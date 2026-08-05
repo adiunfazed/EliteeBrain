@@ -201,7 +201,20 @@ async function startServer() {
   // Security headers. CSP is left off because the app loads QR images from
   // quickchart.io and fonts/Firebase from Google origins; enable it once you
   // have pinned those origins.
-  app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
+  app.use(
+    helmet({
+      contentSecurityPolicy: false,
+      crossOriginEmbedderPolicy: false,
+      // Firebase signInWithPopup opens Google's consent screen in a popup and
+      // reads the result back through window.opener. Helmet's default of
+      // "same-origin" severs that link, and the SDK reports the failure as
+      // "popup closed by user". "same-origin-allow-popups" keeps the isolation
+      // benefit while letting our own popups reply.
+      crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
+      // Social crawlers need to fetch the OG image cross-origin.
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+    })
+  );
   app.use(compression());
 
   // Cap body size — the coach endpoint accepts chat history and would otherwise
