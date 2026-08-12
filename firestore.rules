@@ -1,0 +1,109 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn()
+        && request.auth.token.email != null
+        && request.auth.token.email.lower() == 'unfazed.adibiz@gmail.com';
+    }
+
+    // Deny anything not explicitly matched below.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Users ---
+    // A user may read and write ONLY their own document, and may never change
+    // their own Pro status. Only the admin can grant Pro.
+    match /users/{userId} {
+      allow read: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
+
+      allow create: if isSignedIn()
+                    && request.auth.uid == userId
+                    && request.resource.data.get('lifetimePro', false) == false;
+
+      allow update: if isAdmin()
+                    || (isSignedIn()
+                        && request.auth.uid == userId
+                        // A user may never alter their own entitlement:
+                        // not the Pro flag, not lifetime, and not the trial
+                        // clock (which would otherwise allow endless trials).
+                        && request.resource.data.get('isProUser', false)
+                           == resource.data.get('isProUser', false)
+                        && request.resource.data.get('lifetimePro', false)
+                           == resource.data.get('lifetimePro', false)
+                        && request.resource.data.get('trialStartedAt', '')
+                           == resource.data.get('trialStartedAt', '')
+                        && request.resource.data.get('proExpiresAt', '')
+                           == resource.data.get('proExpiresAt', ''));
+
+      allow delete: if isAdmin();
+    }
+
+    // --- Tasks (users/{uid}/tasks/{taskId}) ---
+    // Strictly private: a user reads and writes only their own tasks.
+    match /users/{userId}/tasks/{taskId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    // --- Focus sessions (users/{uid}/focusSessions/{id}) ---
+    match /users/{userId}/focusSessions/{sessionId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    // --- Goals, habits and habit logs. Strictly private, same as tasks. ---
+    match /users/{userId}/goals/{goalId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+    }
+    match /users/{userId}/habits/{habitId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+    }
+    match /users/{userId}/habitLogs/{logId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    // --- Routine and sleep. Strictly private, same as everything else. ---
+    match /users/{userId}/routineBlocks/{blockId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+    }
+    match /users/{userId}/routineLogs/{logId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+    }
+    match /users/{userId}/sleepLogs/{logId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+    }
+    match /users/{userId}/goalSnapshots/{snapId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    // --- Payment requests ---
+    // A user can file their own request and watch its status. Only the admin
+    // can approve, edit, or delete one.
+    match /payment_requests/{requestId} {
+      allow read: if isAdmin()
+                  || (isSignedIn() && resource.data.get('userId', '') == request.auth.uid);
+
+      allow create: if isSignedIn()
+                    && request.resource.data.get('userId', '') == request.auth.uid;
+
+      allow update, delete: if isAdmin();
+    }
+
+    // --- Admin settings ---
+    match /admin_settings/{settingId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // --- Public system config (e.g. community link) ---
+    match /system_config/{configId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}
