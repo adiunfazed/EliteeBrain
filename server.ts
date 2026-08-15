@@ -6,6 +6,9 @@ import path from 'path';
 import { GoogleGenAI } from '@google/genai';
 import { initAdmin, isAdminAvailable, verifyUser, lastVerifyFailure } from './serverAuth';
 
+/** Reason the last provider attempt failed, for accurate error reporting. */
+let lastProviderError: string | null = null;
+
 async function generateCoachReply(
   userProfile: any,
   userMessage: string,
@@ -35,6 +38,8 @@ How to talk:
 - Be honest. If something won't help much, say so. Don't inflate.
 - No medical or clinical claims, no promises about IQ or guaranteed results.
 - Never repeat a previous answer. If they rephrase, engage with the new angle.`;
+
+  lastProviderError = null;
 
   let prompt = userMessage || '';
   if (mode === 'audit') {
@@ -82,12 +87,10 @@ How to talk:
     } catch (err: any) {
       // Surface the real cause — a bad key, quota exhaustion and a network
       // failure all previously looked identical from the outside.
-      console.error(
-        'Gemini API error:',
-        err?.status || '',
-        err?.message || err,
-        err?.statusText || ''
-      );
+      const status = err?.status || err?.code || '';
+      const msg = err?.message || String(err);
+      console.error('Gemini API error:', status, msg, err?.statusText || '');
+      lastProviderError = `Gemini: ${status ? status + ' ' : ''}${msg}`.slice(0, 300);
     }
   } else {
     console.warn('GEMINI_API_KEY is not set — the coach will use offline replies.');
@@ -132,7 +135,14 @@ How to talk:
     }
   }
 
-  // 4. Offline fallback so the coach always returns something useful.
+  // Every provider failed. Report why rather than returning a canned reply
+  // that hides the cause.
+  if (lastProviderError) {
+    throw new Error(lastProviderError);
+  }
+  if (!geminiKey && !grokKey) {
+    throw new Error('No AI provider is configured. GEMINI_API_KEY is missing.');
+  }
   return generateIntelligentFallback(userProfile, prompt, mode);
 }
 
@@ -283,9 +293,11 @@ async function startServer() {
       const reply = await generateCoachReply(userProfile, userMessage, mode, history);
       res.json({ reply });
     } catch (err: any) {
-      console.error('AI Coach Server Error:', err);
+      const detail = err?.message || String(err);
+      console.error('AI Coach Server Error:', err?.status || '', detail, err?.stack || '');
       res.status(500).json({
-        error: 'The AI Coach is unavailable right now. Please try again shortly.',
+        error: `The AI Coach hit an error: ${detail}`,
+        detail,
       });
     }
   });

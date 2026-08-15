@@ -23,6 +23,7 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
   const [messages, setMessages] = useState<CoachChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [actionsOpen, setActionsOpen] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const userId = currentUser?.uid || null;
@@ -184,7 +185,7 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
   };
 
   /** Cards only show on a fresh thread — once talking, they'd be clutter. */
-  const showActions = messages.length <= 1 && !isTyping;
+  const showActions = (messages.length <= 1 || actionsOpen) && !isTyping;
 
   return (
     <div className="space-y-6 font-sans select-none">
@@ -319,7 +320,10 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
                   return (
                     <button
                       key={action.id}
-                      onClick={() => handleSendMessage(action.prompt)}
+                      onClick={() => {
+                        setActionsOpen(false);
+                        handleSendMessage(action.prompt);
+                      }}
                       className="eb-press eb-shine text-left p-2.5 rounded-xl bg-[#171B22] border border-[#2A313C] hover:border-[#8B5CF6]/45 transition-colors min-w-0"
                     >
                       <Icon className="w-3.5 h-3.5 text-[#A78BFA] mb-1.5" />
@@ -343,7 +347,14 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
 
 
         {messages.length > 1 && (
-          <div className="flex justify-end pt-2">
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              onClick={() => setActionsOpen((v) => !v)}
+              className="eb-press text-[10px] font-mono font-bold px-3 py-2 rounded-xl border border-[#2A313C] text-[#98A2B3] hover:text-[#F4F6F8] hover:border-[#3A424F] flex items-center gap-1.5"
+            >
+              <Sparkles className="w-3 h-3" />
+              {actionsOpen ? 'Hide ideas' : 'Ideas'}
+            </button>
             <button
               onClick={startNewChat}
               className="eb-press text-[10px] font-mono font-bold px-3 py-2 rounded-xl border border-[#2A313C] text-[#98A2B3] hover:text-[#F4F6F8] hover:border-[#3A424F] flex items-center gap-1.5"
