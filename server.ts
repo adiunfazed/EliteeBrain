@@ -268,7 +268,10 @@ async function startServer() {
       if (!verified) {
         // Distinguish "no token sent" from "token rejected" — they need
         // different fixes and the generic message hid which was happening.
-        const code = lastVerifyFailure?.code || '';
+        // Firebase error codes are usually strings but can arrive as numbers,
+        // and calling .includes() on a number threw inside the error handler —
+        // turning a clean 401 into a confusing 500.
+        const code = String(lastVerifyFailure?.code ?? '');
         // Report the real cause. "Session expired" was shown for every
         // failure mode, including ones a re-login could never fix.
         const message = !idToken

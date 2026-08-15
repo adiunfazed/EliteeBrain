@@ -146,7 +146,10 @@ export async function verifyUser(idToken?: string): Promise<VerifiedUser | null>
     // Firebase error codes are specific: auth/id-token-expired,
     // auth/argument-error (malformed), auth/id-token-revoked, and
     // project mismatch all need different fixes.
-    const code = err?.errorInfo?.code || err?.code || 'unknown';
+    // Normalise here: Firebase returns strings, but some transports surface a
+    // numeric code, and callers were doing string operations on it.
+    const rawCode = err?.errorInfo?.code ?? err?.code ?? 'unknown';
+    const code = String(rawCode);
     lastVerifyFailure = { reason: 'verify_failed', code };
     console.error('ID token verification failed:', code, err?.message || err);
     return null;
