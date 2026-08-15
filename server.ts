@@ -4,6 +4,7 @@ import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import path from 'path';
 import { GoogleGenAI } from '@google/genai';
+import { initAdmin, isAdminAvailable, verifyUser } from './serverAuth';
 
 async function generateCoachReply(
   userProfile: any,
@@ -191,6 +192,9 @@ function generateIntelligentFallback(userProfile: any, prompt: string, mode: str
 }
 
 async function startServer() {
+  // Initialise before any request can arrive.
+  initAdmin();
+
   const app = express();
   // Cloud Run / most hosts inject PORT. Listening on a hardcoded port makes the
   // container fail its health check and the deployment is marked "not ready".
@@ -242,9 +246,31 @@ async function startServer() {
     try {
       const { userProfile, userMessage, mode, history } = req.body;
 
-      if (!userProfile?.isProUser) {
+      // Access is decided by a verified Firebase ID token, never by what the
+      // browser claims. Posting {"userProfile":{"isProUser":true}} does nothing.
+      const idToken =
+        (req.headers.authorization || '').replace(/^Bearer\s+/i, '') || undefined;
+      const verified = await verifyUser(idToken);
+
+      if (!isAdminAvailable()) {
+        // Fail CLOSED. Falling back to trusting the client would reopen the
+        // exact hole this replaced.
+        console.error('Coach request refused: server-side verification unavailable.');
+        return res.status(503).json({
+          error: 'The AI Coach is temporarily unavailable. Please try again later.',
+        });
+      }
+
+      if (!verified) {
+        return res.status(401).json({ error: 'Please sign in to use the AI Coach.' });
+      }
+
+      if (!verified.isPro) {
         return res.status(403).json({
-          error: 'AI Coach is an Elite Life Pro feature. Upgrade to Pro to unlock AI guidance.',
+          error:
+            verified.status === 'expired'
+              ? 'Your free month has ended. Unlock Pro to keep using the AI Coach.'
+              : 'The AI Coach is a Pro feature. Start your free month to unlock it.',
         });
       }
 

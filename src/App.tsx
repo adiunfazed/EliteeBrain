@@ -9,6 +9,7 @@ import { doc, onSnapshot } from 'firebase/firestore';
 
 import { SignInScreen } from './components/SignInScreen';
 import { Header } from './components/Header';
+import { NotificationSettings } from './components/NotificationSettings';
 import { Dashboard } from './components/Dashboard';
 import { SummaryModal } from './components/SummaryModal';
 import { SettingsModal } from './components/SettingsModal';
@@ -62,6 +63,7 @@ export default function App() {
   const [isSignOutModalOpen, setIsSignOutModalOpen] = useState(false);
   const [isAICoachOpen, setIsAICoachOpen] = useState(false);
   const [isProModalOpen, setIsProModalOpen] = useState(false);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isAdminPortalOpen, setIsAdminPortalOpen] = useState(false);
   const [isMethodsOpen, setIsMethodsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -316,6 +318,7 @@ export default function App() {
         onOpenProModal={() => setIsProModalOpen(true)}
         onOpenAdminPortal={() => setIsAdminPortalOpen(true)}
         onOpenMethodsModal={() => setIsMethodsOpen(true)}
+        onOpenNotifications={() => setIsNotifOpen(true)}
         onOpenBadgesGallery={() => setIsBadgesGalleryOpen(true)}
         isDarkMode={isDarkMode}
         onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
@@ -461,6 +464,8 @@ export default function App() {
       />
 
       {/* Pro Subscription Modal */}
+      <NotificationSettings isOpen={isNotifOpen} onClose={() => setIsNotifOpen(false)} />
+
       <ProSubscriptionModal
         isOpen={isProModalOpen}
         currentUser={currentUser}

@@ -3,7 +3,7 @@ import { UserProfile } from '../types';
 import { soundFx } from '../utils/audio';
 import { updateUserProfileName, User } from '../lib/firebase';
 import { saveProfile } from '../utils/storage';
-import { Volume2, VolumeX, Sun, Moon, Shield, LogIn, Eye, HelpCircle, Sparkles, Crown, Sliders, X, User as UserIcon, Trophy, Check, Edit2 } from 'lucide-react';
+import { Volume2, VolumeX, Sun, Moon, Shield, LogIn, Eye, HelpCircle, Sparkles, Crown, Sliders, X, User as UserIcon, Trophy, Check, Edit2, Bell } from 'lucide-react';
 import { EliteLifeLogo } from './EliteLifeLogo';
 import { motion, AnimatePresence } from 'motion/react';
 import { resolveEntitlement } from '../lib/entitlement';
@@ -19,6 +19,7 @@ interface Props {
   onOpenProModal: () => void;
   onOpenAdminPortal: () => void;
   onOpenMethodsModal: () => void;
+  onOpenNotifications?: () => void;
   onOpenBadgesGallery?: () => void;
   isDarkMode: boolean;
   onToggleDarkMode: () => void;
@@ -37,6 +38,7 @@ export const Header: React.FC<Props> = ({
   onOpenProModal,
   onOpenAdminPortal,
   onOpenMethodsModal,
+  onOpenNotifications,
   onOpenBadgesGallery,
   isDarkMode,
   onToggleDarkMode,
@@ -349,6 +351,19 @@ export const Header: React.FC<Props> = ({
               >
                 <HelpCircle className="w-4 h-4 text-[#8B5CF6]" />
                 <span>Methods</span>
+              </button>
+
+              {/* Notifications */}
+              <button
+                onClick={() => {
+                  soundFx.playClick();
+                  onOpenNotifications?.();
+                  setIsMobileMenuOpen(false);
+                }}
+                className="flex items-center justify-center gap-2 px-3 py-2 bg-[#171B22] border border-[#2A313C] text-[#F4F6F8] text-xs font-mono rounded-xl active:bg-[#212631]"
+              >
+                <Bell className="w-4 h-4 text-[#A78BFA]" />
+                <span>Alerts</span>
               </button>
 
               {/* Sound FX */}

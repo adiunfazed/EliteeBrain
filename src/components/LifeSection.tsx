@@ -50,17 +50,19 @@ interface Props {
   profile: UserProfile;
   /** Active goals a routine block can be attached to. */
   goals?: { id: string; title: string }[];
+  /** Open directly on a given pane, e.g. from the Sleep card on Home. */
+  initialPane?: 'routine' | 'week' | 'sleep';
 }
 
 type Pane = 'routine' | 'week' | 'sleep';
 
 const KINDS: BlockKind[] = ['study', 'work', 'exercise', 'sleep', 'meal', 'personal', 'custom'];
 
-export const LifeSection: React.FC<Props> = ({ userId, goals = [] }) => {
+export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }) => {
   const [blocks, setBlocks] = useState<RoutineBlock[]>([]);
   const [logs, setLogs] = useState<RoutineLog[]>([]);
   const [sleep, setSleep] = useState<SleepLog[]>([]);
-  const [pane, setPane] = useState<Pane>('routine');
+  const [pane, setPane] = useState<Pane>(initialPane || 'routine');
 
   const [title, setTitle] = useState('');
   const [kind, setKind] = useState<BlockKind>('study');

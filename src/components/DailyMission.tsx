@@ -14,7 +14,9 @@ interface MissionProps {
   focusSessions: number;
   focusSecondsToday: number;
   onGoTrain: () => void;
-  onGoHub: () => void;
+  /** Each row opens its own destination, not a shared landing tab. */
+  onGoTasks: () => void;
+  onGoFocus: () => void;
 }
 
 /**
@@ -32,7 +34,8 @@ export const DailyMission: React.FC<MissionProps> = ({
   focusSessions,
   focusSecondsToday,
   onGoTrain,
-  onGoHub,
+  onGoTasks,
+  onGoFocus,
 }) => {
   const goals = [
     {
@@ -51,7 +54,7 @@ export const DailyMission: React.FC<MissionProps> = ({
       detail: tasksTarget === 0 ? 'No tasks yet — add one' : `${tasksDone} of ${tasksTarget} done`,
       // With no tasks there is nothing to complete, so this is not "done".
       done: tasksTarget > 0 && tasksDone >= tasksTarget,
-      action: onGoHub,
+      action: onGoTasks,
       tint: 'text-emerald-400',
     },
     {
@@ -61,7 +64,7 @@ export const DailyMission: React.FC<MissionProps> = ({
       detail:
         focusSecondsToday > 0 ? `${formatDuration(focusSecondsToday)} today` : 'Not started',
       done: focusSessions >= 1,
-      action: onGoHub,
+      action: onGoFocus,
       tint: 'text-amber-400',
     },
   ];

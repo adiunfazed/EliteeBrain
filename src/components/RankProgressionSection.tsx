@@ -22,6 +22,8 @@ import {
 } from 'lucide-react';
 
 interface RankProgressionSectionProps {
+  /** Activity-derived streak, so this never disagrees with the Home card. */
+  derivedStreak?: number;
   profile: UserProfile;
   onLaunchModule: (id: any) => void;
   onOpenBadgesGallery?: () => void;
@@ -75,6 +77,7 @@ const TIERS: TierInfo[] = [
 
 export const RankProgressionSection: React.FC<RankProgressionSectionProps> = ({
   profile,
+  derivedStreak,
   onLaunchModule,
   onOpenBadgesGallery,
 }) => {
@@ -168,7 +171,7 @@ export const RankProgressionSection: React.FC<RankProgressionSectionProps> = ({
         <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 border border-amber-500/30 rounded-xl">
           <Flame className="w-4 h-4 text-amber-400 animate-pulse" />
           <span className="text-xs font-mono font-bold text-amber-300">
-            {profile.streakDays} Day Streak
+            {derivedStreak ?? profile.streakDays} Day Streak
           </span>
         </div>
       </div>
@@ -335,7 +338,7 @@ export const RankProgressionSection: React.FC<RankProgressionSectionProps> = ({
                     Streak Continuity
                   </span>
                   <div className="text-lg font-mono font-extrabold text-white">
-                    {profile.streakDays} Days
+                    {derivedStreak ?? profile.streakDays} Days
                   </div>
                 </div>
               </div>

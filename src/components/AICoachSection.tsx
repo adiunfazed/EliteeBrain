@@ -4,6 +4,7 @@ import { UserProfile, CoachChatMessage } from '../types';
 import { soundFx } from '../utils/audio';
 import { calculateBrainScore } from '../utils/storage';
 import { Send, Sparkles, Bot, User as UserIcon, RefreshCw, Crown, Lock, ArrowRight, Zap, Lightbulb } from 'lucide-react';
+import { getIdToken } from '../lib/firebase';
 
 interface AICoachSectionProps {
   profile: UserProfile;
@@ -61,9 +62,14 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
     setIsTyping(true);
 
     try {
+      // The server verifies this token and reads Pro status from Firestore.
+      const idToken = await getIdToken();
       const res = await fetch('/api/coach', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
+        },
         body: JSON.stringify({
           userProfile: profile,
           userMessage: query,

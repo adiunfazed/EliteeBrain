@@ -11,6 +11,8 @@ interface Props {
   displayName?: string;
   onOpenHub: (pane: 'today' | 'tasks' | 'goals' | 'routine' | 'focus') => void;
   onStartFocus?: (title: string) => void;
+  /** Opens the Sleep pane directly. */
+  onOpenSleep: () => void;
 }
 
 /**
@@ -20,7 +22,7 @@ interface Props {
  * Deliberately shows ONE next action rather than a ranked list — a list is just
  * the task screen again, and the point of this card is to remove the decision.
  */
-export const CommandCenter: React.FC<Props> = ({ input, displayName, onOpenHub, onStartFocus }) => {
+export const CommandCenter: React.FC<Props> = ({ input, displayName, onOpenHub, onStartFocus, onOpenSleep }) => {
   const today = todayISO();
 
   const next = useMemo(() => nextBestAction(input.tasks), [input.tasks]);

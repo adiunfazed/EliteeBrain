@@ -739,3 +739,19 @@ export function onAuthStateChanged(
 }
 
 export type { User };
+
+
+/**
+ * Current user's Firebase ID token, for authenticating server requests.
+ * The SDK refreshes it automatically, so this is always current.
+ */
+export async function getIdToken(): Promise<string | null> {
+  try {
+    const user = auth?.currentUser;
+    if (!user) return null;
+    return await user.getIdToken();
+  } catch (err) {
+    console.warn('Could not get ID token:', err);
+    return null;
+  }
+}

@@ -95,6 +95,13 @@ export async function fetchProfileFromCloud(userId: string): Promise<UserProfile
             ...baseProfile.dailyLogs,
             ...(profileObj.dailyLogs || {}),
           },
+          // Deep-merge like modules and dailyLogs. A shallow spread let the
+          // cloud copy replace the local one wholesale, so badges earned on one
+          // device disappeared when another device synced.
+          unlockedAchievements: {
+            ...(baseProfile.unlockedAchievements || {}),
+            ...(profileObj.unlockedAchievements || {}),
+          },
           isProUser: isPro,
           lifetimePro: data.lifetimePro === true || profileObj.lifetimePro === true,
           trialStartedAt: data.trialStartedAt || profileObj.trialStartedAt,

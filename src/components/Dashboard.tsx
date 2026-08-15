@@ -23,6 +23,8 @@ import { TodayPane } from './TodayPane';
 import { MomentumChart } from './MomentumChart';
 import { CommandCenter } from './CommandCenter';
 import { StreakCard } from './StreakCard';
+import { computeStreak } from '../lib/streak';
+import { dueReminders, fireReminders, loadPrefs, registerServiceWorker } from '../lib/notifications';
 import { WeeklyReviewSection } from './WeeklyReviewSection';
 import { RealityVsPlan } from './RealityVsPlan';
 import {
@@ -95,6 +97,7 @@ export const Dashboard: React.FC<Props> = ({
   const [openTaskCount, setOpenTaskCount] = useState(0);
   const [hubPane, setHubPane] = useState<'today' | 'tasks' | 'goals' | 'routine' | 'focus'>('today');
   const [focusHandoff, setFocusHandoff] = useState<Task | null>(null);
+  const [lifePane, setLifePane] = useState<'routine' | 'week' | 'sleep' | undefined>();
   const [habitHandoff, setHabitHandoff] = useState<{ title: string; minutes: number; habitId: string } | null>(null);
   const [tasksDone, setTasksDone] = useState(0);
   const [tasksTarget, setTasksTarget] = useState(0);
@@ -133,6 +136,38 @@ export const Dashboard: React.FC<Props> = ({
     [allTasks, allHabits, allHabitLogs, allFocus, routineBlocks, routineLogs, sleepLogs, allGoals, profile]
   );
 
+  // Reminder scheduler. Runs while the app is open, checking once a minute for
+  // anything due. Each reminder records that it fired today, so it cannot
+  // repeat on the next tick.
+  useEffect(() => {
+    registerServiceWorker();
+    const tick = () => {
+      const prefs = loadPrefs();
+      if (!prefs.enabled) return;
+      const due = dueReminders(
+        {
+          blocks: routineBlocks,
+          routineLogs,
+          habits: allHabits,
+          habitLogs: allHabitLogs,
+          tasks: allTasks,
+        },
+        prefs
+      );
+      if (due.length > 0) fireReminders(due);
+    };
+    tick();
+    const id = setInterval(tick, 60_000);
+    return () => clearInterval(id);
+  }, [routineBlocks, routineLogs, allHabits, allHabitLogs, allTasks]);
+
+  const derivedStreak = useMemo(
+    () => computeStreak(momentumInput).current,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [allTasks, allHabits, allHabitLogs, allFocus, routineLogs, sleepLogs]
+  );
+
+
   // Only default the pane when arriving at Plan WITHOUT an explicit target.
   // The previous version reset on every entry, which overrode the pane a
   // button had just set — so "Tasks" and "Focus" both opened Today.
@@ -144,6 +179,7 @@ export const Dashboard: React.FC<Props> = ({
       return;
     }
     setHubPane('today');
+    setLifePane(undefined);
   }, [activeSection]);
 
   /** Open Plan on a specific pane. */
@@ -336,6 +372,10 @@ export const Dashboard: React.FC<Props> = ({
               input={momentumInput}
               displayName={profile.displayName || currentUser?.displayName || undefined}
               onOpenHub={goToPane}
+              onOpenSleep={() => {
+                setLifePane('sleep');
+                goToPane('routine');
+              }}
             />
 
             <StreakCard input={momentumInput} />
@@ -348,11 +388,13 @@ export const Dashboard: React.FC<Props> = ({
               focusSessions={focusToday.sessions}
               focusSecondsToday={focusToday.seconds}
               onGoTrain={() => setActiveSection('exercises')}
-              onGoHub={() => goToPane('today')}
+              onGoTasks={() => goToPane('tasks')}
+              onGoFocus={() => goToPane('focus')}
             />
 
             <RankProgressionSection
               profile={profile}
+              derivedStreak={derivedStreak}
               onLaunchModule={onLaunchModule}
               onOpenBadgesGallery={onOpenBadgesGallery}
             />
@@ -654,6 +696,7 @@ export const Dashboard: React.FC<Props> = ({
                 <LifeSection
                   userId={currentUser?.uid || null}
                   profile={profile}
+                  initialPane={lifePane}
                   goals={allGoals
                     .filter((g: any) => g.status === 'active')
                     .map((g: any) => ({ id: g.id, title: g.title }))}
