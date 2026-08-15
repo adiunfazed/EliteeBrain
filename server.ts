@@ -4,7 +4,7 @@ import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import path from 'path';
 import { GoogleGenAI } from '@google/genai';
-import { initAdmin, isAdminAvailable, verifyUser } from './serverAuth';
+import { initAdmin, isAdminAvailable, verifyUser, lastVerifyFailure } from './serverAuth';
 
 async function generateCoachReply(
   userProfile: any,
@@ -258,11 +258,17 @@ async function startServer() {
       if (!verified) {
         // Distinguish "no token sent" from "token rejected" — they need
         // different fixes and the generic message hid which was happening.
-        return res.status(401).json({
-          error: idToken
-            ? 'Your session has expired. Sign out and back in, then try again.'
-            : 'Sign-in did not reach the server. Refresh the page and try again.',
-        });
+        const code = lastVerifyFailure?.code || '';
+        // Report the real cause. "Session expired" was shown for every
+        // failure mode, including ones a re-login could never fix.
+        const message = !idToken
+          ? 'Sign-in did not reach the server. Refresh the page and try again.'
+          : code.includes('expired')
+            ? 'Your session expired. Refresh the page and try again.'
+            : code.includes('argument')
+              ? 'Your sign-in token was not readable. Sign out and back in.'
+              : `Could not verify your sign-in (${code || 'unknown'}). Sign out and back in.`;
+        return res.status(401).json({ error: message, code });
       }
 
       if (!verified.isPro) {

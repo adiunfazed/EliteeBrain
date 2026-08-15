@@ -104,9 +104,32 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
         }),
       });
 
-      const data = await res.json();
-      if (!res.ok) {
-        // Surface what actually went wrong rather than inventing an answer.
+      let data = await res.json();
+
+      // A 401 can be a token that expired between mint and arrival. Retry once
+      // with a freshly forced token before reporting a failure.
+      if (res.status === 401) {
+        const retryToken = await getIdToken();
+        if (retryToken && retryToken !== idToken) {
+          const retry = await fetch('/api/coach', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${retryToken}`,
+            },
+            body: JSON.stringify({
+              userProfile: profile,
+              userMessage: query,
+              history: messages.slice(-10),
+              mode: 'chat',
+            }),
+          });
+          data = await retry.json();
+          if (!retry.ok) throw new Error(data?.error || `Request failed (${retry.status})`);
+        } else {
+          throw new Error(data?.error || 'Could not verify your sign-in.');
+        }
+      } else if (!res.ok) {
         throw new Error(data?.error || `Request failed (${res.status})`);
       }
 
@@ -213,7 +236,7 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
       </div>
 
       {/* Main Chat Box Container */}
-      <div className="bg-[#12161F] border border-[#2A313C] rounded-3xl p-4 sm:p-6 space-y-4 flex flex-col h-[520px] shadow-2xl relative overflow-hidden">
+      <div className="bg-[#12161F] border border-[#2A313C] rounded-3xl p-3.5 sm:p-6 space-y-3 flex flex-col h-[min(72vh,620px)] shadow-2xl relative overflow-hidden">
         
         {/* Messages Scroll Area */}
         <div className="flex-1 overflow-y-auto space-y-3 pr-2 scrollbar-thin">
@@ -280,9 +303,6 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
             </motion.div>
           )}
 
-          <div ref={chatEndRef} />
-        </div>
-
         {/* Action cards — starting points on a fresh thread. Each sends a
             real question so the coach has something specific to answer. */}
         <AnimatePresence>
@@ -293,20 +313,20 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
               exit={{ opacity: 0, height: 0 }}
               className="overflow-hidden"
             >
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-3 border-t border-[#2A313C]">
+              <div className="grid grid-cols-2 gap-2 pt-3 mt-1 border-t border-[#2A313C]">
                 {COACH_ACTIONS.map((action) => {
                   const Icon = iconFor(action.icon);
                   return (
                     <button
                       key={action.id}
                       onClick={() => handleSendMessage(action.prompt)}
-                      className="eb-press eb-shine group text-left p-3 rounded-2xl bg-[#12161F] border border-[#2A313C] hover:border-[#8B5CF6]/45 transition-colors min-w-0"
+                      className="eb-press eb-shine text-left p-2.5 rounded-xl bg-[#171B22] border border-[#2A313C] hover:border-[#8B5CF6]/45 transition-colors min-w-0"
                     >
-                      <Icon className="w-4 h-4 text-[#A78BFA] mb-2" />
-                      <p className="text-xs font-bold text-[#F4F6F8] leading-snug">
+                      <Icon className="w-3.5 h-3.5 text-[#A78BFA] mb-1.5" />
+                      <p className="text-[11px] font-bold text-[#F4F6F8] leading-snug break-words">
                         {action.title}
                       </p>
-                      <p className="text-[10px] text-[#98A2B3] mt-0.5 leading-relaxed">
+                      <p className="text-[9px] text-[#98A2B3] mt-0.5 leading-snug break-words">
                         {action.hint}
                       </p>
                     </button>
@@ -316,6 +336,11 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
             </motion.div>
           )}
         </AnimatePresence>
+
+          <div ref={chatEndRef} />
+        </div>
+
+
 
         {messages.length > 1 && (
           <div className="flex justify-end pt-2">

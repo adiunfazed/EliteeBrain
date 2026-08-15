@@ -198,7 +198,7 @@ export const ProSubscriptionModal: React.FC<Props> = ({
       }
       setTimeout(() => {
         setCheckingStatus(false);
-        alert('⏳ Payment Status: Under Review in Admin Queue. Admin (unfazed.adibiz@gmail.com) is checking bank records.');
+        alert('Your payment is being reviewed. Access is activated once it is confirmed.');
       }, 800);
     } catch (e) {
       setCheckingStatus(false);
@@ -273,7 +273,7 @@ export const ProSubscriptionModal: React.FC<Props> = ({
             </p>
 
             <p className="text-[11px] text-slate-400 font-mono">
-              Admin (<strong className="text-amber-300">unfazed.adibiz@gmail.com</strong>) is verifying your payment. Your account will automatically activate upon confirmation.
+              Your payment is being verified. Pro access activates automatically once it is confirmed.
             </p>
 
             <div className="flex items-center justify-between pt-1">

@@ -313,7 +313,7 @@ export const SignInScreen: React.FC<Props> = ({ onSignInSuccess, onContinueAsGue
                   <input
                     type="text"
                     required
-                    placeholder="Aditya"
+                    placeholder="Your name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="w-full bg-[#0E1116] border border-[#2A313C] focus:border-[#8B5CF6] rounded-xl pl-10 pr-4 py-3 text-xs text-[#F4F6F8] placeholder-[#98A2B3]/50 focus:outline-none transition-colors"
@@ -331,7 +331,7 @@ export const SignInScreen: React.FC<Props> = ({ onSignInSuccess, onContinueAsGue
                 <input
                   type="email"
                   required
-                  placeholder="adiunfazed@gmail.com"
+                  placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full bg-[#0E1116] border border-[#2A313C] focus:border-[#8B5CF6] rounded-xl pl-10 pr-4 py-3 text-xs text-[#F4F6F8] placeholder-[#98A2B3]/50 focus:outline-none transition-colors"

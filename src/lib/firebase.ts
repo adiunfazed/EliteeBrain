@@ -772,7 +772,10 @@ export async function getIdToken(): Promise<string | null> {
     }
 
     if (!user) return null;
-    return await user.getIdToken();
+    // force=true: a cached token may be expired, or minted by the previous
+    // Firebase project before the migration. Refreshing guarantees a valid
+    // token for the project the server verifies against.
+    return await user.getIdToken(true);
   } catch (err) {
     console.warn('Could not get ID token:', err);
     return null;

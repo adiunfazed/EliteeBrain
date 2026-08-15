@@ -58,6 +58,30 @@ const knightPst = [
   -50, -40, -30, -30, -30, -30, -40, -50,
 ];
 
+/**
+ * Positions already seen this game, so the engine can be penalised for
+ * repeating them. Purely material evaluation scores a rook shuffling between
+ * two squares as zero-cost, which is why the bot could loop forever.
+ */
+const positionHistory = new Map<string, number>();
+
+export function recordPosition(fen: string) {
+  // Only the piece placement matters for repetition, not clocks or move counts.
+  const key = fen.split(' ').slice(0, 4).join(' ');
+  positionHistory.set(key, (positionHistory.get(key) || 0) + 1);
+}
+
+export function resetPositionHistory() {
+  positionHistory.clear();
+}
+
+function repetitionPenalty(game: Chess): number {
+  const key = game.fen().split(' ').slice(0, 4).join(' ');
+  const seen = positionHistory.get(key) || 0;
+  // Heavy enough to outweigh any small positional gain from shuffling.
+  return seen * 45;
+}
+
 function evaluateBoard(game: Chess): number {
   let score = 0;
   const board = game.board();
@@ -77,6 +101,22 @@ function evaluateBoard(game: Chess): number {
       }
     }
   }
+
+  // Mate and stalemate must dominate material, or the engine will happily
+  // trade into a draw it could have avoided.
+  if (game.isCheckmate()) {
+    return game.turn() === 'w' ? -100000 : 100000;
+  }
+  if (game.isStalemate() || game.isThreefoldRepetition() || game.isDraw()) {
+    return 0;
+  }
+
+  // Mobility: a side with more legal moves has a freer position. This alone
+  // stops the "shuffle a rook" behaviour, because repeating a position gains
+  // nothing while developing does.
+  const mobility = game.moves().length;
+  score += game.turn() === 'w' ? mobility * 0.6 : -mobility * 0.6;
+
   return score;
 }
 
@@ -155,6 +195,7 @@ export const ChessGame: React.FC<{
 
   // ELO calculation details
   const [eloDelta, setEloDelta] = useState<number | null>(null);
+  const [drawReason, setDrawReason] = useState<string | null>(null);
 
   // Tap & Drag selections
   const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
@@ -333,14 +374,21 @@ export const ChessGame: React.FC<{
 
   const checkGameOver = useCallback(
     (currentGame: Chess) => {
-      if (currentGame.isGameOver()) {
-        if (currentGame.isCheckmate()) {
-          const outcome = currentGame.turn() === 'w' ? 'lost' : 'won';
-          finishMatch(outcome);
-        } else {
-          finishMatch('drawn');
-        }
+      if (!currentGame.isGameOver()) return;
+
+      if (currentGame.isCheckmate()) {
+        // The side to move is the one checkmated.
+        finishMatch(currentGame.turn() === 'w' ? 'lost' : 'won');
+        return;
       }
+
+      // Name the actual draw reason — "stalemate" was shown for all of them.
+      if (currentGame.isStalemate()) setDrawReason('Stalemate — no legal moves');
+      else if (currentGame.isThreefoldRepetition()) setDrawReason('Threefold repetition');
+      else if (currentGame.isInsufficientMaterial()) setDrawReason('Insufficient material');
+      else setDrawReason('Fifty-move rule');
+
+      finishMatch('drawn');
     },
     [finishMatch]
   );
@@ -380,6 +428,30 @@ export const ChessGame: React.FC<{
       if (!isBlunder) {
         const result = minimax(gameCopy, searchDepth, -Infinity, Infinity, false);
         if (result.move) bestMove = result.move;
+
+        // Reject a move that walks straight back into a position already seen.
+        // Without this the engine can shuffle the same piece indefinitely.
+        if (bestMove) {
+          const probe = new Chess(gameCopy.fen());
+          try {
+            probe.move(bestMove);
+            if (repetitionPenalty(probe) > 0) {
+              const alternatives = gameCopy
+                .moves({ verbose: true })
+                .filter((m: any) => `${m.from}${m.to}` !== `${(bestMove as any).from}${(bestMove as any).to}`);
+              for (const alt of alternatives) {
+                const test = new Chess(gameCopy.fen());
+                test.move(alt);
+                if (repetitionPenalty(test) === 0) {
+                  bestMove = alt;
+                  break;
+                }
+              }
+            }
+          } catch {
+            /* keep the original move */
+          }
+        }
       }
 
       try {
@@ -390,6 +462,7 @@ export const ChessGame: React.FC<{
           // Append rather than replace: gameCopy was rebuilt from a FEN, which
           // carries no history, so gameCopy.history() is just this one move.
           setMoveHistory((prev) => [...prev, played.san]);
+          recordPosition(gameCopy.fen());
           triggerSoundForMove(gameCopy, played);
           checkGameOver(gameCopy);
         }
@@ -446,6 +519,8 @@ export const ChessGame: React.FC<{
           setGame(gameCopy);
           setLastMove({ from: move.from as Square, to: move.to as Square });
           setMoveHistory((prev) => [...prev, move.san]);
+        recordPosition(gameCopy.fen());
+          recordPosition(gameCopy.fen());
           triggerSoundForMove(gameCopy, move);
           checkGameOver(gameCopy);
         } else {
@@ -600,6 +675,8 @@ export const ChessGame: React.FC<{
 
   // Start new match
   const startGame = () => {
+    resetPositionHistory();
+    setDrawReason(null);
     const newG = new Chess();
     setGame(newG);
     setWhiteTime(selectedTimeOption);
@@ -716,6 +793,79 @@ export const ChessGame: React.FC<{
 
     return (
       <div className="fixed inset-0 z-[60] bg-[#07090D] flex flex-col items-center justify-between p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        {/* Result overlay. The fullscreen view returns before the standard
+            overlay renders, so winning in fullscreen previously showed
+            nothing at all. */}
+        <AnimatePresence>
+          {gameStatus !== 'playing' && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.94 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 z-20 bg-[#07090D]/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center"
+            >
+              <div
+                className={`p-5 rounded-3xl mb-4 border ${
+                  gameStatus === 'won' || gameStatus === 'timeout_win'
+                    ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
+                    : gameStatus === 'drawn'
+                      ? 'bg-slate-500/20 text-slate-300 border-slate-500/40'
+                      : 'bg-rose-500/20 text-rose-400 border-rose-500/40'
+                }`}
+              >
+                {gameStatus === 'won' || gameStatus === 'timeout_win' ? (
+                  <Trophy className="w-11 h-11" />
+                ) : gameStatus === 'drawn' ? (
+                  <ShieldAlert className="w-11 h-11" />
+                ) : (
+                  <RotateCcw className="w-11 h-11" />
+                )}
+              </div>
+
+              <h3 className="text-2xl font-black text-white uppercase tracking-wide">
+                {gameStatus === 'won'
+                  ? 'Checkmate — you win'
+                  : gameStatus === 'timeout_win'
+                    ? 'Win on time'
+                    : gameStatus === 'timeout_loss'
+                      ? 'Out of time'
+                      : gameStatus === 'drawn'
+                        ? 'Draw'
+                        : 'Checkmate — you lose'}
+              </h3>
+
+              {eloDelta !== null && (
+                <p className="text-sm font-mono text-[#98A2B3] mt-2">
+                  ELO {userElo}{' '}
+                  <span className={eloDelta >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
+                    {eloDelta >= 0 ? `+${eloDelta}` : eloDelta}
+                  </span>
+                </p>
+              )}
+
+              <p className="text-[11px] font-mono text-[#5A6472] mt-1">
+                {moveHistory.length} moves
+              </p>
+
+              <div className="flex items-center gap-2 mt-6 flex-wrap justify-center">
+                <button
+                  onClick={startGame}
+                  className="eb-btn-primary px-5 py-3 rounded-xl text-xs font-mono font-black flex items-center gap-2"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  Play again
+                </button>
+                <button
+                  onClick={() => setIsFullscreen(false)}
+                  className="eb-btn-ghost px-5 py-3 rounded-xl text-xs font-mono font-bold"
+                >
+                  Exit fullscreen
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Opponent row */}
         <div className="w-full max-w-[640px] flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
@@ -725,6 +875,11 @@ export const ChessGame: React.FC<{
             <span className="text-xs font-mono font-bold text-[#F4F6F8] truncate">
               Bot · {engineLevel}
             </span>
+            {game.inCheck() && gameStatus === 'playing' && (
+              <span className="text-[9px] font-mono font-black px-2 py-0.5 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300 shrink-0">
+                CHECK
+              </span>
+            )}
           </div>
           {clock('b')}
         </div>
@@ -975,7 +1130,7 @@ export const ChessGame: React.FC<{
                       : gameStatus === 'timeout_loss'
                       ? 'Out of Time'
                       : gameStatus === 'drawn'
-                      ? 'Stalemate Draw'
+                      ? drawReason || 'Draw'
                       : 'Match Defeat'}
                   </h3>
 

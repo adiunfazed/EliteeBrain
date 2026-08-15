@@ -89,9 +89,32 @@ export const AICoachModal: React.FC<Props> = ({
         }),
       });
 
-      const data = await res.json();
-      if (!res.ok) {
-        // Surface what actually went wrong rather than inventing an answer.
+      let data = await res.json();
+
+      // A 401 can be a token that expired between mint and arrival. Retry once
+      // with a freshly forced token before reporting a failure.
+      if (res.status === 401) {
+        const retryToken = await getIdToken();
+        if (retryToken && retryToken !== idToken) {
+          const retry = await fetch('/api/coach', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${retryToken}`,
+            },
+            body: JSON.stringify({
+              userProfile: profile,
+              userMessage: query,
+              history: messages.slice(-10),
+              mode: 'chat',
+            }),
+          });
+          data = await retry.json();
+          if (!retry.ok) throw new Error(data?.error || `Request failed (${retry.status})`);
+        } else {
+          throw new Error(data?.error || 'Could not verify your sign-in.');
+        }
+      } else if (!res.ok) {
         throw new Error(data?.error || `Request failed (${res.status})`);
       }
       const replyText = data.reply;

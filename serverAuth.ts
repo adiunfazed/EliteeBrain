@@ -106,8 +106,24 @@ function resolveEntitlement(data: any, now = Date.now()): {
  * Verify a Firebase ID token and look up that user's real entitlement.
  * Returns null when the token is missing, invalid, or expired.
  */
+export interface VerifyFailure {
+  reason: string;
+  code?: string;
+}
+
+/** Populated when the last verification failed, so callers can report why. */
+export let lastVerifyFailure: VerifyFailure | null = null;
+
 export async function verifyUser(idToken?: string): Promise<VerifiedUser | null> {
-  if (!available || !idToken) return null;
+  lastVerifyFailure = null;
+  if (!available) {
+    lastVerifyFailure = { reason: 'admin_unavailable' };
+    return null;
+  }
+  if (!idToken) {
+    lastVerifyFailure = { reason: 'no_token' };
+    return null;
+  }
 
   try {
     const decoded = await getAuth().verifyIdToken(idToken);
@@ -126,8 +142,13 @@ export async function verifyUser(idToken?: string): Promise<VerifiedUser | null>
 
     const { isPro, status } = resolveEntitlement(source);
     return { uid: decoded.uid, email: decoded.email, isPro, status };
-  } catch (err) {
-    console.warn('ID token verification failed:', (err as Error).message);
+  } catch (err: any) {
+    // Firebase error codes are specific: auth/id-token-expired,
+    // auth/argument-error (malformed), auth/id-token-revoked, and
+    // project mismatch all need different fixes.
+    const code = err?.errorInfo?.code || err?.code || 'unknown';
+    lastVerifyFailure = { reason: 'verify_failed', code };
+    console.error('ID token verification failed:', code, err?.message || err);
     return null;
   }
 }
