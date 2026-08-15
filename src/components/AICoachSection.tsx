@@ -1,30 +1,51 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile, CoachChatMessage } from '../types';
 import { soundFx } from '../utils/audio';
 import { calculateBrainScore } from '../utils/storage';
-import { Send, Sparkles, Bot, User as UserIcon, RefreshCw, Crown, Lock, ArrowRight, Zap, Lightbulb } from 'lucide-react';
+import { Send, Sparkles, Bot, User as UserIcon, RefreshCw, Crown, Lock, ArrowRight, Zap, Lightbulb, CalendarCheck, LifeBuoy, TrendingUp, Target, Repeat, Flag, Scale, Brain, Plus } from 'lucide-react';
 import { getIdToken } from '../lib/firebase';
+import { COACH_ACTIONS, clearChat, loadChat, saveChat } from '../lib/coachChat';
 
 interface AICoachSectionProps {
+  /** Chats are stored per account so users never see each other's thread. */
+  currentUser?: { uid: string } | null;
   profile: UserProfile;
   onOpenProModal: () => void;
 }
 
 export const AICoachSection: React.FC<AICoachSectionProps> = ({
   profile,
+  currentUser,
   onOpenProModal,
 }) => {
   const [chatInput, setChatInput] = useState('');
   const [messages, setMessages] = useState<CoachChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const userId = currentUser?.uid || null;
 
   const brainScore = calculateBrainScore(profile);
 
+  // Restore the saved conversation first. Without this the welcome message
+  // would overwrite an existing thread on every mount.
+  useEffect(() => {
+    const saved = loadChat(userId);
+    if (saved.length > 0) setMessages(saved);
+    setLoaded(true);
+  }, [userId]);
+
+  // Persist on every change so nothing is lost on refresh or navigation.
+  useEffect(() => {
+    if (!loaded) return;
+    saveChat(userId, messages);
+  }, [messages, loaded, userId]);
+
   // Initial welcome message
   useEffect(() => {
-    if (messages.length === 0) {
+    if (loaded && messages.length === 0) {
       const welcomeMessage: CoachChatMessage = {
         id: 'welcome_1',
         sender: 'coach',
@@ -33,7 +54,7 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
       };
       setMessages([welcomeMessage]);
     }
-  }, [brainScore, profile.currentDay]);
+  }, [brainScore, profile.currentDay, loaded]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -64,6 +85,11 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
     try {
       // The server verifies this token and reads Pro status from Firestore.
       const idToken = await getIdToken();
+      if (!idToken) {
+        throw new Error(
+          'You need to be signed in with Google or email to use the AI Coach. Guest mode has no account to verify.'
+        );
+      }
       const res = await fetch('/api/coach', {
         method: 'POST',
         headers: {
@@ -113,12 +139,29 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
     }
   };
 
-  const suggestionChips = [
-    'Analyze my memory span metrics',
-    'How do I beat Stroop interference?',
-    'Recommend my Day 1 workout plan',
-    'How should I structure a session?',
-  ];
+  const startNewChat = () => {
+    soundFx.playClick();
+    clearChat(userId);
+    setMessages([]);
+    setChatInput('');
+  };
+
+  const iconFor = (name: string) => {
+    const map: Record<string, any> = {
+      CalendarCheck,
+      LifeBuoy,
+      TrendingUp,
+      Target,
+      Repeat,
+      Flag,
+      Scale,
+      Brain,
+    };
+    return map[name] || Sparkles;
+  };
+
+  /** Cards only show on a fresh thread — once talking, they'd be clutter. */
+  const showActions = messages.length <= 1 && !isTyping;
 
   return (
     <div className="space-y-6 font-sans select-none">
@@ -240,19 +283,51 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
           <div ref={chatEndRef} />
         </div>
 
-        {/* Suggestion Chips */}
-        <div className="flex items-center gap-2 overflow-x-auto pt-2 border-t border-[#2A313C] scrollbar-none">
-          <Lightbulb className="w-4 h-4 text-amber-400 shrink-0" />
-          {suggestionChips.map((chip) => (
-            <button
-              key={chip}
-              onClick={() => handleSendMessage(chip)}
-              className="px-3 py-1.5 bg-[#171B22] hover:bg-[#212631] border border-[#2A313C] text-[#98A2B3] hover:text-white text-xs font-mono rounded-xl shrink-0 cursor-pointer transition-colors"
+        {/* Action cards — starting points on a fresh thread. Each sends a
+            real question so the coach has something specific to answer. */}
+        <AnimatePresence>
+          {showActions && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden"
             >
-              {chip}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-3 border-t border-[#2A313C]">
+                {COACH_ACTIONS.map((action) => {
+                  const Icon = iconFor(action.icon);
+                  return (
+                    <button
+                      key={action.id}
+                      onClick={() => handleSendMessage(action.prompt)}
+                      className="eb-press eb-shine group text-left p-3 rounded-2xl bg-[#12161F] border border-[#2A313C] hover:border-[#8B5CF6]/45 transition-colors min-w-0"
+                    >
+                      <Icon className="w-4 h-4 text-[#A78BFA] mb-2" />
+                      <p className="text-xs font-bold text-[#F4F6F8] leading-snug">
+                        {action.title}
+                      </p>
+                      <p className="text-[10px] text-[#98A2B3] mt-0.5 leading-relaxed">
+                        {action.hint}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {messages.length > 1 && (
+          <div className="flex justify-end pt-2">
+            <button
+              onClick={startNewChat}
+              className="eb-press text-[10px] font-mono font-bold px-3 py-2 rounded-xl border border-[#2A313C] text-[#98A2B3] hover:text-[#F4F6F8] hover:border-[#3A424F] flex items-center gap-1.5"
+            >
+              <Plus className="w-3 h-3" />
+              New chat
             </button>
-          ))}
-        </div>
+          </div>
+        )}
 
         {/* Chat Input Field */}
         <div className="flex items-center gap-2 pt-2">

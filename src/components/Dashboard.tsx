@@ -558,7 +558,7 @@ export const Dashboard: React.FC<Props> = ({
             exit={{ opacity: 0, y: -15, scale: 0.98 }}
             transition={{ duration: 0.25 }}
           >
-            <AICoachSection profile={profile} onOpenProModal={onOpenProModal} />
+            <AICoachSection profile={profile} currentUser={currentUser} onOpenProModal={onOpenProModal} />
           </motion.div>
         )}
 

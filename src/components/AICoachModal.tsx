@@ -70,6 +70,11 @@ export const AICoachModal: React.FC<Props> = ({
     try {
       // The server verifies this token and reads Pro status from Firestore.
       const idToken = await getIdToken();
+      if (!idToken) {
+        throw new Error(
+          'You need to be signed in with Google or email to use the AI Coach. Guest mode has no account to verify.'
+        );
+      }
       const res = await fetch('/api/coach', {
         method: 'POST',
         headers: {

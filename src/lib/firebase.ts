@@ -747,7 +747,30 @@ export type { User };
  */
 export async function getIdToken(): Promise<string | null> {
   try {
-    const user = auth?.currentUser;
+    if (!auth) return null;
+
+    // auth.currentUser is null until Firebase finishes restoring the session
+    // from storage. Reading it immediately after page load returned null for a
+    // signed-in user, so the request went out unauthenticated and the server
+    // answered "please sign in".
+    let user = auth.currentUser;
+    if (!user) {
+      if (typeof (auth as any).authStateReady === 'function') {
+        await (auth as any).authStateReady();
+        user = auth.currentUser;
+      } else {
+        // Older SDKs: resolve on the first auth state emission.
+        user = await new Promise((resolve) => {
+          const timer = setTimeout(() => resolve(null), 4000);
+          const unsub = onAuthStateChanged(auth, (u) => {
+            clearTimeout(timer);
+            unsub();
+            resolve(u);
+          });
+        });
+      }
+    }
+
     if (!user) return null;
     return await user.getIdToken();
   } catch (err) {

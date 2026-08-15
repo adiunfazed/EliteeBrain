@@ -256,7 +256,13 @@ async function startServer() {
       }
 
       if (!verified) {
-        return res.status(401).json({ error: 'Please sign in to use the AI Coach.' });
+        // Distinguish "no token sent" from "token rejected" — they need
+        // different fixes and the generic message hid which was happening.
+        return res.status(401).json({
+          error: idToken
+            ? 'Your session has expired. Sign out and back in, then try again.'
+            : 'Sign-in did not reach the server. Refresh the page and try again.',
+        });
       }
 
       if (!verified.isPro) {
