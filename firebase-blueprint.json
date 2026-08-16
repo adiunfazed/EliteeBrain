@@ -1,0 +1,52 @@
+{
+  "entities": {
+    "users": {
+      "title": "User Profiles & Brain Training Data",
+      "description": "Stores user cognitive scores, daily streak history, module levels, pro membership status, and completion progress",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "brainScore": { "type": "number" },
+        "streak": { "type": "number" },
+        "isProUser": { "type": "boolean" },
+        "proExpiresAt": { "type": "string" },
+        "profileData": { "type": "object" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["uid"]
+    },
+    "payment_requests": {
+      "title": "Direct UPI Payment Verification Requests",
+      "description": "Stores customer payment submissions with UTR/Ref numbers for cloud verification",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "userName": { "type": "string" },
+        "plan": { "type": "string" },
+        "amountINR": { "type": "number" },
+        "utrNumber": { "type": "string" },
+        "status": { "type": "string", "enum": ["PENDING", "APPROVED", "REJECTED"] },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "reviewedAt": { "type": "string" },
+        "reviewedBy": { "type": "string" }
+      },
+      "required": ["id", "userId", "utrNumber", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "users",
+      "description": "User account documents containing profile and pro membership status"
+    },
+    "/payment_requests/{requestId}": {
+      "schema": "payment_requests",
+      "description": "Direct UPI customer payment verifications queue"
+    }
+  }
+}
