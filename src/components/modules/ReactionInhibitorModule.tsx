@@ -227,7 +227,7 @@ export const ReactionInhibitorModule: React.FC<Props> = ({ currentLevel, onFinis
             </span>
             <div className="text-6xl font-black font-mono text-teal-300 mb-2">{lastMs} ms</div>
             <p className="text-xs text-slate-400">
-              {lastMs < 200 ? '⚡ Cyberpunk Speed (<200ms)!' : lastMs < 240 ? '🔥 Pro Athlete Level!' : '👍 Good Reflexes!'}
+              {lastMs < 200 ? '⚡ Cyberpunk Speed (<200ms)!' : lastMs < 240 ? 'Pro Athlete Level!' : '👍 Good Reflexes!'}
             </p>
           </div>
         )}

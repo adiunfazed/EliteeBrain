@@ -252,3 +252,89 @@
   .eb-btn-primary:hover, .eb-btn-ghost:hover,
   .eb-btn-primary:active, .eb-btn-ghost:active { transform: none; }
 }
+
+/* ==================================================================
+   Surface system
+   Derived from the reference set: flat colour, generous radius, tight
+   spacing, one confident accent. Deliberately no gradients on content
+   surfaces — the "AI look" comes from gradient-on-everything, and
+   flat blocks read as more considered.
+   ================================================================== */
+
+/* --- Card: the single container primitive. --- */
+.eb-card {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 20px;
+}
+.eb-card-sunk {
+  background: var(--surface-sunk);
+  border: 1px solid var(--rule);
+  border-radius: 16px;
+}
+
+/* --- Interactive card: lifts and borrows the accent on hover. --- */
+.eb-card-tap {
+  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.18s ease, background-color 0.18s ease;
+}
+.eb-card-tap:hover { border-color: color-mix(in oklab, var(--signal) 45%, var(--rule)); }
+.eb-card-tap:active { transform: scale(0.985); }
+
+/* --- Stat block: small uppercase label, large tabular number. --- */
+.eb-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+.eb-stat {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  line-height: 1;
+}
+
+/* --- Section heading: confident, tight, not shouty. --- */
+.eb-heading {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+/* --- Solid accent tiles, as in the habit-tracker reference. Flat, not
+       gradient, so several can sit together without competing. --- */
+.eb-tile-violet { background: #6D4AFF; color: #fff; }
+.eb-tile-coral  { background: #F0655A; color: #fff; }
+.eb-tile-amber  { background: #E8A33D; color: #1A1205; }
+.eb-tile-teal   { background: #17A398; color: #fff; }
+.eb-tile-slate  { background: #3C4454; color: #fff; }
+
+/* --- Week strip day, from references 2 and 5. --- */
+.eb-day {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.18s ease;
+}
+.eb-day-on { background: var(--signal); color: #fff; }
+.eb-day-today { box-shadow: inset 0 0 0 2px var(--signal); color: var(--signal); }
+.eb-day-off { background: var(--surface-sunk); color: var(--ink-muted); }
+
+/* --- Progress bar: thin, flat, no glow. --- */
+.eb-bar { height: 6px; border-radius: 999px; background: var(--surface-sunk); overflow: hidden; }
+.eb-bar-fill { height: 100%; border-radius: 999px; background: var(--signal); }
+
+/* Tighter rhythm. The references are noticeably denser than default
+   Tailwind spacing, which is what makes them feel designed. */
+.eb-stack > * + * { margin-top: 10px; }
+.eb-stack-lg > * + * { margin-top: 18px; }

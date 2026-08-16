@@ -31,7 +31,7 @@ export const AICoachModal: React.FC<Props> = ({
       const welcomeMessage: CoachChatMessage = {
         id: 'welcome_1',
         sender: 'coach',
-        text: `Hi 👋\n\nI'm your training coach. I can see your scores so far (index ${brainScore}, day ${profile.currentDay} of 30) and help you decide what to work on.\n\nWhat would you like help with?`,
+        text: `Hi\n\nI'm your training coach. I can see your scores so far (index ${brainScore}, day ${profile.currentDay} of 30) and help you decide what to work on.\n\nWhat would you like help with?`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setMessages([welcomeMessage]);

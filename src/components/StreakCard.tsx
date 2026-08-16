@@ -16,14 +16,14 @@ export const StreakCard: React.FC<Props> = ({ input }) => {
   const streak = useMemo(() => computeStreak(input), [input]);
 
   return (
-    <div className="bg-[#0E1116] border border-[#2A313C] rounded-2xl p-4 sm:p-5">
+    <div className="eb-card p-4 sm:p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <span className="text-[10px] font-mono font-bold text-[#98A2B3] tracking-widest uppercase flex items-center gap-1.5">
+          <span className="eb-label flex items-center gap-1.5">
             <Flame className={`w-3 h-3 ${streak.current > 0 ? 'text-orange-400' : 'text-[#5A6472]'}`} />
             Streak
           </span>
-          <p className="text-2xl font-black font-mono text-[#F4F6F8] tabular-nums mt-1">
+          <p className="eb-stat text-3xl mt-1.5">
             {streak.current}
             <span className="text-xs font-bold text-[#5A6472] ml-2">
               {streak.current === 1 ? 'day' : 'days'}
@@ -52,14 +52,14 @@ export const StreakCard: React.FC<Props> = ({ input }) => {
             <motion.div
               initial={false}
               animate={{ scale: d.isToday ? 1.06 : 1 }}
-              className={`w-full aspect-square max-w-[42px] rounded-xl border flex items-center justify-center ${
+              className={`eb-day w-full aspect-square max-w-[44px] text-xs ${
                 d.active
-                  ? 'bg-[#8B5CF6] border-[#8B5CF6] text-white shadow-[0_0_16px_-4px_rgba(139,92,246,0.9)]'
+                  ? 'eb-day-on'
                   : d.isToday
-                    ? 'bg-[#171B22] border-[#8B5CF6]/50 text-[#A78BFA]'
+                    ? 'eb-day-today'
                     : d.isFuture
-                      ? 'bg-transparent border-[#20252E] text-[#3A424F]'
-                      : 'bg-[#0B0E13] border-[#2A313C] text-[#5A6472]'
+                      ? 'bg-transparent text-[#3A424F]'
+                      : 'eb-day-off'
               }`}
             >
               {d.active ? (

@@ -133,7 +133,7 @@ export const TodayPane: React.FC<Props> = ({
   return (
     <div className="space-y-4">
       {/* Progress header */}
-      <div className="bg-[#0E1116] border border-[#2A313C] rounded-2xl p-4 sm:p-5 flex items-center gap-4">
+      <div className="eb-card p-4 sm:p-5 flex items-center gap-4">
         <div className="relative w-16 h-16 shrink-0">
           <svg viewBox="0 0 44 44" className="w-full h-full -rotate-90">
             <circle cx="22" cy="22" r="19" fill="none" stroke="#171B22" strokeWidth="4" />
@@ -156,10 +156,10 @@ export const TodayPane: React.FC<Props> = ({
           </span>
         </div>
         <div className="min-w-0">
-          <p className="text-[10px] font-mono font-bold text-[#98A2B3] tracking-widest uppercase truncate">
+          <p className="eb-label truncate">
             {new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}
           </p>
-          <p className="text-xl sm:text-2xl font-black font-mono text-[#F4F6F8] tabular-nums mt-0.5">
+          <p className="eb-stat text-2xl sm:text-3xl mt-1">
             {doneCount} / {totalCount}
             <span className="text-xs font-bold text-[#5A6472] ml-2">done today</span>
           </p>
@@ -194,7 +194,7 @@ export const TodayPane: React.FC<Props> = ({
       {day.length > 0 && (
         <div>
           <div className="flex items-center justify-between gap-2 mb-2">
-            <span className="text-[10px] font-mono font-bold text-[#98A2B3] tracking-widest uppercase">
+            <span className="eb-label">
               Your routine
             </span>
             <span className="text-[10px] font-mono text-[#5A6472] tabular-nums">
@@ -206,7 +206,7 @@ export const TodayPane: React.FC<Props> = ({
               <motion.div
                 key={block.id}
                 layout
-                className={`eb-shine relative overflow-hidden rounded-2xl border p-3 flex items-center gap-3 ${
+                className={`eb-card-tap relative overflow-hidden rounded-2xl border p-3.5 flex items-center gap-3 ${
                   state === 'done'
                     ? 'bg-emerald-500/[0.07] border-emerald-500/25'
                     : state === 'partial'
@@ -250,56 +250,80 @@ export const TodayPane: React.FC<Props> = ({
         </div>
       )}
 
-      {/* Habits */}
+      {/* Habits — colour tiles, scannable at a glance. */}
       {activeHabits.length > 0 && (
         <div>
-          <span className="text-[10px] font-mono font-bold text-[#98A2B3] tracking-widest uppercase">
-            Your habits
-          </span>
-          <div className="space-y-2 mt-2">
-            {activeHabits.map((habit) => {
+          <span className="eb-label">Your habits</span>
+
+          <div className="flex gap-2.5 overflow-x-auto no-scrollbar mt-2 -mx-1 px-1 pb-1">
+            {activeHabits.map((habit, i) => {
               const stats = habitStats(habit, localHabits, today);
+              const pct = Math.min(1, stats.todayValue / stats.target);
+              const tints = ['eb-tile-violet', 'eb-tile-coral', 'eb-tile-amber', 'eb-tile-teal', 'eb-tile-slate'];
+              const tint = tints[i % tints.length];
               return (
-                <motion.div
+                <button
                   key={habit.id}
-                  layout
-                  className={`eb-shine rounded-2xl border p-3 flex items-center gap-3 ${
-                    stats.completedToday
-                      ? 'bg-emerald-500/[0.07] border-emerald-500/25'
-                      : 'bg-[#0E1116] border-[#2A313C]'
+                  onClick={() => toggleHabit(habit)}
+                  className={`eb-card-tap shrink-0 w-[132px] rounded-2xl p-3.5 text-left ${
+                    stats.completedToday ? tint : 'eb-card-sunk'
                   }`}
                 >
-                  <Tick
-                    done={stats.completedToday}
-                    onClick={() => toggleHabit(habit)}
-                    label={`Mark ${habit.title}`}
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-bold text-[#F4F6F8] break-words">{habit.title}</p>
-                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                      {habit.metric !== 'yes_no' && (
-                        <span className="text-[10px] font-mono text-[#98A2B3]">
-                          {stats.todayValue} / {describeTarget(habit)}
-                        </span>
+                  <div className="flex items-start justify-between gap-2">
+                    <span
+                      className={`w-7 h-7 rounded-lg flex items-center justify-center ${
+                        stats.completedToday ? 'bg-black/20' : 'bg-[#0E1116]'
+                      }`}
+                    >
+                      {stats.completedToday ? (
+                        <Check className="w-4 h-4 stroke-[3]" />
+                      ) : (
+                        <Target className="w-3.5 h-3.5 text-[#98A2B3]" />
                       )}
-                      {stats.currentStreak > 1 && (
-                        <span className="text-[10px] font-mono text-orange-300 flex items-center gap-1">
-                          <Flame className="w-2.5 h-2.5" />
-                          {stats.currentStreak}
-                        </span>
-                      )}
-                      {habit.goalId && goalTitle(habit.goalId) && (
-                        <span className="text-[10px] font-mono text-[#A78BFA] flex items-center gap-1 truncate">
-                          <Target className="w-2.5 h-2.5 shrink-0" />
-                          {goalTitle(habit.goalId)}
-                        </span>
-                      )}
-                    </div>
+                    </span>
+                    {stats.currentStreak > 1 && (
+                      <span className="text-[10px] font-mono font-bold flex items-center gap-0.5 opacity-80">
+                        <Flame className="w-2.5 h-2.5" />
+                        {stats.currentStreak}
+                      </span>
+                    )}
                   </div>
-                </motion.div>
+
+                  <p
+                    className={`text-sm font-bold mt-3 leading-snug break-words ${
+                      stats.completedToday ? '' : 'text-[#F4F6F8]'
+                    }`}
+                  >
+                    {habit.title}
+                  </p>
+
+                  <div
+                    className={`eb-bar mt-2 ${stats.completedToday ? 'bg-black/20' : ''}`}
+                  >
+                    <motion.div
+                      className={`eb-bar-fill ${stats.completedToday ? 'bg-white/80' : ''}`}
+                      initial={false}
+                      animate={{ width: `${pct * 100}%` }}
+                      transition={{ duration: 0.4, ease: 'easeOut' }}
+                    />
+                  </div>
+
+                  <p
+                    className={`text-[10px] font-mono mt-1.5 ${
+                      stats.completedToday ? 'opacity-75' : 'text-[#98A2B3]'
+                    }`}
+                  >
+                    {habit.metric === 'yes_no'
+                      ? stats.completedToday
+                        ? 'Done'
+                        : 'Not yet'
+                      : `${stats.todayValue} / ${describeTarget(habit)}`}
+                  </p>
+                </button>
               );
             })}
           </div>
+
         </div>
       )}
 
@@ -307,7 +331,7 @@ export const TodayPane: React.FC<Props> = ({
       {topTasks.length > 0 && (
         <div>
           <div className="flex items-center justify-between gap-2 mb-2">
-            <span className="text-[10px] font-mono font-bold text-[#98A2B3] tracking-widest uppercase">
+            <span className="eb-label">
               Top tasks
             </span>
             <button

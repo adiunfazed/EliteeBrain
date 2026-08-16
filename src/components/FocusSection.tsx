@@ -173,8 +173,8 @@ export const FocusSection: React.FC<Props> = ({ userId, incomingTask, onConsumeI
         animate={{ opacity: 1, scale: 1 }}
         className={`relative overflow-hidden rounded-2xl p-6 sm:p-10 text-center border transition-colors ${
           paused
-            ? 'bg-gradient-to-b from-[#12141A] to-[#0B0E13] border-[#2A313C]'
-            : 'bg-gradient-to-b from-[#0C1714] to-[#0B0E13] border-emerald-500/25 shadow-[0_0_50px_-20px_rgba(16,185,129,0.5)]'
+            ? 'bg-[#12141A] border-[#2A313C]'
+            : 'bg-[#0C1714] border-emerald-500/25 shadow-[0_0_50px_-20px_rgba(16,185,129,0.5)]'
         }`}
       >
         <p className="text-[10px] font-mono font-bold text-[#98A2B3] tracking-widest uppercase">
@@ -298,7 +298,7 @@ export const FocusSection: React.FC<Props> = ({ userId, incomingTask, onConsumeI
         )}
       </AnimatePresence>
 
-      <div className="eb-shine relative overflow-hidden bg-gradient-to-br from-[#111623] to-[#0E1116] border border-[#2A313C] rounded-2xl p-4 space-y-4">
+      <div className="eb-shine relative overflow-hidden bg-[#121722] border border-[#2A313C] rounded-2xl p-4 space-y-4">
         <div>
           <p className="text-[10px] font-mono font-bold text-[#98A2B3] tracking-widest uppercase mb-2">
             What are you working on?

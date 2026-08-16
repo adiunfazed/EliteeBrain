@@ -334,16 +334,16 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
           task.completed
             ? 'bg-[#0B0E13] border-[#20252E]'
             : highlight
-              ? 'bg-gradient-to-br from-[#141A28] to-[#0E1116] border-[#8B5CF6]/40 eb-glow-brand'
+              ? 'bg-[#141A28] border-[#8B5CF6]/40 eb-glow-brand'
               : task.priority === 'critical' || task.priority === 'high'
-                ? 'bg-gradient-to-br from-[#1A1216] to-[#0E1116] border-[#2A313C] hover:border-rose-500/40 eb-glow-rose'
+                ? 'bg-[#17121A] border-[#2A313C] hover:border-rose-500/40 eb-glow-rose'
                 : task.category === 'fitness'
-                  ? 'bg-gradient-to-br from-[#191509] to-[#0E1116] border-[#2A313C] hover:border-amber-500/40 eb-glow-amber'
+                  ? 'bg-[#181408] border-[#2A313C] hover:border-amber-500/40 eb-glow-amber'
                   : task.category === 'personal'
-                    ? 'bg-gradient-to-br from-[#0C1714] to-[#0E1116] border-[#2A313C] hover:border-emerald-500/40 eb-glow-emerald'
+                    ? 'bg-[#0C1714] border-[#2A313C] hover:border-emerald-500/40 eb-glow-emerald'
                     : task.category === 'work'
-                      ? 'bg-gradient-to-br from-[#0B1620] to-[#0E1116] border-[#2A313C] hover:border-sky-500/40 eb-glow-sky'
-                      : 'bg-gradient-to-br from-[#111623] to-[#0E1116] border-[#2A313C] hover:border-[#8B5CF6]/40 eb-glow-brand'
+                      ? 'bg-[#0B1620] border-[#2A313C] hover:border-sky-500/40 eb-glow-sky'
+                      : 'bg-[#121722] border-[#2A313C] hover:border-[#8B5CF6]/40 eb-glow-brand'
         }`}
       >
         {!task.completed && (
