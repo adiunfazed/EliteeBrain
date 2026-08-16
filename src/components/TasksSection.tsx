@@ -549,7 +549,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
   return (
     <div className="space-y-4">
       {/* TODAY header */}
-      <div className="bg-[#0E1116] border border-[#2A313C] rounded-2xl p-4 sm:p-5 flex items-center gap-4">
+      <div className="eb-card p-4 sm:p-5 flex items-center gap-4">
         <div className="relative w-16 h-16 shrink-0">
           <svg viewBox="0 0 44 44" className="w-full h-full -rotate-90">
             <circle cx="22" cy="22" r="19" fill="none" stroke="#171B22" strokeWidth="4" />
@@ -573,7 +573,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-mono font-bold text-[#98A2B3] tracking-widest uppercase truncate">
+          <p className="eb-label truncate">
             {new Date().toLocaleDateString(undefined, {
               weekday: 'long',
               month: 'long',
@@ -622,7 +622,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
       )}
 
       {/* Quick add */}
-      <div className="bg-[#0E1116] border border-[#2A313C] rounded-2xl p-3.5 sm:p-4">
+      <div className="eb-card p-3.5 sm:p-4">
         <div className="flex items-center gap-2">
           <input
             ref={inputRef}
@@ -846,7 +846,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
           {tab === 'today' &&
             visible.some((t) => t.pinned) &&
             visible.some((t) => !t.pinned) && (
-              <p className="text-[10px] font-mono font-bold text-[#5A6472] tracking-widest uppercase pt-2">
+              <p className="eb-label pt-2">
                 Everything else
               </p>
             )}
@@ -880,7 +880,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
               initial={{ opacity: 0, y: 12, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 8, scale: 0.98 }}
-              className="pointer-events-auto bg-[#171B22] border border-[#2A313C] rounded-xl px-3.5 py-2.5 shadow-xl flex items-center gap-3"
+              className="pointer-events-auto eb-card-sunk px-3.5 py-2.5 shadow-xl flex items-center gap-3"
             >
               <span className="text-[11px] text-[#F4F6F8] flex-1 min-w-0">{t.message}</span>
               {t.undo && (

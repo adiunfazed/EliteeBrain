@@ -413,61 +413,39 @@ export const Dashboard: React.FC<Props> = ({
           >
             <DailyChallengeCard profile={profile} onLaunchModule={onLaunchModule} />
 
-            {/* Exercises Header Banner */}
-            <div className="bg-[#12161F] border border-[#2A313C] rounded-3xl p-5 md:p-6 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-              <div>
-                <Eyebrow>EXECUTIVE COGNITIVE EXERCISES</Eyebrow>
-                <h2 className="text-xl md:text-2xl font-display font-extrabold text-white mt-1">
-                  8 Domain Training Exercises
-                </h2>
-                <p className="text-xs text-[#98A2B3] mt-1 leading-relaxed max-w-xl">
-                  Select any domain module below to initiate a focused training session. Launch daily sessions to build skills.
-                </p>
-              </div>
+            {/* Compact action row. The old banner explained what a tap does
+                and repeated the section title — bulk with no function. */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                onClick={() => {
+                  soundFx.playClick();
+                  onLaunchModule(nextPendingModule.id);
+                }}
+                className="eb-btn-primary flex-1 min-w-[200px] px-4 py-3 text-xs font-mono uppercase tracking-wide flex items-center justify-center gap-2"
+              >
+                {isDailyComplete ? 'Replay next' : `Train ${nextPendingModule.name}`}
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
 
-              <div className="flex flex-wrap items-center gap-2 w-full md:w-auto shrink-0">
-                <Button
-                  variant="primary"
-                  className="font-mono text-xs uppercase shadow-md"
-                  onClick={() => {
-                    soundFx.playClick();
-                    onLaunchModule(nextPendingModule.id);
-                  }}
-                >
-                  {isDailyComplete ? 'Replay Next Exercise →' : `Train ${nextPendingModule.name} →`}
-                </Button>
-
-                {/* Toggle View Switch */}
-                <div className="flex items-center gap-1 p-1 bg-[#171B22] border border-[#2A313C] rounded-2xl text-xs font-mono">
+              <div className="flex items-center gap-1 p-1 eb-card-sunk shrink-0">
+                {([
+                  { id: 'grid' as const, icon: LayoutGrid, label: 'Cards' },
+                  { id: 'roster' as const, icon: List, label: 'List' },
+                ]).map(({ id, icon: Icon, label }) => (
                   <button
+                    key={id}
                     onClick={() => {
                       soundFx.playClick();
-                      setViewMode('grid');
+                      setViewMode(id);
                     }}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl cursor-pointer transition-colors ${
-                      viewMode === 'grid'
-                        ? 'bg-[#8B5CF6] text-white font-bold shadow-xs'
-                        : 'text-[#98A2B3] hover:text-white'
+                    className={`eb-press flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono font-bold ${
+                      viewMode === id ? 'eb-chip-active' : 'text-[#8A93A5] hover:text-white'
                     }`}
                   >
-                    <LayoutGrid className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">Cards</span>
+                    <Icon className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">{label}</span>
                   </button>
-                  <button
-                    onClick={() => {
-                      soundFx.playClick();
-                      setViewMode('roster');
-                    }}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl cursor-pointer transition-colors ${
-                      viewMode === 'roster'
-                        ? 'bg-[#8B5CF6] text-white font-bold shadow-xs'
-                        : 'text-[#98A2B3] hover:text-white'
-                    }`}
-                  >
-                    <List className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">Roster</span>
-                  </button>
-                </div>
+                ))}
               </div>
             </div>
 
@@ -589,9 +567,6 @@ export const Dashboard: React.FC<Props> = ({
               <h2 className="text-lg sm:text-xl font-black text-[#F4F6F8] font-mono tracking-tight">
                 Plan and execute
               </h2>
-              <p className="text-[11px] sm:text-xs text-[#98A2B3] mt-1 leading-relaxed">
-                Decide what matters today, then work through it.
-              </p>
             </div>
 
             {/* Each tab states what it is FOR, not just what it's called —

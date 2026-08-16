@@ -426,7 +426,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
                   ].map((s) => (
                     <div
                       key={s.label}
-                      className="bg-[#171B22] border border-[#2A313C] rounded-xl p-2 text-center"
+                      className="eb-card-sunk p-2 text-center"
                     >
                       <p className="text-base font-black font-mono text-[#F4F6F8] tabular-nums leading-none">
                         {s.value}
@@ -478,7 +478,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
     const linked = habits.filter((h) => h.goalId === goal.id);
 
     return (
-      <div className="bg-[#0E1116] border border-[#2A313C] rounded-2xl p-4 space-y-3">
+      <div className="eb-card p-4 space-y-3">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             {editingGoalId === goal.id ? (

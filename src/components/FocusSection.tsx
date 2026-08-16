@@ -177,7 +177,7 @@ export const FocusSection: React.FC<Props> = ({ userId, incomingTask, onConsumeI
             : 'bg-[#0C1714] border-emerald-500/25 shadow-[0_0_50px_-20px_rgba(16,185,129,0.5)]'
         }`}
       >
-        <p className="text-[10px] font-mono font-bold text-[#98A2B3] tracking-widest uppercase">
+        <p className="eb-label">
           {paused ? 'Paused' : 'Focusing on'}
         </p>
         <p className="text-sm sm:text-base font-bold text-[#F4F6F8] mt-2 break-words max-w-md mx-auto">
@@ -300,7 +300,7 @@ export const FocusSection: React.FC<Props> = ({ userId, incomingTask, onConsumeI
 
       <div className="eb-shine relative overflow-hidden bg-[#121722] border border-[#2A313C] rounded-2xl p-4 space-y-4">
         <div>
-          <p className="text-[10px] font-mono font-bold text-[#98A2B3] tracking-widest uppercase mb-2">
+          <p className="eb-label mb-2">
             What are you working on?
           </p>
 
@@ -340,7 +340,7 @@ export const FocusSection: React.FC<Props> = ({ userId, incomingTask, onConsumeI
         </div>
 
         <div>
-          <p className="text-[10px] font-mono font-bold text-[#98A2B3] tracking-widest uppercase mb-2">
+          <p className="eb-label mb-2">
             For how long?
           </p>
           <div className="flex items-center gap-2 flex-wrap">

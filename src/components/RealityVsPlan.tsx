@@ -20,8 +20,8 @@ export const RealityVsPlan: React.FC<Props> = ({ input }) => {
   const signals = useMemo(() => adaptiveSignals(input), [input]);
 
   return (
-    <div className="bg-[#0E1116] border border-[#2A313C] rounded-2xl p-4 sm:p-5">
-      <span className="text-[10px] font-mono font-bold text-[#98A2B3] tracking-widest uppercase flex items-center gap-1.5">
+    <div className="eb-card p-4 sm:p-5">
+      <span className="eb-label flex items-center gap-1.5">
         <Scale className="w-3 h-3 text-[#A78BFA]" />
         Plan vs reality · 7 days
       </span>
@@ -77,7 +77,7 @@ export const RealityVsPlan: React.FC<Props> = ({ input }) => {
 
       {signals.length > 0 && (
         <div className="mt-4 pt-3.5 border-t border-[#2A313C] space-y-2">
-          <span className="text-[10px] font-mono font-bold text-[#98A2B3] tracking-widest uppercase flex items-center gap-1.5">
+          <span className="eb-label flex items-center gap-1.5">
             <Lightbulb className="w-3 h-3 text-amber-400" />
             From your history
           </span>

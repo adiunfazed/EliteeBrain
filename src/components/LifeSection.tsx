@@ -197,9 +197,9 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
         <>
           {/* Today's adherence */}
           {adherence.total > 0 && (
-            <div className="bg-[#0E1116] border border-[#2A313C] rounded-2xl p-4">
+            <div className="eb-card p-4">
               <div className="flex items-center justify-between gap-3">
-                <span className="text-[10px] font-mono font-bold text-[#98A2B3] tracking-widest uppercase">
+                <span className="eb-label">
                   Today's routine
                 </span>
                 <span className="text-sm font-black font-mono text-[#F4F6F8] tabular-nums">
@@ -225,7 +225,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
           )}
 
           {/* Composer */}
-          <div className="bg-[#0E1116] border border-[#2A313C] rounded-2xl p-3.5 space-y-2.5">
+          <div className="eb-card p-3.5 space-y-2.5">
             <div className="flex items-center gap-2">
               <input
                 value={title}
@@ -503,10 +503,10 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
 
       {pane === 'sleep' && (
         <div className="space-y-4">
-          <div className="bg-[#0E1116] border border-[#2A313C] rounded-2xl p-4">
+          <div className="eb-card p-4">
             <div className="flex items-center gap-1.5">
               <Moon className="w-3.5 h-3.5 text-indigo-300" />
-              <span className="text-[10px] font-mono font-bold text-[#98A2B3] tracking-widest uppercase">
+              <span className="eb-label">
                 Last night
               </span>
             </div>
@@ -564,7 +564,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                 ].map((s) => (
                   <div
                     key={s.label}
-                    className="bg-[#0E1116] border border-[#2A313C] rounded-2xl p-3 text-center min-w-0"
+                    className="eb-card p-3 text-center min-w-0"
                   >
                     <p className="text-lg font-black font-mono text-[#F4F6F8] tabular-nums leading-none">
                       {s.value}
@@ -575,8 +575,8 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
               </div>
 
               {/* Duration history */}
-              <div className="bg-[#0E1116] border border-[#2A313C] rounded-2xl p-4">
-                <span className="text-[10px] font-mono font-bold text-[#98A2B3] tracking-widest uppercase flex items-center gap-1.5">
+              <div className="eb-card p-4">
+                <span className="eb-label flex items-center gap-1.5">
                   <TrendingUp className="w-3 h-3" />
                   Sleep history
                 </span>

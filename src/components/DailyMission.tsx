@@ -73,7 +73,7 @@ export const DailyMission: React.FC<MissionProps> = ({
   const allDone = complete === goals.length;
 
   return (
-    <div className="bg-[#0E1116] border border-[#2A313C] rounded-2xl p-4 sm:p-5">
+    <div className="eb-card p-4 sm:p-5">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="min-w-0">
           <h3 className="text-sm sm:text-base font-black text-[#F4F6F8] font-mono tracking-tight">

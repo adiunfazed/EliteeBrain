@@ -105,7 +105,7 @@ export const ProgressSection: React.FC<Props> = ({ profile, userId }) => {
           return (
             <div
               key={t.label}
-              className="bg-[#0E1116] border border-[#2A313C] rounded-2xl p-3.5 min-w-0"
+              className="eb-card p-3.5 min-w-0"
             >
               <div className="flex items-center gap-1.5">
                 <Icon className={`w-3.5 h-3.5 shrink-0 ${t.tint}`} />
@@ -148,7 +148,7 @@ export const ProgressSection: React.FC<Props> = ({ profile, userId }) => {
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.03, duration: 0.2 }}
-                className="bg-[#0E1116] border border-[#2A313C] rounded-2xl p-3.5 flex items-center justify-between gap-3"
+                className="eb-card p-3.5 flex items-center justify-between gap-3"
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">

@@ -36,7 +36,7 @@ export const DailyChallengeCard: React.FC<Props> = ({ profile, onLaunchModule })
           <Target
             className={`w-4 h-4 shrink-0 ${completed ? 'text-emerald-400' : 'text-rose-400'}`}
           />
-          <span className="text-[10px] font-mono font-bold text-[#98A2B3] tracking-widest uppercase">
+          <span className="eb-label">
             Today's challenge
           </span>
         </div>

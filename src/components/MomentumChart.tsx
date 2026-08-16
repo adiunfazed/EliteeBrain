@@ -50,10 +50,10 @@ export const MomentumChart: React.FC<Props> = ({ input }) => {
   const hasData = summary.current !== null;
 
   return (
-    <div className="bg-[#0E1116] border border-[#2A313C] rounded-2xl p-4 sm:p-5">
+    <div className="eb-card p-4 sm:p-5">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="min-w-0">
-          <span className="text-[10px] font-mono font-bold text-[#98A2B3] tracking-widest uppercase flex items-center gap-1.5">
+          <span className="eb-label flex items-center gap-1.5">
             <Activity className="w-3 h-3 text-[#A78BFA]" />
             Life Momentum
           </span>

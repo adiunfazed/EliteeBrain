@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  --font-display: "Bricolage Grotesque", sans-serif;
+  --font-display: "Clash Display", "Bricolage Grotesque", sans-serif;
   --font-sans: "Public Sans", system-ui, -apple-system, sans-serif;
   --font-mono: "Martian Mono", "JetBrains Mono", monospace;
 
@@ -12,6 +12,7 @@
   --color-ink-muted: var(--ink-muted);
   --color-rule: var(--rule);
   --color-signal: var(--signal);
+  --color-signal-ink: var(--signal-ink);
 
   --color-dom-memory: var(--dom-memory);
   --color-dom-focus: var(--dom-focus);
@@ -27,7 +28,8 @@
   --ink-muted: #647085;
   --rule: #D1D8E2;
 
-  --signal: #8B5CF6;
+  --signal: #7C5CFF;
+  --signal-ink: #5B3FD6;
 
   --dom-memory: #E11D48;
   --dom-focus: #8B5CF6;
@@ -36,14 +38,19 @@
 }
 
 .dark {
-  --ground: #0E1116;
-  --surface: #171B22;
-  --surface-sunk: #1E232D;
-  --ink: #F4F6F8;
-  --ink-muted: #98A2B3;
-  --rule: #2A313C;
+  /* 60% — base. The canvas and the cards sitting on it. */
+  --ground: #0B0D12;
+  --surface: #14171F;
+  --surface-sunk: #1B1F29;
 
-  --signal: #8B5CF6;
+  /* 30% — secondary. Text, rules, and structure. */
+  --ink: #F2F4F7;
+  --ink-muted: #8A93A5;
+  --rule: #262C38;
+
+  /* 10% — accent. Used sparingly: one primary action per view. */
+  --signal: #7C5CFF;
+  --signal-ink: #B9A6FF;
 
   --dom-memory: #F43F5E;
   --dom-focus: #8B5CF6;
@@ -254,87 +261,166 @@
 }
 
 /* ==================================================================
-   Surface system
-   Derived from the reference set: flat colour, generous radius, tight
-   spacing, one confident accent. Deliberately no gradients on content
-   surfaces — the "AI look" comes from gradient-on-everything, and
-   flat blocks read as more considered.
+   Neo-brutalist surface system
+
+   Principles taken from the references and the brief:
+   - Hard edges and solid offset shadows instead of soft blur. A blurred
+     drop shadow reads as a default; a solid offset reads as a decision.
+   - Flat colour only. No gradients on content.
+   - The accent occupies roughly a tenth of any view — one primary action.
+   - Type does the heavy lifting: Clash Display, tight tracking, real weight.
    ================================================================== */
 
-/* --- Card: the single container primitive. --- */
 .eb-card {
   background: var(--surface);
   border: 1px solid var(--rule);
-  border-radius: 20px;
+  border-radius: 18px;
 }
+
 .eb-card-sunk {
   background: var(--surface-sunk);
   border: 1px solid var(--rule);
-  border-radius: 16px;
+  border-radius: 14px;
 }
 
-/* --- Interactive card: lifts and borrows the accent on hover. --- */
-.eb-card-tap {
-  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
-    border-color 0.18s ease, background-color 0.18s ease;
+/* Solid offset shadow — the defining neo-brutalist detail. */
+.eb-raised {
+  box-shadow: 3px 3px 0 0 var(--rule);
+  transition: box-shadow 0.16s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.16s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.eb-card-tap:hover { border-color: color-mix(in oklab, var(--signal) 45%, var(--rule)); }
+.eb-raised:hover { box-shadow: 5px 5px 0 0 var(--signal); transform: translate(-2px, -2px); }
+.eb-raised:active { box-shadow: 1px 1px 0 0 var(--signal); transform: translate(1px, 1px); }
+
+.eb-card-tap {
+  transition: transform 0.16s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.16s ease, background-color 0.16s ease;
+}
+.eb-card-tap:hover { border-color: var(--signal); }
 .eb-card-tap:active { transform: scale(0.985); }
 
-/* --- Stat block: small uppercase label, large tabular number. --- */
+/* --- Type scale --- */
 .eb-label {
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--ink-muted);
 }
 .eb-stat {
   font-family: var(--font-display);
-  font-weight: 800;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
   color: var(--ink);
-  line-height: 1;
+  line-height: 0.95;
 }
-
-/* --- Section heading: confident, tight, not shouty. --- */
 .eb-heading {
   font-family: var(--font-display);
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
   color: var(--ink);
 }
 
-/* --- Solid accent tiles, as in the habit-tracker reference. Flat, not
-       gradient, so several can sit together without competing. --- */
-.eb-tile-violet { background: #6D4AFF; color: #fff; }
-.eb-tile-coral  { background: #F0655A; color: #fff; }
-.eb-tile-amber  { background: #E8A33D; color: #1A1205; }
-.eb-tile-teal   { background: #17A398; color: #fff; }
-.eb-tile-slate  { background: #3C4454; color: #fff; }
+/* --- Buttons --- */
+.eb-btn-primary {
+  background: var(--signal);
+  color: #fff;
+  border: 1px solid var(--signal);
+  border-radius: 14px;
+  font-weight: 700;
+  box-shadow: 3px 3px 0 0 rgba(0, 0, 0, 0.45);
+  transition: transform 0.14s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.14s ease,
+    filter 0.14s ease;
+}
+.eb-btn-primary:hover { filter: brightness(1.08); transform: translate(-1px, -1px); box-shadow: 4px 4px 0 0 rgba(0,0,0,0.5); }
+.eb-btn-primary:active { transform: translate(2px, 2px); box-shadow: 0 0 0 0 rgba(0,0,0,0.5); }
+.eb-btn-primary:disabled { opacity: 0.4; box-shadow: none; transform: none; filter: grayscale(0.5); }
 
-/* --- Week strip day, from references 2 and 5. --- */
+.eb-btn-ghost {
+  background: var(--surface-sunk);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  font-weight: 700;
+  transition: transform 0.14s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.16s ease;
+}
+.eb-btn-ghost:hover { border-color: var(--signal); transform: translate(-1px, -1px); }
+.eb-btn-ghost:active { transform: translate(1px, 1px); }
+
+.eb-chip-active {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: #fff;
+  box-shadow: 2px 2px 0 0 rgba(0, 0, 0, 0.4);
+}
+
+/* --- Solid tiles. Flat so several can coexist without competing. --- */
+.eb-tile-violet { background: #7C5CFF; color: #fff; }
+.eb-tile-coral  { background: #FF6B57; color: #fff; }
+.eb-tile-amber  { background: #FFB020; color: #1A1205; }
+.eb-tile-teal   { background: #00C2A8; color: #04231F; }
+.eb-tile-slate  { background: #384153; color: #fff; }
+
+/* --- Week strip --- */
 .eb-day {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 14px;
+  border-radius: 12px;
   font-family: var(--font-mono);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.18s ease;
+  transition: transform 0.16s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.16s ease;
 }
-.eb-day-on { background: var(--signal); color: #fff; }
-.eb-day-today { box-shadow: inset 0 0 0 2px var(--signal); color: var(--signal); }
+.eb-day-on { background: var(--signal); color: #fff; box-shadow: 2px 2px 0 0 rgba(0,0,0,0.35); }
+.eb-day-today { box-shadow: inset 0 0 0 2px var(--signal); color: var(--signal-ink); }
 .eb-day-off { background: var(--surface-sunk); color: var(--ink-muted); }
 
-/* --- Progress bar: thin, flat, no glow. --- */
+/* --- Progress --- */
 .eb-bar { height: 6px; border-radius: 999px; background: var(--surface-sunk); overflow: hidden; }
 .eb-bar-fill { height: 100%; border-radius: 999px; background: var(--signal); }
 
-/* Tighter rhythm. The references are noticeably denser than default
-   Tailwind spacing, which is what makes them feel designed. */
+/* --- Motion --- */
+@keyframes eb-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.eb-rise { animation: eb-rise 0.32s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+.eb-press { transition: transform 0.13s cubic-bezier(0.22, 1, 0.36, 1); }
+.eb-press:active { transform: scale(0.94); }
+
+.eb-shine { position: relative; overflow: hidden; }
+.eb-shine::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-120%) skewX(-18deg);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent);
+  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+.eb-shine:hover::after { transform: translateX(120%) skewX(-18deg); }
+
+.eb-press:focus-visible,
+.eb-raised:focus-visible,
+.eb-card-tap:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+
 .eb-stack > * + * { margin-top: 10px; }
 .eb-stack-lg > * + * { margin-top: 18px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .eb-raised, .eb-btn-primary, .eb-btn-ghost, .eb-card-tap, .eb-press, .eb-day { transition: none; }
+  .eb-raised:hover, .eb-raised:active,
+  .eb-btn-primary:hover, .eb-btn-primary:active,
+  .eb-btn-ghost:hover, .eb-btn-ghost:active,
+  .eb-card-tap:active, .eb-press:active { transform: none; }
+  .eb-rise { animation: none; }
+  .eb-shine::after { transition: none; }
+}

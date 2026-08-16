@@ -59,75 +59,7 @@ export const GamesSection: React.FC<{ profile: UserProfile; onProfileUpdate?: (p
     },
   ];
 
-  const renderGameBgWatermark = (id: string) => {
-    switch (id) {
-      case 'chess':
-        return (
-          <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-20 group-hover:opacity-30 transition-opacity">
-            <svg className="absolute -right-4 -bottom-6 w-56 h-56 text-rose-400" viewBox="0 0 100 100" fill="currentColor">
-              {/* Chessboard grid & Knight silhouette */}
-              <rect x="0" y="0" width="25" height="25" opacity="0.3" />
-              <rect x="50" y="0" width="25" height="25" opacity="0.3" />
-              <rect x="25" y="25" width="25" height="25" opacity="0.3" />
-              <rect x="75" y="25" width="25" height="25" opacity="0.3" />
-              <rect x="0" y="50" width="25" height="25" opacity="0.3" />
-              <rect x="50" y="50" width="25" height="25" opacity="0.3" />
-              <rect x="25" y="75" width="25" height="25" opacity="0.3" />
-              <rect x="75" y="75" width="25" height="25" opacity="0.3" />
-              {/* Crown / Knight outline */}
-              <path d="M35 85 L65 85 L60 65 L70 50 L55 50 L50 35 L45 50 L30 50 L40 65 Z" fill="currentColor" opacity="0.6" />
-            </svg>
-          </div>
-        );
-      case 'flow':
-        return (
-          <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-20 group-hover:opacity-30 transition-opacity">
-            <svg className="absolute -right-6 -bottom-6 w-56 h-56 text-blue-400" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="4">
-              {/* Interconnected flow lines */}
-              <path d="M10 20 H50 V60 H90" strokeDasharray="4 4" />
-              <path d="M20 80 V40 H80 V90" />
-              <circle cx="10" cy="20" r="6" fill="#60A5FA" />
-              <circle cx="90" cy="60" r="6" fill="#60A5FA" />
-              <circle cx="20" cy="80" r="6" fill="#3B82F6" />
-              <circle cx="80" cy="90" r="6" fill="#3B82F6" />
-            </svg>
-          </div>
-        );
-      case 'sliding':
-        return (
-          <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-20 group-hover:opacity-30 transition-opacity">
-            <svg className="absolute -right-4 -bottom-4 w-52 h-52 text-emerald-400" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="3">
-              {/* Puzzle grid tiles */}
-              <rect x="10" y="10" width="25" height="25" rx="4" />
-              <rect x="40" y="10" width="25" height="25" rx="4" />
-              <rect x="70" y="10" width="25" height="25" rx="4" />
-              <rect x="10" y="40" width="25" height="25" rx="4" />
-              <rect x="40" y="40" width="25" height="25" rx="4" fill="currentColor" fillOpacity="0.2" />
-              <rect x="70" y="40" width="25" height="25" rx="4" />
-              <rect x="10" y="70" width="25" height="25" rx="4" />
-              <rect x="40" y="70" width="25" height="25" rx="4" />
-            </svg>
-          </div>
-        );
-      case '2048':
-        return (
-          <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-20 group-hover:opacity-30 transition-opacity">
-            <svg className="absolute -right-2 -bottom-2 w-52 h-52 text-amber-400" viewBox="0 0 100 100" fill="currentColor">
-              {/* 2048 matrix tiles */}
-              <rect x="5" y="5" width="42" height="42" rx="8" opacity="0.3" />
-              <text x="26" y="32" fontSize="16" fontWeight="bold" textAnchor="middle" fill="currentColor">2</text>
-              <rect x="53" y="5" width="42" height="42" rx="8" opacity="0.4" />
-              <text x="74" y="32" fontSize="16" fontWeight="bold" textAnchor="middle" fill="currentColor">4</text>
-              <rect x="5" y="53" width="42" height="42" rx="8" opacity="0.5" />
-              <text x="26" y="80" fontSize="16" fontWeight="bold" textAnchor="middle" fill="currentColor">2048</text>
-              <rect x="53" y="53" width="42" height="42" rx="8" opacity="0.3" />
-            </svg>
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
+
 
   return (
     <div className="w-full pb-20">
@@ -142,62 +74,43 @@ export const GamesSection: React.FC<{ profile: UserProfile; onProfileUpdate?: (p
             className="w-full"
           >
             <div className="mb-8">
-              <h2 className="text-3xl font-display font-black text-white">Games Dashboard</h2>
-              <p className="text-[#98A2B3] font-mono text-sm mt-2">Engage in extended cognitive challenges</p>
+              <h2 className="eb-heading text-2xl sm:text-3xl">Games</h2>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:gap-5">
+            <div className="grid grid-cols-4 gap-2 sm:gap-3">
               {games.map((g, index) => {
                 const Icon = g.icon;
                 return (
                   <motion.button
                     key={g.id}
-                    initial={{ opacity: 0, y: 22, scale: 0.96 }}
-                    whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                    viewport={{ once: false, amount: 0.08 }}
-                    whileHover={{ y: -6, scale: 1.02 }}
-                    whileTap={{ scale: 0.95 }}
-                    transition={{
-                      type: 'spring',
-                      stiffness: 300,
-                      damping: 22,
-                      delay: Math.min(index * 0.04, 0.2),
-                    }}
+                    initial={{ opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: Math.min(index * 0.05, 0.2), ease: [0.22, 1, 0.36, 1] }}
                     onClick={() => {
                       soundFx.playClick();
                       setActiveGame(g.id as GameType);
                     }}
-                    className={`relative overflow-hidden text-left bg-gradient-to-br ${g.color} border rounded-3xl p-6 transition-all hover:shadow-[0_15px_30px_-5px_rgba(255,255,255,0.12)] hover:border-white/30 group cursor-pointer select-none`}
+                    className="eb-card eb-raised eb-shine group relative overflow-hidden text-left p-2.5 sm:p-4 cursor-pointer select-none min-w-0"
                   >
-                    {/* Game-specific Background Watermark */}
-                    {renderGameBgWatermark(g.id)}
+                    <span
+                      className={`inline-flex items-center justify-center w-9 h-9 sm:w-11 sm:h-11 rounded-xl eb-card-sunk ${g.iconColor}`}
+                    >
+                      <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </span>
 
-                    <div className="relative z-10">
-                      <div className="flex justify-between items-start mb-6">
-                        <div className={`p-3 rounded-2xl bg-[#0D1117]/90 backdrop-blur-md border border-[#2A313C] shadow-lg ${g.iconColor}`}>
-                          <Icon className="w-6 h-6" />
-                        </div>
-                        <span className="px-3 py-1 bg-[#0D1117]/90 backdrop-blur-md border border-[#2A313C] rounded-full text-[10px] font-mono font-bold text-white uppercase tracking-wider shadow-sm">
-                          {g.difficulty}
-                        </span>
-                      </div>
+                    <h3 className="eb-heading text-[11px] sm:text-sm mt-2.5 leading-tight break-words">
+                      {g.title}
+                    </h3>
 
-                      <div className="bg-[#0D1117]/50 backdrop-blur-xs p-3.5 rounded-2xl border border-white/5">
-                        <div className="flex justify-between items-center mb-1">
-                          <h3 className="text-2xl font-display font-extrabold text-white group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-slate-300 transition-all">
-                            {g.title}
-                          </h3>
-                          {g.id === 'chess' && (
-                            <span className="px-2.5 py-1 bg-amber-500/20 border border-amber-500/40 rounded-xl text-[11px] font-mono font-black text-amber-300 shadow-sm">
-                              {profile.chessElo || 1200} ELO
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs font-mono font-semibold text-[#98A2B3]">
-                          {g.subtitle}
-                        </p>
-                      </div>
-                    </div>
+                    <p className="hidden sm:block text-[10px] font-mono text-[#8A93A5] mt-1 leading-snug break-words">
+                      {g.subtitle}
+                    </p>
+
+                    {g.id === 'chess' && (
+                      <span className="mt-2 inline-block text-[9px] font-mono font-bold text-[#FFB020]">
+                        {profile.chessElo || 1200} ELO
+                      </span>
+                    )}
                   </motion.button>
                 );
               })}

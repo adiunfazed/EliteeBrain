@@ -26,8 +26,8 @@ export const WeeklyReviewSection: React.FC<Props> = ({ input }) => {
   return (
     <div className="space-y-4">
       {/* Life areas */}
-      <div className="bg-[#0E1116] border border-[#2A313C] rounded-2xl p-4 sm:p-5">
-        <span className="text-[10px] font-mono font-bold text-[#98A2B3] tracking-widest uppercase flex items-center gap-1.5">
+      <div className="eb-card p-4 sm:p-5">
+        <span className="eb-label flex items-center gap-1.5">
           <Compass className="w-3 h-3 text-[#A78BFA]" />
           Life areas · last 7 days
         </span>
@@ -66,8 +66,8 @@ export const WeeklyReviewSection: React.FC<Props> = ({ input }) => {
       </div>
 
       {/* Weekly review */}
-      <div className="bg-[#0E1116] border border-[#2A313C] rounded-2xl p-4 sm:p-5">
-        <span className="text-[10px] font-mono font-bold text-[#98A2B3] tracking-widest uppercase flex items-center gap-1.5">
+      <div className="eb-card p-4 sm:p-5">
+        <span className="eb-label flex items-center gap-1.5">
           <CalendarCheck className="w-3 h-3 text-emerald-400" />
           This week
         </span>
@@ -91,7 +91,7 @@ export const WeeklyReviewSection: React.FC<Props> = ({ input }) => {
               ].map((s) => (
                 <div
                   key={s.label}
-                  className="bg-[#171B22] border border-[#2A313C] rounded-xl p-2.5 min-w-0"
+                  className="eb-card-sunk p-2.5 min-w-0"
                 >
                   <p className="text-[9px] font-mono text-[#5A6472] truncate">{s.label}</p>
                   <p className="text-sm font-black font-mono text-[#F4F6F8] tabular-nums mt-0.5">

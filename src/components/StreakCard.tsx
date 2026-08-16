@@ -81,10 +81,6 @@ export const StreakCard: React.FC<Props> = ({ input }) => {
         ))}
       </div>
 
-      <p className="text-[10px] font-mono text-[#5A6472] mt-3 leading-relaxed">
-        A day counts when you complete a task, meet a habit, focus, tick a routine block or log
-        sleep.
-      </p>
     </div>
   );
 };

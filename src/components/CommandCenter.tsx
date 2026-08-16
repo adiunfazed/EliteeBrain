@@ -48,9 +48,9 @@ export const CommandCenter: React.FC<Props> = ({ input, displayName, onOpenHub, 
     nowMin < 12 * 60 ? 'Good morning' : nowMin < 17 * 60 ? 'Good afternoon' : 'Good evening';
 
   return (
-    <div className="bg-[#0E1116] border border-[#2A313C] rounded-2xl p-4 sm:p-5 space-y-4">
+    <div className="eb-card p-4 sm:p-5 space-y-4">
       <div>
-        <p className="text-[10px] font-mono font-bold text-[#98A2B3] tracking-widest uppercase">
+        <p className="eb-label">
           {new Date().toLocaleDateString(undefined, {
             weekday: 'long',
             day: 'numeric',

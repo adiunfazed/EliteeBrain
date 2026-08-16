@@ -356,11 +356,6 @@ export const TodayPane: React.FC<Props> = ({
         </div>
       )}
 
-      {!empty && (
-        <p className="text-[10px] font-mono text-[#5A6472] text-center leading-relaxed">
-          Tap a routine box repeatedly to cycle: done → partial → skipped.
-        </p>
-      )}
     </div>
   );
 };
