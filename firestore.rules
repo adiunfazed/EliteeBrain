@@ -81,6 +81,16 @@ service cloud.firestore {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
     }
 
+    // --- Leaderboard ---
+    // Readable by any signed-in user because it contains ONLY public fields
+    // (display name, XP, level). Never readable anonymously, and never
+    // writable from a client: entries are written exclusively by the server
+    // through the Admin SDK after recomputing XP from stored activity.
+    match /leaderboard/{entryId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
     // --- Payment requests ---
     // A user can file their own request and watch its status. Only the admin
     // can approve, edit, or delete one.

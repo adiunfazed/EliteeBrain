@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import path from 'path';
 import { GoogleGenAI } from '@google/genai';
 import { initAdmin, isAdminAvailable, verifyUser, lastVerifyFailure } from './serverAuth';
+import { getLeaderboard, syncLeaderboardEntry } from './serverLeaderboard';
 
 /** Reason the last provider attempt failed, for accurate error reporting. */
 let lastProviderError: string | null = null;
@@ -311,6 +312,50 @@ async function startServer() {
       res.json({ ok: true, reply });
     } catch (err: any) {
       res.status(500).json({ ok: false, error: err?.message || String(err) });
+    }
+  });
+
+  /**
+   * Leaderboard read. Returns real entries only — on failure it errors rather
+   * than substituting placeholder users.
+   */
+  app.get('/api/leaderboard', async (req, res) => {
+    if (!isAdminAvailable()) {
+      return res.status(503).json({ error: 'Leaderboard temporarily unavailable.' });
+    }
+    try {
+      const idToken = (req.headers.authorization || '').replace(/^Bearer\s+/i, '') || undefined;
+      const verified = await verifyUser(idToken);
+      const mode = req.query.mode === 'weekly' ? 'weekly' : 'career';
+
+      const page = await getLeaderboard(verified?.uid || null, mode, 20);
+      res.json(page);
+    } catch (err: any) {
+      console.error('Leaderboard read failed:', err?.message || err);
+      res.status(500).json({ error: 'Leaderboard temporarily unavailable.' });
+    }
+  });
+
+  /**
+   * Publish the caller's entry. XP is recomputed server-side from their stored
+   * activity, so a client cannot submit a number of its own choosing.
+   */
+  app.post('/api/leaderboard/sync', coachLimiter, async (req, res) => {
+    if (!isAdminAvailable()) {
+      return res.status(503).json({ error: 'Leaderboard temporarily unavailable.' });
+    }
+    try {
+      const idToken = (req.headers.authorization || '').replace(/^Bearer\s+/i, '') || undefined;
+      const verified = await verifyUser(idToken);
+      if (!verified) return res.status(401).json({ error: 'Sign in to join the leaderboard.' });
+
+      // Note: the request body is ignored entirely. Only the verified uid is
+      // used, and every number is derived from the database.
+      const entry = await syncLeaderboardEntry(verified.uid);
+      res.json(entry);
+    } catch (err: any) {
+      console.error('Leaderboard sync failed:', err?.message || err);
+      res.status(500).json({ error: 'Could not update your ranking.' });
     }
   });
 
