@@ -7,6 +7,8 @@ import { blocksForDate, routineAdherence } from '../lib/routine';
 import { habitStats, describeTarget } from '../lib/habits';
 import { bucketTasks, todayISO } from '../lib/tasks';
 import { soundFx } from '../utils/audio';
+import { useXp } from './XpToast';
+import { XP } from '../lib/xp';
 
 interface Props {
   userId: string | null;
@@ -51,6 +53,7 @@ export const TodayPane: React.FC<Props> = ({
   onGo,
 }) => {
   const today = todayISO();
+  const { awardXp } = useXp();
   const [localRoutine, setLocalRoutine] = useState<RoutineLog[]>(routineLogs);
   const [localHabits, setLocalHabits] = useState<HabitLog[]>(habitLogs);
 
@@ -77,7 +80,12 @@ export const TodayPane: React.FC<Props> = ({
   const cycleBlock = async (block: RoutineBlock, current: BlockState) => {
     const order: BlockState[] = ['pending', 'done', 'partial', 'skipped'];
     const next = order[(order.indexOf(current) + 1) % order.length];
-    next === 'done' ? soundFx.playSuccess() : soundFx.playClick();
+    if (next === 'done') {
+      soundFx.playSuccess();
+      awardXp(XP.routineBlockDone, block.title);
+    } else {
+      soundFx.playClick();
+    }
     setLocalRoutine((prev) => [
       { id: `${today}__${block.id}`, blockId: block.id, date: today, state: next, updatedAt: '' },
       ...prev.filter((l) => !(l.blockId === block.id && l.date === today)),
@@ -92,7 +100,12 @@ export const TodayPane: React.FC<Props> = ({
   const toggleHabit = async (habit: Habit) => {
     const stats = habitStats(habit, localHabits, today);
     const next = stats.completedToday ? 0 : stats.target;
-    next > 0 ? soundFx.playSuccess() : soundFx.playClick();
+    if (next > 0) {
+      soundFx.playSuccess();
+      awardXp(XP.habitMet, habit.title);
+    } else {
+      soundFx.playClick();
+    }
     setLocalHabits((prev) => [
       { id: `${today}__${habit.id}`, habitId: habit.id, date: today, value: next, updatedAt: '' },
       ...prev.filter((l) => !(l.habitId === habit.id && l.date === today)),

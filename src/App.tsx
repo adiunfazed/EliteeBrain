@@ -35,6 +35,7 @@ import { ReactionInhibitorModule } from './components/modules/ReactionInhibitorM
 import { resolveEntitlement, startTrialFields } from './lib/entitlement';
 import { goalById } from './lib/goals';
 import { ScrollProgress } from './components/ScrollProgress';
+import { XpProvider } from './components/XpToast';
 
 export default function App() {
   const [profile, setProfile] = useState<UserProfile>(() => loadProfile());
@@ -315,6 +316,7 @@ export default function App() {
   };
 
   return (
+    <XpProvider>
     <div className="min-h-screen bg-ground text-ink font-sans selection:bg-signal selection:text-white transition-colors duration-150 relative">
       <AnimatePresence>
         {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
@@ -538,5 +540,6 @@ export default function App() {
         onClose={() => setIsBadgesGalleryOpen(false)}
       />
     </div>
+    </XpProvider>
   );
 }

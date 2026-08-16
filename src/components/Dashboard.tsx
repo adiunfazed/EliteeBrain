@@ -23,6 +23,7 @@ import { TodayPane } from './TodayPane';
 import { MomentumChart } from './MomentumChart';
 import { CommandCenter } from './CommandCenter';
 import { StreakCard } from './StreakCard';
+import { LevelBar } from './LevelBar';
 import { computeStreak } from '../lib/streak';
 import { checkAchievements } from '../utils/achievements';
 import { habitStats, valueOn } from '../lib/habits';
@@ -435,6 +436,19 @@ export const Dashboard: React.FC<Props> = ({
               onOpenSleep={() => {
                 setLifePane('sleep');
                 goToPane('routine');
+              }}
+            />
+
+            <LevelBar
+              profile={profile}
+              input={{
+                tasks: allTasks,
+                habits: allHabits,
+                habitLogs: allHabitLogs,
+                focusSessions: allFocus,
+                routineBlocks,
+                routineLogs,
+                sleepLogs,
               }}
             />
 

@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { motion } from 'motion/react';
-import { Flame, Check } from 'lucide-react';
+import { Flame, Check, Shield } from 'lucide-react';
 import type { MomentumInput } from '../lib/momentum';
 import { WEEKDAY_INITIALS, computeStreak } from '../lib/streak';
 
@@ -30,19 +30,32 @@ export const StreakCard: React.FC<Props> = ({ input }) => {
             </span>
           </p>
           <p className="text-[10px] font-mono text-[#5A6472] mt-0.5">
-            {streak.current === 0
-              ? 'Do one thing today to start it'
-              : streak.activeToday
-                ? `Best: ${streak.best} days`
-                : 'Not logged today yet — still alive'}
+            {streak.freezeInUse
+              ? 'A missed day was covered by a protection'
+              : streak.current === 0
+                ? 'Do one thing today to start it'
+                : streak.activeToday
+                  ? `Best: ${streak.best} days`
+                  : 'Not logged today yet — still alive'}
           </p>
         </div>
 
-        {streak.best > 0 && (
-          <span className="shrink-0 text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-[#8B5CF6]/12 border border-[#8B5CF6]/30 text-[#A78BFA]">
-            Best {streak.best}
-          </span>
-        )}
+        <div className="flex flex-col items-end gap-1.5 shrink-0">
+          {streak.best > 0 && (
+            <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-[#8B5CF6]/12 border border-[#8B5CF6]/30 text-[#A78BFA]">
+              Best {streak.best}
+            </span>
+          )}
+          {streak.freezesAvailable > 0 && (
+            <span
+              title="Earned by staying consistent. Covers one missed day."
+              className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-[#4C9AFF]/12 border border-[#4C9AFF]/30 text-[#7FA6FF] flex items-center gap-1"
+            >
+              <Shield className="w-2.5 h-2.5" />
+              {streak.freezesAvailable}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* This week */}

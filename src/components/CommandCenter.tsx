@@ -1,10 +1,11 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { ArrowRight, Clock, Moon, Target, Timer } from 'lucide-react';
+import { Clock, Moon, Timer } from 'lucide-react';
 import type { MomentumInput } from '../lib/momentum';
 import { nextBestAction } from '../lib/taskEngine';
 import { BLOCK_META, blocksForDate, formatSleepDuration, minutesOf, sleepStats } from '../lib/routine';
 import { todayISO } from '../lib/tasks';
+import { isScheduledOn, valueOn } from '../lib/habits';
 
 interface Props {
   input: MomentumInput;
@@ -55,11 +56,33 @@ export const CommandCenter: React.FC<Props> = ({ input, displayName, onOpenHub, 
   const greeting =
     nowMin < 12 * 60 ? 'Good morning' : nowMin < 17 * 60 ? 'Good afternoon' : 'Good evening';
 
-  // Share of a 06:00–23:00 waking day already spent.
-  const DAY_START = 6 * 60;
-  const DAY_END = 23 * 60;
-  const dayElapsed = Math.max(0, Math.min(1, (nowMin - DAY_START) / (DAY_END - DAY_START)));
-  const hoursLeft = Math.max(0, Math.round(((DAY_END - nowMin) / 60) * 10) / 10);
+  // Today's completion across everything actually scheduled: routine blocks,
+  // habits due today, and tasks due today. Nothing is assumed.
+  const dayScore = useMemo(() => {
+    let done = 0;
+    let total = 0;
+
+    for (const d of day) {
+      total++;
+      if (d.state === 'done') done++;
+      else if (d.state === 'partial') done += 0.5;
+    }
+
+    for (const h of input.habits.filter((x) => x.status === 'active' && isScheduledOn(x, today))) {
+      total++;
+      if (valueOn(input.habitLogs, h.id, today) >= Math.max(1, h.targetValue || 1)) done++;
+    }
+
+    const todayTasks = input.tasks.filter(
+      (t) => t.dueDate === today || (t.completed && (t.completedAt || '').startsWith(today))
+    );
+    for (const t of todayTasks) {
+      total++;
+      if (t.completed) done++;
+    }
+
+    return { done, total, ratio: total > 0 ? done / total : 0 };
+  }, [day, input.habits, input.habitLogs, input.tasks, today]);
 
   return (
     <div className="eb-card relative overflow-hidden p-4 sm:p-5 space-y-4">
@@ -83,8 +106,8 @@ export const CommandCenter: React.FC<Props> = ({ input, displayName, onOpenHub, 
             {displayName ? <span className="text-[var(--signal-ink)]">, {displayName.split(' ')[0]}</span> : ''}
           </h2>
 
-          {/* How much of the day is left — the one number a daily planner
-              should always show. */}
+          {/* Today's completion, derived entirely from what the user has
+              actually scheduled. */}
           <div className="relative w-14 h-14 shrink-0">
             <svg viewBox="0 0 44 44" className="w-full h-full -rotate-90">
               <circle cx="22" cy="22" r="19" fill="none" stroke="var(--surface-sunk)" strokeWidth="3.5" />
@@ -93,20 +116,20 @@ export const CommandCenter: React.FC<Props> = ({ input, displayName, onOpenHub, 
                 cy="22"
                 r="19"
                 fill="none"
-                stroke="var(--signal)"
                 strokeWidth="3.5"
                 strokeLinecap="round"
                 strokeDasharray={2 * Math.PI * 19}
                 initial={false}
-                animate={{ strokeDashoffset: 2 * Math.PI * 19 * (1 - dayElapsed) }}
+                stroke={dayScore.ratio >= 1 ? '#00C2A8' : 'var(--signal)'}
+                animate={{ strokeDashoffset: 2 * Math.PI * 19 * (1 - dayScore.ratio) }}
                 transition={{ duration: 0.6, ease: 'easeOut' }}
               />
             </svg>
             <span className="absolute inset-0 flex flex-col items-center justify-center leading-none">
               <span className="text-[11px] font-mono font-black text-[#F2F4F7] tabular-nums">
-                {hoursLeft}h
+                {dayScore.total > 0 ? `${Math.round(dayScore.done)}/${dayScore.total}` : '—'}
               </span>
-              <span className="text-[7px] font-mono text-[#8A93A5] mt-0.5">LEFT</span>
+              <span className="text-[7px] font-mono text-[#8A93A5] mt-0.5">TODAY</span>
             </span>
           </div>
         </div>

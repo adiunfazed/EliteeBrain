@@ -44,6 +44,8 @@ import { soundFx } from '../utils/audio';
 import { TaskDetailSheet } from './TaskDetailSheet';
 import { StuckTaskCard } from './StuckTaskCard';
 import { mostStuckTask } from '../lib/adaptive';
+import { useXp } from './XpToast';
+import { XP } from '../lib/xp';
 
 interface Props {
   userId: string | null;
@@ -124,6 +126,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
   const [editingText, setEditingText] = useState('');
   const [busy, setBusy] = useState(false);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const { awardXp } = useXp();
   const inputRef = useRef<HTMLInputElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState('');
@@ -227,8 +230,12 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
 
   const handleToggle = async (task: Task) => {
     const completed = !task.completed;
-    if (completed) soundFx.playSuccess();
-    else soundFx.playClick();
+    if (completed) {
+      soundFx.playSuccess();
+      awardXp(XP.taskCompleted, task.title);
+    } else {
+      soundFx.playClick();
+    }
 
     applyLocal((list) =>
       list.map((t) =>

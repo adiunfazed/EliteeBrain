@@ -26,6 +26,15 @@ export interface StreakDay {
 export interface StreakInfo {
   current: number;
   best: number;
+  /**
+   * Unused protections. One is earned for every 7 consecutive active days and
+   * covers a single missed day, so one bad day doesn't erase months of work.
+   * Earned through consistency rather than purchased — a paid streak save
+   * turns a habit tool into a slot machine.
+   */
+  freezesAvailable: number;
+  /** True when a protection is currently covering a missed day. */
+  freezeInUse: boolean;
   /** The seven days of the current week, Sunday first. */
   week: StreakDay[];
   activeToday: boolean;
@@ -92,11 +101,25 @@ export function computeStreak(input: MomentumInput, today: string = todayISO()):
   // Scan only as far back as this user actually has records. No fixed ceiling,
   // so a streak can run indefinitely; a user with two days of history costs
   // two iterations rather than four hundred.
-  const span = daysBetween(earliestRecord(input, today), today) + 1;
+  const firstRecord = earliestRecord(input, today);
+  const span = daysBetween(firstRecord, today) + 1;
+
+  // One protection for every 7 active days recorded, capped at 3 so a long
+  // absence can't be papered over. Counting total active days rather than the
+  // in-progress run means the balance doesn't read zero the moment it's earned.
+  let activeDayTally = 0;
+  for (let i = 0; i < span; i++) {
+    if (wasActiveOn(input, shift(today, -i))) activeDayTally++;
+  }
+  const earnedFreezes = Math.min(3, Math.floor(activeDayTally / 7));
 
   // Current streak: walk backwards. Today not being done yet is not a break —
-  // otherwise every streak would read zero each morning.
+  // otherwise every streak would read zero each morning. A single gap may be
+  // covered by an earned protection.
   let current = 0;
+  let freezesSpent = 0;
+  let freezeInUse = false;
+
   for (let i = 0; i < span; i++) {
     const iso = shift(today, -i);
     if (wasActiveOn(input, iso)) {
@@ -104,6 +127,18 @@ export function computeStreak(input: MomentumInput, today: string = todayISO()):
       continue;
     }
     if (i === 0) continue;
+
+    // Days before the user's first record are not missed days — there was
+    // nothing to miss. Spending a protection there silently drained the
+    // balance the moment it was earned.
+    if (iso < firstRecord) break;
+
+    // A missed day: spend a protection if one is available, otherwise stop.
+    if (freezesSpent < earnedFreezes) {
+      freezesSpent++;
+      freezeInUse = true;
+      continue;
+    }
     break;
   }
 
@@ -137,7 +172,15 @@ export function computeStreak(input: MomentumInput, today: string = todayISO()):
   let totalActiveDays = 0;
   for (let i = 0; i < span; i++) if (wasActiveOn(input, shift(today, -i))) totalActiveDays++;
 
-  return { current, best, week, activeToday, totalActiveDays };
+  return {
+    current,
+    best,
+    week,
+    activeToday,
+    totalActiveDays,
+    freezesAvailable: Math.max(0, earnedFreezes - freezesSpent),
+    freezeInUse,
+  };
 }
 
 export const WEEKDAY_INITIALS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
