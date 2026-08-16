@@ -10,6 +10,8 @@ interface Entry {
   careerXp: number;
   weeklyXp: number;
   level: number;
+  /** Server-verified: lifetime or active trial. Never inferred here. */
+  isPro: boolean;
   rank: number;
 }
 
@@ -360,16 +362,33 @@ export const ArenaSection: React.FC = () => {
                       damping: 26,
                       delay: Math.min(i * 0.03, 0.25),
                     }}
-                    className={`eb-card-tap relative overflow-hidden rounded-2xl border p-3 flex items-center gap-3 ${
-                      isYou ? 'border-[var(--signal)] bg-[var(--signal)]/[0.09]' : 'eb-card'
+                    className={`eb-card-tap eb-shine relative overflow-hidden rounded-2xl border p-3 flex items-center gap-3 ${
+                      isYou
+                        ? 'border-[var(--signal)] bg-[var(--signal)]/[0.10] shadow-[0_0_22px_-8px_var(--signal)]'
+                        : e.rank <= 3
+                          ? 'eb-card shadow-[0_0_18px_-10px_currentColor]'
+                          : 'eb-card'
                     }`}
+                    style={e.rank <= 3 ? { color: t.color } : undefined}
                   >
                     <span
                       className="absolute left-0 top-0 bottom-0 w-[3px]"
                       style={{ background: t.color, opacity: isYou ? 1 : 0.55 }}
                     />
 
-                    <span className="w-7 shrink-0 text-center text-xs font-mono font-bold text-[#8A93A5] tabular-nums">
+                    <span
+                      className="w-7 shrink-0 text-center text-xs font-mono font-bold tabular-nums"
+                      style={{
+                        color:
+                          e.rank === 1
+                            ? '#FFB020'
+                            : e.rank === 2
+                              ? '#C7D0DE'
+                              : e.rank === 3
+                                ? '#C97B3C'
+                                : '#8A93A5',
+                      }}
+                    >
                       {String(e.rank).padStart(2, '0')}
                     </span>
 
@@ -378,6 +397,15 @@ export const ArenaSection: React.FC = () => {
                     <span className="min-w-0 flex-1">
                       <span className="flex items-center gap-1.5 min-w-0">
                         <span className="eb-heading text-sm truncate">{e.displayName}</span>
+                        {e.isPro && (
+                          <span
+                            title="Pro member"
+                            className="shrink-0 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-[#FFB020]/15 border border-[#FFB020]/40"
+                          >
+                            <Crown className="w-2.5 h-2.5 text-[#FFB020]" />
+                            <span className="text-[8px] font-mono font-bold text-[#FFB020]">PRO</span>
+                          </span>
+                        )}
                         {isYou && (
                           <span className="text-[9px] font-mono font-bold text-[var(--signal-ink)] shrink-0">
                             — YOU

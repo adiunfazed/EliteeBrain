@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile, ModuleState, DailyLog } from '../types';
 import { calculateBrainScore, calculateTotalXp } from '../utils/storage';
+import { ArenaSection } from './ArenaSection';
 import { ChartRecorder } from './ChartRecorder';
 import { DayProgressCalendar } from './DayProgressCalendar';
-import { AchievementsDashboardSection } from './AchievementsDashboardSection';
 import { soundFx } from '../utils/audio';
 import {
   Flame,
@@ -377,13 +377,9 @@ export const RankProgressionSection: React.FC<RankProgressionSectionProps> = ({
               </div>
             </div>
 
-            {/* Earned Badges Section */}
-            {onOpenBadgesGallery && (
-              <AchievementsDashboardSection
-                profile={profile}
-                onOpenGallery={onOpenBadgesGallery}
-              />
-            )}
+            {/* Arena sits under the ladder: rank and leaderboard answer the
+                same question, so they belong together. */}
+            <ArenaSection />
           </motion.div>
         )}
 

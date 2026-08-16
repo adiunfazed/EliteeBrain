@@ -23,7 +23,27 @@ export interface LeaderboardEntry {
   careerXp: number;
   weeklyXp: number;
   level: number;
+  /** Lifetime or active trial — shown as a badge, never inferred client-side. */
+  isPro: boolean;
   updatedAt: string;
+}
+
+/** Recompute an entry if its cached copy is older than this. */
+const STALE_MS = 5 * 60 * 1000;
+
+/** Mirrors resolveEntitlement — Pro means lifetime or an unexpired trial. */
+function isProAccount(data: any): boolean {
+  if (!data) return false;
+  if (data.lifetimePro === true || data.proPlanType === 'lifetime') return true;
+
+  const started = Date.parse(data.trialStartedAt || data.profileData?.trialStartedAt || '');
+  if (Number.isFinite(started)) {
+    const end = Math.min(started, Date.now()) + 30 * 24 * 60 * 60 * 1000;
+    if (Date.now() < end) return true;
+  }
+
+  const legacy = Date.parse(data.proExpiresAt || '');
+  return data.isProUser === true && Number.isFinite(legacy) && Date.now() < legacy;
 }
 
 /* ------------------------------------------------------------------ */
@@ -210,6 +230,7 @@ export async function syncLeaderboardEntry(uid: string): Promise<LeaderboardEntr
     careerXp: career,
     weeklyXp: weekly,
     level: levelFromXp(career),
+    isPro: isProAccount(data),
     updatedAt: new Date().toISOString(),
   };
 
@@ -232,6 +253,17 @@ export interface LeaderboardPage {
  * across refreshes — without that, two users on the same XP would swap places
  * unpredictably.
  */
+/**
+ * Build the leaderboard across ALL registered users.
+ *
+ * The previous version only listed users who had opened the Arena, because
+ * entries were created on visit — so a board with seventeen sign-ups showed
+ * one member. This walks the users collection instead, so everyone with an
+ * account appears whether or not they've ever looked at the rankings.
+ *
+ * Cached entries are reused when fresh; stale ones are recomputed. With a
+ * small user base that is cheap, and it stays bounded as the base grows.
+ */
 export async function getLeaderboard(
   uid: string | null,
   mode: 'career' | 'weekly' = 'career',
@@ -240,19 +272,76 @@ export async function getLeaderboard(
   const db = getFirestore();
   const field = mode === 'weekly' ? 'weeklyXp' : 'careerXp';
 
-  const snap = await db.collection('leaderboard').get();
+  const [usersSnap, cacheSnap] = await Promise.all([
+    db.collection('users').get(),
+    db.collection('leaderboard').get(),
+  ]);
 
-  const all = snap.docs
-    .map((d) => d.data() as LeaderboardEntry)
-    .filter((e) => e && typeof e.careerXp === 'number')
+  const cache = new Map<string, LeaderboardEntry>();
+  for (const doc of cacheSnap.docs) cache.set(doc.id, doc.data() as LeaderboardEntry);
+
+  const now = Date.now();
+  const entries: LeaderboardEntry[] = [];
+  const toPersist: LeaderboardEntry[] = [];
+
+  for (const doc of usersSnap.docs) {
+    const data = doc.data();
+
+    // Skip records that aren't real accounts.
+    if (!data || data.accountStatus === 'deleted' || data.accountStatus === 'banned') continue;
+
+    const cached = cache.get(doc.id);
+    const fresh =
+      cached && Date.parse(cached.updatedAt || '') > now - STALE_MS && typeof cached.careerXp === 'number';
+
+    const rawName =
+      data.displayName || data.profileData?.displayName || data.email?.split('@')[0] || '';
+    const displayName = String(rawName).trim().slice(0, 24) || 'Unnamed member';
+    const pro = isProAccount(data);
+
+    if (fresh) {
+      // Name and Pro status are cheap to read, so keep them current even when
+      // the XP figure is being served from cache.
+      entries.push({ ...cached!, displayName, isPro: pro });
+      continue;
+    }
+
+    try {
+      const { career, weekly } = await computeUserXp(doc.id);
+      const entry: LeaderboardEntry = {
+        uid: doc.id,
+        displayName,
+        careerXp: career,
+        weeklyXp: weekly,
+        level: levelFromXp(career),
+        isPro: pro,
+        updatedAt: new Date().toISOString(),
+      };
+      entries.push(entry);
+      toPersist.push(entry);
+    } catch (err) {
+      // One unreadable account must not take down the whole board.
+      console.warn('Could not compute XP for', doc.id, (err as Error)?.message);
+      if (cached) entries.push({ ...cached, displayName, isPro: pro });
+    }
+  }
+
+  // Persist recomputed entries without blocking the response.
+  if (toPersist.length > 0) {
+    const batch = db.batch();
+    for (const e of toPersist) batch.set(db.collection('leaderboard').doc(e.uid), e, { merge: true });
+    batch.commit().catch((err) => console.warn('Leaderboard cache write failed:', err?.message));
+  }
+
+  const ranked = entries
     .sort((a, b) => {
-      const diff = (b as any)[field] - (a as any)[field];
+      const diff = ((b as any)[field] || 0) - ((a as any)[field] || 0);
       if (diff !== 0) return diff;
       // Deterministic tiebreak — same order for everyone, every time.
       return a.uid.localeCompare(b.uid);
-    });
+    })
+    .map((e, i) => ({ ...e, rank: i + 1 }));
 
-  const ranked = all.map((e, i) => ({ ...e, rank: i + 1 }));
   const yourEntry = uid ? ranked.find((e) => e.uid === uid) || null : null;
 
   return {

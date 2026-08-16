@@ -12,7 +12,6 @@ import { DayProgressCalendar } from './DayProgressCalendar';
 import { AchievementsDashboardSection } from './AchievementsDashboardSection';
 import { RankProgressionSection } from './RankProgressionSection';
 import { AICoachSection } from './AICoachSection';
-import { ArenaSection } from './ArenaSection';
 import { GamesSection } from './GamesSection';
 import { TasksSection } from './TasksSection';
 import { FocusSection } from './FocusSection';
@@ -753,7 +752,10 @@ export const Dashboard: React.FC<Props> = ({
                 <RealityVsPlan input={momentumInput} />
                 <WeeklyReviewSection input={momentumInput} />
                 <ProgressSection profile={profile} userId={currentUser?.uid || null} />
-                <ArenaSection />
+                <AchievementsDashboardSection
+                  profile={profile}
+                  onOpenGallery={onOpenBadgesGallery || (() => {})}
+                />
               </div>
             </ProGate>
           </motion.div>
