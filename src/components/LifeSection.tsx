@@ -11,6 +11,7 @@ import {
   AlertTriangle,
   Pencil,
   Target,
+  CalendarDays,
 } from 'lucide-react';
 import type {
   BlockKind,
@@ -56,6 +57,8 @@ interface Props {
 
 type Pane = 'routine' | 'week' | 'sleep';
 
+const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
 const KINDS: BlockKind[] = ['study', 'work', 'exercise', 'sleep', 'meal', 'personal', 'custom'];
 
 export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }) => {
@@ -74,6 +77,9 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
   const [title, setTitle] = useState('');
   const [kind, setKind] = useState<BlockKind>('study');
   const [blockGoalId, setBlockGoalId] = useState<string | undefined>();
+  /** Empty means every day. */
+  const [blockDays, setBlockDays] = useState<number[]>([]);
+  const [editingDaysFor, setEditingDaysFor] = useState<string | null>(null);
   const [start, setStart] = useState('09:00');
   const [end, setEnd] = useState('10:00');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -110,9 +116,11 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
     if (!t) return;
     const block = newRoutineBlock(t, kind, start, end);
     if (blockGoalId) block.goalId = blockGoalId;
+    if (blockDays.length > 0) block.weekdays = [...blockDays].sort((a, b) => a - b);
     setBlocks((prev) => [block, ...prev]);
     setTitle('');
     setBlockGoalId(undefined);
+    setBlockDays([]);
     soundFx.playClick();
     try {
       await saveRoutineBlock(userId, block);
@@ -148,6 +156,25 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
       await patchRoutineBlock(userId, block.id, { title: t });
     } catch (e) {
       console.error('Could not rename block:', e);
+    }
+  };
+
+  const toggleBlockDay = async (block: RoutineBlock, day: number) => {
+    const current = block.weekdays && block.weekdays.length > 0 ? block.weekdays : [0, 1, 2, 3, 4, 5, 6];
+    const next = current.includes(day)
+      ? current.filter((d) => d !== day)
+      : [...current, day].sort((a, b) => a - b);
+
+    // Removing every day would hide the block entirely with no way back, so
+    // an empty selection means "every day" rather than "never".
+    const weekdays = next.length === 0 || next.length === 7 ? undefined : next;
+
+    soundFx.playClick();
+    setBlocks((prev) => prev.map((b) => (b.id === block.id ? { ...b, weekdays } : b)));
+    try {
+      await patchRoutineBlock(userId, block.id, { weekdays: weekdays ?? [] });
+    } catch (e) {
+      console.error('Could not update days:', e);
     }
   };
 
@@ -268,9 +295,45 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
               </label>
             </div>
 
+            <div>
+              <p className="eb-label mb-1.5">
+                Repeats on
+                <span className="ml-1.5 normal-case tracking-normal text-[#5A6472]">
+                  {blockDays.length === 0 ? 'every day' : `${blockDays.length} day${blockDays.length === 1 ? '' : 's'}`}
+                </span>
+              </p>
+              <div className="flex items-center gap-1.5">
+                {DAY_LABELS.map((label, i) => {
+                  const on = blockDays.length === 0 || blockDays.includes(i);
+                  return (
+                    <button
+                      key={i}
+                      onClick={() =>
+                        setBlockDays((prev) => {
+                          // An empty list means every day, so the first tap
+                          // starts from all-selected rather than none.
+                          const base = prev.length === 0 ? [0, 1, 2, 3, 4, 5, 6] : prev;
+                          const next = base.includes(i)
+                            ? base.filter((d) => d !== i)
+                            : [...base, i].sort((a, b) => a - b);
+                          return next.length === 7 ? [] : next;
+                        })
+                      }
+                      aria-label={`Toggle day ${i}`}
+                      className={`eb-press flex-1 h-10 rounded-xl text-[11px] font-mono font-bold border ${
+                        on ? 'eb-chip-active' : 'text-[#5A6472] border-[#262C38]'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             {goals.length > 0 && (
               <div>
-                <p className="text-[9px] font-mono font-bold text-[#5A6472] tracking-widest uppercase mb-1.5">
+                <p className="eb-label mb-1.5">
                   Counts toward a goal
                 </p>
                 <div className="eb-tabs w-fit max-w-full overflow-x-auto no-scrollbar">
@@ -332,7 +395,9 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                 <motion.div
                   key={block.id}
                   layout
-                  className={`group eb-shine eb-lift relative overflow-hidden rounded-2xl border p-3.5 flex items-start gap-3 ${stateStyle[state]}`}
+                  className={`group eb-shine eb-lift relative overflow-hidden rounded-2xl border p-3.5 flex items-start gap-3 ${
+                  editingDaysFor === block.id ? 'pb-12' : ''
+                } ${stateStyle[state]}`}
                 >
                   <span className={`absolute left-0 top-0 bottom-0 w-[3px] ${BLOCK_META[block.kind].bar}`} />
 
@@ -389,6 +454,17 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                       >
                         {BLOCK_META[block.kind].label}
                       </span>
+                      <button
+                        onClick={() =>
+                          setEditingDaysFor(editingDaysFor === block.id ? null : block.id)
+                        }
+                        className="eb-press text-[9px] font-mono text-[#8A93A5] hover:text-[#F2F4F7] flex items-center gap-1 relative"
+                      >
+                        <CalendarDays className="w-2.5 h-2.5" />
+                        {!block.weekdays || block.weekdays.length === 0
+                          ? 'Every day'
+                          : block.weekdays.map((d) => DAY_LABELS[d]).join(' ')}
+                      </button>
                       {block.goalId && (
                         <span className="text-[9px] font-mono text-[#A78BFA] flex items-center gap-1">
                           <Target className="w-2.5 h-2.5" />
@@ -400,6 +476,31 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                       )}
                     </div>
                   </div>
+
+                  {editingDaysFor === block.id && (
+                    <div className="absolute left-3 right-3 bottom-2 flex items-center gap-1 z-10">
+                      {DAY_LABELS.map((label, i) => {
+                        const active =
+                          !block.weekdays || block.weekdays.length === 0
+                            ? true
+                            : block.weekdays.includes(i);
+                        return (
+                          <button
+                            key={i}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleBlockDay(block, i);
+                            }}
+                            className={`eb-press flex-1 h-8 rounded-lg text-[10px] font-mono font-bold border ${
+                              active ? 'eb-chip-active' : 'text-[#5A6472] border-[#262C38] bg-[#0B0D12]'
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
 
                   <div className="flex items-center gap-0.5 shrink-0 opacity-70 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                     <button

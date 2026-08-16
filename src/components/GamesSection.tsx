@@ -93,9 +93,12 @@ export const GamesSection: React.FC<{ profile: UserProfile; onProfileUpdate?: (p
                 return (
                   <motion.button
                     key={g.id}
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.32, delay: Math.min(index * 0.06, 0.24), ease: [0.22, 1, 0.36, 1] }}
+                    initial={{ opacity: 0, y: 34, scale: 0.96 }}
+                    whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                    viewport={{ once: true, amount: 0.25, margin: '0px 0px -60px 0px' }}
+                    whileHover={{ y: -4 }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={{ type: 'spring', stiffness: 260, damping: 24, delay: Math.min(index * 0.08, 0.3) }}
                     onClick={() => {
                       soundFx.playClick();
                       setActiveGame(g.id as GameType);

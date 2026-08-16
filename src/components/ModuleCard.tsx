@@ -63,16 +63,19 @@ export const ModuleCard: React.FC<Props> = ({ config, state, isProUser, index = 
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 22, scale: 0.96 }}
+      initial={{ opacity: 0, y: 34, scale: 0.94 }}
       whileInView={{ opacity: 1, y: 0, scale: 1 }}
-      viewport={{ once: false, amount: 0.08 }}
+      // Trigger at a quarter visible with a negative bottom margin, so the
+      // card is genuinely entering the viewport when it animates. `once`
+      // avoids re-animating every time the user scrolls back up.
+      viewport={{ once: true, amount: 0.25, margin: '0px 0px -60px 0px' }}
       whileHover={{ y: -6, scale: 1.02 }}
       whileTap={{ scale: 0.95 }}
       transition={{
         type: 'spring',
-        stiffness: 300,
-        damping: 22,
-        delay: Math.min(index * 0.04, 0.2),
+        stiffness: 260,
+        damping: 24,
+        delay: Math.min(index * 0.07, 0.35),
       }}
       onTouchStart={() => setIsPressed(true)}
       onTouchEnd={() => setIsPressed(false)}

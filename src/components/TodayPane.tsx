@@ -297,17 +297,34 @@ export const TodayPane: React.FC<Props> = ({
                     stats.completedToday ? `${tint} eb-raised` : 'eb-tint eb-card-sunk'
                   }`}
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <span
-                      className={`w-7 h-7 rounded-lg flex items-center justify-center ${
-                        stats.completedToday ? 'bg-black/20' : 'bg-[#0E1116]'
-                      }`}
-                    >
-                      {stats.completedToday ? (
-                        <Check className="w-4 h-4 stroke-[3]" />
-                      ) : (
-                        <Target className="w-3.5 h-3.5 text-[#98A2B3]" />
-                      )}
+                  <div className="flex items-start justify-between gap-2 relative">
+                    <span className="relative w-9 h-9 shrink-0">
+                      {/* Ring doubles as the progress indicator, so a measured
+                          habit reads without needing a separate bar. */}
+                      <svg viewBox="0 0 36 36" className="absolute inset-0 w-full h-full -rotate-90">
+                        <circle cx="18" cy="18" r="15" fill="none" stroke="currentColor" strokeWidth="3" opacity="0.22" />
+                        <circle
+                          cx="18"
+                          cy="18"
+                          r="15"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          strokeDasharray={2 * Math.PI * 15}
+                          strokeDashoffset={2 * Math.PI * 15 * (1 - pct)}
+                          style={{ transition: 'stroke-dashoffset 0.45s cubic-bezier(0.22,1,0.36,1)' }}
+                        />
+                      </svg>
+                      <span className="absolute inset-0 flex items-center justify-center">
+                        {stats.completedToday ? (
+                          <Check className="w-4 h-4 stroke-[3]" />
+                        ) : (
+                          <span className="text-[9px] font-mono font-bold">
+                            {Math.round(pct * 100)}%
+                          </span>
+                        )}
+                      </span>
                     </span>
                     {stats.currentStreak > 1 && (
                       <span className="text-[10px] font-mono font-bold flex items-center gap-0.5 opacity-80">
@@ -325,28 +342,21 @@ export const TodayPane: React.FC<Props> = ({
                     {habit.title}
                   </p>
 
-                  <div
-                    className={`eb-bar mt-2 ${stats.completedToday ? 'bg-black/20' : ''}`}
-                  >
-                    <motion.div
-                      className={`eb-bar-fill ${stats.completedToday ? 'bg-white/80' : ''}`}
-                      initial={false}
-                      animate={{ width: `${pct * 100}%` }}
-                      transition={{ duration: 0.4, ease: 'easeOut' }}
-                    />
-                  </div>
-
                   <p
-                    className={`text-[10px] font-mono mt-1.5 ${
-                      stats.completedToday ? 'opacity-75' : 'text-[#98A2B3]'
+                    className={`text-[10px] mt-1 relative ${
+                      stats.completedToday ? 'opacity-80' : 'text-[#8A93A5]'
                     }`}
                   >
                     {habit.metric === 'yes_no'
                       ? stats.completedToday
-                        ? 'Done'
-                        : 'Not yet'
-                      : `${stats.todayValue} / ${describeTarget(habit)}`}
+                        ? 'Done today'
+                        : 'Tap to mark done'
+                      : `${stats.todayValue} of ${describeTarget(habit)}`}
                   </p>
+
+
+
+
                 </button>
               );
             })}
