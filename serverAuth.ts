@@ -126,9 +126,32 @@ export async function verifyUser(idToken?: string): Promise<VerifiedUser | null>
   }
 
   try {
+    // Identity check. If this succeeds the user is genuinely signed in.
     const decoded = await getAuth().verifyIdToken(idToken);
-    const snap = await getFirestore().collection('users').doc(decoded.uid).get();
-    const data = snap.exists ? snap.data() : null;
+
+    // Entitlement lookup. Separated deliberately: a Firestore permission or
+    // API-enablement problem here is NOT the user's fault, and previously it
+    // surfaced as "could not verify your sign-in" even though the sign-in was
+    // perfectly valid.
+    let data: any = null;
+    try {
+      const snap = await getFirestore().collection('users').doc(decoded.uid).get();
+      data = snap.exists ? snap.data() : null;
+    } catch (dbErr: any) {
+      const dbCode = String(dbErr?.code ?? dbErr?.errorInfo?.code ?? '');
+      console.error(
+        'Firestore read failed for uid',
+        decoded.uid,
+        '| code:',
+        dbCode,
+        '|',
+        dbErr?.message || dbErr
+      );
+      lastVerifyFailure = { reason: 'db_unavailable', code: dbCode };
+      // The user is authenticated; we simply cannot read their entitlement.
+      // Report that honestly rather than blaming their sign-in.
+      throw new Error('ENTITLEMENT_LOOKUP_FAILED');
+    }
 
     // Entitlement fields live at the top level; profileData is the fallback for
     // documents written before that was standardised.

@@ -347,7 +347,10 @@ async function startServer() {
         const code = String(lastVerifyFailure?.code ?? '');
         // Report the real cause. "Session expired" was shown for every
         // failure mode, including ones a re-login could never fix.
-        const message = !idToken
+        const reason = lastVerifyFailure?.reason;
+        const message = reason === 'db_unavailable'
+          ? `The server signed you in but could not read your account (Firestore error ${code || 'unknown'}). This is a server configuration problem, not your account.`
+          : !idToken
           ? 'Sign-in did not reach the server. Refresh the page and try again.'
           : code.includes('expired')
             ? 'Your session expired. Refresh the page and try again.'

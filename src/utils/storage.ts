@@ -143,7 +143,19 @@ export function createInitialProfile(): UserProfile {
   };
 }
 
+/**
+ * Admin profile handling.
+ *
+ * This used to rebuild the profile from scratch on EVERY admin sign-in,
+ * preserving only the payment fields — so badges, module progress, daily logs
+ * and the streak were wiped on every login and every refresh. It now performs
+ * the reset exactly once (guarded by adminResetDone) and otherwise returns the
+ * existing profile untouched.
+ */
 export function resetAdminProfile(existing?: UserProfile): UserProfile {
+  // Already reset once: leave the account alone.
+  if (existing?.adminResetDone) return existing;
+
   const fresh = createInitialProfile();
   const resetProf: UserProfile = {
     ...fresh,
@@ -158,6 +170,17 @@ export function resetAdminProfile(existing?: UserProfile): UserProfile {
     proAmountPaid: existing?.proAmountPaid,
     proUtrNumber: existing?.proUtrNumber,
     pendingPayment: existing?.pendingPayment,
+    // Earned history must survive. Losing badges and module progress on every
+    // login is data loss, not a reset.
+    unlockedAchievements: existing?.unlockedAchievements || {},
+    modules: existing?.modules || fresh.modules,
+    dailyLogs: existing?.dailyLogs || fresh.dailyLogs,
+    streakDays: existing?.streakDays ?? 0,
+    currentDay: existing?.currentDay ?? 1,
+    startDate: existing?.startDate || fresh.startDate,
+    gamesXp: existing?.gamesXp ?? 0,
+    chessElo: existing?.chessElo ?? fresh.chessElo,
+    displayName: existing?.displayName || fresh.displayName,
     adminResetDone: true,
   };
   saveProfile(resetProf);
@@ -260,6 +283,30 @@ export function loadProfile(): UserProfile {
   }
 }
 
+/**
+ * Consecutive days ending today that have a completed daily log.
+ *
+ * Deriving this is the only way a missed day can reduce the streak — an
+ * incrementing counter has no way to notice absence.
+ */
+export function countConsecutiveCompletedDays(profile: UserProfile): number {
+  const logs = profile.dailyLogs || {};
+  let streak = 0;
+
+  for (let day = profile.currentDay; day >= 1; day--) {
+    const log = logs[day];
+    if (log && log.status === 'completed') {
+      streak++;
+      continue;
+    }
+    // Today being unfinished doesn't break a live streak; the day isn't over.
+    if (day === profile.currentDay) continue;
+    break;
+  }
+
+  return streak;
+}
+
 export function saveProfile(profile: UserProfile): void {
   if (typeof window === 'undefined') return;
   try {
@@ -350,10 +397,16 @@ export function processModuleResult(
     }
     dayLog.cognitiveScore = calculateBrainScore(profile);
 
-    // If all 4 modules are completed today!
-    if (dayLog.completedModules.length >= 4) {
+    // Mark the day complete once, and only once. This previously incremented
+    // the streak on EVERY module finished past the fourth, so replaying
+    // modules in a single day inflated the streak by a day each time.
+    if (dayLog.completedModules.length >= 4 && dayLog.status !== 'completed') {
       dayLog.status = 'completed';
-      profile.streakDays += 1;
+
+      // Derive the streak from consecutive completed days rather than
+      // incrementing a counter. A counter cannot detect a missed day, so it
+      // only ever grew.
+      profile.streakDays = countConsecutiveCompletedDays(profile);
     }
   }
 
