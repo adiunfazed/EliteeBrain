@@ -264,7 +264,7 @@ export const NotificationSettings: React.FC<Props> = ({ isOpen, onClose }) => {
             </>
           )}
 
-          <p className="text-[10px] font-mono text-[#5A6472] leading-relaxed">
+          <p className="text-[10px] text-[#5A6472] leading-relaxed">
             Reminders are scheduled by the app while it's open or running in the background. If
             you fully close it, some may not arrive.
           </p>

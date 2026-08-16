@@ -989,7 +989,7 @@ export const ChessGame: React.FC<{
 
             {/* AI ELO Display */}
             <div className="flex items-center gap-2 px-3.5 py-2 bg-[#0E1116] border border-[#2A313C] rounded-2xl">
-              <span className="text-xs font-mono text-[#98A2B3]">Bot ELO:</span>
+              <span className="text-xs text-[#98A2B3]">Bot ELO:</span>
               <span className="text-xs font-mono font-black text-rose-400">{engineLevel} ELO</span>
             </div>
 
@@ -1150,7 +1150,7 @@ export const ChessGame: React.FC<{
 
                   {eloDelta !== null && (
                     <div className="flex items-center gap-2 mb-6 bg-[#12161F] border border-[#2A313C] px-5 py-2.5 rounded-2xl">
-                      <span className="text-xs font-mono text-[#98A2B3]">ELO RATING:</span>
+                      <span className="text-xs text-[#98A2B3]">ELO RATING:</span>
                       <div className="flex items-center gap-1 text-sm font-mono font-black text-white">
                         <span>{userElo}</span>
                         <span

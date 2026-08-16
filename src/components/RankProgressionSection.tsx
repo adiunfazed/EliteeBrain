@@ -264,7 +264,7 @@ export const RankProgressionSection: React.FC<RankProgressionSectionProps> = ({
                 </h1>
 
                 {/* Subtitle Details */}
-                <p className="text-xs font-mono text-[#98A2B3] pt-1">
+                <p className="text-xs text-[#98A2B3] pt-1">
                   NEXT: {nextTier.baseName} {nextTier.tierNumber} — <strong className="text-white">{xpToGo.toLocaleString()} XP</strong> TO GO
                 </p>
                 <div className="text-[11px] font-mono text-[#6C757D]">
@@ -407,7 +407,7 @@ export const RankProgressionSection: React.FC<RankProgressionSectionProps> = ({
                     Cognitive Trajectory & Index Graph
                   </h3>
                 </div>
-                <div className="text-xs font-mono text-[#98A2B3]">
+                <div className="text-xs text-[#98A2B3]">
                   Score: <strong className="text-[#A78BFA]">{brainScore} pts</strong>
                 </div>
               </div>

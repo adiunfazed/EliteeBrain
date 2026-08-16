@@ -444,7 +444,7 @@ export const Header: React.FC<Props> = ({
             <div className="mt-3 pt-3 border-t border-[#2A313C]/60 space-y-2.5">
               {/* Account Display Name Card */}
               <div className="bg-[#171B22] border border-[#2A313C] p-2.5 rounded-2xl space-y-2">
-                <div className="flex items-center justify-between text-xs font-mono text-[#98A2B3]">
+                <div className="flex items-center justify-between text-xs text-[#98A2B3]">
                   <span className="flex items-center gap-1.5 font-bold text-slate-200">
                     <UserIcon className="w-3.5 h-3.5 text-[#8B5CF6]" />
                     <span>User Profile Name</span>

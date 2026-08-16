@@ -110,7 +110,7 @@ export const DailyChallengeCard: React.FC<Props> = ({ profile, onLaunchModule })
       ) : (
         <>
           {previousBest > 0 && (
-            <p className="text-[11px] font-mono text-[#98A2B3] mt-3">
+            <p className="text-[11px] text-[#98A2B3] mt-3">
               Your best so far: <span className="text-yellow-400 font-bold">{previousBest}</span>
               {attempts > 0 && ` · ${attempts} attempt${attempts === 1 ? '' : 's'}`}
             </p>

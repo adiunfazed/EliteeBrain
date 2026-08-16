@@ -35,7 +35,7 @@ export const WeeklyReviewSection: React.FC<Props> = ({ input }) => {
         <div className="mt-3 space-y-2.5">
           {areas.map((a) => (
             <div key={a.key} className="flex items-center gap-3">
-              <span className="text-[11px] font-mono text-[#98A2B3] w-16 shrink-0 truncate">
+              <span className="text-[11px] text-[#98A2B3] w-16 shrink-0 truncate">
                 {a.label}
               </span>
               <div className="flex-1 min-w-0 h-2 bg-[#171B22] rounded-full overflow-hidden">

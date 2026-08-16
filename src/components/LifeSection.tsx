@@ -600,7 +600,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                 </div>
               </div>
 
-              <p className="text-[10px] font-mono text-[#5A6472] leading-relaxed text-center max-w-md mx-auto">
+              <p className="text-[10px] text-[#5A6472] leading-relaxed text-center max-w-md mx-auto">
                 Consistency measures how steady your bedtime is across recorded nights. It
                 describes your own logged times — it is not a health or medical measure.
               </p>

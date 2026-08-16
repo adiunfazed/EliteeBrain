@@ -215,7 +215,7 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
               <h2 className="text-xl sm:text-2xl font-display font-bold text-white mt-1">
                 AI Coach
               </h2>
-              <p className="text-xs font-mono text-[#98A2B3] mt-0.5">
+              <p className="text-xs text-[#98A2B3] mt-0.5">
                 Real-time feedback on memory span, focus, latency, and cognitive growth.
               </p>
             </div>

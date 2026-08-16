@@ -120,7 +120,7 @@ export const GamesSection: React.FC<{ profile: UserProfile; onProfileUpdate?: (p
 
                         <div className="min-w-0 flex-1">
                           <h3 className="eb-heading text-xl sm:text-2xl">{g.title}</h3>
-                          <p className="text-xs font-mono text-[#8A93A5] mt-1">{g.subtitle}</p>
+                          <p className="text-xs text-[#8A93A5] mt-1">{g.subtitle}</p>
                         </div>
 
                         <span

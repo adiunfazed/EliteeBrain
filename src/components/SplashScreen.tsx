@@ -66,7 +66,7 @@ export const SplashScreen: React.FC<Props> = ({ onFinish }) => {
               className="h-full bg-gradient-to-r from-[#8B5CF6] to-[#A78BFA]"
             />
           </div>
-          <div className="flex items-center justify-between text-[11px] font-mono text-[#98A2B3]">
+          <div className="flex items-center justify-between text-[11px] text-[#98A2B3]">
             <span className="flex items-center gap-1.5">
               <Activity className="w-3.5 h-3.5 text-[#8B5CF6] animate-pulse" />
               <span>Initializing Protocol...</span>

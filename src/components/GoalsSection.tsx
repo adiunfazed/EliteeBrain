@@ -520,7 +520,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
           />
         </div>
 
-        <p className="text-[10px] font-mono text-[#5A6472] leading-relaxed">{health.reason}</p>
+        <p className="text-[10px] text-[#5A6472] leading-relaxed">{health.reason}</p>
 
         {left !== null && left >= 0 && (
           <p className="text-[10px] font-mono text-[#98A2B3]">
@@ -599,7 +599,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
               {bits.join(' · ')} feeding this goal
             </p>
           ) : (
-            <p className="text-[10px] font-mono text-[#5A6472] leading-relaxed">
+            <p className="text-[10px] text-[#5A6472] leading-relaxed">
               Nothing linked yet. Attach a routine block, habit or task and this goal moves when
               you do the work.
             </p>

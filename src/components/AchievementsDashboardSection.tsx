@@ -56,7 +56,7 @@ export const AchievementsDashboardSection: React.FC<Props> = ({ profile, onOpenG
                 {unlockedCount}/{totalCount}
               </span>
             </h3>
-            <p className="text-xs font-mono text-[#98A2B3]">
+            <p className="text-xs text-[#98A2B3]">
               {totalPoints} Total Badge PTS • Complete training targets to unlock new rewards
             </p>
           </div>

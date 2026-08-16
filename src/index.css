@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
 @theme {
-  --font-display: "Clash Display", "Bricolage Grotesque", sans-serif;
-  --font-sans: "Public Sans", system-ui, -apple-system, sans-serif;
-  --font-mono: "Martian Mono", "JetBrains Mono", monospace;
+  --font-display: "Inter", system-ui, -apple-system, "SF Pro Display", sans-serif;
+  --font-sans: "Inter", system-ui, -apple-system, "SF Pro Text", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 
   --color-ground: var(--ground);
   --color-surface: var(--surface);
@@ -268,7 +268,8 @@
      drop shadow reads as a default; a solid offset reads as a decision.
    - Flat colour only. No gradients on content.
    - The accent occupies roughly a tenth of any view — one primary action.
-   - Type does the heavy lifting: Clash Display, tight tracking, real weight.
+   - Type does the heavy lifting: Inter for anything read, JetBrains Mono
+     reserved for numbers, times and labels.
    ================================================================== */
 
 .eb-card {
@@ -304,17 +305,18 @@
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--ink-muted);
 }
 .eb-stat {
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: 800;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
+  /* Inter needs far less negative tracking than a display face. */
+  letter-spacing: -0.015em;
   color: var(--ink);
-  line-height: 1;
+  line-height: 1.05;
 }
 /* Nested prose inside a stat must not inherit numeral tracking. */
 .eb-stat span,
@@ -325,9 +327,8 @@
 .eb-heading {
   font-family: var(--font-display);
   font-weight: 700;
-  /* -0.03em collided glyphs at small sizes in Clash Display. */
-  letter-spacing: -0.015em;
-  line-height: 1.15;
+  letter-spacing: -0.011em;
+  line-height: 1.25;
   color: var(--ink);
 }
 
@@ -642,4 +643,16 @@
 @media (prefers-reduced-motion: reduce) {
   .eb-tab, .eb-tile { transition: none; }
   .eb-tab:active, .eb-tile:hover { transform: none; }
+}
+
+
+/* --- Numerals: tabular everywhere a value can change, so counters and
+       timers don't shift width as digits tick over. --- */
+.tabular-nums, .eb-stat, .eb-label { font-variant-numeric: tabular-nums; }
+
+/* Inter ships optional features that improve small-size legibility. */
+:root {
+  font-feature-settings: 'cv05' 1, 'ss03' 1;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }

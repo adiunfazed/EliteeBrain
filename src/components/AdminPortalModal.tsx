@@ -788,7 +788,7 @@ export const AdminPortalModal: React.FC<Props> = ({
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-black text-[#F4F6F8]">{req.userName}</span>
-                        <span className="text-[11px] font-mono text-[#98A2B3]">({req.userEmail})</span>
+                        <span className="text-[11px] text-[#98A2B3]">({req.userEmail})</span>
                         <span
                           className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
                             req.status === 'PENDING'

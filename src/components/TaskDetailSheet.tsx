@@ -182,7 +182,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
 
           {/* Estimate vs actual — only when both exist */}
           {task.estimatedMinutes && (task.focusSeconds || 0) > 60 && (
-            <p className="text-[11px] font-mono text-[#98A2B3] bg-[#171B22] border border-[#2A313C] rounded-xl p-2.5">
+            <p className="text-[11px] text-[#98A2B3] bg-[#171B22] border border-[#2A313C] rounded-xl p-2.5">
               {(() => {
                 const actual = Math.round((task.focusSeconds || 0) / 60);
                 const diff = actual - task.estimatedMinutes;
