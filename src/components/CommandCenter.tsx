@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { ArrowRight, Clock, Moon, Target, Timer } from 'lucide-react';
 import type { MomentumInput } from '../lib/momentum';
@@ -25,6 +25,14 @@ interface Props {
 export const CommandCenter: React.FC<Props> = ({ input, displayName, onOpenHub, onStartFocus, onOpenSleep }) => {
   const today = todayISO();
 
+  // Live clock so the header reflects the passing day rather than the moment
+  // the component happened to mount.
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 30_000);
+    return () => clearInterval(id);
+  }, []);
+
   const next = useMemo(() => nextBestAction(input.tasks), [input.tasks]);
   const day = useMemo(
     () => blocksForDate(input.routineBlocks, input.routineLogs, today),
@@ -34,7 +42,7 @@ export const CommandCenter: React.FC<Props> = ({ input, displayName, onOpenHub, 
   const lastNight = input.sleepLogs.find((s) => s.date === today);
 
   // The block that is on right now, or the next one due.
-  const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
+  const nowMin = now.getHours() * 60 + now.getMinutes();
   const currentBlock = useMemo(() => {
     const live = day.find(
       (d) => minutesOf(d.block.startTime) <= nowMin && minutesOf(d.block.endTime) > nowMin
@@ -46,6 +54,12 @@ export const CommandCenter: React.FC<Props> = ({ input, displayName, onOpenHub, 
 
   const greeting =
     nowMin < 12 * 60 ? 'Good morning' : nowMin < 17 * 60 ? 'Good afternoon' : 'Good evening';
+
+  // Share of a 06:00–23:00 waking day already spent.
+  const DAY_START = 6 * 60;
+  const DAY_END = 23 * 60;
+  const dayElapsed = Math.max(0, Math.min(1, (nowMin - DAY_START) / (DAY_END - DAY_START)));
+  const hoursLeft = Math.max(0, Math.round(((DAY_END - nowMin) / 60) * 10) / 10);
 
   return (
     <div className="eb-card relative overflow-hidden p-4 sm:p-5 space-y-4">
@@ -63,10 +77,39 @@ export const CommandCenter: React.FC<Props> = ({ input, displayName, onOpenHub, 
             month: 'long',
           })}
         </p>
-        <h2 className="eb-heading text-2xl sm:text-3xl mt-1">
-          {greeting}
-          {displayName ? <span className="text-[var(--signal-ink)]">, {displayName.split(' ')[0]}</span> : ''}
-        </h2>
+        <div className="flex items-center justify-between gap-4">
+          <h2 className="eb-heading text-2xl sm:text-3xl mt-1 min-w-0">
+            {greeting}
+            {displayName ? <span className="text-[var(--signal-ink)]">, {displayName.split(' ')[0]}</span> : ''}
+          </h2>
+
+          {/* How much of the day is left — the one number a daily planner
+              should always show. */}
+          <div className="relative w-14 h-14 shrink-0">
+            <svg viewBox="0 0 44 44" className="w-full h-full -rotate-90">
+              <circle cx="22" cy="22" r="19" fill="none" stroke="var(--surface-sunk)" strokeWidth="3.5" />
+              <motion.circle
+                cx="22"
+                cy="22"
+                r="19"
+                fill="none"
+                stroke="var(--signal)"
+                strokeWidth="3.5"
+                strokeLinecap="round"
+                strokeDasharray={2 * Math.PI * 19}
+                initial={false}
+                animate={{ strokeDashoffset: 2 * Math.PI * 19 * (1 - dayElapsed) }}
+                transition={{ duration: 0.6, ease: 'easeOut' }}
+              />
+            </svg>
+            <span className="absolute inset-0 flex flex-col items-center justify-center leading-none">
+              <span className="text-[11px] font-mono font-black text-[#F2F4F7] tabular-nums">
+                {hoursLeft}h
+              </span>
+              <span className="text-[7px] font-mono text-[#8A93A5] mt-0.5">LEFT</span>
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* ONE next action */}

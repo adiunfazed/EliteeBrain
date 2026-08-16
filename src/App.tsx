@@ -170,11 +170,28 @@ export default function App() {
                       ...prev,
                       ...cloudProfile,
                       lifetimePro: data.lifetimePro === true || (cloudProfile as any).lifetimePro === true,
-                      trialStartedAt: data.trialStartedAt || (cloudProfile as any).trialStartedAt,
+                      // Never let a stale cloud snapshot erase a started trial.
+                      // The clock is write-once; keeping the EARLIEST value
+                      // also means it cannot be restarted by any sync order.
+                      trialStartedAt:
+                        [
+                          data.trialStartedAt,
+                          (cloudProfile as any).trialStartedAt,
+                          prev.trialStartedAt,
+                        ]
+                          .filter(Boolean)
+                          .sort()[0],
                       isProUser: resolveEntitlement({
                         ...cloudProfile,
                         lifetimePro: data.lifetimePro === true || (cloudProfile as any).lifetimePro === true,
-                        trialStartedAt: data.trialStartedAt || (cloudProfile as any).trialStartedAt,
+                        trialStartedAt:
+                          [
+                            data.trialStartedAt,
+                            (cloudProfile as any).trialStartedAt,
+                            prev.trialStartedAt,
+                          ]
+                            .filter(Boolean)
+                            .sort()[0],
                         proPlanType: data.proPlanType || (cloudProfile as any).proPlanType,
                         proExpiresAt: data.proExpiresAt || (cloudProfile as any).proExpiresAt,
                         isProUser: data.isProUser === true,

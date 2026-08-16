@@ -108,14 +108,36 @@ export const ProSubscriptionModal: React.FC<Props> = ({
    * out, or editing anything in the browser.
    */
   const handleStartTrial = async () => {
-    if (profile.trialStartedAt || loading) return;
+    if (loading) return;
+
+    // The button is only rendered for status 'free', but guard anyway: a stale
+    // trialStartedAt used to make this return silently, so the button looked
+    // broken rather than explaining itself.
+    if (ent.status === 'trial') {
+      setSuccessMsg('Your trial is already running.');
+      return;
+    }
+    if (ent.status === 'expired') {
+      alert('Your free month has already been used on this account.');
+      return;
+    }
+
     soundFx.playClick();
     setLoading(true);
     try {
-      Object.assign(profile, startTrialFields());
-      profile.isProUser = true;
-      saveProfile(profile);
-      if (currentUser) await syncProfileToCloud(profile, currentUser);
+      // Build a NEW object. Object.assign mutated the profile React was
+      // holding, so state never changed and the screen fell back to its
+      // previous render — which is why the trial appeared to start and then
+      // revert.
+      const updated: UserProfile = {
+        ...profile,
+        ...startTrialFields(),
+        isProUser: true,
+      };
+
+      saveProfile(updated);
+      if (currentUser) await syncProfileToCloud(updated, currentUser);
+
       soundFx.playSuccess();
       setSuccessMsg('Trial started. You have full Pro access for 30 days.');
       onRefreshProfile?.();

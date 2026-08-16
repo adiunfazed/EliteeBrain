@@ -80,7 +80,11 @@ export async function fetchProfileFromCloud(userId: string): Promise<UserProfile
         const isPro = resolveEntitlement({
           ...profileObj,
           lifetimePro: data.lifetimePro === true || profileObj.lifetimePro === true,
-          trialStartedAt: data.trialStartedAt || profileObj.trialStartedAt,
+          // Earliest wins: the trial clock is write-once, so a later snapshot
+          // must never clear or restart it.
+          trialStartedAt: [data.trialStartedAt, profileObj.trialStartedAt, baseProfile.trialStartedAt]
+            .filter(Boolean)
+            .sort()[0],
           proPlanType: data.proPlanType || profileObj.proPlanType,
           proExpiresAt: data.proExpiresAt || profileObj.proExpiresAt,
           isProUser: data.isProUser === true,
@@ -105,7 +109,11 @@ export async function fetchProfileFromCloud(userId: string): Promise<UserProfile
           },
           isProUser: isPro,
           lifetimePro: data.lifetimePro === true || profileObj.lifetimePro === true,
-          trialStartedAt: data.trialStartedAt || profileObj.trialStartedAt,
+          // Earliest wins: the trial clock is write-once, so a later snapshot
+          // must never clear or restart it.
+          trialStartedAt: [data.trialStartedAt, profileObj.trialStartedAt, baseProfile.trialStartedAt]
+            .filter(Boolean)
+            .sort()[0],
           proExpiresAt: data.proExpiresAt || profileObj.proExpiresAt || undefined,
           proPlanType: data.proPlanType || profileObj.proPlanType || undefined,
           proPaidAt: data.proPaidAt || profileObj.proPaidAt || undefined,
