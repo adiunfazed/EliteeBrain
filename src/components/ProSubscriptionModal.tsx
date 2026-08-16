@@ -239,7 +239,7 @@ export const ProSubscriptionModal: React.FC<Props> = ({
         {/* Pro Header Badge */}
         <div className="flex items-center gap-2 mb-1">
           <span className="text-[10px] font-mono font-bold text-amber-400 uppercase tracking-widest">
-            ELITELIFE PRO ACCESS
+            ELITELIFE PRO
           </span>
           <span className="text-[10px] font-mono font-bold text-amber-300 px-2.5 py-0.5 bg-amber-500/20 border border-amber-500/40 rounded-full flex items-center gap-1 whitespace-nowrap">
             <Crown className="w-3 h-3 text-amber-400" /> UNLOCK ALL 8 MODULES
@@ -250,7 +250,7 @@ export const ProSubscriptionModal: React.FC<Props> = ({
           Select Your Subscription Plan
         </h2>
         <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">
-          No trials or hidden fees. Choose a plan below to submit for instant admin verification.
+          One payment. No subscription, no renewal.
         </p>
 
         {/* PENDING VERIFICATION CARD (If payment is waiting in queue) */}
@@ -346,7 +346,7 @@ export const ProSubscriptionModal: React.FC<Props> = ({
             whileTap={{ scale: 0.98 }}
             onClick={handleStartTrial}
             disabled={loading}
-            className="eb-lift eb-glow-emerald eb-marquee w-full mt-4 p-4 rounded-2xl bg-emerald-500 hover:brightness-110 disabled:opacity-50 text-slate-950 text-left"
+            className="eb-glow-green eb-marquee w-full mt-4 p-4 rounded-2xl bg-[#00C97A] hover:brightness-110 disabled:opacity-50 text-[#04231A] text-left"
           >
             <span className="flex items-center gap-2 text-sm font-black font-mono uppercase tracking-wide">
               <Gift className="w-4 h-4" />
@@ -459,7 +459,7 @@ export const ProSubscriptionModal: React.FC<Props> = ({
           
           <div className="flex items-center justify-center gap-2 text-slate-300 text-xs font-mono font-semibold tracking-wide">
             <Smartphone className="w-4 h-4 text-emerald-400" />
-            <span>UPI Instant Payment Gateway</span>
+            <span>Pay with UPI</span>
           </div>
 
           {/* SINGLE REALISTIC PAY USING UPI BUTTON WITH MOTION */}
@@ -478,13 +478,13 @@ export const ProSubscriptionModal: React.FC<Props> = ({
             </motion.a>
             <p className="text-[10px] font-sans text-slate-400 mt-1.5 flex items-center justify-center gap-1.5">
               <Shield className="w-3 h-3 text-emerald-400" />
-              <span>Directly launches Google Pay, PhonePe, Paytm, BHIM or any UPI app</span>
+              <span>Opens GPay, PhonePe, Paytm or any UPI app</span>
             </p>
           </div>
 
           {/* OR Scan QR Code */}
           <div className="pt-2 border-t border-slate-800/80">
-            <p className="text-[11px] text-slate-400 font-mono mb-2">Or scan QR Code directly from desktop:</p>
+            <p className="text-[11px] text-slate-400 font-mono mb-2">Or scan to pay</p>
             <motion.div
               whileHover={{ scale: 1.03 }}
               className="p-2.5 bg-white rounded-2xl inline-block shadow-lg mx-auto relative cursor-pointer"
@@ -524,7 +524,7 @@ export const ProSubscriptionModal: React.FC<Props> = ({
             whileTap={{ scale: 0.95 }}
             disabled={loading}
             onClick={handleWhatsAppConfirm}
-            className="eb-lift eb-glow-emerald eb-shine w-full py-3.5 bg-[#25D366] hover:brightness-110 text-slate-950 font-bold font-mono text-xs uppercase tracking-wider rounded-2xl flex items-center justify-center gap-2 cursor-pointer shadow-xl shadow-emerald-500/20 select-none touch-manipulation disabled:opacity-50"
+            className="eb-glow-green eb-shine w-full py-4 bg-[#25D366] hover:brightness-110 text-[#04231A] font-bold font-mono text-sm uppercase tracking-wider rounded-2xl flex items-center justify-center gap-2 cursor-pointer select-none touch-manipulation disabled:opacity-50"
           >
             <MessageCircle className="w-4 h-4" />
             <span>{loading ? 'Opening WhatsApp…' : 'Send screenshot on WhatsApp'}</span>

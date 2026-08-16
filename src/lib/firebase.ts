@@ -5,6 +5,7 @@ import {
   signInWithPopup,
   signOut as firebaseSignOut,
   onAuthStateChanged as firebaseOnAuthStateChanged,
+  fetchSignInMethodsForEmail,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
@@ -284,6 +285,16 @@ let localAuthStateCallback: ((user: User | null) => void) | null = null;
 // past the login screen without credentials.
 function describeAuthError(error: any): Error {
   const code = error?.code || '';
+  if (code === 'auth/account-exists-with-different-credential') {
+    return new Error(
+      'This email is already registered with a different sign-in method. Use the method you signed up with, or sign in and link them.'
+    );
+  }
+  if (code === 'auth/email-already-in-use') {
+    return new Error(
+      'That email already has an account. Try Sign In instead — or use Google if that is how you registered.'
+    );
+  }
   if (code === 'auth/unauthorized-domain') {
     return new Error(
       'This site is not authorised for sign-in yet. Add this domain under ' +
@@ -780,4 +791,31 @@ export async function getIdToken(): Promise<string | null> {
     console.warn('Could not get ID token:', err);
     return null;
   }
+}
+
+
+/**
+ * Which sign-in methods already exist for an email.
+ *
+ * Firebase can create SEPARATE accounts for google.com and password on the
+ * same address, each with its own uid — and because every collection is keyed
+ * by uid, that produces two completely separate sets of data for what the user
+ * thinks is one account. Checking first lets us steer them to the method they
+ * actually registered with.
+ */
+export async function existingSignInMethods(email: string): Promise<string[]> {
+  try {
+    if (!auth || !email) return [];
+    return await fetchSignInMethodsForEmail(auth, email.trim().toLowerCase());
+  } catch (err) {
+    console.warn('Could not check sign-in methods:', err);
+    return [];
+  }
+}
+
+/** Human-readable name for a Firebase provider id. */
+export function describeProvider(method: string): string {
+  if (method.startsWith('google')) return 'Google';
+  if (method.startsWith('password')) return 'email and password';
+  return method;
 }

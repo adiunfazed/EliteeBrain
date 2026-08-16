@@ -19,6 +19,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { EliteLifeLogo } from './EliteLifeLogo';
+import { existingSignInMethods, describeProvider } from '../lib/firebase';
 
 interface Props {
   onSignInSuccess: (user?: any) => void;
@@ -75,6 +76,17 @@ export const SignInScreen: React.FC<Props> = ({ onSignInSuccess, onContinueAsGue
         if (!name.trim()) {
           throw new Error('Please enter your full name.');
         }
+
+        // Firebase can create a SECOND account for the same address when the
+        // first used Google. Because all data is keyed by uid, that silently
+        // splits the user's history in two. Steer them to the original method.
+        const existing = await existingSignInMethods(email);
+        if (existing.length > 0) {
+          throw new Error(
+            `This email already has an account created with ${describeProvider(existing[0])}. Please sign in that way so your data stays in one place.`
+          );
+        }
+
         const user = await signUpWithEmail(email, password, name);
         soundFx.playSuccess();
         setSuccessMsg('Account created successfully!');

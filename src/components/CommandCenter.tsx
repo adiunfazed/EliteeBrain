@@ -48,8 +48,14 @@ export const CommandCenter: React.FC<Props> = ({ input, displayName, onOpenHub, 
     nowMin < 12 * 60 ? 'Good morning' : nowMin < 17 * 60 ? 'Good afternoon' : 'Good evening';
 
   return (
-    <div className="eb-card p-4 sm:p-5 space-y-4">
-      <div>
+    <div className="eb-card relative overflow-hidden p-4 sm:p-5 space-y-4">
+      {/* Ambient accent, clipped by the card. Flat radial, no gradient bar. */}
+      <div
+        className="pointer-events-none absolute -top-24 -right-16 w-64 h-64 rounded-full opacity-[0.16] blur-3xl"
+        style={{ background: 'var(--signal)' }}
+      />
+
+      <div className="relative">
         <p className="eb-label">
           {new Date().toLocaleDateString(undefined, {
             weekday: 'long',
@@ -57,9 +63,9 @@ export const CommandCenter: React.FC<Props> = ({ input, displayName, onOpenHub, 
             month: 'long',
           })}
         </p>
-        <h2 className="text-lg sm:text-xl font-black font-mono text-[#F4F6F8] tracking-tight mt-0.5">
+        <h2 className="eb-heading text-2xl sm:text-3xl mt-1">
           {greeting}
-          {displayName ? `, ${displayName.split(' ')[0]}` : ''}.
+          {displayName ? <span className="text-[var(--signal-ink)]">, {displayName.split(' ')[0]}</span> : ''}
         </h2>
       </div>
 
