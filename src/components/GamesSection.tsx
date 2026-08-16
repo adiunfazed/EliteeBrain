@@ -29,6 +29,8 @@ export const GamesSection: React.FC<{ profile: UserProfile; onProfileUpdate?: (p
       color: 'bg-[#2A1116] border-[#FF6B57]/40', accent: '#FF6B57',
       iconColor: 'text-rose-400',
       difficulty: 'Dynamic',
+      blurb: 'Play a full game against an engine that adapts to your rating. Every move is timed, and your rating moves with the result.',
+      trains: 'Planning · Foresight',
     },
     {
       id: 'flow',
@@ -38,6 +40,8 @@ export const GamesSection: React.FC<{ profile: UserProfile; onProfileUpdate?: (p
       color: 'bg-[#0E1B2E] border-[#4C9AFF]/40', accent: '#4C9AFF',
       iconColor: 'text-blue-400',
       difficulty: 'Medium',
+      blurb: 'Connect every pair of dots without crossing a line. Later boards need you to see the whole grid before you start.',
+      trains: 'Spatial logic',
     },
     {
       id: 'sliding',
@@ -47,6 +51,8 @@ export const GamesSection: React.FC<{ profile: UserProfile; onProfileUpdate?: (p
       color: 'bg-[#0B241F] border-[#00C2A8]/40', accent: '#00C2A8',
       iconColor: 'text-emerald-400',
       difficulty: 'Medium',
+      blurb: 'Slide tiles back into place against the clock. Hints are there when you need a nudge.',
+      trains: 'Working memory',
     },
     {
       id: '2048',
@@ -56,6 +62,8 @@ export const GamesSection: React.FC<{ profile: UserProfile; onProfileUpdate?: (p
       color: 'bg-[#2A1F08] border-[#FFB020]/40', accent: '#FFB020',
       iconColor: 'text-amber-400',
       difficulty: 'Hard',
+      blurb: 'Slide tiles back into place against the clock. Hints are there when you need a nudge.',
+      trains: 'Working memory',
     },
   ];
 
@@ -92,39 +100,66 @@ export const GamesSection: React.FC<{ profile: UserProfile; onProfileUpdate?: (p
                       soundFx.playClick();
                       setActiveGame(g.id as GameType);
                     }}
-                    className={`eb-raised eb-shine group relative overflow-hidden w-full text-left rounded-2xl border p-4 sm:p-5 cursor-pointer select-none ${g.color}`}
+                    className={`eb-raised eb-shine group relative overflow-hidden w-full text-left rounded-3xl border p-5 sm:p-6 cursor-pointer select-none ${g.color}`}
                   >
-                    {/* Oversized watermark glyph, clipped by the card. */}
+                    {/* Oversized glyph, clipped — gives each card its own
+                        identity without needing an image asset. */}
                     <Icon
-                      className="pointer-events-none absolute -right-4 -bottom-6 w-32 h-32 opacity-[0.07]"
+                      className="pointer-events-none absolute -right-8 -bottom-10 w-44 h-44 opacity-[0.08] group-hover:opacity-[0.13] group-hover:scale-105 transition-all duration-500"
                       style={{ color: g.accent }}
                     />
 
-                    <div className="relative z-10 flex items-center gap-4">
-                      <span
-                        className="shrink-0 inline-flex items-center justify-center w-14 h-14 rounded-2xl"
-                        style={{ backgroundColor: `${g.accent}22`, color: g.accent }}
-                      >
-                        <Icon className="w-7 h-7" />
-                      </span>
-
-                      <span className="min-w-0 flex-1">
-                        <span className="eb-heading block text-lg sm:text-xl">{g.title}</span>
-                        <span className="block text-xs font-mono text-[#8A93A5] mt-1">
-                          {g.subtitle}
-                        </span>
-                      </span>
-
-                      {g.id === 'chess' && (
+                    <div className="relative z-10">
+                      <div className="flex items-start gap-4">
                         <span
-                          className="shrink-0 text-xs font-mono font-bold px-2.5 py-1 rounded-lg"
-                          style={{ backgroundColor: `${g.accent}22`, color: g.accent }}
+                          className="shrink-0 inline-flex items-center justify-center w-14 h-14 rounded-2xl"
+                          style={{ backgroundColor: `${g.accent}20`, color: g.accent }}
                         >
-                          {profile.chessElo || 1200}
+                          <Icon className="w-7 h-7" />
                         </span>
-                      )}
 
-                      <ChevronRight className="w-5 h-5 text-[#8A93A5] shrink-0 group-hover:translate-x-1 transition-transform" />
+                        <div className="min-w-0 flex-1">
+                          <h3 className="eb-heading text-xl sm:text-2xl">{g.title}</h3>
+                          <p className="text-xs font-mono text-[#8A93A5] mt-1">{g.subtitle}</p>
+                        </div>
+
+                        <span
+                          className="shrink-0 text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border"
+                          style={{ borderColor: `${g.accent}55`, color: g.accent }}
+                        >
+                          {g.difficulty}
+                        </span>
+                      </div>
+
+                      <p className="text-[11px] text-[#8A93A5] leading-relaxed mt-3.5 max-w-lg">
+                        {g.blurb}
+                      </p>
+
+                      {/* Stat strip */}
+                      <div className="flex items-center gap-2 mt-4 flex-wrap">
+                        {g.id === 'chess' && (
+                          <span className="eb-card-sunk px-3 py-2 rounded-xl min-w-0">
+                            <span className="eb-label block">Rating</span>
+                            <span className="eb-stat block text-base mt-0.5" style={{ color: g.accent }}>
+                              {profile.chessElo || 1200}
+                            </span>
+                          </span>
+                        )}
+                        <span className="eb-card-sunk px-3 py-2 rounded-xl min-w-0">
+                          <span className="eb-label block">Trains</span>
+                          <span className="block text-xs font-bold text-[#F2F4F7] mt-1">
+                            {g.trains}
+                          </span>
+                        </span>
+
+                        <span
+                          className="ml-auto inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-mono font-bold group-hover:gap-2.5 transition-all"
+                          style={{ backgroundColor: `${g.accent}20`, color: g.accent }}
+                        >
+                          Play
+                          <ChevronRight className="w-4 h-4" />
+                        </span>
+                      </div>
                     </div>
                   </motion.button>
                 );

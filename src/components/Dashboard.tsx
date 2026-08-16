@@ -102,6 +102,7 @@ export const Dashboard: React.FC<Props> = ({
   const [hubPane, setHubPane] = useState<'today' | 'tasks' | 'goals' | 'routine' | 'focus'>('today');
   const [focusHandoff, setFocusHandoff] = useState<Task | null>(null);
   const [lifePane, setLifePane] = useState<'routine' | 'week' | 'sleep' | undefined>();
+  const lastUnlockSignatureRef = useRef<string>('');
   const [habitHandoff, setHabitHandoff] = useState<{ title: string; minutes: number; habitId: string } | null>(null);
   const [tasksDone, setTasksDone] = useState(0);
   const [tasksTarget, setTasksTarget] = useState(0);
@@ -197,10 +198,26 @@ export const Dashboard: React.FC<Props> = ({
       ),
     };
 
+    // Don't evaluate against empty collections on first render — that is not
+    // "no activity", it's "not loaded yet".
+    const loaded =
+      allHabits.length > 0 ||
+      routineBlocks.length > 0 ||
+      allFocus.length > 0 ||
+      allTasks.length > 0 ||
+      allGoals.length > 0 ||
+      sleepLogs.length > 0;
+    if (!loaded) return;
+
     const { updatedProfile, newlyUnlocked } = checkAchievements(profile, life);
-    if (newlyUnlocked.length > 0) {
-      onProfileUpdate?.(updatedProfile);
-    }
+    if (newlyUnlocked.length === 0) return;
+
+    // Guard against a re-render writing the same unlocks again.
+    const signature = newlyUnlocked.map((a) => a.id).sort().join(',');
+    if (signature === lastUnlockSignatureRef.current) return;
+    lastUnlockSignatureRef.current = signature;
+
+    onProfileUpdate?.(updatedProfile);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allHabits, allHabitLogs, routineBlocks, routineLogs, allFocus, allTasks, allGoals, sleepLogs]);
 
@@ -578,7 +595,7 @@ export const Dashboard: React.FC<Props> = ({
 
             {/* Each tab states what it is FOR, not just what it's called —
                 a label alone made it unclear why five tabs existed. */}
-            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar -mx-1 px-1">
+            <div className="eb-tabs overflow-x-auto no-scrollbar">
               {([
                 { id: 'today' as const, label: 'Today', icon: Sun, hint: 'Tick off your day' },
                 { id: 'tasks' as const, label: 'Tasks', icon: CheckSquare, hint: 'What to do' },
@@ -589,11 +606,8 @@ export const Dashboard: React.FC<Props> = ({
                 <button
                   key={id}
                   onClick={() => setHubPane(id)}
-                  className={`eb-press eb-shine shrink-0 text-[11px] font-mono font-bold px-3.5 py-2.5 rounded-xl border min-h-[42px] flex items-center gap-1.5 ${
-                    hubPane === id
-                      ? 'eb-chip-active'
-                      : 'text-[#8A93A5] eb-card-sunk hover:border-[var(--signal)] hover:text-[#F2F4F7]'
-                  }`}
+                  data-active={hubPane === id}
+                  className="eb-tab eb-shine shrink-0 text-[11px] font-mono px-3.5 py-2.5 min-h-[42px] flex items-center gap-1.5" 
                 >
                   <Icon className="w-3.5 h-3.5 shrink-0" />
                   {label}

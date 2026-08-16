@@ -20,7 +20,7 @@ export const RealityVsPlan: React.FC<Props> = ({ input }) => {
   const signals = useMemo(() => adaptiveSignals(input), [input]);
 
   return (
-    <div className="eb-card p-4 sm:p-5">
+    <div className="eb-panel p-4 sm:p-5">
       <span className="eb-label flex items-center gap-1.5">
         <Scale className="w-3 h-3 text-[#A78BFA]" />
         Plan vs reality · 7 days

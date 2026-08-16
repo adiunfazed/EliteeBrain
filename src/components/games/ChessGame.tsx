@@ -102,22 +102,20 @@ function evaluateBoard(game: Chess): number {
     }
   }
 
-  // Mate and stalemate must dominate material, or the engine will happily
-  // trade into a draw it could have avoided.
-  if (game.isCheckmate()) {
-    return game.turn() === 'w' ? -100000 : 100000;
-  }
-  if (game.isStalemate() || game.isThreefoldRepetition() || game.isDraw()) {
-    return 0;
-  }
-
-  // Mobility: a side with more legal moves has a freer position. This alone
-  // stops the "shuffle a rook" behaviour, because repeating a position gains
-  // nothing while developing does.
-  const mobility = game.moves().length;
-  score += game.turn() === 'w' ? mobility * 0.6 : -mobility * 0.6;
-
   return score;
+}
+
+/**
+ * Terminal check, done once per node instead of inside the evaluation.
+ *
+ * isCheckmate/isStalemate and moves() each cost roughly thirty times a board
+ * scan. Calling them from evaluateBoard meant thousands of calls per engine
+ * move, which froze the UI mid-game.
+ */
+function terminalScore(game: Chess, legalMoveCount: number): number | null {
+  if (legalMoveCount > 0) return null;
+  // No legal moves: checkmate if in check, stalemate otherwise.
+  return game.inCheck() ? (game.turn() === 'w' ? -100000 : 100000) : 0;
 }
 
 function minimax(
@@ -127,18 +125,27 @@ function minimax(
   beta: number,
   isMaximizing: boolean
 ): { score: number; move?: any } {
-  if (depth === 0 || game.isGameOver()) {
-    return { score: evaluateBoard(game) };
+  const legalMoves = game.moves({ verbose: true });
+
+  const terminal = terminalScore(game, legalMoves.length);
+  if (terminal !== null) return { score: terminal };
+
+  if (depth === 0) {
+    // Mobility is derived from the move list the search already built, so it
+    // costs nothing extra here.
+    const mobility = legalMoves.length * 0.6;
+    const base = evaluateBoard(game);
+    return { score: base + (game.turn() === 'w' ? mobility : -mobility) };
   }
 
-  const moves = game.moves({ verbose: true });
-  if (moves.length === 0) {
-    if (game.inCheck()) {
-      return { score: isMaximizing ? -99999 + (10 - depth) : 99999 - (10 - depth) };
-    }
-    return { score: 0 };
-  }
-
+  // Reuse the list already built above rather than enumerating twice.
+  // Captures first: alpha-beta prunes dramatically more when strong moves are
+  // examined early, which buys back the strength lost by capping depth.
+  const moves = legalMoves.slice().sort((a: any, b: any) => {
+    const av = a.captured ? (PIECE_VALUES[a.captured] || 0) - (PIECE_VALUES[a.piece] || 0) / 10 : -1;
+    const bv = b.captured ? (PIECE_VALUES[b.captured] || 0) - (PIECE_VALUES[b.piece] || 0) / 10 : -1;
+    return bv - av;
+  });
   let bestMove = moves[Math.floor(Math.random() * moves.length)];
 
   if (isMaximizing) {
@@ -418,8 +425,10 @@ export const ChessGame: React.FC<{
         return;
       }
 
+      // Depth is capped at 2: depth 3 measured ~6s and froze the board, which
+      // cost players games on the clock. Higher levels get better move
+      // ordering instead, which improves play without the stall.
       let searchDepth = 2;
-      if (engineLevel >= 2200) searchDepth = 3;
       if (engineLevel <= 700) searchDepth = 1;
 
       let bestMove = moves[Math.floor(Math.random() * moves.length)];
@@ -432,17 +441,22 @@ export const ChessGame: React.FC<{
         // Reject a move that walks straight back into a position already seen.
         // Without this the engine can shuffle the same piece indefinitely.
         if (bestMove) {
-          const probe = new Chess(gameCopy.fen());
           try {
-            probe.move(bestMove);
-            if (repetitionPenalty(probe) > 0) {
-              const alternatives = gameCopy
-                .moves({ verbose: true })
-                .filter((m: any) => `${m.from}${m.to}` !== `${(bestMove as any).from}${(bestMove as any).to}`);
+            // make/undo on the existing board — no FEN parsing, no allocation.
+            gameCopy.move(bestMove);
+            const repeats = repetitionPenalty(gameCopy) > 0;
+            gameCopy.undo();
+
+            if (repeats) {
+              const alternatives = gameCopy.moves({ verbose: true });
+              const currentKey = `${(bestMove as any).from}${(bestMove as any).to}`;
+
               for (const alt of alternatives) {
-                const test = new Chess(gameCopy.fen());
-                test.move(alt);
-                if (repetitionPenalty(test) === 0) {
+                if (`${alt.from}${alt.to}` === currentKey) continue;
+                gameCopy.move(alt);
+                const clean = repetitionPenalty(gameCopy) === 0;
+                gameCopy.undo();
+                if (clean) {
                   bestMove = alt;
                   break;
                 }

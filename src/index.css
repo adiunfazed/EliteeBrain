@@ -554,3 +554,92 @@
 @media (prefers-reduced-motion: reduce) {
   .eb-nav-item, .eb-nav-item::before { transition: none; }
 }
+
+
+/* ==================================================================
+   Section and tab treatments
+
+   These were flat rectangles with a border. Each now has an accent
+   pool behind it, a shine sweep, and a press state — so the interface
+   responds to touch rather than just changing colour.
+   ================================================================== */
+
+/* --- Section panel: card with an accent pool bleeding in from a corner. --- */
+.eb-panel {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 20px;
+}
+.eb-panel::before {
+  content: '';
+  position: absolute;
+  top: -60%;
+  right: -30%;
+  width: 70%;
+  height: 180%;
+  border-radius: 50%;
+  background: var(--signal);
+  opacity: 0.07;
+  filter: blur(48px);
+  pointer-events: none;
+}
+
+/* --- Tab row: a sunk track, so the group reads as one control. --- */
+.eb-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px;
+  background: var(--surface-sunk);
+  border: 1px solid var(--rule);
+  border-radius: 16px;
+}
+
+.eb-tab {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  font-weight: 700;
+  color: var(--ink-muted);
+  transition: color 0.18s ease, transform 0.14s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.eb-tab:hover { color: var(--ink); }
+.eb-tab:active { transform: scale(0.95); }
+.eb-tab[data-active='true'] {
+  color: #fff;
+  background: var(--signal);
+  box-shadow: 0 2px 0 0 rgba(0, 0, 0, 0.45), 0 0 18px -4px var(--signal);
+}
+
+/* --- Section header rule: a short accent bar under a heading. --- */
+.eb-underline { position: relative; padding-bottom: 10px; }
+.eb-underline::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 34px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--signal);
+  box-shadow: 0 0 10px 0 var(--signal);
+}
+
+/* --- Stat tile: subtle inner light from the top, per the lighting rule. --- */
+.eb-tile {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-sunk);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+  transition: border-color 0.18s ease, transform 0.16s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.eb-tile:hover { border-color: var(--signal); transform: translateY(-2px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .eb-tab, .eb-tile { transition: none; }
+  .eb-tab:active, .eb-tile:hover { transform: none; }
+}

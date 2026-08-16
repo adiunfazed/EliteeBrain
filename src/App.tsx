@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile, ModuleId, SessionResult } from './types';
-import { loadProfile, saveProfile, processModuleResult, MODULE_METADATA, createInitialProfile, resetAdminProfile } from './utils/storage';
+import { loadProfile, saveProfile, processModuleResult, MODULE_METADATA, createInitialProfile, resetAdminProfile, countConsecutiveCompletedDays } from './utils/storage';
 import { soundFx } from './utils/audio';
 import { auth, db, onAuthStateChanged, logoutUser, User } from './lib/firebase';
 import { syncProfileToCloud, fetchProfileFromCloud } from './lib/sync';
@@ -180,6 +180,13 @@ export default function App() {
                         isProUser: data.isProUser === true,
                       }).isPro,
                     };
+
+                    // The live listener applies the cloud copy directly, so a
+                    // stale inflated streak would come straight back after the
+                    // local repair. Recompute from the daily logs, which are
+                    // the actual record.
+                    merged.streakDays = countConsecutiveCompletedDays(merged);
+
                     saveProfile(merged);
                     return merged;
                   });

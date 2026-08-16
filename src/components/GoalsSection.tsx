@@ -646,7 +646,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-1.5 flex-wrap">
+      <div className="eb-tabs w-fit max-w-full overflow-x-auto no-scrollbar">
         {(['goals', 'habits'] as Pane[]).map((p) => (
           <button
             key={p}

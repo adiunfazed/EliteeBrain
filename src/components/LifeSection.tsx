@@ -189,11 +189,8 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
               soundFx.playClick();
               setPane(p);
             }}
-            className={`eb-press eb-shine text-[11px] font-mono font-bold px-3.5 py-2 rounded-xl border capitalize ${
-              pane === p
-                ? 'eb-chip-active'
-                : 'text-[#8A93A5] eb-card-sunk hover:border-[var(--signal)] hover:text-[#F2F4F7]'
-            }`}
+            data-active={pane === p}
+            className="eb-tab eb-shine text-[11px] font-mono px-3.5 py-2.5 capitalize shrink-0" 
           >
             {p}
           </button>
@@ -276,7 +273,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                 <p className="text-[9px] font-mono font-bold text-[#5A6472] tracking-widest uppercase mb-1.5">
                   Counts toward a goal
                 </p>
-                <div className="flex items-center gap-1.5 flex-wrap">
+                <div className="eb-tabs w-fit max-w-full overflow-x-auto no-scrollbar">
                   <button
                     onClick={() => setBlockGoalId(undefined)}
                     className={`eb-press text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border ${

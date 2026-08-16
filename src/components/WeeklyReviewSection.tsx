@@ -26,7 +26,7 @@ export const WeeklyReviewSection: React.FC<Props> = ({ input }) => {
   return (
     <div className="space-y-4">
       {/* Life areas */}
-      <div className="eb-card p-4 sm:p-5">
+      <div className="eb-panel p-4 sm:p-5">
         <span className="eb-label flex items-center gap-1.5">
           <Compass className="w-3 h-3 text-[#A78BFA]" />
           Life areas · last 7 days
@@ -66,7 +66,7 @@ export const WeeklyReviewSection: React.FC<Props> = ({ input }) => {
       </div>
 
       {/* Weekly review */}
-      <div className="eb-card p-4 sm:p-5">
+      <div className="eb-panel p-4 sm:p-5">
         <span className="eb-label flex items-center gap-1.5">
           <CalendarCheck className="w-3 h-3 text-emerald-400" />
           This week

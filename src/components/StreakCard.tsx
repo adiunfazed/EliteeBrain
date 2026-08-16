@@ -16,7 +16,7 @@ export const StreakCard: React.FC<Props> = ({ input }) => {
   const streak = useMemo(() => computeStreak(input), [input]);
 
   return (
-    <div className="eb-card p-4 sm:p-5">
+    <div className="eb-panel p-4 sm:p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <span className="eb-label flex items-center gap-1.5">

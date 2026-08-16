@@ -175,7 +175,9 @@ export function resetAdminProfile(existing?: UserProfile): UserProfile {
     unlockedAchievements: existing?.unlockedAchievements || {},
     modules: existing?.modules || fresh.modules,
     dailyLogs: existing?.dailyLogs || fresh.dailyLogs,
-    streakDays: existing?.streakDays ?? 0,
+    // Recomputed below from the preserved logs — never carry the stored
+    // number across, since old values are inflated.
+    streakDays: 0,
     currentDay: existing?.currentDay ?? 1,
     startDate: existing?.startDate || fresh.startDate,
     gamesXp: existing?.gamesXp ?? 0,
@@ -183,6 +185,7 @@ export function resetAdminProfile(existing?: UserProfile): UserProfile {
     displayName: existing?.displayName || fresh.displayName,
     adminResetDone: true,
   };
+  resetProf.streakDays = countConsecutiveCompletedDays(resetProf);
   saveProfile(resetProf);
   return resetProf;
 }

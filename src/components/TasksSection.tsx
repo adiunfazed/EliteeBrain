@@ -679,7 +679,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
               className="overflow-hidden"
             >
               <div className="pt-3 space-y-2.5">
-                <div className="flex items-center gap-1.5 flex-wrap">
+                <div className="eb-tabs w-fit max-w-full overflow-x-auto no-scrollbar">
                   {(Object.keys(CATEGORY_META) as TaskCategory[]).map((c) => (
                     <button
                       key={c}
@@ -774,11 +774,8 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
               soundFx.playClick();
               setTab(t.id);
             }}
-            className={`eb-press eb-shine text-[11px] font-mono font-bold px-3 py-2 rounded-xl border flex items-center gap-1.5 ${
-              tab === t.id
-                ? 'eb-chip-active'
-                : 'text-[#8A93A5] eb-card-sunk hover:border-[var(--signal)] hover:text-[#F2F4F7]'
-            }`}
+            data-active={tab === t.id}
+            className="eb-tab eb-shine text-[11px] font-mono px-3.5 py-2.5 flex items-center gap-1.5 shrink-0" 
           >
             {t.label}
             <span className="text-[9px] opacity-70">{t.count}</span>

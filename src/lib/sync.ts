@@ -2,6 +2,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db, User } from './firebase';
 import { resolveEntitlement } from './entitlement';
 import { UserProfile } from '../types';
+import { countConsecutiveCompletedDays } from '../utils/storage';
 import { saveProfile, calculateBrainScore, createInitialProfile, loadProfile } from '../utils/storage';
 
 export function sanitizeForFirestore(obj: any): any {
@@ -84,7 +85,7 @@ export async function fetchProfileFromCloud(userId: string): Promise<UserProfile
           proExpiresAt: data.proExpiresAt || profileObj.proExpiresAt,
           isProUser: data.isProUser === true,
         }).isPro;
-        const fullProfile: UserProfile = {
+        const merged: any = {
           ...baseProfile,
           ...profileObj,
           modules: {
@@ -113,6 +114,12 @@ export async function fetchProfileFromCloud(userId: string): Promise<UserProfile
           pendingPayment: isPro ? undefined : (profileObj.pendingPayment || baseProfile.pendingPayment),
         };
 
+        // Never trust a stored streak: the old code incremented it on every
+        // module completion, so cloud copies are inflated too. Daily logs are
+        // the record; recompute from them.
+        merged.streakDays = countConsecutiveCompletedDays(merged);
+
+        const fullProfile: UserProfile = merged;
         return fullProfile;
       }
     }
