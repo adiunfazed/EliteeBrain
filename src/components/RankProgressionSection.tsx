@@ -24,6 +24,8 @@ import {
 interface RankProgressionSectionProps {
   /** Activity-derived streak, so this never disagrees with the Home card. */
   derivedStreak?: number;
+  /** Unified career XP including habits, tasks, routine, focus and sleep. */
+  lifeXp?: number;
   profile: UserProfile;
   onLaunchModule: (id: any) => void;
   onOpenBadgesGallery?: () => void;
@@ -78,6 +80,7 @@ const TIERS: TierInfo[] = [
 export const RankProgressionSection: React.FC<RankProgressionSectionProps> = ({
   profile,
   derivedStreak,
+  lifeXp,
   onLaunchModule,
   onOpenBadgesGallery,
 }) => {
@@ -88,7 +91,9 @@ export const RankProgressionSection: React.FC<RankProgressionSectionProps> = ({
   }, [activeSubTab]);
 
   // Calculate total EXP strictly across modules and games
-  const careerXp = calculateTotalXp(profile);
+  // Same total the Level system uses, so Rank and Level can never disagree
+  // about how much a user has done.
+  const careerXp = lifeXp ?? calculateTotalXp(profile);
 
   // Determine current Tier strictly based on earned EXP
   let currentTierIndex = 0;

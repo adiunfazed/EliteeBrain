@@ -24,6 +24,7 @@ import { MomentumChart } from './MomentumChart';
 import { CommandCenter } from './CommandCenter';
 import { StreakCard } from './StreakCard';
 import { LevelBar } from './LevelBar';
+import { careerXp } from '../lib/xp';
 import { computeStreak } from '../lib/streak';
 import { checkAchievements } from '../utils/achievements';
 import { habitStats, valueOn } from '../lib/habits';
@@ -221,6 +222,21 @@ export const Dashboard: React.FC<Props> = ({
     onProfileUpdate?.(updatedProfile);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allHabits, allHabitLogs, routineBlocks, routineLogs, allFocus, allTasks, allGoals, sleepLogs]);
+
+  // One career total shared by Rank and Level.
+  const careerXpTotal = useMemo(
+    () =>
+      careerXp(profile, {
+        tasks: allTasks,
+        habits: allHabits,
+        habitLogs: allHabitLogs,
+        focusSessions: allFocus,
+        routineBlocks,
+        routineLogs,
+        sleepLogs,
+      }),
+    [profile, allTasks, allHabits, allHabitLogs, allFocus, routineBlocks, routineLogs, sleepLogs]
+  );
 
   const derivedStreak = useMemo(
     () => computeStreak(momentumInput).current,
@@ -469,6 +485,7 @@ export const Dashboard: React.FC<Props> = ({
             <RankProgressionSection
               profile={profile}
               derivedStreak={derivedStreak}
+              lifeXp={careerXpTotal}
               onLaunchModule={onLaunchModule}
               onOpenBadgesGallery={onOpenBadgesGallery}
             />

@@ -80,6 +80,11 @@ export const LevelBar: React.FC<Props> = ({ profile, input }) => {
           Perfect day — everything you scheduled is done.
         </p>
       )}
+
+      <p className="relative text-[10px] font-mono text-[#8A93A5] mt-3 leading-relaxed">
+        XP comes from finishing things — tasks, habits, routine blocks, focus and training. The
+        same total sets your rank.
+      </p>
     </div>
   );
 };
