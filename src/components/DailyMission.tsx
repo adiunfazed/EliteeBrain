@@ -88,7 +88,7 @@ export const DailyMission: React.FC<MissionProps> = ({
         <span
           className={`text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border shrink-0 ${
             allDone
-              ? 'text-emerald-300 bg-emerald-500/15 border-emerald-500/40'
+              ? 'eb-chip-active'
               : 'text-[#98A2B3] bg-[#171B22] border-[#2A313C]'
           }`}
         >

@@ -349,7 +349,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
                     onClick={() => onPatch({ goalId: task.goalId === g.id ? undefined : g.id })}
                     className={`eb-press text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border max-w-full truncate ${
                       task.goalId === g.id
-                        ? 'text-[#A78BFA] bg-[#8B5CF6]/15 border-[#8B5CF6]/35'
+                        ? 'eb-chip-active'
                         : 'text-[#5A6472] border-[#2A313C] hover:border-[#3A424F]'
                     }`}
                   >

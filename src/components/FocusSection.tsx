@@ -353,7 +353,7 @@ export const FocusSection: React.FC<Props> = ({ userId, incomingTask, onConsumeI
                 }}
                 className={`eb-press eb-shine px-4 py-2 rounded-xl border text-xs font-mono font-bold ${
                   minutes === m
-                    ? 'text-[#A78BFA] bg-[#8B5CF6]/15 border-[#8B5CF6]/40 shadow-[0_0_18px_-6px_rgba(92,108,242,0.7)]'
+                    ? 'eb-chip-active shadow-[0_0_18px_-6px_rgba(92,108,242,0.7)]'
                     : 'text-[#98A2B3] bg-[#171B22] border-[#2A313C] hover:border-[#3A424F]'
                 }`}
               >

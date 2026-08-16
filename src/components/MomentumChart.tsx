@@ -87,7 +87,7 @@ export const MomentumChart: React.FC<Props> = ({ input }) => {
               onClick={() => setRange(r.id)}
               className={`eb-press text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-lg border ${
                 range === r.id
-                  ? 'text-[#A78BFA] bg-[#8B5CF6]/15 border-[#8B5CF6]/35'
+                  ? 'eb-chip-active'
                   : 'text-[#5A6472] border-[#2A313C] hover:border-[#3A424F]'
               }`}
             >

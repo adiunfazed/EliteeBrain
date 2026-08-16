@@ -189,20 +189,15 @@ export const ModuleCard: React.FC<Props> = ({ config, state, isProUser, index = 
             <div className="p-2.5 rounded-xl bg-surface-sunk border border-rule group-hover:border-[#8B5CF6]/60 transition-colors shadow-xs">
               {getIcon()}
             </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-ink-muted font-bold">
-                  {config.category}
-                </span>
-                {config.isPro && (
-                  <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-                    <Crown className="w-2.5 h-2.5" /> PRO
-                  </span>
-                )}
-              </div>
-              <h4 className="text-sm font-bold font-mono text-ink group-hover:text-[#8B5CF6] transition-colors">
+            <div className="min-w-0">
+              <h4 className="eb-heading text-base group-hover:text-[var(--signal)] transition-colors break-words">
                 {config.name}
               </h4>
+              {config.isPro && (
+                <span className="inline-flex items-center gap-0.5 mt-1 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                  <Crown className="w-2.5 h-2.5" /> PRO
+                </span>
+              )}
             </div>
           </div>
 
@@ -215,10 +210,8 @@ export const ModuleCard: React.FC<Props> = ({ config, state, isProUser, index = 
           </div>
         </div>
 
-        {/* Tagline & Description */}
-        <p className="text-xs font-mono font-semibold text-ink mb-1">
-          {config.tagline}
-        </p>
+        {/* One plain line. Category and tagline said the same thing three
+            different ways. */}
         <p className="text-xs text-ink-muted leading-relaxed mb-4 line-clamp-2">
           {config.description}
         </p>

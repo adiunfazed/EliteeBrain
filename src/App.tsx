@@ -34,6 +34,7 @@ import { VisuospatialModule } from './components/modules/VisuospatialModule';
 import { ReactionInhibitorModule } from './components/modules/ReactionInhibitorModule';
 import { resolveEntitlement, startTrialFields } from './lib/entitlement';
 import { goalById } from './lib/goals';
+import { ScrollProgress } from './components/ScrollProgress';
 
 export default function App() {
   const [profile, setProfile] = useState<UserProfile>(() => loadProfile());
@@ -464,6 +465,8 @@ export default function App() {
       />
 
       {/* Pro Subscription Modal */}
+      <ScrollProgress />
+
       <NotificationSettings isOpen={isNotifOpen} onClose={() => setIsNotifOpen(false)} />
 
       <ProSubscriptionModal

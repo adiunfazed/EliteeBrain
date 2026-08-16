@@ -312,15 +312,22 @@
   font-family: var(--font-display);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
   color: var(--ink);
-  line-height: 0.95;
+  line-height: 1;
+}
+/* Nested prose inside a stat must not inherit numeral tracking. */
+.eb-stat span,
+.eb-heading span {
+  letter-spacing: normal;
+  font-variant-numeric: normal;
 }
 .eb-heading {
   font-family: var(--font-display);
   font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 1.05;
+  /* -0.03em collided glyphs at small sizes in Clash Display. */
+  letter-spacing: -0.015em;
+  line-height: 1.15;
   color: var(--ink);
 }
 
@@ -423,4 +430,30 @@
   .eb-card-tap:active, .eb-press:active { transform: none; }
   .eb-rise { animation: none; }
   .eb-shine::after { transition: none; }
+}
+
+
+/* --- Active nav indicator: a glowing rail rather than a flat underline. --- */
+.eb-nav-active { position: relative; }
+.eb-nav-active::after {
+  content: '';
+  position: absolute;
+  left: 22%;
+  right: 22%;
+  bottom: 2px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--signal);
+  box-shadow: 0 0 10px 1px var(--signal);
+}
+
+/* --- Section reveal on scroll, for module and card lists. --- */
+@keyframes eb-reveal {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.eb-reveal { animation: eb-reveal 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .eb-reveal { animation: none; }
 }

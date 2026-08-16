@@ -249,7 +249,7 @@ export const Dashboard: React.FC<Props> = ({
       label: 'Train',
       shortLabel: 'TRAIN',
       icon: Brain,
-      activeColor: 'text-[#A78BFA] bg-[#8B5CF6]/15 border-[#8B5CF6]/40',
+      activeColor: 'eb-chip-active',
       badge: `${completedTodayCount}/8`,
     },
     {
@@ -412,42 +412,6 @@ export const Dashboard: React.FC<Props> = ({
             className="space-y-6"
           >
             <DailyChallengeCard profile={profile} onLaunchModule={onLaunchModule} />
-
-            {/* Compact action row. The old banner explained what a tap does
-                and repeated the section title — bulk with no function. */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <button
-                onClick={() => {
-                  soundFx.playClick();
-                  onLaunchModule(nextPendingModule.id);
-                }}
-                className="eb-btn-primary flex-1 min-w-[200px] px-4 py-3 text-xs font-mono uppercase tracking-wide flex items-center justify-center gap-2"
-              >
-                {isDailyComplete ? 'Replay next' : `Train ${nextPendingModule.name}`}
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-
-              <div className="flex items-center gap-1 p-1 eb-card-sunk shrink-0">
-                {([
-                  { id: 'grid' as const, icon: LayoutGrid, label: 'Cards' },
-                  { id: 'roster' as const, icon: List, label: 'List' },
-                ]).map(({ id, icon: Icon, label }) => (
-                  <button
-                    key={id}
-                    onClick={() => {
-                      soundFx.playClick();
-                      setViewMode(id);
-                    }}
-                    className={`eb-press flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono font-bold ${
-                      viewMode === id ? 'eb-chip-active' : 'text-[#8A93A5] hover:text-white'
-                    }`}
-                  >
-                    <Icon className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">{label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
 
             {/* Exercises Content Grid / Roster */}
             <div>

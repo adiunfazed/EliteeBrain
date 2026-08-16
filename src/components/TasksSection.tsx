@@ -776,7 +776,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
             }}
             className={`eb-press eb-shine text-[11px] font-mono font-bold px-3 py-2 rounded-xl border flex items-center gap-1.5 ${
               tab === t.id
-                ? 'text-[#A78BFA] bg-[#8B5CF6]/15 border-[#8B5CF6]/40'
+                ? 'eb-chip-active'
                 : 'text-[#98A2B3] bg-[#0E1116] border-[#2A313C] hover:border-[#3A424F]'
             }`}
           >

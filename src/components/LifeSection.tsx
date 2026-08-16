@@ -64,6 +64,13 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
   const [sleep, setSleep] = useState<SleepLog[]>([]);
   const [pane, setPane] = useState<Pane>(initialPane || 'routine');
 
+  // useState only reads its initial value on first mount, so a later request
+  // to open Sleep was ignored whenever this component was already mounted —
+  // which is exactly the case when tapping Sleep from Home.
+  useEffect(() => {
+    if (initialPane) setPane(initialPane);
+  }, [initialPane]);
+
   const [title, setTitle] = useState('');
   const [kind, setKind] = useState<BlockKind>('study');
   const [blockGoalId, setBlockGoalId] = useState<string | undefined>();
@@ -184,7 +191,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
             }}
             className={`eb-press eb-shine text-[11px] font-mono font-bold px-3.5 py-2 rounded-xl border capitalize ${
               pane === p
-                ? 'text-[#A78BFA] bg-[#8B5CF6]/15 border-[#8B5CF6]/40'
+                ? 'eb-chip-active'
                 : 'text-[#98A2B3] bg-[#0E1116] border-[#2A313C] hover:border-[#3A424F]'
             }`}
           >
@@ -274,7 +281,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                     onClick={() => setBlockGoalId(undefined)}
                     className={`eb-press text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border ${
                       !blockGoalId
-                        ? 'text-[#A78BFA] bg-[#8B5CF6]/15 border-[#8B5CF6]/35'
+                        ? 'eb-chip-active'
                         : 'text-[#5A6472] border-[#2A313C]'
                     }`}
                   >
@@ -286,7 +293,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                       onClick={() => setBlockGoalId(blockGoalId === g.id ? undefined : g.id)}
                       className={`eb-press text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border max-w-full truncate ${
                         blockGoalId === g.id
-                          ? 'text-[#A78BFA] bg-[#8B5CF6]/15 border-[#8B5CF6]/35'
+                          ? 'eb-chip-active'
                           : 'text-[#5A6472] border-[#2A313C] hover:border-[#3A424F]'
                       }`}
                     >
