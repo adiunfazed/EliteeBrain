@@ -92,6 +92,8 @@ export interface UserProfile {
   gamesXp?: number;
   chessElo?: number;
   adminResetDone?: boolean;
+  /** One-time flag: the inflated streak counter has been recomputed. */
+  streakRepairedV2?: boolean;
   /** Goal chosen during onboarding — see lib/goals.ts. */
   focusGoal?: string;
   dailyMinutes?: number;

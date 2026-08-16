@@ -24,6 +24,10 @@ import { MomentumChart } from './MomentumChart';
 import { CommandCenter } from './CommandCenter';
 import { StreakCard } from './StreakCard';
 import { computeStreak } from '../lib/streak';
+import { checkAchievements } from '../utils/achievements';
+import { habitStats, valueOn } from '../lib/habits';
+import { blocksForDate } from '../lib/routine';
+import { todayISO } from '../lib/tasks';
 import { dueReminders, fireReminders, loadPrefs, registerServiceWorker } from '../lib/notifications';
 import { WeeklyReviewSection } from './WeeklyReviewSection';
 import { RealityVsPlan } from './RealityVsPlan';
@@ -160,6 +164,45 @@ export const Dashboard: React.FC<Props> = ({
     const id = setInterval(tick, 60_000);
     return () => clearInterval(id);
   }, [routineBlocks, routineLogs, allHabits, allHabitLogs, allTasks]);
+
+  // Life-based badges depend on data spread across several collections, so
+  // they are evaluated here where everything is already subscribed.
+  useEffect(() => {
+    const today = todayISO();
+    const bestHabitStreak = allHabits
+      .filter((h: any) => h.status === 'active')
+      .reduce((best: number, h: any) => Math.max(best, habitStats(h, allHabitLogs, today).bestStreak), 0);
+
+    const dayBlocks = blocksForDate(routineBlocks, routineLogs, today);
+    const focusMinutesTotal = Math.round(
+      allFocus.reduce((sum: number, s: any) => sum + (s.focusedSeconds || 0), 0) / 60
+    );
+
+    const life = {
+      habitCount: allHabits.filter((h: any) => h.status === 'active').length,
+      bestHabitStreak,
+      routineBlockCount: routineBlocks.filter((b: any) => b.active).length,
+      perfectRoutineDay: dayBlocks.length > 0 && dayBlocks.every((d: any) => d.state === 'done'),
+      focusSessions: allFocus.length,
+      focusMinutesTotal,
+      tasksCompleted: allTasks.filter((t) => t.completed).length,
+      goalCount: allGoals.length,
+      goalsCompleted: allGoals.filter((g: any) => g.status === 'completed').length,
+      sleepNights: sleepLogs.length,
+      trainedToday: (profile.dailyLogs?.[profile.currentDay]?.completedModules?.length || 0) > 0,
+      focusedToday: allFocus.some((s: any) => s.startedAt?.startsWith(today)),
+      habitHitToday: allHabits.some(
+        (h: any) =>
+          h.status === 'active' && valueOn(allHabitLogs, h.id, today) >= Math.max(1, h.targetValue || 1)
+      ),
+    };
+
+    const { updatedProfile, newlyUnlocked } = checkAchievements(profile, life);
+    if (newlyUnlocked.length > 0) {
+      onProfileUpdate?.(updatedProfile);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allHabits, allHabitLogs, routineBlocks, routineLogs, allFocus, allTasks, allGoals, sleepLogs]);
 
   const derivedStreak = useMemo(
     () => computeStreak(momentumInput).current,
@@ -549,7 +592,7 @@ export const Dashboard: React.FC<Props> = ({
                   className={`eb-press eb-shine shrink-0 text-[11px] font-mono font-bold px-3.5 py-2.5 rounded-xl border min-h-[42px] flex items-center gap-1.5 ${
                     hubPane === id
                       ? 'eb-chip-active'
-                      : 'text-[#98A2B3] bg-[#0E1116] border-[#2A313C] hover:border-[#3A424F]'
+                      : 'text-[#8A93A5] eb-card-sunk hover:border-[var(--signal)] hover:text-[#F2F4F7]'
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5 shrink-0" />
@@ -687,7 +730,8 @@ export const Dashboard: React.FC<Props> = ({
                   soundFx.playClick();
                   setActiveSection(item.id);
                 }}
-                className={`eb-press relative py-1.5 px-0.5 rounded-lg flex flex-col items-center justify-center gap-0.5 cursor-pointer min-h-[44px] ${
+                data-active={isActive}
+                className={`eb-press eb-nav-item relative py-1.5 px-0.5 rounded-xl flex flex-col items-center justify-center gap-0.5 cursor-pointer min-h-[46px] ${
                   isActive
                     ? 'text-white font-bold'
                     : 'text-[#98A2B3] hover:text-white'

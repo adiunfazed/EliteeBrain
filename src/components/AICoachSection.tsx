@@ -315,8 +315,10 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
               className="overflow-hidden"
             >
               <div className="grid grid-cols-2 gap-2 pt-3 mt-1 border-t border-[#2A313C]">
-                {COACH_ACTIONS.map((action) => {
+                {COACH_ACTIONS.map((action, i) => {
                   const Icon = iconFor(action.icon);
+                  const hues = ['#7C5CFF', '#FF6B57', '#00C2A8', '#FFB020', '#4C9AFF', '#A78BFA', '#FF8FA3', '#5BE9B9'];
+                  const hue = hues[i % hues.length];
                   return (
                     <button
                       key={action.id}
@@ -324,13 +326,14 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
                         setActionsOpen(false);
                         handleSendMessage(action.prompt);
                       }}
-                      className="eb-press eb-shine text-left p-2.5 rounded-xl bg-[#171B22] border border-[#2A313C] hover:border-[#8B5CF6]/45 transition-colors min-w-0"
+                      style={{ color: hue }}
+                      className="eb-press eb-shine eb-tint text-left p-3 rounded-xl bg-[#14171F] border border-[#262C38] hover:border-current transition-colors min-w-0 relative"
                     >
-                      <Icon className="w-3.5 h-3.5 text-[#A78BFA] mb-1.5" />
-                      <p className="text-[11px] font-bold text-[#F4F6F8] leading-snug break-words">
+                      <Icon className="w-4 h-4 mb-2 relative" />
+                      <p className="eb-heading text-xs text-[#F2F4F7] leading-snug break-words relative">
                         {action.title}
                       </p>
-                      <p className="text-[9px] text-[#98A2B3] mt-0.5 leading-snug break-words">
+                      <p className="text-[10px] text-[#8A93A5] mt-1 leading-snug break-words relative">
                         {action.hint}
                       </p>
                     </button>

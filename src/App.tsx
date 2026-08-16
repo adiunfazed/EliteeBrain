@@ -465,6 +465,8 @@ export default function App() {
       />
 
       {/* Pro Subscription Modal */}
+      <div className="eb-ambient" aria-hidden="true" />
+
       <ScrollProgress />
 
       <NotificationSettings isOpen={isNotifOpen} onClose={() => setIsNotifOpen(false)} />

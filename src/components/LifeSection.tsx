@@ -192,7 +192,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
             className={`eb-press eb-shine text-[11px] font-mono font-bold px-3.5 py-2 rounded-xl border capitalize ${
               pane === p
                 ? 'eb-chip-active'
-                : 'text-[#98A2B3] bg-[#0E1116] border-[#2A313C] hover:border-[#3A424F]'
+                : 'text-[#8A93A5] eb-card-sunk hover:border-[var(--signal)] hover:text-[#F2F4F7]'
             }`}
           >
             {p}
@@ -240,7 +240,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                 onKeyDown={(e) => e.key === 'Enter' && addBlock()}
                 placeholder="Add a time block — e.g. Morning study"
                 maxLength={80}
-                className="flex-1 min-w-0 bg-[#171B22] border border-[#2A313C] focus:border-[#8B5CF6]/60 rounded-xl px-3 py-2.5 text-sm text-[#F4F6F8] placeholder:text-[#5A6472] outline-none"
+                className="flex-1 min-w-0 eb-card-sunk focus:border-[#8B5CF6]/60 rounded-xl px-3 py-2.5 text-sm text-[#F4F6F8] placeholder:text-[#5A6472] outline-none"
               />
               <button
                 onClick={addBlock}
@@ -259,14 +259,14 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                   type="time"
                   value={start}
                   onChange={(e) => setStart(e.target.value)}
-                  className="bg-[#171B22] border border-[#2A313C] rounded-lg px-2 py-1.5 text-[11px] text-[#F4F6F8] outline-none"
+                  className="eb-card-sunk rounded-lg px-2 py-1.5 text-[11px] text-[#F4F6F8] outline-none"
                 />
                 <span className="text-[#5A6472]">→</span>
                 <input
                   type="time"
                   value={end}
                   onChange={(e) => setEnd(e.target.value)}
-                  className="bg-[#171B22] border border-[#2A313C] rounded-lg px-2 py-1.5 text-[11px] text-[#F4F6F8] outline-none"
+                  className="eb-card-sunk rounded-lg px-2 py-1.5 text-[11px] text-[#F4F6F8] outline-none"
                 />
               </label>
             </div>
@@ -525,7 +525,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                   type="time"
                   value={bedtime}
                   onChange={(e) => setBedtime(e.target.value)}
-                  className="bg-[#171B22] border border-[#2A313C] rounded-lg px-2 py-1.5 text-[11px] text-[#F4F6F8] outline-none"
+                  className="eb-card-sunk rounded-lg px-2 py-1.5 text-[11px] text-[#F4F6F8] outline-none"
                 />
               </label>
               <label className="flex items-center gap-1.5 text-[10px] font-mono text-[#98A2B3]">
@@ -534,7 +534,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                   type="time"
                   value={wakeTime}
                   onChange={(e) => setWakeTime(e.target.value)}
-                  className="bg-[#171B22] border border-[#2A313C] rounded-lg px-2 py-1.5 text-[11px] text-[#F4F6F8] outline-none"
+                  className="eb-card-sunk rounded-lg px-2 py-1.5 text-[11px] text-[#F4F6F8] outline-none"
                 />
               </label>
               <button

@@ -275,7 +275,22 @@ export function loadProfile(): UserProfile {
         saveProfile(parsed);
       }
     }
-    
+
+    // Repair inflated streaks written by the old incrementing counter. Daily
+    // logs are the source of truth; a stored number that disagrees with them
+    // is wrong by definition.
+    if (!parsed.streakRepairedV2) {
+      const recomputed = countConsecutiveCompletedDays(parsed);
+      if (parsed.streakDays !== recomputed) {
+        console.info(
+          `Corrected streak: stored ${parsed.streakDays}, actual ${recomputed} completed days.`
+        );
+        parsed.streakDays = recomputed;
+      }
+      parsed.streakRepairedV2 = true;
+      saveProfile(parsed);
+    }
+
     return parsed;
   } catch (err) {
     console.error('Error loading profile from localStorage:', err);
@@ -299,8 +314,11 @@ export function countConsecutiveCompletedDays(profile: UserProfile): number {
       streak++;
       continue;
     }
-    // Today being unfinished doesn't break a live streak; the day isn't over.
-    if (day === profile.currentDay) continue;
+
+    // Today still in progress doesn't break a live streak — the day isn't over.
+    // But a day explicitly marked MISSED is a decision, not an absence, and
+    // must break it even when that day is today.
+    if (day === profile.currentDay && log?.status !== 'missed') continue;
     break;
   }
 

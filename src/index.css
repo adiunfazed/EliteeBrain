@@ -476,3 +476,81 @@
   .eb-glow-green { animation: none; box-shadow: 0 0 22px -4px rgba(0,201,122,0.6); }
   .eb-glow-green:hover, .eb-glow-green:active { transform: none; }
 }
+
+
+/* ==================================================================
+   Ambient depth
+
+   The canvas was a single flat black, which made every card look like
+   it was floating on nothing. Two very low-opacity radial pools give
+   the page a subtle sense of light without becoming a gradient
+   background — they sit at 4-5% and never compete with content.
+   ================================================================== */
+
+.eb-ambient {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(900px 520px at 12% -8%, rgba(124, 92, 255, 0.10), transparent 60%),
+    radial-gradient(760px 480px at 92% 8%, rgba(0, 194, 168, 0.055), transparent 62%),
+    radial-gradient(680px 420px at 50% 108%, rgba(124, 92, 255, 0.06), transparent 60%);
+}
+
+/* Fine grid, barely visible — gives large empty areas some structure. */
+.eb-ambient::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse 90% 60% at 50% 0%, #000 40%, transparent 100%);
+}
+
+/* --- Tinted card. Carries a hint of a colour without becoming a block. --- */
+.eb-tint {
+  position: relative;
+  overflow: hidden;
+}
+.eb-tint::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.07;
+  background: currentColor;
+  pointer-events: none;
+}
+
+/* --- Left accent rail on list rows: reads as a category at a glance. --- */
+.eb-rail { position: relative; overflow: hidden; }
+.eb-rail::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: currentColor;
+  border-radius: 0 3px 3px 0;
+}
+
+/* --- Nav: the active item gets a soft pool behind it, not just a colour. --- */
+.eb-nav-item { position: relative; transition: color 0.18s ease; }
+.eb-nav-item::before {
+  content: '';
+  position: absolute;
+  inset: 4px 2px;
+  border-radius: 12px;
+  background: var(--signal);
+  opacity: 0;
+  transform: scale(0.82);
+  transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.eb-nav-item[data-active='true']::before { opacity: 0.16; transform: scale(1); }
+
+@media (prefers-reduced-motion: reduce) {
+  .eb-nav-item, .eb-nav-item::before { transition: none; }
+}

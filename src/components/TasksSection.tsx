@@ -634,7 +634,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
             }}
             placeholder="Add task — try: Gym tomorrow 6pm !high 45m #fitness"
             maxLength={180}
-            className="flex-1 min-w-0 bg-[#171B22] border border-[#2A313C] focus:border-[#8B5CF6]/60 rounded-xl px-3 py-2.5 text-sm text-[#F4F6F8] placeholder:text-[#5A6472] outline-none transition-colors"
+            className="flex-1 min-w-0 eb-card-sunk focus:border-[#8B5CF6]/60 rounded-xl px-3 py-2.5 text-sm text-[#F4F6F8] placeholder:text-[#5A6472] outline-none transition-colors"
           />
           <motion.button
             whileTap={{ scale: 0.94 }}
@@ -748,7 +748,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
             }
           }}
           placeholder="Search tasks"
-          className="w-full bg-[#0E1116] border border-[#2A313C] focus:border-[#8B5CF6]/60 rounded-xl pl-9 pr-9 py-2.5 text-xs text-[#F4F6F8] placeholder:text-[#5A6472] outline-none transition-colors"
+          className="w-full eb-card focus:border-[#8B5CF6]/60 rounded-xl pl-9 pr-9 py-2.5 text-xs text-[#F4F6F8] placeholder:text-[#5A6472] outline-none transition-colors"
         />
         {search && (
           <button
@@ -777,7 +777,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
             className={`eb-press eb-shine text-[11px] font-mono font-bold px-3 py-2 rounded-xl border flex items-center gap-1.5 ${
               tab === t.id
                 ? 'eb-chip-active'
-                : 'text-[#98A2B3] bg-[#0E1116] border-[#2A313C] hover:border-[#3A424F]'
+                : 'text-[#8A93A5] eb-card-sunk hover:border-[var(--signal)] hover:text-[#F2F4F7]'
             }`}
           >
             {t.label}

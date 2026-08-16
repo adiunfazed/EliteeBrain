@@ -569,7 +569,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
               }
             }}
             placeholder="Add a milestone"
-            className="flex-1 min-w-0 bg-[#171B22] border border-[#2A313C] focus:border-[#8B5CF6]/60 rounded-lg px-2.5 py-2 text-[11px] text-[#F4F6F8] placeholder:text-[#5A6472] outline-none"
+            className="flex-1 min-w-0 eb-card-sunk focus:border-[#8B5CF6]/60 rounded-lg px-2.5 py-2 text-[11px] text-[#F4F6F8] placeholder:text-[#5A6472] outline-none"
           />
           <button
             onClick={() => {
@@ -578,7 +578,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
             }}
             disabled={!msDraft.trim()}
             aria-label="Add milestone"
-            className="shrink-0 w-10 h-10 rounded-lg bg-[#171B22] border border-[#2A313C] disabled:opacity-40 text-[#F4F6F8] flex items-center justify-center"
+            className="shrink-0 w-10 h-10 rounded-lg eb-card-sunk disabled:opacity-40 text-[#F4F6F8] flex items-center justify-center"
           >
             <Plus className="w-4 h-4" />
           </button>
@@ -657,7 +657,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
             className={`eb-press eb-shine text-[11px] font-mono font-bold px-3 py-2 rounded-xl border capitalize ${
               pane === p
                 ? 'eb-chip-active'
-                : 'text-[#98A2B3] bg-[#0E1116] border-[#2A313C] hover:border-[#3A424F]'
+                : 'text-[#8A93A5] eb-card-sunk hover:border-[var(--signal)] hover:text-[#F2F4F7]'
             }`}
           >
             {p}
@@ -682,7 +682,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
               onKeyDown={(e) => e.key === 'Enter' && addGoal()}
               placeholder="What are you working toward?"
               maxLength={120}
-              className="flex-1 min-w-0 bg-[#0E1116] border border-[#2A313C] focus:border-[#8B5CF6]/60 rounded-xl px-3 py-2.5 text-sm text-[#F4F6F8] placeholder:text-[#5A6472] outline-none"
+              className="flex-1 min-w-0 eb-card focus:border-[#8B5CF6]/60 rounded-xl px-3 py-2.5 text-sm text-[#F4F6F8] placeholder:text-[#5A6472] outline-none"
             />
             <button
               onClick={addGoal}
@@ -717,7 +717,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
               onKeyDown={(e) => e.key === 'Enter' && addHabit()}
               placeholder="What will you repeat?"
               maxLength={120}
-              className="flex-1 min-w-0 bg-[#0E1116] border border-[#2A313C] focus:border-[#8B5CF6]/60 rounded-xl px-3 py-2.5 text-sm text-[#F4F6F8] placeholder:text-[#5A6472] outline-none"
+              className="flex-1 min-w-0 eb-card focus:border-[#8B5CF6]/60 rounded-xl px-3 py-2.5 text-sm text-[#F4F6F8] placeholder:text-[#5A6472] outline-none"
             />
             <button
               onClick={addHabit}

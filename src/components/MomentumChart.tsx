@@ -121,7 +121,7 @@ export const MomentumChart: React.FC<Props> = ({ input }) => {
           {series[series.length - 1].components.map((c) => (
             <div
               key={c.key}
-              className="bg-[#171B22] border border-[#2A313C] rounded-lg px-2 py-1.5 min-w-0"
+              className="eb-card-sunk rounded-lg px-2 py-1.5 min-w-0"
             >
               <p className="text-[9px] font-mono text-[#5A6472] truncate">{c.label}</p>
               <p className="text-[11px] font-mono font-bold text-[#F4F6F8] tabular-nums">

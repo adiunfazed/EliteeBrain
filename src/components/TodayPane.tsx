@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Check, Clock, MinusCircle, Flame, Target, ArrowRight } from 'lucide-react';
 import type { BlockState, Habit, HabitLog, RoutineBlock, RoutineLog, Task } from '../types';
 import { setHabitValue, setRoutineState } from '../lib/goalStore';
-import { BLOCK_META, blocksForDate, routineAdherence } from '../lib/routine';
+import { blocksForDate, routineAdherence } from '../lib/routine';
 import { habitStats, describeTarget } from '../lib/habits';
 import { bucketTasks, todayISO } from '../lib/tasks';
 import { soundFx } from '../utils/audio';
@@ -26,6 +26,20 @@ interface Props {
  * tabs, so nobody saw their whole day at once. This is the single screen you
  * open in the morning and tick through.
  */
+/** One colour per block kind, so a block looks the same everywhere. */
+/** Matching hexes for the tile classes, used to tint incomplete habits. */
+const TILE_HEX = ['#7C5CFF', '#FF6B57', '#FFB020', '#00C2A8', '#8A93A5'];
+
+const BLOCK_TINT: Record<string, string> = {
+  study: '#7C5CFF',
+  work: '#4C9AFF',
+  exercise: '#FFB020',
+  sleep: '#6C7BFF',
+  meal: '#00C2A8',
+  personal: '#FF6B57',
+  custom: '#8A93A5',
+};
+
 export const TodayPane: React.FC<Props> = ({
   userId,
   blocks,
@@ -206,17 +220,17 @@ export const TodayPane: React.FC<Props> = ({
               <motion.div
                 key={block.id}
                 layout
-                className={`eb-card-tap relative overflow-hidden rounded-2xl border p-3.5 flex items-center gap-3 ${
+                style={{ color: BLOCK_TINT[block.kind] || '#8A93A5' }}
+                className={`eb-card-tap eb-rail eb-shine relative overflow-hidden rounded-2xl border p-3.5 flex items-center gap-3 ${
                   state === 'done'
-                    ? 'bg-emerald-500/[0.07] border-emerald-500/25'
+                    ? 'bg-emerald-500/[0.09] border-emerald-500/30'
                     : state === 'partial'
-                      ? 'bg-amber-500/[0.07] border-amber-500/25'
+                      ? 'bg-amber-500/[0.09] border-amber-500/30'
                       : state === 'skipped'
-                        ? 'bg-[#0B0E13] border-[#20252E] opacity-60'
-                        : 'bg-[#0E1116] border-[#2A313C]'
+                        ? 'bg-[#0B0E13] border-[#20252E] opacity-55'
+                        : 'eb-tint bg-[#14171F] border-[#262C38]'
                 }`}
               >
-                <span className={`absolute left-0 top-0 bottom-0 w-[3px] ${BLOCK_META[block.kind].bar}`} />
                 <Tick
                   done={state === 'done'}
                   partial={state === 'partial'}
@@ -225,8 +239,8 @@ export const TodayPane: React.FC<Props> = ({
                 />
                 <div className="min-w-0 flex-1">
                   <p
-                    className={`text-sm font-bold break-words ${
-                      state === 'skipped' ? 'text-[#5A6472] line-through' : 'text-[#F4F6F8]'
+                    className={`eb-heading text-sm break-words relative ${
+                      state === 'skipped' ? 'text-[#5A6472] line-through' : 'text-[#F2F4F7]'
                     }`}
                   >
                     {block.title}
@@ -265,8 +279,9 @@ export const TodayPane: React.FC<Props> = ({
                 <button
                   key={habit.id}
                   onClick={() => toggleHabit(habit)}
-                  className={`eb-card-tap shrink-0 w-[132px] rounded-2xl p-3.5 text-left ${
-                    stats.completedToday ? tint : 'eb-card-sunk'
+                  style={stats.completedToday ? undefined : { color: TILE_HEX[i % TILE_HEX.length] }}
+                  className={`eb-card-tap eb-shine shrink-0 w-[136px] rounded-2xl p-3.5 text-left ${
+                    stats.completedToday ? `${tint} eb-raised` : 'eb-tint eb-card-sunk'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
@@ -290,8 +305,8 @@ export const TodayPane: React.FC<Props> = ({
                   </div>
 
                   <p
-                    className={`text-sm font-bold mt-3 leading-snug break-words ${
-                      stats.completedToday ? '' : 'text-[#F4F6F8]'
+                    className={`eb-heading text-sm mt-3 leading-snug break-words relative ${
+                      stats.completedToday ? '' : 'text-[#F2F4F7]'
                     }`}
                   >
                     {habit.title}

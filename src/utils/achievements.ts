@@ -5,7 +5,7 @@ export interface Achievement {
   id: string;
   title: string;
   description: string;
-  category: 'Streak' | 'Memory' | 'Focus' | 'Logic' | 'Milestones' | 'Mastery';
+  category: 'Streak' | 'Memory' | 'Focus' | 'Logic' | 'Milestones' | 'Mastery' | 'Habits' | 'Routine' | 'Goals' | 'Life';
   icon: string; // Lucide icon name
   color: 'amber' | 'emerald' | 'indigo' | 'violet' | 'rose' | 'sky' | 'teal';
   points: number;
@@ -173,9 +173,181 @@ export const ACHIEVEMENTS_LIST: Achievement[] = [
     points: 600,
     conditionDescription: 'Reach an overall Brain Index of 600+',
   },
+
+  /* ---- Habits ---- */
+  {
+    id: 'habit_first',
+    title: 'First Habit',
+    description: 'You created a habit worth repeating.',
+    category: 'Habits',
+    icon: 'Repeat',
+    color: 'violet',
+    points: 10,
+    conditionDescription: 'Create your first habit',
+  },
+  {
+    id: 'habit_week',
+    title: 'Seven Straight',
+    description: 'A habit kept every scheduled day for a week.',
+    category: 'Habits',
+    icon: 'Flame',
+    color: 'amber',
+    points: 30,
+    conditionDescription: 'Hit a 7-day streak on any habit',
+  },
+  {
+    id: 'habit_month',
+    title: 'Month of Momentum',
+    description: 'Thirty days of showing up for the same habit.',
+    category: 'Habits',
+    icon: 'Award',
+    color: 'emerald',
+    points: 80,
+    conditionDescription: 'Hit a 30-day streak on any habit',
+  },
+  {
+    id: 'habit_three',
+    title: 'Stacked',
+    description: 'Three habits running at once.',
+    category: 'Habits',
+    icon: 'Layers',
+    color: 'teal',
+    points: 25,
+    conditionDescription: 'Keep 3 habits active at the same time',
+  },
+
+  /* ---- Routine ---- */
+  {
+    id: 'routine_first',
+    title: 'Blocked Out',
+    description: 'You gave your day a shape.',
+    category: 'Routine',
+    icon: 'Clock',
+    color: 'sky',
+    points: 10,
+    conditionDescription: 'Add your first routine block',
+  },
+  {
+    id: 'routine_perfect_day',
+    title: 'Clean Sweep',
+    description: 'Every block on the schedule, done.',
+    category: 'Routine',
+    icon: 'CheckCheck',
+    color: 'emerald',
+    points: 35,
+    conditionDescription: 'Complete every routine block in one day',
+  },
+
+  /* ---- Focus ---- */
+  {
+    id: 'focus_first',
+    title: 'First Deep Work',
+    description: 'One session, no distractions.',
+    category: 'Focus',
+    icon: 'Timer',
+    color: 'indigo',
+    points: 10,
+    conditionDescription: 'Complete your first focus session',
+  },
+  {
+    id: 'focus_10h',
+    title: 'Ten Hours Deep',
+    description: 'Ten hours of genuinely focused work.',
+    category: 'Focus',
+    icon: 'Hourglass',
+    color: 'violet',
+    points: 60,
+    conditionDescription: 'Accumulate 10 hours of focus time',
+  },
+
+  /* ---- Tasks & goals ---- */
+  {
+    id: 'task_50',
+    title: 'Fifty Done',
+    description: 'Fifty tasks finished, not just planned.',
+    category: 'Milestones',
+    icon: 'ListChecks',
+    color: 'emerald',
+    points: 40,
+    conditionDescription: 'Complete 50 tasks',
+  },
+  {
+    id: 'goal_first',
+    title: 'Something to Aim At',
+    description: 'You set a goal worth working toward.',
+    category: 'Goals',
+    icon: 'Target',
+    color: 'rose',
+    points: 10,
+    conditionDescription: 'Create your first goal',
+  },
+  {
+    id: 'goal_complete',
+    title: 'Goal Reached',
+    description: 'You finished what you set out to do.',
+    category: 'Goals',
+    icon: 'Trophy',
+    color: 'amber',
+    points: 100,
+    conditionDescription: 'Complete a goal',
+  },
+
+  /* ---- Sleep & consistency ---- */
+  {
+    id: 'sleep_week',
+    title: 'Tracking Rest',
+    description: 'A week of recorded nights.',
+    category: 'Life',
+    icon: 'Moon',
+    color: 'indigo',
+    points: 25,
+    conditionDescription: 'Log sleep on 7 nights',
+  },
+  {
+    id: 'balanced_day',
+    title: 'Balanced Day',
+    description: 'Trained, focused, and kept your habits — all in one day.',
+    category: 'Life',
+    icon: 'Scale',
+    color: 'teal',
+    points: 50,
+    conditionDescription: 'Train, focus and hit a habit on the same day',
+  },
+  {
+    id: 'comeback',
+    title: 'Back On It',
+    description: 'You broke a streak and started another. That is the hard part.',
+    category: 'Streak',
+    icon: 'RotateCcw',
+    color: 'sky',
+    points: 30,
+    conditionDescription: 'Rebuild a 3-day streak after losing one',
+  },
 ];
 
-export function checkAchievements(profile: UserProfile): {
+
+export interface LifeContext {
+  habitCount?: number;
+  bestHabitStreak?: number;
+  routineBlockCount?: number;
+  perfectRoutineDay?: boolean;
+  focusSessions?: number;
+  focusMinutesTotal?: number;
+  tasksCompleted?: number;
+  goalCount?: number;
+  goalsCompleted?: number;
+  sleepNights?: number;
+  trainedToday?: boolean;
+  focusedToday?: boolean;
+  habitHitToday?: boolean;
+  /** True once a streak has been lost and rebuilt to 3+. */
+  rebuiltStreak?: boolean;
+}
+
+export function checkAchievements(
+  profile: UserProfile,
+  life: LifeContext = {}
+): {
   updatedProfile: UserProfile;
   newlyUnlocked: Achievement[];
 } {
@@ -278,6 +450,58 @@ export function checkAchievements(profile: UserProfile): {
 
       case 'brain_600':
         if (brainScore >= 600) unlocked = true;
+        break;
+
+      /* ---- Habits ---- */
+      case 'habit_first':
+        if ((life.habitCount || 0) >= 1) unlocked = true;
+        break;
+      case 'habit_week':
+        if ((life.bestHabitStreak || 0) >= 7) unlocked = true;
+        break;
+      case 'habit_month':
+        if ((life.bestHabitStreak || 0) >= 30) unlocked = true;
+        break;
+      case 'habit_three':
+        if ((life.habitCount || 0) >= 3) unlocked = true;
+        break;
+
+      /* ---- Routine ---- */
+      case 'routine_first':
+        if ((life.routineBlockCount || 0) >= 1) unlocked = true;
+        break;
+      case 'routine_perfect_day':
+        if (life.perfectRoutineDay) unlocked = true;
+        break;
+
+      /* ---- Focus ---- */
+      case 'focus_first':
+        if ((life.focusSessions || 0) >= 1) unlocked = true;
+        break;
+      case 'focus_10h':
+        if ((life.focusMinutesTotal || 0) >= 600) unlocked = true;
+        break;
+
+      /* ---- Tasks & goals ---- */
+      case 'task_50':
+        if ((life.tasksCompleted || 0) >= 50) unlocked = true;
+        break;
+      case 'goal_first':
+        if ((life.goalCount || 0) >= 1) unlocked = true;
+        break;
+      case 'goal_complete':
+        if ((life.goalsCompleted || 0) >= 1) unlocked = true;
+        break;
+
+      /* ---- Life ---- */
+      case 'sleep_week':
+        if ((life.sleepNights || 0) >= 7) unlocked = true;
+        break;
+      case 'balanced_day':
+        if (life.trainedToday && life.focusedToday && life.habitHitToday) unlocked = true;
+        break;
+      case 'comeback':
+        if (life.rebuiltStreak) unlocked = true;
         break;
     }
 

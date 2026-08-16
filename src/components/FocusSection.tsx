@@ -334,7 +334,7 @@ export const FocusSection: React.FC<Props> = ({ userId, incomingTask, onConsumeI
               onChange={(e) => setFreeLabel(e.target.value)}
               placeholder="Name this session"
               maxLength={100}
-              className="w-full bg-[#171B22] border border-[#2A313C] focus:border-[#8B5CF6]/60 rounded-xl px-3 py-2.5 text-sm text-[#F4F6F8] placeholder:text-[#5A6472] outline-none transition-colors"
+              className="w-full eb-card-sunk focus:border-[#8B5CF6]/60 rounded-xl px-3 py-2.5 text-sm text-[#F4F6F8] placeholder:text-[#5A6472] outline-none transition-colors"
             />
           )}
         </div>
