@@ -109,49 +109,37 @@ export const CommandCenter: React.FC<Props> = ({ input, displayName, onOpenHub, 
             month: 'long',
           })}
         </p>
-        <div className="flex items-center justify-between gap-4">
+        <div className="min-w-0">
           <h2 className="eb-heading text-2xl sm:text-3xl mt-1 min-w-0">
             {greeting}
             {displayName ? <span className="text-[var(--signal-ink)]">, {displayName.split(' ')[0]}</span> : ''}
           </h2>
 
-          {/* Today's completion, derived entirely from what the user has
-              actually scheduled. */}
-          <div className="relative w-14 h-14 shrink-0">
-            <svg viewBox="0 0 44 44" className="w-full h-full -rotate-90">
-              <circle cx="22" cy="22" r="19" fill="none" stroke="var(--surface-sunk)" strokeWidth="3.5" />
-              <motion.circle
-                cx="22"
-                cy="22"
-                r="19"
-                fill="none"
-                strokeWidth="3.5"
-                strokeLinecap="round"
-                strokeDasharray={2 * Math.PI * 19}
-                initial={false}
-                stroke={dayScore.ratio >= 1 ? '#00C2A8' : 'var(--signal)'}
-                animate={{ strokeDashoffset: 2 * Math.PI * 19 * (1 - dayScore.ratio) }}
-                transition={{ duration: 0.6, ease: 'easeOut' }}
-              />
-            </svg>
-            <span className="absolute inset-0 flex flex-col items-center justify-center leading-none">
-              <span className="text-[11px] font-mono font-black text-[#F2F4F7] tabular-nums">
-                {dayScore.total > 0 ? `${Math.round(dayScore.done)}/${dayScore.total}` : '—'}
-              </span>
-              <span className="text-[7px] font-mono text-[#8A93A5] mt-0.5">DONE</span>
-            </span>
-          </div>
         </div>
 
         {dayScore.total > 0 ? (
-          <p className="text-[10px] text-[#8A93A5] mt-2">
-            {dayScore.parts
-              .map((p) => `${Math.round(p.done)}/${p.total} ${p.label}`)
-              .join(' · ')}
-          </p>
+          <div className="mt-3">
+            <div className="flex items-center justify-between gap-2">
+              <span className="eb-label">Today</span>
+              <span className="text-[10px] font-mono text-[#8A93A5]">
+                {dayScore.parts
+                  .map((p) => `${Math.round(p.done)}/${p.total} ${p.label}`)
+                  .join('  ·  ')}
+              </span>
+            </div>
+            <div className="eb-bar mt-1.5">
+              <motion.div
+                className="eb-bar-fill"
+                initial={false}
+                animate={{ width: `${dayScore.ratio * 100}%` }}
+                transition={{ duration: 0.5, ease: 'easeOut' }}
+                style={{ background: dayScore.ratio >= 1 ? '#00C2A8' : undefined }}
+              />
+            </div>
+          </div>
         ) : (
           <p className="text-[10px] text-[#8A93A5] mt-2">
-            Nothing scheduled today. Add a task or a routine block to get started.
+            Nothing scheduled today. Add a task or routine block to get started.
           </p>
         )}
       </div>
@@ -203,10 +191,25 @@ export const CommandCenter: React.FC<Props> = ({ input, displayName, onOpenHub, 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <button
           onClick={() => onOpenHub('routine')}
-          className="eb-press eb-shine text-left rounded-xl bg-[#171B22] border border-[#2A313C] p-3 min-w-0"
+          className={`eb-press eb-shine text-left rounded-xl p-3.5 min-w-0 border transition-all ${
+            currentBlock?.live
+              ? 'bg-[#00C2A8]/[0.13] border-[#00C2A8]/50 shadow-[0_0_22px_-6px_#00C2A8]'
+              : currentBlock
+                ? 'bg-[var(--signal)]/[0.13] border-[var(--signal)]/50 shadow-[0_0_22px_-6px_var(--signal)]'
+                : 'eb-card-sunk'
+          }`}
         >
-          <span className="text-[9px] font-mono font-bold text-[#5A6472] tracking-widest uppercase flex items-center gap-1">
-            <Clock className="w-2.5 h-2.5" />
+          <span
+            className="eb-label flex items-center gap-1.5"
+            style={{
+              color: currentBlock?.live
+                ? '#00C2A8'
+                : currentBlock
+                  ? 'var(--signal-ink)'
+                  : undefined,
+            }}
+          >
+            <Clock className="w-3 h-3" />
             {currentBlock?.live ? 'Right now' : 'Next up'}
           </span>
           {currentBlock ? (
@@ -226,10 +229,17 @@ export const CommandCenter: React.FC<Props> = ({ input, displayName, onOpenHub, 
 
         <button
           onClick={() => onOpenHub('routine')}
-          className="eb-press eb-shine text-left rounded-xl bg-[#171B22] border border-[#2A313C] p-3 min-w-0"
+          className={`eb-press eb-shine text-left rounded-xl p-3.5 min-w-0 border transition-all ${
+            lastNight
+              ? 'bg-[#7C9CFF]/[0.11] border-[#7C9CFF]/45 shadow-[0_0_20px_-8px_#7C9CFF]'
+              : 'eb-card-sunk'
+          }`}
         >
-          <span className="text-[9px] font-mono font-bold text-[#5A6472] tracking-widest uppercase flex items-center gap-1">
-            <Moon className="w-2.5 h-2.5" />
+          <span
+            className="eb-label flex items-center gap-1.5"
+            style={{ color: lastNight ? '#7C9CFF' : undefined }}
+          >
+            <Moon className="w-3 h-3" />
             Sleep
           </span>
           {lastNight ? (

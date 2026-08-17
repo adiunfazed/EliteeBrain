@@ -154,7 +154,8 @@ const CLOUD_MESSAGES = 60;
  */
 export async function saveChatEverywhere(
   userId: string | null,
-  messages: CoachChatMessage[]
+  messages: CoachChatMessage[],
+  stamp: string = new Date().toISOString()
 ): Promise<void> {
   saveChat(userId, messages);
   if (!userId || !db) return;
@@ -163,7 +164,7 @@ export async function saveChatEverywhere(
     const trimmed = messages.slice(-CLOUD_MESSAGES);
     await setDoc(
       doc(db, 'users', userId, 'coachChat', 'current'),
-      { messages: trimmed, updatedAt: new Date().toISOString() },
+      { messages: trimmed, updatedAt: stamp },
       { merge: true }
     );
   } catch (err) {

@@ -9,6 +9,7 @@ import {
   COACH_ACTIONS,
   clearChatEverywhere,
   loadChat,
+  saveChat,
   saveChatEverywhere,
   subscribeChat,
 } from '../lib/coachChat';
@@ -52,11 +53,21 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
   useEffect(() => {
     if (!userId) return;
     return subscribeChat(userId, (cloud, updatedAt) => {
-      // Ignore an echo of what this device just wrote, and never let an empty
-      // cloud document wipe a thread that exists locally.
+      // Ignore this device's own write coming back.
       if (updatedAt && updatedAt === lastWriteRef.current) return;
-      if (cloud.length === 0 && messagesRef.current.length > 1) return;
-      if (cloud.length > 0) setMessages(cloud);
+      // A failed or empty cloud read must never wipe a local conversation.
+      if (cloud.length === 0) return;
+
+      // Adopt the cloud copy when it differs. Comparing content rather than
+      // length catches edits and replacements, not just additions.
+      const localIds = messagesRef.current.map((m) => m.id).join('|');
+      const cloudIds = cloud.map((m) => m.id).join('|');
+      if (localIds === cloudIds) return;
+
+      lastWriteRef.current = updatedAt;
+      messagesRef.current = cloud;
+      setMessages(cloud);
+      saveChat(userId, cloud);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
@@ -67,7 +78,9 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
     messagesRef.current = messages;
     const stamp = new Date().toISOString();
     lastWriteRef.current = stamp;
-    saveChatEverywhere(userId, messages);
+    // Pass the same stamp we recorded, so the echo guard can actually
+    // recognise this device's own write coming back.
+    saveChatEverywhere(userId, messages, stamp);
   }, [messages, loaded, userId]);
 
   // Initial welcome message

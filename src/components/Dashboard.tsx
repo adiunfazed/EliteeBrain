@@ -532,7 +532,7 @@ export const Dashboard: React.FC<Props> = ({
                           )}
                         </div>
 
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                           {groupModules.map((meta, idx) => {
                             const state = profile.modules[meta.id] || {
                               level: 1,

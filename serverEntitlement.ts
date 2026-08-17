@@ -88,8 +88,19 @@ export function resolveEntitlement(data: any, now: number = Date.now()): Entitle
     return { isPro: false, status: 'expired' };
   }
 
+  const isProFlag = readField(data, 'isProUser') === true;
   const legacy = toMillis(readField(data, 'proExpiresAt'));
-  if (readField(data, 'isProUser') === true && legacy !== null && now < legacy) {
+
+  if (isProFlag && legacy !== null) {
+    // Dated legacy plan — honour it until it runs out.
+    return now < legacy
+      ? { isPro: true, status: 'lifetime' }
+      : { isPro: false, status: 'expired' };
+  }
+
+  if (isProFlag) {
+    // Granted before plan type and expiry were recorded. There is no evidence
+    // it ever ended, so it is honoured rather than silently revoked.
     return { isPro: true, status: 'lifetime' };
   }
 

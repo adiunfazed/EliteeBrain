@@ -63,11 +63,11 @@ export const ModuleCard: React.FC<Props> = ({ config, state, isProUser, index = 
 
   return (
     <motion.div
-      // The first six cards fill the opening screen, so they animate in on
-      // mount rather than waiting for a scroll that has not happened. Anything
-      // further down still reveals as it comes into view.
-      initial={index < 6 ? { opacity: 0, y: 12 } : { opacity: 0, y: 28, scale: 0.96 }}
-      {...(index < 6
+      // The first two cards animate in on mount so the section never looks
+      // like it holds a single module. Everything below still reveals on
+      // scroll, which is what tells people to keep going.
+      initial={index < 2 ? { opacity: 0, y: 10 } : { opacity: 0, y: 28, scale: 0.96 }}
+      {...(index < 2
         ? { animate: { opacity: 1, y: 0, scale: 1 } }
         : {
             whileInView: { opacity: 1, y: 0, scale: 1 },
@@ -85,7 +85,7 @@ export const ModuleCard: React.FC<Props> = ({ config, state, isProUser, index = 
       onTouchEnd={() => setIsPressed(false)}
       onTouchCancel={() => setIsPressed(false)}
       onClick={handleCardClick}
-      className={`group eb-lift eb-shine ${config.isPro ? 'eb-glow-amber' : 'eb-glow-brand'} relative flex flex-col justify-between bg-surface border rounded-2xl p-3 sm:p-5 cursor-pointer select-none touch-manipulation overflow-hidden ${
+      className={`group eb-lift eb-shine ${config.isPro ? 'eb-glow-amber' : 'eb-glow-brand'} relative flex flex-col justify-between bg-surface border rounded-2xl p-4 sm:p-5 cursor-pointer select-none touch-manipulation overflow-hidden ${
         isPressed
           ? 'scale-[0.96] border-[#8B5CF6] shadow-[0_15px_30px_-5px_rgba(92,108,242,0.35)] bg-[#8B5CF6]/10'
           : isLocked
@@ -197,7 +197,7 @@ export const ModuleCard: React.FC<Props> = ({ config, state, isProUser, index = 
               {getIcon()}
             </div>
             <div className="min-w-0">
-              <h4 className="eb-heading text-[13px] sm:text-base group-hover:text-[var(--signal)] transition-colors break-words">
+              <h4 className="eb-heading text-base group-hover:text-[var(--signal)] transition-colors break-words">
                 {config.name}
               </h4>
               {config.isPro && (
@@ -219,7 +219,7 @@ export const ModuleCard: React.FC<Props> = ({ config, state, isProUser, index = 
 
         {/* One plain line. Category and tagline said the same thing three
             different ways. */}
-        <p className="hidden sm:block text-xs text-ink-muted leading-relaxed mb-4 line-clamp-2">
+        <p className="text-xs text-ink-muted leading-relaxed mb-4 line-clamp-2">
           {config.description}
         </p>
 
