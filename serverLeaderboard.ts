@@ -1,4 +1,5 @@
 import { getFirestore } from 'firebase-admin/firestore';
+import { readDisplayName, resolveEntitlement } from './serverEntitlement';
 
 /**
  * Leaderboard.
@@ -31,40 +32,14 @@ export interface LeaderboardEntry {
 /** Recompute an entry if its cached copy is older than this. */
 const STALE_MS = 5 * 60 * 1000;
 
-/** Mirrors resolveEntitlement — Pro means lifetime or an unexpired trial. */
 /**
- * Mirrors resolveEntitlement in src/lib/entitlement.ts.
- *
- * Entitlement fields can live at the top level (written by the admin portal)
- * or inside profileData (written by the app when a user starts their own
- * trial). Reading only one location meant admin-granted accounts showed the
- * Pro badge while self-serve trial users did not.
+ * How many users may be recomputed inside a single request. Everyone else is
+ * served from cache and refreshed on later requests, so response time stays
+ * flat as the member count grows.
  */
-function isProAccount(data: any): boolean {
-  if (!data) return false;
-  const p = data.profileData || {};
+const MAX_RECOMPUTE_PER_REQUEST = 6;
 
-  // Read every field from whichever location has it.
-  const pick = (key: string) => data[key] ?? p[key];
-
-  // Lifetime never expires and wins over everything.
-  if (pick('lifetimePro') === true || pick('proPlanType') === 'lifetime') return true;
-
-  // Free trial — 30 days from the recorded start. A forward-dated start is
-  // clamped, matching the client so the two can never disagree.
-  const startedRaw = pick('trialStartedAt');
-  const started = Date.parse(startedRaw || '');
-  if (Number.isFinite(started)) {
-    const now = Date.now();
-    const end = Math.min(started, now) + 30 * 24 * 60 * 60 * 1000;
-    if (now < end) return true;
-  }
-
-  // Legacy dated plans.
-  const legacy = Date.parse(pick('proExpiresAt') || '');
-  return pick('isProUser') === true && Number.isFinite(legacy) && Date.now() < legacy;
-}
-
+/** Mirrors resolveEntitlement — Pro means lifetime or an unexpired trial. */
 /* ------------------------------------------------------------------ */
 /* XP rules — must match src/lib/xp.ts                                 */
 /* ------------------------------------------------------------------ */
@@ -234,12 +209,7 @@ export async function syncLeaderboardEntry(uid: string): Promise<LeaderboardEntr
   const userSnap = await db.collection('users').doc(uid).get();
   const data = userSnap.exists ? userSnap.data() : null;
 
-  const rawName =
-    data?.displayName ||
-    data?.profileData?.displayName ||
-    data?.email?.split('@')[0] ||
-    '';
-  const displayName = String(rawName).trim().slice(0, 24) || 'Unnamed member';
+  const displayName = readDisplayName(data);
 
   const { career, weekly } = await computeUserXp(uid);
 
@@ -249,7 +219,7 @@ export async function syncLeaderboardEntry(uid: string): Promise<LeaderboardEntr
     careerXp: career,
     weeklyXp: weekly,
     level: levelFromXp(career),
-    isPro: isProAccount(data),
+    isPro: resolveEntitlement(data).isPro,
     updatedAt: new Date().toISOString(),
   };
 
@@ -302,6 +272,7 @@ export async function getLeaderboard(
   const now = Date.now();
   const entries: LeaderboardEntry[] = [];
   const toPersist: LeaderboardEntry[] = [];
+  let recomputed = 0;
 
   for (const doc of usersSnap.docs) {
     const data = doc.data();
@@ -313,10 +284,8 @@ export async function getLeaderboard(
     const fresh =
       cached && Date.parse(cached.updatedAt || '') > now - STALE_MS && typeof cached.careerXp === 'number';
 
-    const rawName =
-      data.displayName || data.profileData?.displayName || data.email?.split('@')[0] || '';
-    const displayName = String(rawName).trim().slice(0, 24) || 'Unnamed member';
-    const pro = isProAccount(data);
+    const displayName = readDisplayName(data);
+    const pro = resolveEntitlement(data).isPro;
 
     if (fresh) {
       // Name and Pro status are cheap to read, so keep them current even when
@@ -325,7 +294,16 @@ export async function getLeaderboard(
       continue;
     }
 
+    // Serve a stale entry rather than blocking the response on a recompute.
+    // Only a few accounts are refreshed per request, so the first load stays
+    // fast no matter how many members exist.
+    if (cached && recomputed >= MAX_RECOMPUTE_PER_REQUEST) {
+      entries.push({ ...cached, displayName, isPro: pro });
+      continue;
+    }
+
     try {
+      recomputed++;
       const { career, weekly } = await computeUserXp(doc.id);
       const entry: LeaderboardEntry = {
         uid: doc.id,

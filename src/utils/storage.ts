@@ -243,37 +243,44 @@ export function loadProfile(): UserProfile {
       const diffDays = Math.round((curr - last) / (1000 * 3600 * 24));
 
       if (diffDays > 0) {
-        // Reset completedToday flag on modules for new calendar day
+        // A new calendar day always resets per-module completion.
         Object.keys(parsed.modules).forEach((m) => {
           if (parsed.modules[m as ModuleId]) {
             parsed.modules[m as ModuleId].completedToday = false;
           }
         });
 
-        if (diffDays === 1) {
-          // Check if yesterday had at least 4 modules completed
-          const currentDayLog = parsed.dailyLogs[parsed.currentDay];
-          const allDone = currentDayLog && currentDayLog.completedModules.length >= 4;
-          
-          if (allDone && parsed.currentDay < 30) {
-            parsed.currentDay += 1;
-            parsed.dailyLogs[parsed.currentDay].status = 'current';
-            parsed.dailyLogs[parsed.currentDay].date = today;
-          }
-        } else if (diffDays > 1) {
-          // Missed one or more days
-          const currentLog = parsed.dailyLogs[parsed.currentDay];
-          if (currentLog && currentLog.completedModules.length < 4) {
-            currentLog.status = 'missed';
-          }
-          if (parsed.currentDay < 30) {
-            parsed.currentDay += 1;
-            parsed.dailyLogs[parsed.currentDay].status = 'current';
-            parsed.dailyLogs[parsed.currentDay].date = today;
-          }
-          // Reset streak if gap > 1 day
-          parsed.streakDays = 0;
+        // Close out the day that just ended. Previously this only advanced
+        // when four modules were finished, so an incomplete day stayed
+        // "current" — and its completed modules carried into the next day,
+        // which is why modules appeared already done and the streak grew
+        // without any activity.
+        const closing = parsed.dailyLogs[parsed.currentDay];
+        if (closing) {
+          closing.status = (closing.completedModules?.length || 0) >= 4 ? 'completed' : 'missed';
         }
+
+        // Advance one day per calendar day elapsed, marking any fully skipped
+        // days as missed so the streak calculation sees the real history.
+        for (let i = 0; i < diffDays && parsed.currentDay < 30; i++) {
+          parsed.currentDay += 1;
+          const log = parsed.dailyLogs[parsed.currentDay];
+          if (!log) continue;
+
+          // Every intermediate day was never opened, so it is missed.
+          const isToday = i === diffDays - 1;
+          log.status = isToday ? 'current' : 'missed';
+          log.date = isToday ? today : log.date;
+          if (isToday) {
+            // Guard against stale entries carried over from a previous cycle.
+            log.completedModules = [];
+          }
+        }
+
+        // Streak is derived from the logs, never incremented. With the days
+        // above correctly marked, a skipped day now breaks it as expected.
+        parsed.streakDays = countConsecutiveCompletedDays(parsed);
+
         parsed.lastActiveDate = today;
         saveProfile(parsed);
       }

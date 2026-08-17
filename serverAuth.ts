@@ -1,6 +1,7 @@
 import { cert, getApps, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
+import { resolveEntitlement } from './serverEntitlement';
 
 /**
  * Server-side identity and entitlement verification.
@@ -68,40 +69,6 @@ export interface VerifiedUser {
   status: 'lifetime' | 'trial' | 'expired' | 'free';
 }
 
-const TRIAL_DAYS = 30;
-
-/**
- * Mirrors src/lib/entitlement.ts. Kept deliberately simple and separate: the
- * server must not import client code, and this is the copy that actually
- * decides access.
- */
-function resolveEntitlement(data: any, now = Date.now()): {
-  isPro: boolean;
-  status: VerifiedUser['status'];
-} {
-  if (!data) return { isPro: false, status: 'free' };
-
-  if (data.lifetimePro === true || data.proPlanType === 'lifetime') {
-    return { isPro: true, status: 'lifetime' };
-  }
-
-  const startMs = Date.parse(data.trialStartedAt || '');
-  if (Number.isFinite(startMs)) {
-    // A forward-dated start would stretch the trial indefinitely; clamp it.
-    const start = Math.min(startMs, now);
-    const end = start + TRIAL_DAYS * 24 * 60 * 60 * 1000;
-    if (now < end) return { isPro: true, status: 'trial' };
-    return { isPro: false, status: 'expired' };
-  }
-
-  const legacy = Date.parse(data.proExpiresAt || '');
-  if (data.isProUser === true && Number.isFinite(legacy) && now < legacy) {
-    return { isPro: true, status: 'lifetime' };
-  }
-
-  return { isPro: false, status: 'free' };
-}
-
 /**
  * Verify a Firebase ID token and look up that user's real entitlement.
  * Returns null when the token is missing, invalid, or expired.
@@ -153,17 +120,22 @@ export async function verifyUser(idToken?: string): Promise<VerifiedUser | null>
       throw new Error('ENTITLEMENT_LOOKUP_FAILED');
     }
 
-    // Entitlement fields live at the top level; profileData is the fallback for
-    // documents written before that was standardised.
-    const source = {
-      lifetimePro: data?.lifetimePro ?? data?.profileData?.lifetimePro,
-      trialStartedAt: data?.trialStartedAt ?? data?.profileData?.trialStartedAt,
-      proPlanType: data?.proPlanType ?? data?.profileData?.proPlanType,
-      proExpiresAt: data?.proExpiresAt ?? data?.profileData?.proExpiresAt,
-      isProUser: data?.isProUser ?? data?.profileData?.isProUser,
-    };
-
-    const { isPro, status } = resolveEntitlement(source);
+    // Delegates to the shared reader, which handles profileData stored as an
+    // object OR a JSON string, and dates as ISO/epoch/Timestamp. Reading only
+    // one shape is why trial users were refused the coach.
+    const { isPro, status } = resolveEntitlement(data);
+    if (!isPro) {
+      console.info(
+        'Coach denied for',
+        decoded.uid,
+        '| status:',
+        status,
+        '| lifetimePro:',
+        JSON.stringify(data?.lifetimePro),
+        '| trialStartedAt:',
+        JSON.stringify(data?.trialStartedAt || data?.profileData?.trialStartedAt)
+      );
+    }
     return { uid: decoded.uid, email: decoded.email, isPro, status };
   } catch (err: any) {
     // Firebase error codes are specific: auth/id-token-expired,

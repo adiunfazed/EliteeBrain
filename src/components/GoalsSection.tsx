@@ -13,6 +13,7 @@ import {
   ChevronRight,
   Pencil,
   Trash2,
+  ChevronDown,
 } from 'lucide-react';
 import type { Goal, Habit, HabitLog, Task } from '../types';
 import {
@@ -148,6 +149,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
   const [editingHabitId, setEditingHabitId] = useState<string | null>(null);
   const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
+  const [openMilestones, setOpenMilestones] = useState<Record<string, boolean>>({});
 
   const commitHabitRename = async (habit: Habit) => {
     const title = editText.trim();
@@ -528,10 +530,32 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
           </p>
         )}
 
-        {/* Milestones */}
+        {/* Milestones — collapsed by default so a long list doesn't bury the
+            rest of the goal card. */}
         {(goal.milestones || []).length > 0 && (
           <div className="space-y-1.5">
-            {(goal.milestones || []).map((m) => (
+            <button
+              onClick={() =>
+                setOpenMilestones((prev) => ({ ...prev, [goal.id]: !prev[goal.id] }))
+              }
+              className="eb-press w-full flex items-center justify-between gap-2 py-1.5 text-left"
+            >
+              <span className="eb-label">
+                Milestones{' '}
+                <span className="normal-case tracking-normal text-[#8A93A5]">
+                  {(goal.milestones || []).filter((m) => m.done).length} of{' '}
+                  {(goal.milestones || []).length} done
+                </span>
+              </span>
+              <ChevronDown
+                className={`w-3.5 h-3.5 text-[#8A93A5] shrink-0 transition-transform ${
+                  openMilestones[goal.id] ? 'rotate-180' : ''
+                }`}
+              />
+            </button>
+
+            {openMilestones[goal.id] &&
+              (goal.milestones || []).map((m) => (
               <button
                 key={m.id}
                 onClick={() => toggleMilestone(goal, m.id)}

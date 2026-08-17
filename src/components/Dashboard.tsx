@@ -280,9 +280,9 @@ export const Dashboard: React.FC<Props> = ({
       const doneToday = tasksDoneToday(list);
       setOpenTaskCount(openToday);
       setTasksDone(doneToday);
-      // Target reflects the work that actually exists, capped at three so the
-      // goal stays achievable. Zero tasks means zero target, not a phantom 3.
-      setTasksTarget(Math.min(3, openToday + doneToday));
+      // Show the real number. Capping at three reported "0 of 3" to someone
+      // with nine tasks due, which is simply untrue.
+      setTasksTarget(openToday + doneToday);
       setAllTasks(list);
     });
   }, [currentUser?.uid]);

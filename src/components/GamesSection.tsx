@@ -7,6 +7,7 @@ import { SlidingPuzzle } from './games/SlidingPuzzle';
 import { FlowFree } from './games/FlowFree';
 import { Swords, LayoutGrid, Image as ImageIcon, GitMerge, ArrowLeft, ChevronRight } from 'lucide-react';
 import { soundFx } from '../utils/audio';
+import { GameShell } from './games/GameShell';
 
 type GameType = 'chess' | '2048' | 'sliding' | 'flow' | null;
 
@@ -179,21 +180,20 @@ export const GamesSection: React.FC<{ profile: UserProfile; onProfileUpdate?: (p
             className="w-full"
           >
             <div className="mb-6 flex justify-between items-center bg-[#12161F] p-2 rounded-2xl border border-[#2A313C]">
-              <button
-                onClick={() => {
-                  soundFx.playClick();
-                  setActiveGame(null);
-                }}
-                className="flex items-center gap-2 px-4 py-2 hover:bg-[#1C212B] rounded-xl transition-colors text-white text-sm font-mono font-bold uppercase tracking-wider cursor-pointer"
-              >
-                <ArrowLeft className="w-4 h-4" /> Back to Games
-              </button>
             </div>
 
-            {activeGame === 'chess' && <ChessGame profile={profile} onProfileUpdate={onProfileUpdate} />}
-            {activeGame === 'flow' && <FlowFree profile={profile} onProfileUpdate={onProfileUpdate} />}
-            {activeGame === '2048' && <Game2048 profile={profile} onProfileUpdate={onProfileUpdate} />}
-            {activeGame === 'sliding' && <SlidingPuzzle profile={profile} onProfileUpdate={onProfileUpdate} />}
+            <GameShell
+              title={games.find((g) => g.id === activeGame)?.title || 'Game'}
+              onExit={() => {
+                soundFx.playClick();
+                setActiveGame(null);
+              }}
+            >
+              {activeGame === 'chess' && <ChessGame profile={profile} onProfileUpdate={onProfileUpdate} />}
+              {activeGame === 'flow' && <FlowFree profile={profile} onProfileUpdate={onProfileUpdate} />}
+              {activeGame === '2048' && <Game2048 profile={profile} onProfileUpdate={onProfileUpdate} />}
+              {activeGame === 'sliding' && <SlidingPuzzle profile={profile} onProfileUpdate={onProfileUpdate} />}
+            </GameShell>
           </motion.div>
         )}
       </AnimatePresence>

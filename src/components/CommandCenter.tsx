@@ -129,10 +129,19 @@ export const CommandCenter: React.FC<Props> = ({ input, displayName, onOpenHub, 
               <span className="text-[11px] font-mono font-black text-[#F2F4F7] tabular-nums">
                 {dayScore.total > 0 ? `${Math.round(dayScore.done)}/${dayScore.total}` : '—'}
               </span>
-              <span className="text-[7px] font-mono text-[#8A93A5] mt-0.5">TODAY</span>
+              <span className="text-[7px] font-mono text-[#8A93A5] mt-0.5">DONE</span>
             </span>
           </div>
         </div>
+
+        {dayScore.total > 0 && (
+          <p className="text-[10px] text-[#8A93A5] mt-2">
+            {Math.round(dayScore.done)} of {dayScore.total} things scheduled today —{' '}
+            {dayScore.total - Math.round(dayScore.done) === 0
+              ? 'all done'
+              : `${dayScore.total - Math.round(dayScore.done)} left`}
+          </p>
+        )}
       </div>
 
       {/* ONE next action */}
