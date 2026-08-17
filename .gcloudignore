@@ -1,0 +1,18 @@
+# .gcloudignore
+.gcloudignore
+.git
+.gitignore
+
+# Dependencies and Build Outputs
+node_modules/
+dist/
+build/
+.cache/
+.vite/
+bun.lock
+
+# Logs and Temp
+*.log
+tmp/
+temp/
+.DS_Store
