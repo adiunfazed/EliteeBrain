@@ -1,24 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { UserProfile, ModuleState, DailyLog } from '../types';
+import { UserProfile } from '../types';
 import { calculateBrainScore, calculateTotalXp } from '../utils/storage';
-import { ArenaSection } from './ArenaSection';
 import { ChartRecorder } from './ChartRecorder';
 import { DayProgressCalendar } from './DayProgressCalendar';
 import { soundFx } from '../utils/audio';
 import {
   Flame,
   Trophy,
-  Award,
-  Zap,
-  TrendingUp,
-  ChevronRight,
-  ShieldAlert,
-  BarChart2,
   Calendar,
-  Sparkles,
   Activity,
-  Layers,
 } from 'lucide-react';
 
 interface RankProgressionSectionProps {
@@ -192,194 +183,67 @@ export const RankProgressionSection: React.FC<RankProgressionSectionProps> = ({
             className="space-y-6"
           >
             {/* HERO RANK CARD (Directly matching screenshot layout) */}
-            <div className="eb-shine bg-[#12161F] border border-[#2A313C] rounded-3xl p-6 sm:p-8 text-center relative overflow-hidden shadow-2xl">
-
-              {/* Ambient glow, tinted to the current tier and gently breathing
-                  so the rank feels alive without distracting. */}
-              <div
-                className="eb-pulse-ring absolute inset-0 opacity-15 pointer-events-none blur-3xl"
-                style={{ backgroundColor: currentTier.color }}
-              />
-
-              {/* Circular Gauge Ring */}
-              <div className="relative mx-auto w-48 h-48 sm:w-56 sm:h-56 flex items-center justify-center my-2">
-                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                  {/* Background Arc */}
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="42"
-                    stroke="#1E2634"
-                    strokeWidth="6"
-                    fill="transparent"
-                  />
-                  {/* Active Progress Arc */}
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="42"
-                    stroke={currentTier.color}
-                    strokeWidth="6"
-                    strokeDasharray={263.89}
-                    strokeDashoffset={263.89 - (263.89 * progressPercent) / 100}
-                    strokeLinecap="round"
-                    fill="transparent"
-                    className="transition-all duration-1000 ease-out"
-                  />
-                </svg>
-
-                {/* Hexagonal Center Badge */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  {/* Hexagon Shape Container */}
-                  <div
-                    className="w-16 h-18 sm:w-20 sm:h-22 flex items-center justify-center relative mb-1"
-                    style={{
-                      clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
-                      backgroundColor: currentTier.color + '25',
-                      border: `2px solid ${currentTier.color}`,
-                    }}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {[
+                {
+                  label: 'Rank',
+                  value: currentRankLabel,
+                  sub: nextTier !== currentTier ? `${xpToGo.toLocaleString()} XP to ${nextTier.baseName} ${nextTier.tierNumber}` : 'Top tier',
+                  color: currentTier.color,
+                },
+                {
+                  label: 'Total XP',
+                  value: careerXp.toLocaleString(),
+                  sub: 'earned',
+                  color: '#F2F4F7',
+                },
+                {
+                  label: 'Streak',
+                  value: `${derivedStreak ?? profile.streakDays}`,
+                  sub: (derivedStreak ?? profile.streakDays) === 1 ? 'day' : 'days',
+                  color: '#FFB020',
+                },
+                {
+                  label: 'Badges',
+                  value: `${Object.keys(profile.unlockedAchievements || {}).length}`,
+                  sub: 'unlocked',
+                  color: '#00C2A8',
+                },
+              ].map((stat) => (
+                <div key={stat.label} className="eb-card p-3 min-w-0">
+                  <span className="eb-label block truncate">{stat.label}</span>
+                  <span
+                    className="eb-stat block text-lg mt-1 truncate"
+                    style={{ color: stat.color }}
                   >
-                    <span className="text-xl sm:text-2xl font-mono font-black text-white tracking-widest drop-shadow-md">
-                      {currentTier.tierNumber}
-                    </span>
-                  </div>
-
-                  {/* Percentage under Hexagon */}
-                  <span className="text-xs font-mono font-bold text-[#98A2B3]">
-                    {progressPercent}%
+                    {stat.value}
+                  </span>
+                  <span className="block text-[9px] text-[#8A93A5] mt-0.5 truncate">
+                    {stat.sub}
                   </span>
                 </div>
-              </div>
+              ))}
+            </div>
 
-              {/* Rank Info Text */}
-              <div className="space-y-1 mt-2">
-                <span className="text-[10px] font-mono font-extrabold text-[#98A2B3] uppercase tracking-widest block">
-                  CURRENT COGNITIVE RANK
+            {/* Tier progress — one bar rather than a six-card ladder. */}
+            <div className="eb-card p-4">
+              <div className="flex items-center justify-between gap-2">
+                <span className="eb-label">Progress to next rank</span>
+                <span className="text-[10px] font-mono font-bold" style={{ color: currentTier.color }}>
+                  {progressPercent}%
                 </span>
-                <h1
-                  className="text-3xl sm:text-4xl font-display font-black tracking-wider uppercase drop-shadow-lg"
-                  style={{ color: currentTier.color }}
-                >
-                  {currentRankLabel}
-                </h1>
-
-                {/* Subtitle Details */}
-                <p className="text-xs text-[#98A2B3] pt-1">
-                  NEXT: {nextTier.baseName} {nextTier.tierNumber} — <strong className="text-white">{xpToGo.toLocaleString()} XP</strong> TO GO
-                </p>
-                <div className="text-[11px] font-mono text-[#6C757D]">
-                  {careerXp.toLocaleString()} TOTAL EARNED EXP
-                </div>
               </div>
-
-              {/* PROGRESSION LADDER (Grouped by Base Tier) */}
-              <div className="mt-8 pt-6 border-t border-[#2A313C]/80">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-xs font-mono font-bold text-[#98A2B3] uppercase tracking-wider">
-                    PROGRESSION LADDER (TIER OVERVIEW)
-                  </span>
-                </div>
-
-                {/* Grid of Hexagon Tier Cards */}
-                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                  {Array.from(new Set(TIERS.map(t => t.baseName))).map((baseName) => {
-                    const baseTiers = TIERS.filter(t => t.baseName === baseName);
-                    const firstTier = baseTiers[0];
-                    const isCurrentBase = currentTier.baseName === baseName;
-                    const isUnlocked = TIERS.findIndex(t => t.baseName === baseName) <= currentTierIndex;
-
-                    return (
-                      <div
-                        key={baseName}
-                        className={`p-3 rounded-2xl border text-center transition-all relative ${
-                          isCurrentBase
-                            ? 'bg-[#1A1F2C] border-2 border-amber-400 shadow-lg shadow-amber-500/10'
-                            : isUnlocked
-                            ? 'bg-[#12161F] border-[#2A313C] opacity-90'
-                            : 'bg-[#0D1117]/60 border-[#1F242D] opacity-40'
-                        }`}
-                      >
-                        {/* Hexagon Icon */}
-                        <div
-                          className="w-8 h-9 mx-auto flex items-center justify-center font-mono font-extrabold text-xs mb-1.5"
-                          style={{
-                            clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
-                            backgroundColor: isUnlocked ? firstTier.color + '30' : '#1A1F2C',
-                            border: `1.5px solid ${isUnlocked ? firstTier.color : '#363F4D'}`,
-                            color: isUnlocked ? firstTier.color : '#6C757D',
-                          }}
-                        >
-                          {baseName.charAt(0)}
-                        </div>
-
-                        <span className="block text-[10px] font-mono font-black uppercase tracking-tight text-white">
-                          {baseName}
-                        </span>
-
-                        <span className="text-[9px] font-mono text-[#98A2B3] block">
-                          {firstTier.minXp >= 1000 ? `${Math.floor(firstTier.minXp / 1000)}K+` : firstTier.minXp + '+'}
-                        </span>
-
-                        {/* Active Bottom Highlight Line */}
-                        {isCurrentBase && (
-                          <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-amber-400 rounded-full shadow-xs" />
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-            </div>
-
-            {/* Quick Stat Summary Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="p-4 bg-[#12161F] border border-[#2A313C] rounded-2xl flex items-center gap-3">
-                <div className="p-3 bg-amber-500/15 border border-amber-500/30 text-amber-400 rounded-xl">
-                  <Flame className="w-5 h-5" />
-                </div>
-                <div>
-                  <span className="text-[10px] font-mono font-bold text-[#98A2B3] uppercase">
-                    Streak Continuity
-                  </span>
-                  <div className="text-lg font-mono font-extrabold text-white">
-                    {derivedStreak ?? profile.streakDays} Days
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-4 bg-[#12161F] border border-[#2A313C] rounded-2xl flex items-center gap-3">
-                <div className="p-3 bg-[#8B5CF6]/15 border border-[#8B5CF6]/30 text-[#A78BFA] rounded-xl">
-                  <Zap className="w-5 h-5" />
-                </div>
-                <div>
-                  <span className="text-[10px] font-mono font-bold text-[#98A2B3] uppercase">
-                    Composite Brain Score
-                  </span>
-                  <div className="text-lg font-mono font-extrabold text-[#A78BFA]">
-                    {brainScore} pts
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-4 bg-[#12161F] border border-[#2A313C] rounded-2xl flex items-center gap-3">
-                <div className="p-3 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 rounded-xl">
-                  <Trophy className="w-5 h-5" />
-                </div>
-                <div>
-                  <span className="text-[10px] font-mono font-bold text-[#98A2B3] uppercase">
-                    Unlocked Achievements
-                  </span>
-                  <div className="text-lg font-mono font-extrabold text-white">
-                    {Object.keys(profile.unlockedAchievements || {}).length} Badges
-                  </div>
-                </div>
+              <div className="eb-bar mt-2">
+                <motion.div
+                  className="eb-bar-fill"
+                  initial={false}
+                  animate={{ width: `${progressPercent}%` }}
+                  transition={{ duration: 0.6, ease: 'easeOut' }}
+                  style={{ background: currentTier.color }}
+                />
               </div>
             </div>
 
-            {/* Arena sits under the ladder: rank and leaderboard answer the
-                same question, so they belong together. */}
-            <ArenaSection />
           </motion.div>
         )}
 

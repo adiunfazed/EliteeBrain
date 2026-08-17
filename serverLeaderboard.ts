@@ -32,27 +32,37 @@ export interface LeaderboardEntry {
 const STALE_MS = 5 * 60 * 1000;
 
 /** Mirrors resolveEntitlement — Pro means lifetime or an unexpired trial. */
+/**
+ * Mirrors resolveEntitlement in src/lib/entitlement.ts.
+ *
+ * Entitlement fields can live at the top level (written by the admin portal)
+ * or inside profileData (written by the app when a user starts their own
+ * trial). Reading only one location meant admin-granted accounts showed the
+ * Pro badge while self-serve trial users did not.
+ */
 function isProAccount(data: any): boolean {
   if (!data) return false;
   const p = data.profileData || {};
 
-  // Entitlement fields can sit at the top level (written by the admin portal)
-  // or inside profileData (written by the app when a user starts a trial).
-  // Checking only the top level meant admin-granted accounts showed the badge
-  // and self-serve trial users did not.
-  const lifetime = data.lifetimePro ?? p.lifetimePro;
-  const planType = data.proPlanType ?? p.proPlanType;
-  if (lifetime === true || planType === 'lifetime') return true;
+  // Read every field from whichever location has it.
+  const pick = (key: string) => data[key] ?? p[key];
 
-  const started = Date.parse(data.trialStartedAt || p.trialStartedAt || '');
+  // Lifetime never expires and wins over everything.
+  if (pick('lifetimePro') === true || pick('proPlanType') === 'lifetime') return true;
+
+  // Free trial — 30 days from the recorded start. A forward-dated start is
+  // clamped, matching the client so the two can never disagree.
+  const startedRaw = pick('trialStartedAt');
+  const started = Date.parse(startedRaw || '');
   if (Number.isFinite(started)) {
-    const end = Math.min(started, Date.now()) + 30 * 24 * 60 * 60 * 1000;
-    if (Date.now() < end) return true;
+    const now = Date.now();
+    const end = Math.min(started, now) + 30 * 24 * 60 * 60 * 1000;
+    if (now < end) return true;
   }
 
-  const legacy = Date.parse(data.proExpiresAt || p.proExpiresAt || '');
-  const isPro = data.isProUser ?? p.isProUser;
-  return isPro === true && Number.isFinite(legacy) && Date.now() < legacy;
+  // Legacy dated plans.
+  const legacy = Date.parse(pick('proExpiresAt') || '');
+  return pick('isProUser') === true && Number.isFinite(legacy) && Date.now() < legacy;
 }
 
 /* ------------------------------------------------------------------ */

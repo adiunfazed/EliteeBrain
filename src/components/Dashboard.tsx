@@ -482,9 +482,7 @@ export const Dashboard: React.FC<Props> = ({
               onGoFocus={() => goToPane('focus')}
             />
 
-            {/* Compact standings only. The full board, ladder and analytics
-                live in Life, where reviewing belongs. */}
-            <ArenaSection variant="compact" onExpand={() => setActiveSection('progress')} />
+            <ArenaSection />
           </motion.div>
         )}
 
