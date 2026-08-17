@@ -34,16 +34,25 @@ const STALE_MS = 5 * 60 * 1000;
 /** Mirrors resolveEntitlement — Pro means lifetime or an unexpired trial. */
 function isProAccount(data: any): boolean {
   if (!data) return false;
-  if (data.lifetimePro === true || data.proPlanType === 'lifetime') return true;
+  const p = data.profileData || {};
 
-  const started = Date.parse(data.trialStartedAt || data.profileData?.trialStartedAt || '');
+  // Entitlement fields can sit at the top level (written by the admin portal)
+  // or inside profileData (written by the app when a user starts a trial).
+  // Checking only the top level meant admin-granted accounts showed the badge
+  // and self-serve trial users did not.
+  const lifetime = data.lifetimePro ?? p.lifetimePro;
+  const planType = data.proPlanType ?? p.proPlanType;
+  if (lifetime === true || planType === 'lifetime') return true;
+
+  const started = Date.parse(data.trialStartedAt || p.trialStartedAt || '');
   if (Number.isFinite(started)) {
     const end = Math.min(started, Date.now()) + 30 * 24 * 60 * 60 * 1000;
     if (Date.now() < end) return true;
   }
 
-  const legacy = Date.parse(data.proExpiresAt || '');
-  return data.isProUser === true && Number.isFinite(legacy) && Date.now() < legacy;
+  const legacy = Date.parse(data.proExpiresAt || p.proExpiresAt || '');
+  const isPro = data.isProUser ?? p.isProUser;
+  return isPro === true && Number.isFinite(legacy) && Date.now() < legacy;
 }
 
 /* ------------------------------------------------------------------ */

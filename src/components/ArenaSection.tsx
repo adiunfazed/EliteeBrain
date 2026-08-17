@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Trophy, RefreshCw, AlertCircle, Crown, ChevronUp } from 'lucide-react';
 import { getIdToken } from '../lib/firebase';
-import { xpForLevel } from '../lib/xp';
 
 interface Entry {
   uid: string;
@@ -75,7 +74,13 @@ const TierBadge: React.FC<{ xp: number; size?: 'sm' | 'lg' }> = ({ xp, size = 's
   );
 };
 
-export const ArenaSection: React.FC = () => {
+interface ArenaProps {
+  /** Compact shows a short preview; full shows the whole board. */
+  variant?: 'full' | 'compact';
+  onExpand?: () => void;
+}
+
+export const ArenaSection: React.FC<ArenaProps> = ({ variant = 'full', onExpand }) => {
   const [mode, setMode] = useState<'career' | 'weekly'>('career');
   const [page, setPage] = useState<Page | null>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
@@ -145,17 +150,6 @@ export const ArenaSection: React.FC = () => {
   }, [page, you]);
 
   const tier = you ? tierFor(you.careerXp) : TIERS[0];
-  const tierIndex = TIERS.indexOf(tier);
-  const nextTier = TIERS[tierIndex + 1] || null;
-
-  if (status === 'loading') {
-    return (
-      <div className="eb-card p-8 text-center">
-        <RefreshCw className="w-5 h-5 text-[#8A93A5] animate-spin mx-auto" />
-        <p className="text-xs text-[#8A93A5] mt-3">Loading the Arena…</p>
-      </div>
-    );
-  }
 
   if (status === 'error') {
     return (
@@ -177,6 +171,88 @@ export const ArenaSection: React.FC = () => {
   }
 
   const members = page?.totalMembers ?? 0;
+  const loading = status === 'loading';
+
+  // Compact: top three plus your own row, for the Home screen.
+  if (variant === 'compact') {
+    const rows = page?.entries.slice(0, 3) || [];
+    const showYou = you && you.rank > 3;
+
+    return (
+      <div className="eb-card p-4">
+        <div className="flex items-center justify-between gap-2">
+          <span className="eb-label flex items-center gap-1.5">
+            <Trophy className="w-3 h-3 text-[#FFB020]" />
+            Arena
+          </span>
+          <button
+            onClick={onExpand}
+            className="eb-press text-[10px] font-mono font-bold text-[var(--signal-ink)]"
+          >
+            {members > 0 ? `${members} members` : 'View'} →
+          </button>
+        </div>
+
+        {loading ? (
+          // Skeleton rows keep the layout stable instead of collapsing.
+          <div className="space-y-2 mt-3">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="h-11 rounded-xl eb-card-sunk animate-pulse" />
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-2 mt-3">
+            {rows.map((e) => {
+              const t = tierFor(e.careerXp);
+              const isYou = you?.uid === e.uid;
+              return (
+                <div
+                  key={e.uid}
+                  className={`rounded-xl border p-2.5 flex items-center gap-2.5 ${
+                    isYou ? 'border-[var(--signal)] bg-[var(--signal)]/[0.10]' : 'eb-card-sunk'
+                  }`}
+                >
+                  <span
+                    className="w-5 text-center text-[11px] font-mono font-bold tabular-nums"
+                    style={{
+                      color: e.rank === 1 ? '#FFB020' : e.rank === 2 ? '#C7D0DE' : '#C97B3C',
+                    }}
+                  >
+                    {e.rank}
+                  </span>
+                  <span className="eb-heading text-xs truncate flex-1 min-w-0">
+                    {e.displayName}
+                  </span>
+                  {e.isPro && <Crown className="w-3 h-3 text-[#FFB020] shrink-0" />}
+                  <span className="text-xs font-mono font-bold tabular-nums" style={{ color: t.color }}>
+                    {value(e).toLocaleString()}
+                  </span>
+                </div>
+              );
+            })}
+
+            {showYou && (
+              <div className="rounded-xl border border-[var(--signal)] bg-[var(--signal)]/[0.10] p-2.5 flex items-center gap-2.5">
+                <span className="w-5 text-center text-[11px] font-mono font-bold text-[var(--signal-ink)] tabular-nums">
+                  {you!.rank}
+                </span>
+                <span className="eb-heading text-xs truncate flex-1 min-w-0">You</span>
+                <span className="text-xs font-mono font-bold tabular-nums text-[#F2F4F7]">
+                  {value(you!).toLocaleString()}
+                </span>
+              </div>
+            )}
+
+            {rows.length === 0 && (
+              <p className="text-[11px] text-[#8A93A5] py-2">
+                Complete something today to join the rankings.
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -205,72 +281,6 @@ export const ArenaSection: React.FC = () => {
           <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
         </button>
       </div>
-
-      {/* Progression ladder */}
-      {you && (
-        <div className="eb-card p-4">
-          <div className="flex items-center justify-between gap-2">
-            <span className="eb-label">Progression</span>
-            <span className="text-[10px] font-mono font-bold" style={{ color: tier.color }}>
-              {tier.name} {subTier(you.careerXp)}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-1 mt-3 overflow-x-auto no-scrollbar">
-            {TIERS.map((t, i) => {
-              const reached = you.careerXp >= t.min;
-              const current = t.name === tier.name;
-              return (
-                <div key={t.name} className="flex flex-col items-center gap-1 min-w-[52px] flex-1">
-                  <span
-                    className={`w-10 h-11 flex items-center justify-center rounded-lg ${
-                      current ? 'ring-2' : ''
-                    }`}
-                    style={{
-                      // Unreached tiers stay dim so the ladder reads at a glance.
-                      opacity: reached ? 1 : 0.32,
-                      boxShadow: current ? `0 0 14px -2px ${t.color}` : undefined,
-                      ...(current ? ({ ['--tw-ring-color' as any]: t.color } as any) : {}),
-                    }}
-                  >
-                    <TierBadge xp={t.min} />
-                  </span>
-                  <span
-                    className="text-[8px] font-mono font-bold tracking-wide"
-                    style={{ color: reached ? t.color : '#5A6472' }}
-                  >
-                    {t.name}
-                  </span>
-                  <span className="text-[8px] font-mono text-[#5A6472]">
-                    {t.min >= 1000 ? `${t.min / 1000}K` : t.min}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-
-          {nextTier && (
-            <div className="mt-3">
-              <div className="eb-bar">
-                <motion.div
-                  className="eb-bar-fill"
-                  initial={false}
-                  animate={{
-                    width: `${Math.min(
-                      100,
-                      ((you.careerXp - tier.min) / (nextTier.min - tier.min)) * 100
-                    )}%`,
-                  }}
-                  transition={{ duration: 0.6, ease: 'easeOut' }}
-                />
-              </div>
-              <p className="text-[10px] text-[#8A93A5] mt-1.5">
-                {(nextTier.min - you.careerXp).toLocaleString()} XP to {nextTier.name}
-              </p>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Your position */}
       <div className="eb-card p-4">

@@ -10,6 +10,7 @@ import { ModuleRoster } from './ModuleRoster';
 import { ModuleCard } from './ModuleCard';
 import { DayProgressCalendar } from './DayProgressCalendar';
 import { AchievementsDashboardSection } from './AchievementsDashboardSection';
+import { ArenaSection } from './ArenaSection';
 import { RankProgressionSection } from './RankProgressionSection';
 import { AICoachSection } from './AICoachSection';
 import { GamesSection } from './GamesSection';
@@ -481,13 +482,9 @@ export const Dashboard: React.FC<Props> = ({
               onGoFocus={() => goToPane('focus')}
             />
 
-            <RankProgressionSection
-              profile={profile}
-              derivedStreak={derivedStreak}
-              lifeXp={careerXpTotal}
-              onLaunchModule={onLaunchModule}
-              onOpenBadgesGallery={onOpenBadgesGallery}
-            />
+            {/* Compact standings only. The full board, ladder and analytics
+                live in Life, where reviewing belongs. */}
+            <ArenaSection variant="compact" onExpand={() => setActiveSection('progress')} />
           </motion.div>
         )}
 
@@ -748,6 +745,13 @@ export const Dashboard: React.FC<Props> = ({
               onOpenPro={onOpenProModal}
             >
               <div className="space-y-4">
+                <RankProgressionSection
+                  profile={profile}
+                  derivedStreak={derivedStreak}
+                  lifeXp={careerXpTotal}
+                  onLaunchModule={onLaunchModule}
+                  onOpenBadgesGallery={onOpenBadgesGallery}
+                />
                 <MomentumChart input={momentumInput} />
                 <RealityVsPlan input={momentumInput} />
                 <WeeklyReviewSection input={momentumInput} />
