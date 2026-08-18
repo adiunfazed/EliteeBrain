@@ -55,7 +55,7 @@ export const DailyMission: React.FC<MissionProps> = ({
       // With no tasks there is nothing to complete, so this is not "done".
       done: tasksTarget > 0 && tasksDone >= tasksTarget,
       action: onGoTasks,
-      tint: 'text-emerald-400',
+      tint: 'eb-done',
     },
     {
       key: 'focus',
@@ -65,7 +65,7 @@ export const DailyMission: React.FC<MissionProps> = ({
         focusSecondsToday > 0 ? `${formatDuration(focusSecondsToday)} today` : 'Not started',
       done: focusSessions >= 1,
       action: onGoFocus,
-      tint: 'text-amber-400',
+      tint: 'eb-warn',
     },
   ];
 
@@ -76,7 +76,7 @@ export const DailyMission: React.FC<MissionProps> = ({
     <div className="eb-panel p-4 sm:p-5">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="min-w-0">
-          <h3 className="text-sm sm:text-base font-black text-[#F4F6F8] font-mono tracking-tight">
+          <h3 className="text-sm sm:eb-heading text-base tracking-tight">
             Today's mission
           </h3>
           <p className="text-[11px] text-[#98A2B3] mt-0.5">
@@ -135,7 +135,7 @@ export const DailyMission: React.FC<MissionProps> = ({
               <span className="min-w-0 flex-1">
                 <span
                   className={`block text-xs font-bold truncate ${
-                    g.done ? 'text-emerald-300' : 'text-[#F4F6F8]'
+                    g.done ? 'eb-done' : 'text-[#F4F6F8]'
                   }`}
                 >
                   {g.label}

@@ -36,6 +36,9 @@ import { resolveEntitlement, startTrialFields } from './lib/entitlement';
 import { goalById } from './lib/goals';
 import { ScrollProgress } from './components/ScrollProgress';
 import { XpProvider } from './components/XpToast';
+import { FirstRunFlow } from './components/FirstRunFlow';
+import { subscribeGoals } from './lib/goalStore';
+import { subscribeTasks } from './lib/tasks';
 
 export default function App() {
   const [profile, setProfile] = useState<UserProfile>(() => loadProfile());
@@ -66,6 +69,45 @@ export default function App() {
   const [isAICoachOpen, setIsAICoachOpen] = useState(false);
   const [isProModalOpen, setIsProModalOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+  // Shown once per account, and only when there is genuinely nothing to show.
+  const [showFirstRun, setShowFirstRun] = useState(false);
+
+  // Decide once per sign-in. The flow only appears for an account with no
+  // goals and no tasks — an existing user must never be walked through setup
+  // they already completed.
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const key = `elitebrain_firstrun_v1:${currentUser.uid}`;
+    try {
+      if (localStorage.getItem(key) === 'done') return;
+    } catch {
+      return;
+    }
+
+    let cancelled = false;
+    const unsubGoals = subscribeGoals(currentUser.uid, (goals) => {
+      const unsubTasks = subscribeTasks(currentUser.uid, (tasks) => {
+        if (cancelled) return;
+        if (goals.length === 0 && tasks.length === 0) {
+          setShowFirstRun(true);
+        } else {
+          // Already has data — never show setup again.
+          try {
+            localStorage.setItem(key, 'done');
+          } catch {
+            /* ignore */
+          }
+        }
+        unsubTasks();
+      });
+      unsubGoals();
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUser]);
   const [isAdminPortalOpen, setIsAdminPortalOpen] = useState(false);
   const [isMethodsOpen, setIsMethodsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -491,6 +533,20 @@ export default function App() {
       />
 
       {/* Pro Subscription Modal */}
+      {showFirstRun && currentUser && (
+        <FirstRunFlow
+          userId={currentUser.uid}
+          onDone={() => {
+            try {
+              localStorage.setItem(`elitebrain_firstrun_v1:${currentUser.uid}`, 'done');
+            } catch {
+              /* private mode — the flow simply may reappear */
+            }
+            setShowFirstRun(false);
+          }}
+        />
+      )}
+
       <div className="eb-ambient" aria-hidden="true" />
 
       <ScrollProgress />

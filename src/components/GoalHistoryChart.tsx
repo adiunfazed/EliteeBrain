@@ -41,7 +41,7 @@ export const GoalHistoryChart: React.FC<Props> = ({ snapshots }) => {
         </span>
         <span
           className={`text-[10px] font-mono font-bold tabular-nums ${
-            delta > 0 ? 'text-emerald-300' : delta < 0 ? 'text-amber-300' : 'text-[#5A6472]'
+            delta > 0 ? 'eb-done' : delta < 0 ? 'eb-warn' : 'text-[#5A6472]'
           }`}
         >
           {delta > 0 ? '+' : ''}

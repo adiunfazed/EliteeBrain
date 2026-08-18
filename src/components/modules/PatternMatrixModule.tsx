@@ -413,8 +413,8 @@ export const PatternMatrixModule: React.FC<Props> = ({ currentLevel, onFinishSes
                 let btnStyle = 'bg-slate-900 border-slate-800 text-slate-200 hover:border-blue-500/50';
 
                 if (phase === 'feedback') {
-                  if (isCorrect) btnStyle = 'bg-emerald-950/80 border-emerald-500 text-emerald-300';
-                  else if (isSelected) btnStyle = 'bg-rose-950/80 border-rose-500 text-rose-300';
+                  if (isCorrect) btnStyle = 'bg-emerald-950/80 border-emerald-500 eb-done';
+                  else if (isSelected) btnStyle = 'bg-rose-950/80 border-rose-500 eb-danger';
                 }
 
                 return (

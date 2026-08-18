@@ -451,7 +451,7 @@ export const AdminPortalModal: React.FC<Props> = ({
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
         <div className="relative w-full max-w-md bg-[#171B22] border border-rose-500/40 rounded-3xl p-6 text-center shadow-2xl text-[#F4F6F8]">
-          <div className="w-12 h-12 rounded-2xl bg-rose-500/20 text-rose-400 flex items-center justify-center mx-auto mb-3">
+          <div className="w-12 h-12 rounded-2xl bg-rose-500/20 eb-danger flex items-center justify-center mx-auto mb-3">
             <AlertTriangle className="w-6 h-6" />
           </div>
           <h3 className="text-lg font-black text-[#F4F6F8] mb-1">Access Restricted</h3>
@@ -556,7 +556,7 @@ export const AdminPortalModal: React.FC<Props> = ({
         </div>
 
         {actionSuccess && (
-          <div className="mt-3 p-3 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center gap-2 animate-fadeIn shrink-0">
+          <div className="mt-3 p-3 rounded-xl bg-emerald-500/20 border border-emerald-500/40 eb-done text-xs font-bold flex items-center gap-2 animate-fadeIn shrink-0">
             <CheckCircle2 className="w-4 h-4 shrink-0" />
             <span>{actionSuccess}</span>
           </div>
@@ -583,8 +583,8 @@ export const AdminPortalModal: React.FC<Props> = ({
                   Admin Receiver UPI ID
                 </span>
                 <div className="flex items-center gap-2 mt-0.5">
-                  <Smartphone className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span className="text-xs font-mono font-black text-emerald-300 truncate max-w-[140px]">
+                  <Smartphone className="w-4 h-4 eb-done shrink-0" />
+                  <span className="text-xs font-mono font-black eb-done truncate max-w-[140px]">
                     {merchantUpi}
                   </span>
                 </div>
@@ -792,10 +792,10 @@ export const AdminPortalModal: React.FC<Props> = ({
                         <span
                           className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
                             req.status === 'PENDING'
-                              ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                              ? 'bg-amber-500/20 eb-warn border-amber-500/40'
                               : req.status === 'APPROVED'
-                              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                              : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                              ? 'bg-emerald-500/20 eb-done border-emerald-500/40'
+                              : 'bg-rose-500/20 eb-danger border-rose-500/40'
                           }`}
                         >
                           {req.status}
@@ -807,7 +807,7 @@ export const AdminPortalModal: React.FC<Props> = ({
                           Plan: <strong className="text-[#8B5CF6]">{req.plan.toUpperCase()}</strong> (₹{req.amountINR})
                         </span>
                         <span>•</span>
-                        <span className="bg-[#171B22] px-2 py-0.5 rounded-md border border-[#2A313C] text-amber-300 font-bold">
+                        <span className="bg-[#171B22] px-2 py-0.5 rounded-md border border-[#2A313C] eb-warn font-bold">
                           UTR / Ref: {req.utrNumber}
                         </span>
                       </div>
@@ -832,7 +832,7 @@ export const AdminPortalModal: React.FC<Props> = ({
                         <button
                           onClick={() => handleReview(req, 'REJECTED')}
                           disabled={loading}
-                          className="px-3 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 text-rose-300 font-bold text-xs cursor-pointer transition-all active:scale-95 flex items-center gap-1 disabled:opacity-50"
+                          className="px-3 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 eb-danger font-bold text-xs cursor-pointer transition-all active:scale-95 flex items-center gap-1 disabled:opacity-50"
                         >
                           <XCircle className="w-4 h-4" />
                           <span>Reject</span>
@@ -892,13 +892,13 @@ export const AdminPortalModal: React.FC<Props> = ({
                               isProUser: u.isProUser,
                             });
                             const tone =
-                              e.status === 'lifetime' ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                              : e.status === 'trial' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                              : e.status === 'expired' ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                              e.status === 'lifetime' ? 'bg-amber-500/20 eb-warn border-amber-500/40'
+                              : e.status === 'trial' ? 'bg-emerald-500/20 eb-done border-emerald-500/40'
+                              : e.status === 'expired' ? 'bg-rose-500/20 eb-danger border-rose-500/40'
                               : 'bg-[#171B22] text-[#98A2B3] border-[#2A313C]';
                             return (
                               <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded-full border flex items-center gap-1 ${tone}`}>
-                                {e.status === 'lifetime' && <Crown className="w-3 h-3 text-amber-400" />}
+                                {e.status === 'lifetime' && <Crown className="w-3 h-3 eb-warn" />}
                                 {entitlementLabel(e).toUpperCase()}
                               </span>
                             );
@@ -925,7 +925,7 @@ export const AdminPortalModal: React.FC<Props> = ({
                         disabled={loading}
                         className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50 ${
                           u.isProUser
-                            ? 'bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40'
+                            ? 'bg-rose-500/20 hover:bg-rose-500/30 eb-danger border border-rose-500/40'
                             : 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-md font-black'
                         }`}
                       >

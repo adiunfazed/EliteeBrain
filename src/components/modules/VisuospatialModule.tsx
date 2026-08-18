@@ -229,7 +229,7 @@ export const VisuospatialModule: React.FC<Props> = ({ currentLevel, onFinishSess
                   <strong className="text-indigo-300">2. Mentally Spin:</strong> Rotate the anchor in your mind by the specified angle ({rotationAngle || 90}°).
                 </li>
                 <li>
-                  <strong className="text-indigo-300">3. Check Hand Orientation (Chirality):</strong> If the branch points in the same relative side after rotation, it is <span className="text-emerald-400 font-bold">MATCHING</span>. If it flips to the opposite side, it is <span className="text-rose-400 font-bold">MIRRORED DIFFERENT</span>!
+                  <strong className="text-indigo-300">3. Check Hand Orientation (Chirality):</strong> If the branch points in the same relative side after rotation, it is <span className="eb-done font-bold">MATCHING</span>. If it flips to the opposite side, it is <span className="eb-danger font-bold">MIRRORED DIFFERENT</span>!
                 </li>
               </ul>
             </div>
@@ -259,7 +259,7 @@ export const VisuospatialModule: React.FC<Props> = ({ currentLevel, onFinishSess
               </span>
               <button
                 onClick={() => setShowGuide(!showGuide)}
-                className="flex items-center gap-1 text-[10px] font-bold text-amber-400 hover:text-amber-300 px-2 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30 cursor-pointer"
+                className="flex items-center gap-1 text-[10px] font-bold eb-warn hover:eb-warn px-2 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30 cursor-pointer"
               >
                 <Eye className="w-3 h-3" />
                 <span>{showGuide ? 'Hide Anchor Tip' : 'Show Anchor Tip'}</span>
@@ -287,11 +287,11 @@ export const VisuospatialModule: React.FC<Props> = ({ currentLevel, onFinishSess
                   <p className="text-slate-300">
                     The right shape was rotated <strong className="text-indigo-400">{rotationAngle}°</strong>.{' '}
                     {isSame ? (
-                      <span className="text-emerald-400 font-semibold">
+                      <span className="eb-done font-semibold">
                         All block relationships remain in identical relative orientation (MATCHING!).
                       </span>
                     ) : (
-                      <span className="text-rose-400 font-semibold">
+                      <span className="eb-danger font-semibold">
                         The shape was also reflected across the Y-axis, inverting its orientation (MIRRORED DIFFERENT!).
                       </span>
                     )}
@@ -307,7 +307,7 @@ export const VisuospatialModule: React.FC<Props> = ({ currentLevel, onFinishSess
                 onClick={() => handleUserChoice(true)}
                 className="py-4 rounded-2xl bg-slate-900 hover:bg-indigo-500 hover:text-white border border-slate-700 font-black text-sm tracking-wider uppercase transition-all active:scale-95 cursor-pointer shadow-lg select-none touch-manipulation flex items-center justify-center gap-2"
               >
-                <Check className="w-5 h-5 text-emerald-400" />
+                <Check className="w-5 h-5 eb-done" />
                 <span>MATCHING (SAME)</span>
               </button>
               <button
@@ -315,7 +315,7 @@ export const VisuospatialModule: React.FC<Props> = ({ currentLevel, onFinishSess
                 onClick={() => handleUserChoice(false)}
                 className="py-4 rounded-2xl bg-slate-900 hover:bg-rose-500 hover:text-white border border-slate-700 font-black text-sm tracking-wider uppercase transition-all active:scale-95 cursor-pointer shadow-lg select-none touch-manipulation flex items-center justify-center gap-2"
               >
-                <X className="w-5 h-5 text-rose-400" />
+                <X className="w-5 h-5 eb-danger" />
                 <span>DIFFERENT (MIRROR)</span>
               </button>
             </div>

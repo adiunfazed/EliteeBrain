@@ -78,7 +78,7 @@ export const ModuleRoster: React.FC<ModuleRosterProps> = ({
                     {meta.domain}
                   </span>
                   {meta.isPro && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold text-amber-700 dark:text-amber-400">
+                    <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold text-amber-700 dark:eb-warn">
                       <Lock className="w-2.5 h-2.5" /> PRO
                     </span>
                   )}

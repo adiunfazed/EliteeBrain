@@ -147,7 +147,7 @@ export const ReactionInhibitorModule: React.FC<Props> = ({ currentLevel, onFinis
             </div>
             <h3 className="text-2xl font-black text-slate-100 mb-2">Visual Reaction Speed Tester</h3>
             <p className="text-xs text-slate-400 leading-relaxed mb-6">
-              When you click Start, the screen will turn <span className="text-rose-400 font-bold">RED</span>. Wait patiently. The instant the screen turns <span className="text-emerald-400 font-bold">BRIGHT GREEN</span>, click or hit Spacebar as fast as humanly possible!
+              When you click Start, the screen will turn <span className="eb-danger font-bold">RED</span>. Wait patiently. The instant the screen turns <span className="eb-done font-bold">BRIGHT GREEN</span>, click or hit Spacebar as fast as humanly possible!
             </p>
 
             <button
@@ -207,8 +207,8 @@ export const ReactionInhibitorModule: React.FC<Props> = ({ currentLevel, onFinis
             onClick={handleClick}
             className="w-full h-80 rounded-3xl bg-amber-950/90 border-4 border-amber-500 flex flex-col items-center justify-center p-8 text-center cursor-pointer shadow-2xl select-none"
           >
-            <ShieldAlert className="w-16 h-16 text-amber-400 mb-3" />
-            <h3 className="text-2xl font-black text-amber-300 mb-2 uppercase">TOO EARLY!</h3>
+            <ShieldAlert className="w-16 h-16 eb-warn mb-3" />
+            <h3 className="text-2xl font-black eb-warn mb-2 uppercase">TOO EARLY!</h3>
             <p className="text-xs text-slate-300 mb-6">You clicked while the screen was still Red. Click anywhere to retry this trial.</p>
             <button className="px-6 py-2.5 rounded-xl bg-amber-500 text-slate-950 font-bold text-xs">
               Retry Trial

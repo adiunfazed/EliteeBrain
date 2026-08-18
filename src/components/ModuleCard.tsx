@@ -36,15 +36,15 @@ export const ModuleCard: React.FC<Props> = ({ config, state, isProUser, index = 
   const getIcon = () => {
     switch (config.icon) {
       case 'Binary':
-        return <Binary className="w-5 h-5 text-rose-500 dark:text-rose-400" />;
+        return <Binary className="w-5 h-5 text-rose-500 dark:eb-danger" />;
       case 'Zap':
         return <Zap className="w-5 h-5 text-indigo-500 dark:text-[#8B5CF6]" />;
       case 'Layers':
-        return <Layers className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />;
+        return <Layers className="w-5 h-5 text-emerald-500 dark:eb-done" />;
       case 'Compass':
         return <Compass className="w-5 h-5 text-blue-500 dark:text-blue-400" />;
       case 'Boxes':
-        return <Boxes className="w-5 h-5 text-amber-500 dark:text-amber-400" />;
+        return <Boxes className="w-5 h-5 text-amber-500 dark:eb-warn" />;
       case 'Shuffle':
         return <Shuffle className="w-5 h-5 text-indigo-500 dark:text-indigo-300" />;
       case 'Cuboid':
@@ -201,7 +201,7 @@ export const ModuleCard: React.FC<Props> = ({ config, state, isProUser, index = 
                 {config.name}
               </h4>
               {config.isPro && (
-                <span className="inline-flex items-center gap-0.5 mt-1 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                <span className="inline-flex items-center gap-0.5 mt-1 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-amber-500/10 eb-warn border border-amber-500/30">
                   <Crown className="w-2.5 h-2.5" /> PRO
                 </span>
               )}
@@ -245,11 +245,11 @@ export const ModuleCard: React.FC<Props> = ({ config, state, isProUser, index = 
       {/* Footer Action Button Bar */}
       <div className="pl-2 pt-2.5 border-t border-rule flex items-center justify-between gap-2 relative z-10">
         {isLocked ? (
-          <span className="inline-flex items-center gap-1 text-xs font-mono text-amber-600 dark:text-amber-400 font-bold">
+          <span className="inline-flex items-center gap-1 text-xs font-mono text-amber-600 dark:eb-warn font-bold">
             <Lock className="w-3.5 h-3.5" /> Locked Pro
           </span>
         ) : state.completedToday ? (
-          <span className="inline-flex items-center gap-1 text-xs font-mono text-emerald-600 dark:text-emerald-400 font-bold">
+          <span className="inline-flex items-center gap-1 text-xs font-mono text-emerald-600 dark:eb-done font-bold">
             <CheckCircle2 className="w-3.5 h-3.5" /> Done Today
           </span>
         ) : (
@@ -289,13 +289,13 @@ export const ModuleCard: React.FC<Props> = ({ config, state, isProUser, index = 
       {isLocked && (
         <div className="absolute inset-0 z-20 bg-slate-950/40 backdrop-blur-[2px] flex flex-col items-center justify-center p-4 text-center opacity-90 group-hover:opacity-100 transition-opacity">
           <div className="p-3 bg-slate-900/95 border border-amber-500/60 rounded-2xl shadow-xl flex flex-col items-center space-y-2 max-w-[200px]">
-            <div className="p-2 bg-amber-500/20 text-amber-400 rounded-full border border-amber-500/40">
+            <div className="p-2 bg-amber-500/20 eb-warn rounded-full border border-amber-500/40">
               <Lock className="w-5 h-5 animate-pulse" />
             </div>
             <span className="text-xs font-mono font-bold text-white uppercase tracking-wider">
               PRO MODULE
             </span>
-            <span className="text-[10px] font-mono text-amber-300 flex items-center gap-1">
+            <span className="text-[10px] font-mono eb-warn flex items-center gap-1">
               <Sparkles className="w-3 h-3" /> Tap to unlock all 8
             </span>
           </div>

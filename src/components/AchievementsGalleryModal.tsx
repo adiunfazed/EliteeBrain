@@ -116,7 +116,7 @@ export const AchievementsGalleryModal: React.FC<Props> = ({ isOpen, profile, onC
           {/* Header Bar */}
           <div className="flex items-start justify-between pb-4 border-b border-[#2D3748] mb-4 shrink-0 gap-3">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-amber-500/20 border border-amber-500/40 text-amber-400 rounded-2xl shrink-0 shadow-inner">
+              <div className="p-3 bg-amber-500/20 border border-amber-500/40 eb-warn rounded-2xl shrink-0 shadow-inner">
                 <Trophy className="w-6 h-6 sm:w-7 sm:h-7" />
               </div>
               <div>
@@ -124,7 +124,7 @@ export const AchievementsGalleryModal: React.FC<Props> = ({ isOpen, profile, onC
                   <h2 className="text-lg sm:text-2xl font-display font-extrabold text-white tracking-tight">
                     Badges & Milestones
                   </h2>
-                  <span className="whitespace-nowrap inline-flex items-center px-2.5 py-0.5 bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded-lg text-xs font-mono font-black">
+                  <span className="whitespace-nowrap inline-flex items-center px-2.5 py-0.5 bg-amber-500/20 eb-warn border border-amber-500/40 rounded-lg text-xs font-mono font-black">
                     {unlockedCount} / {totalCount}
                   </span>
                 </div>
@@ -150,11 +150,11 @@ export const AchievementsGalleryModal: React.FC<Props> = ({ isOpen, profile, onC
           <div className="bg-[#181E2A] border border-[#2D3748] rounded-2xl p-3.5 sm:p-4 mb-4 shrink-0 relative overflow-hidden">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 mb-2.5">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 eb-warn flex items-center justify-center shrink-0">
                   <Star className="w-4 h-4" />
                 </div>
                 <div>
-                  <div className="text-[10px] font-mono uppercase tracking-wider text-amber-400 font-bold">
+                  <div className="text-[10px] font-mono uppercase tracking-wider eb-warn font-bold">
                     Reward Tier Status
                   </div>
                   <div className="text-sm sm:text-base font-display font-black text-white">
@@ -164,7 +164,7 @@ export const AchievementsGalleryModal: React.FC<Props> = ({ isOpen, profile, onC
               </div>
 
               <div className="text-xs font-mono text-[#A0AEC0] flex items-center gap-1.5 bg-[#0F141C] px-3 py-1 border border-[#2D3748] rounded-xl shrink-0">
-                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                <ShieldCheck className="w-4 h-4 eb-done" />
                 <span>Completion: <strong className="text-white font-black">{progressPercent}%</strong></span>
               </div>
             </div>
@@ -211,7 +211,7 @@ export const AchievementsGalleryModal: React.FC<Props> = ({ isOpen, profile, onC
               }}
               className={`py-1.5 rounded-xl transition-all cursor-pointer text-center ${
                 statusFilter === 'all'
-                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                  ? 'bg-amber-500/20 eb-warn border border-amber-500/40'
                   : 'text-[#A0AEC0] hover:text-white'
               }`}
             >
@@ -224,7 +224,7 @@ export const AchievementsGalleryModal: React.FC<Props> = ({ isOpen, profile, onC
               }}
               className={`py-1.5 rounded-xl transition-all cursor-pointer text-center ${
                 statusFilter === 'unlocked'
-                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                  ? 'bg-emerald-500/20 eb-done border border-emerald-500/40'
                   : 'text-[#A0AEC0] hover:text-white'
               }`}
             >
@@ -273,7 +273,7 @@ export const AchievementsGalleryModal: React.FC<Props> = ({ isOpen, profile, onC
                         <div
                           className={`w-11 h-11 rounded-2xl border flex items-center justify-center shrink-0 shadow-md ${
                             isUnlocked
-                              ? 'bg-gradient-to-br from-amber-500/30 to-amber-600/10 border-amber-500/50 text-amber-300'
+                              ? 'bg-gradient-to-br from-amber-500/30 to-amber-600/10 border-amber-500/50 eb-warn'
                               : 'bg-[#0F141C] border-[#2D3748] text-slate-400'
                           }`}
                         >
@@ -288,7 +288,7 @@ export const AchievementsGalleryModal: React.FC<Props> = ({ isOpen, profile, onC
                           <h3 className="text-sm sm:text-base font-display font-black text-white leading-tight">
                             {badge.title}
                           </h3>
-                          <span className="inline-block text-[10px] font-mono text-rose-400 font-bold uppercase tracking-wider mt-0.5">
+                          <span className="inline-block text-[10px] font-mono eb-danger font-bold uppercase tracking-wider mt-0.5">
                             {badge.category}
                           </span>
                         </div>
@@ -298,14 +298,14 @@ export const AchievementsGalleryModal: React.FC<Props> = ({ isOpen, profile, onC
                         <span
                           className={`px-2 py-0.5 border text-[10px] font-mono font-black rounded-md ${
                             isUnlocked
-                              ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                              ? 'bg-amber-500/20 eb-warn border-amber-500/40'
                               : 'bg-[#0F141C] text-slate-300 border-[#2D3748]'
                           }`}
                         >
                           +{badge.points} PTS
                         </span>
                         {isUnlocked ? (
-                          <span className="text-[10px] font-mono text-emerald-400 flex items-center gap-0.5 font-extrabold">
+                          <span className="text-[10px] font-mono eb-done flex items-center gap-0.5 font-extrabold">
                             <CheckCircle2 className="w-3 h-3" /> Unlocked
                           </span>
                         ) : (
@@ -325,17 +325,17 @@ export const AchievementsGalleryModal: React.FC<Props> = ({ isOpen, profile, onC
                     <div className="p-2.5 bg-[#0D1117] border border-[#2B3545] rounded-xl flex items-center justify-between gap-2 text-xs font-mono">
                       <div className="flex items-center gap-2 overflow-hidden">
                         {isUnlocked ? (
-                          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                          <CheckCircle2 className="w-4 h-4 eb-done shrink-0" />
                         ) : (
-                          <Target className="w-4 h-4 text-amber-400 shrink-0" />
+                          <Target className="w-4 h-4 eb-warn shrink-0" />
                         )}
                         <span className="text-slate-200 font-semibold truncate">
-                          <strong className="text-amber-400 font-bold mr-1">Target:</strong>
+                          <strong className="eb-warn font-bold mr-1">Target:</strong>
                           {badge.conditionDescription}
                         </span>
                       </div>
                       {isUnlocked && (
-                        <span className="text-[10px] font-bold text-emerald-400 shrink-0">
+                        <span className="text-[10px] font-bold eb-done shrink-0">
                           {formatUnlockDate(unlockTime)}
                         </span>
                       )}
@@ -363,11 +363,11 @@ export const AchievementsGalleryModal: React.FC<Props> = ({ isOpen, profile, onC
                     <X className="w-5 h-5" />
                   </button>
 
-                  <div className="w-20 h-20 mx-auto rounded-3xl bg-amber-500/15 border border-amber-500/40 text-amber-300 flex items-center justify-center mb-4 shadow-xl">
+                  <div className="w-20 h-20 mx-auto rounded-3xl bg-amber-500/15 border border-amber-500/40 eb-warn flex items-center justify-center mb-4 shadow-xl">
                     {renderBadgeIcon(activeBadgeDetail.icon, 'w-10 h-10')}
                   </div>
 
-                  <span className="px-3 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-mono font-extrabold rounded-lg inline-block mb-2">
+                  <span className="px-3 py-1 bg-amber-500/20 eb-warn border border-amber-500/40 text-xs font-mono font-extrabold rounded-lg inline-block mb-2">
                     {activeBadgeDetail.category} • +{activeBadgeDetail.points} PTS
                   </span>
 
@@ -380,7 +380,7 @@ export const AchievementsGalleryModal: React.FC<Props> = ({ isOpen, profile, onC
                   </p>
 
                   <div className="p-3.5 bg-[#0D1117] border border-[#2B3545] rounded-2xl text-xs font-mono text-[#A0AEC0] mb-5 text-left">
-                    <strong className="text-amber-400 block mb-1 uppercase tracking-wider text-[10px]">
+                    <strong className="eb-warn block mb-1 uppercase tracking-wider text-[10px]">
                       Unlock Requirement:
                     </strong>
                     <div className="text-white font-semibold">{activeBadgeDetail.conditionDescription}</div>

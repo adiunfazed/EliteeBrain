@@ -153,15 +153,15 @@ export const SpatialNBackModule: React.FC<Props> = ({ currentLevel, onFinishSess
         </button>
 
         <div className="flex items-center gap-2">
-          <Grid className="w-5 h-5 text-emerald-400" />
+          <Grid className="w-5 h-5 eb-done" />
           <h2 className="text-base font-bold text-slate-100">Fluid IQ ({nValue}-Back)</h2>
-          <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-mono border border-emerald-500/30">
+          <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 eb-done font-mono border border-emerald-500/30">
             Lvl {currentLevel}
           </span>
         </div>
 
         <div className="text-xs text-slate-400 font-mono">
-          Flash <span className="text-emerald-400 font-bold">{currentStep + 1}</span> / {TOTAL_FLASHES}
+          Flash <span className="eb-done font-bold">{currentStep + 1}</span> / {TOTAL_FLASHES}
         </div>
       </div>
 
@@ -169,18 +169,18 @@ export const SpatialNBackModule: React.FC<Props> = ({ currentLevel, onFinishSess
       <div className="flex-1 flex flex-col items-center justify-center p-4 max-w-xl mx-auto w-full">
         {phase === 'intro' && (
           <div className="text-center bg-slate-900/80 border border-slate-800 p-6 md:p-8 rounded-3xl shadow-2xl w-full">
-            <div className="inline-flex p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 mb-4">
+            <div className="inline-flex p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 eb-done mb-4">
               <Grid className="w-8 h-8" />
             </div>
             <h3 className="text-2xl font-black text-slate-100 mb-2">Spatial {nValue}-Back Working Memory</h3>
             <p className="text-xs text-slate-400 leading-relaxed mb-6">
-              Squares will flash sequentially in a 3x3 grid. Click <span className="text-emerald-300 font-bold">MATCH</span> (or press <span className="text-emerald-300 font-bold underline">SPACEBAR</span>) if the current square position is identical to the square position <span className="text-emerald-300 font-bold">{nValue} step{nValue > 1 ? 's' : ''} ago</span>!
+              Squares will flash sequentially in a 3x3 grid. Click <span className="eb-done font-bold">MATCH</span> (or press <span className="eb-done font-bold underline">SPACEBAR</span>) if the current square position is identical to the square position <span className="eb-done font-bold">{nValue} step{nValue > 1 ? 's' : ''} ago</span>!
             </p>
 
             <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 text-left text-xs mb-6 space-y-2">
               <div className="flex justify-between text-slate-400">
                 <span>N-Back Factor:</span>
-                <span className="font-bold text-emerald-400">{nValue}-Back</span>
+                <span className="font-bold eb-done">{nValue}-Back</span>
               </div>
               <div className="flex justify-between text-slate-400">
                 <span>Pacing Interval:</span>
@@ -205,7 +205,7 @@ export const SpatialNBackModule: React.FC<Props> = ({ currentLevel, onFinishSess
         {phase === 'playing' && (
           <div className="w-full text-center">
             <div className="flex items-center justify-between mb-4 text-xs">
-              <span className="text-emerald-400 font-bold uppercase tracking-wider">
+              <span className="eb-done font-bold uppercase tracking-wider">
                 WATCH POSITIONS • PRESS MATCH IF SAME AS {nValue}-STEP AGO
               </span>
               <span className="text-slate-400 font-mono">
@@ -241,7 +241,7 @@ export const SpatialNBackModule: React.FC<Props> = ({ currentLevel, onFinishSess
                 disabled={matchPressedCurrentStep}
                 className={`w-full py-4 rounded-2xl font-black text-base tracking-wider uppercase transition-all active:scale-95 cursor-pointer shadow-xl select-none touch-manipulation flex items-center justify-center gap-2 ${
                   matchPressedCurrentStep
-                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50'
+                    ? 'bg-emerald-500/20 eb-done border border-emerald-500/50'
                     : 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 shadow-emerald-500/20'
                 }`}
               >

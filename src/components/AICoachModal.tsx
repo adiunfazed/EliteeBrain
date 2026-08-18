@@ -185,7 +185,7 @@ export const AICoachModal: React.FC<Props> = ({
                     PRO
                   </span>
                 ) : (
-                  <span className="text-[9px] font-mono font-bold text-amber-400 px-1.5 py-0.5 bg-amber-950/60 border border-amber-500/40 rounded-full flex items-center gap-0.5">
+                  <span className="text-[9px] font-mono font-bold eb-warn px-1.5 py-0.5 bg-amber-950/60 border border-amber-500/40 rounded-full flex items-center gap-0.5">
                     <Crown className="w-2.5 h-2.5" /> Free Mode
                   </span>
                 )}
@@ -277,9 +277,9 @@ export const AICoachModal: React.FC<Props> = ({
           {/* Pro Unlock Banner inside Chat if not Pro */}
           {!profile.isProUser && (
             <div className="p-4 bg-gradient-to-r from-amber-500/10 via-amber-600/10 to-cyan-500/10 border border-amber-500/40 rounded-2xl text-center space-y-2 mt-4 shadow-md">
-              <div className="flex items-center justify-center gap-1.5 text-amber-400 font-bold text-xs uppercase tracking-wider">
+              <div className="flex items-center justify-center gap-1.5 eb-warn font-bold text-xs uppercase tracking-wider">
                 <Crown className="w-4 h-4" />
-                <span>Unlock Unlimited AI Neuro-Coach</span>
+                <span>Unlock the AI Coach</span>
               </div>
               <p className="text-xs text-slate-300 leading-relaxed max-w-sm mx-auto">
                 Pro gives you unlimited AI coaching, every training module, and your full progress history.

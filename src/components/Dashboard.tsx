@@ -318,7 +318,7 @@ export const Dashboard: React.FC<Props> = ({
       label: 'Engine',
       shortLabel: 'HOME',
       icon: Flame,
-      activeColor: 'text-amber-400 bg-amber-500/15 border-amber-500/40',
+      activeColor: 'eb-warn bg-amber-500/15 border-amber-500/40',
       badge: `${profile.streakDays}d`,
     },
     {
@@ -342,7 +342,7 @@ export const Dashboard: React.FC<Props> = ({
       label: 'Games',
       shortLabel: 'GAMES',
       icon: Gamepad2,
-      activeColor: 'text-rose-400 bg-rose-500/15 border-rose-500/40',
+      activeColor: 'eb-danger bg-rose-500/15 border-rose-500/40',
       badge: '',
     },
     {
@@ -350,7 +350,7 @@ export const Dashboard: React.FC<Props> = ({
       label: 'Plan',
       shortLabel: 'PLAN',
       icon: CheckSquare,
-      activeColor: 'text-emerald-400 bg-emerald-500/15 border-emerald-500/40',
+      activeColor: 'eb-done bg-emerald-500/15 border-emerald-500/40',
       badge: openTaskCount > 0 ? `${openTaskCount}` : '',
     },
     {
@@ -364,7 +364,7 @@ export const Dashboard: React.FC<Props> = ({
   ];
 
   return (
-    <div className="space-y-6 pb-28 font-sans select-none relative min-h-[80vh]">
+    <div className="space-y-6 pb-[calc(7rem+env(safe-area-inset-bottom))] font-sans select-none relative min-h-[80vh]">
       
       {/* Prominent Non-Logged-In Guest Sync Banner */}
       {!currentUser && (
@@ -751,8 +751,8 @@ export const Dashboard: React.FC<Props> = ({
                   onOpenBadgesGallery={onOpenBadgesGallery}
                 />
                 <MomentumChart input={momentumInput} />
-                <RealityVsPlan input={momentumInput} />
-                <WeeklyReviewSection input={momentumInput} />
+                <RealityVsPlan input={momentumInput} onGo={goToPane} />
+                <WeeklyReviewSection input={momentumInput} onGo={goToPane} />
                 <ProgressSection profile={profile} userId={currentUser?.uid || null} />
                 <AchievementsDashboardSection
                   profile={profile}

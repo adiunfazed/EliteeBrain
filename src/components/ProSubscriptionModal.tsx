@@ -260,11 +260,11 @@ export const ProSubscriptionModal: React.FC<Props> = ({
 
         {/* Pro Header Badge */}
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-[10px] font-mono font-bold text-amber-400 uppercase tracking-widest">
+          <span className="text-[10px] font-mono font-bold eb-warn uppercase tracking-widest">
             ELITELIFE PRO
           </span>
-          <span className="text-[10px] font-mono font-bold text-amber-300 px-2.5 py-0.5 bg-amber-500/20 border border-amber-500/40 rounded-full flex items-center gap-1 whitespace-nowrap">
-            <Crown className="w-3 h-3 text-amber-400" /> UNLOCK ALL 8 MODULES
+          <span className="text-[10px] font-mono font-bold eb-warn px-2.5 py-0.5 bg-amber-500/20 border border-amber-500/40 rounded-full flex items-center gap-1 whitespace-nowrap">
+            <Crown className="w-3 h-3 eb-warn" /> UNLOCK ALL 8 MODULES
           </span>
         </div>
 
@@ -280,12 +280,12 @@ export const ProSubscriptionModal: React.FC<Props> = ({
           <div className="mt-3.5 p-4 rounded-2xl bg-amber-950/60 border border-amber-500/50 space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-amber-400 animate-pulse" />
+                <Clock className="w-4 h-4 eb-warn animate-pulse" />
                 <span className="text-xs font-mono font-bold text-amber-200 uppercase tracking-wider">
                   Payment Submitted: Verification Queue
                 </span>
               </div>
-              <span className="text-[10px] font-mono font-bold text-amber-300 px-2.5 py-0.5 bg-amber-500/20 border border-amber-500/40 rounded-full flex items-center gap-1 whitespace-nowrap">
+              <span className="text-[10px] font-mono font-bold eb-warn px-2.5 py-0.5 bg-amber-500/20 border border-amber-500/40 rounded-full flex items-center gap-1 whitespace-nowrap">
                 ⏳ UNDER REVIEW
               </span>
             </div>
@@ -303,7 +303,7 @@ export const ProSubscriptionModal: React.FC<Props> = ({
                 type="button"
                 onClick={handleCheckStatus}
                 disabled={checkingStatus}
-                className="px-3.5 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-mono text-xs font-bold cursor-pointer transition-all flex items-center gap-1.5"
+                className="px-3.5 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 eb-warn font-mono text-xs font-bold cursor-pointer transition-all flex items-center gap-1.5"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${checkingStatus ? 'animate-spin' : ''}`} />
                 <span>{checkingStatus ? 'Checking Cloud...' : 'Check Approval Status'}</span>
@@ -331,13 +331,13 @@ export const ProSubscriptionModal: React.FC<Props> = ({
           <div className="mt-3.5 p-4 rounded-2xl bg-indigo-950/70 border border-indigo-500/50 shadow-inner space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Crown className="w-4 h-4 text-amber-400 animate-pulse" />
+                <Crown className="w-4 h-4 eb-warn animate-pulse" />
                 <span className="text-xs font-mono font-bold text-indigo-200 uppercase tracking-wider">
                   Active Subscription: {profile.proPlanType?.toUpperCase() || 'PRO USER'}
                 </span>
               </div>
-              <span className="text-[10px] font-mono font-bold text-emerald-400 px-2.5 py-0.5 bg-emerald-950/80 border border-emerald-500/40 rounded-full flex items-center gap-1 whitespace-nowrap">
-                <Zap className="w-3 h-3 text-emerald-400" /> ACTIVE
+              <span className="text-[10px] font-mono font-bold eb-done px-2.5 py-0.5 bg-emerald-950/80 border border-emerald-500/40 rounded-full flex items-center gap-1 whitespace-nowrap">
+                <Zap className="w-3 h-3 eb-done" /> ACTIVE
               </span>
             </div>
 
@@ -346,7 +346,7 @@ export const ProSubscriptionModal: React.FC<Props> = ({
                 <Clock className="w-4 h-4 text-indigo-400" />
                 <span>Time Remaining:</span>
               </div>
-              <span className="text-xs font-mono font-black text-amber-300">
+              <span className="text-xs font-mono font-black eb-warn">
                 {timeInfo.label}
               </span>
             </div>
@@ -383,10 +383,10 @@ export const ProSubscriptionModal: React.FC<Props> = ({
         {ent.status === 'trial' && (
           <div className="mt-4 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30">
             <div className="flex items-center justify-between gap-3 flex-wrap">
-              <span className="text-sm font-black font-mono text-emerald-300 uppercase tracking-wide">
+              <span className="text-sm font-black font-mono eb-done uppercase tracking-wide">
                 Free trial active
               </span>
-              <span className="text-lg font-black font-mono text-emerald-300 tabular-nums">
+              <span className="text-lg font-black font-mono eb-done tabular-nums">
                 {ent.trialDaysLeft}
                 <span className="text-[10px] ml-1">
                   day{ent.trialDaysLeft === 1 ? '' : 's'} left
@@ -409,8 +409,8 @@ export const ProSubscriptionModal: React.FC<Props> = ({
 
         {ent.status === 'lifetime' && (
           <div className="mt-4 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-center">
-            <Crown className="w-6 h-6 text-amber-400 mx-auto" />
-            <p className="text-sm font-black font-mono text-amber-300 mt-2 uppercase tracking-wide">
+            <Crown className="w-6 h-6 eb-warn mx-auto" />
+            <p className="text-sm font-black font-mono eb-warn mt-2 uppercase tracking-wide">
               Lifetime Pro active
             </p>
             <p className="text-[11px] text-slate-300 mt-1">
@@ -422,7 +422,7 @@ export const ProSubscriptionModal: React.FC<Props> = ({
         {/* TRIAL + SINGLE LIFETIME TIER */}
         {ent.status === 'trial' && (
           <div className="my-4 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30">
-            <p className="text-sm font-bold text-emerald-300 font-mono">
+            <p className="text-sm font-bold eb-done font-mono">
               Your free trial is active
             </p>
             <p className="text-[11px] text-slate-300 mt-1 font-sans leading-relaxed">
@@ -434,7 +434,7 @@ export const ProSubscriptionModal: React.FC<Props> = ({
 
         {ent.status === 'expired' && (
           <div className="my-4 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30">
-            <p className="text-sm font-bold text-amber-300 font-mono">Your free month has ended</p>
+            <p className="text-sm font-bold eb-warn font-mono">Your free month has ended</p>
             <p className="text-[11px] text-slate-300 mt-1 font-sans leading-relaxed">
               Your progress and records are safe. Unlock everything again with a single payment.
             </p>
@@ -444,7 +444,7 @@ export const ProSubscriptionModal: React.FC<Props> = ({
         {ent.status !== 'lifetime' && (
         <div className="my-4 p-5 rounded-2xl bg-slate-950 border border-amber-500/40 ring-1 ring-amber-500/20">
           <div className="flex items-baseline gap-2 flex-wrap">
-            <span className="text-2xl font-black font-mono text-amber-400">
+            <span className="text-2xl font-black font-mono eb-warn">
               ₹{LIFETIME_PRICE_INR}
             </span>
             <span className="text-xs font-mono text-slate-400">one time</span>
@@ -464,7 +464,7 @@ export const ProSubscriptionModal: React.FC<Props> = ({
               'Cloud sync across your devices',
             ].map((item) => (
               <li key={item} className="flex items-start gap-2 text-[11px] text-slate-300 font-sans">
-                <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5 stroke-[3]" />
+                <Check className="w-3.5 h-3.5 eb-done shrink-0 mt-0.5 stroke-[3]" />
                 <span>{item}</span>
               </li>
             ))}
@@ -480,7 +480,7 @@ export const ProSubscriptionModal: React.FC<Props> = ({
         <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 mb-4 text-center space-y-3 shadow-inner">
           
           <div className="flex items-center justify-center gap-2 text-slate-300 text-xs font-mono font-semibold tracking-wide">
-            <Smartphone className="w-4 h-4 text-emerald-400" />
+            <Smartphone className="w-4 h-4 eb-done" />
             <span>Pay with UPI</span>
           </div>
 
@@ -499,7 +499,7 @@ export const ProSubscriptionModal: React.FC<Props> = ({
               <ArrowRight className="w-4 h-4 text-emerald-200 ml-auto shrink-0 group-hover:translate-x-1 transition-transform" />
             </motion.a>
             <p className="text-[10px] font-sans text-slate-400 mt-1.5 flex items-center justify-center gap-1.5">
-              <Shield className="w-3 h-3 text-emerald-400" />
+              <Shield className="w-3 h-3 eb-done" />
               <span>Opens GPay, PhonePe, Paytm or any UPI app</span>
             </p>
           </div>

@@ -259,7 +259,7 @@ export const SlidingPuzzle: React.FC<{ profile: UserProfile, onProfileUpdate?: (
             onClick={handleHint}
             disabled={isWon || hintBusy}
             title="Highlight the next tile to move"
-            className="eb-press eb-glow-emerald flex items-center gap-2 px-3 py-2 bg-emerald-500/12 border border-emerald-500/35 text-emerald-300 rounded-xl hover:bg-emerald-500/20 disabled:opacity-40 text-xs font-bold"
+            className="eb-press eb-glow-emerald flex items-center gap-2 px-3 py-2 bg-emerald-500/12 border border-emerald-500/35 eb-done rounded-xl hover:bg-emerald-500/20 disabled:opacity-40 text-xs font-bold"
           >
             <Lightbulb className="w-3 h-3" />
             {hintBusy ? 'Thinking…' : 'Hint'}
@@ -345,13 +345,13 @@ export const SlidingPuzzle: React.FC<{ profile: UserProfile, onProfileUpdate?: (
               exit={{ opacity: 0 }}
               className="absolute inset-0 z-20 bg-black/60 backdrop-blur-md flex flex-col items-center justify-center rounded-2xl"
             >
-              <div className="bg-emerald-500/20 text-emerald-400 p-4 rounded-full mb-4">
+              <div className="bg-emerald-500/20 eb-done p-4 rounded-full mb-4">
                 <Check className="w-12 h-12" />
               </div>
               <h3 className="text-3xl font-display font-black text-white mb-2 uppercase tracking-wide">
                 Masterpiece Restored!
               </h3>
-              <p className="text-emerald-400 font-mono font-bold mb-6">
+              <p className="eb-done font-mono font-bold mb-6">
                 +{gridSize === 3 ? 100 : gridSize === 4 ? 300 : 800} EXP
               </p>
               

@@ -794,8 +794,8 @@ export const ChessGame: React.FC<{
           className={`px-3 py-2 rounded-xl border flex items-center gap-2 min-w-[92px] justify-center ${
             live
               ? t <= 10
-                ? 'bg-rose-500/20 border-rose-500 text-rose-300 animate-pulse'
-                : 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300'
+                ? 'bg-rose-500/20 border-rose-500 eb-danger animate-pulse'
+                : 'bg-emerald-500/20 border-emerald-500/50 eb-done'
               : 'bg-[#0E1116] border-[#2A313C] text-[#98A2B3]'
           }`}
         >
@@ -821,10 +821,10 @@ export const ChessGame: React.FC<{
               <div
                 className={`p-5 rounded-3xl mb-4 border ${
                   gameStatus === 'won' || gameStatus === 'timeout_win'
-                    ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
+                    ? 'bg-amber-500/20 eb-warn border-amber-500/40'
                     : gameStatus === 'drawn'
                       ? 'bg-slate-500/20 text-slate-300 border-slate-500/40'
-                      : 'bg-rose-500/20 text-rose-400 border-rose-500/40'
+                      : 'bg-rose-500/20 eb-danger border-rose-500/40'
                 }`}
               >
                 {gameStatus === 'won' || gameStatus === 'timeout_win' ? (
@@ -851,7 +851,7 @@ export const ChessGame: React.FC<{
               {eloDelta !== null && (
                 <p className="text-sm font-mono text-[#98A2B3] mt-2">
                   ELO {userElo}{' '}
-                  <span className={eloDelta >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
+                  <span className={eloDelta >= 0 ? 'eb-done' : 'eb-danger'}>
                     {eloDelta >= 0 ? `+${eloDelta}` : eloDelta}
                   </span>
                 </p>
@@ -884,13 +884,13 @@ export const ChessGame: React.FC<{
         <div className="w-full max-w-[640px] flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             <BrainCircuit
-              className={`w-4 h-4 shrink-0 ${isEngineThinking ? 'text-rose-400 animate-pulse' : 'text-[#98A2B3]'}`}
+              className={`w-4 h-4 shrink-0 ${isEngineThinking ? 'eb-danger animate-pulse' : 'text-[#98A2B3]'}`}
             />
             <span className="text-xs font-mono font-bold text-[#F4F6F8] truncate">
               Bot · {engineLevel}
             </span>
             {game.inCheck() && gameStatus === 'playing' && (
-              <span className="text-[9px] font-mono font-black px-2 py-0.5 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300 shrink-0">
+              <span className="text-[9px] font-mono font-black px-2 py-0.5 rounded-full bg-rose-500/20 border border-rose-500/40 eb-danger shrink-0">
                 CHECK
               </span>
             )}
@@ -961,7 +961,7 @@ export const ChessGame: React.FC<{
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <div className="flex items-center gap-3 mb-1">
-              <Eyebrow className="text-rose-400 border-rose-500/30 bg-rose-500/10">
+              <Eyebrow className="eb-danger border-rose-500/30 bg-rose-500/10">
                 CHESS.COM ARENA ENGINE
               </Eyebrow>
               <button
@@ -969,7 +969,7 @@ export const ChessGame: React.FC<{
                 className="p-1.5 bg-[#0E1116] border border-[#2A313C] rounded-lg text-[#98A2B3] hover:text-white transition-colors cursor-pointer"
                 title={isMuted ? 'Unmute Audio' : 'Mute Audio'}
               >
-                {isMuted ? <VolumeX className="w-4 h-4 text-rose-400" /> : <Volume2 className="w-4 h-4" />}
+                {isMuted ? <VolumeX className="w-4 h-4 eb-danger" /> : <Volume2 className="w-4 h-4" />}
               </button>
             </div>
             <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-white">Cognitive Chess</h2>
@@ -978,9 +978,9 @@ export const ChessGame: React.FC<{
           <div className="flex flex-wrap items-center gap-3">
             {/* Persistent User Chess ELO Badge */}
             <div className="flex items-center gap-2.5 px-4 py-2 bg-gradient-to-r from-amber-500/20 to-amber-600/10 border border-amber-500/40 rounded-2xl shadow-lg">
-              <Trophy className="w-4 h-4 text-amber-400" />
+              <Trophy className="w-4 h-4 eb-warn" />
               <div>
-                <div className="text-[10px] font-mono uppercase tracking-wider text-amber-300 font-bold">
+                <div className="text-[10px] font-mono uppercase tracking-wider eb-warn font-bold">
                   Your Rating
                 </div>
                 <div className="text-sm font-mono font-black text-white">{userElo} ELO</div>
@@ -990,7 +990,7 @@ export const ChessGame: React.FC<{
             {/* AI ELO Display */}
             <div className="flex items-center gap-2 px-3.5 py-2 bg-[#0E1116] border border-[#2A313C] rounded-2xl">
               <span className="text-xs text-[#98A2B3]">Bot ELO:</span>
-              <span className="text-xs font-mono font-black text-rose-400">{engineLevel} ELO</span>
+              <span className="text-xs font-mono font-black eb-danger">{engineLevel} ELO</span>
             </div>
 
             {/* Time Control Options */}
@@ -1019,7 +1019,7 @@ export const ChessGame: React.FC<{
             <div className="flex-1 w-full">
               <div className="flex justify-between items-center mb-1.5 text-xs font-mono">
                 <span className="text-[#98A2B3]">Bot Difficulty Level</span>
-                <span className="text-rose-400 font-bold">
+                <span className="eb-danger font-bold">
                   {engineLevel <= 500
                     ? 'Beginner Bot'
                     : engineLevel <= 1200
@@ -1066,12 +1066,12 @@ export const ChessGame: React.FC<{
           <div className="bg-[#12161F] border border-[#2A313C] rounded-2xl px-4 py-3 flex items-center justify-between shadow-lg">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-center text-slate-200 shadow-inner">
-                <BrainCircuit className={`w-5 h-5 ${isEngineThinking ? 'text-rose-400 animate-pulse' : ''}`} />
+                <BrainCircuit className={`w-5 h-5 ${isEngineThinking ? 'eb-danger animate-pulse' : ''}`} />
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <h4 className="text-sm font-display font-extrabold text-white">Grandmaster Bot</h4>
-                  <span className="px-2 py-0.5 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-[10px] font-mono font-bold rounded-md">
+                  <span className="px-2 py-0.5 bg-rose-500/10 border border-rose-500/30 eb-danger text-[10px] font-mono font-bold rounded-md">
                     {engineLevel} ELO
                   </span>
                 </div>
@@ -1082,7 +1082,7 @@ export const ChessGame: React.FC<{
                     </span>
                   ))}
                   {diff < 0 && (
-                    <span className="text-[11px] font-mono font-bold text-rose-400 ml-1">+{Math.abs(diff)}</span>
+                    <span className="text-[11px] font-mono font-bold eb-danger ml-1">+{Math.abs(diff)}</span>
                   )}
                 </div>
               </div>
@@ -1093,8 +1093,8 @@ export const ChessGame: React.FC<{
               className={`px-4 py-2 rounded-xl border flex items-center gap-2 transition-all ${
                 game.turn() === 'b' && gameStatus === 'playing'
                   ? blackTime <= 10
-                    ? 'bg-rose-500/20 border-rose-500 text-rose-400 animate-pulse'
-                    : 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
+                    ? 'bg-rose-500/20 border-rose-500 eb-danger animate-pulse'
+                    : 'bg-emerald-500/20 border-emerald-500/50 eb-done shadow-[0_0_15px_rgba(16,185,129,0.2)]'
                   : 'bg-[#0E1116] border-[#2A313C] text-[#98A2B3]'
               }`}
             >
@@ -1121,10 +1121,10 @@ export const ChessGame: React.FC<{
                   <div
                     className={`p-5 rounded-3xl mb-4 ${
                       gameStatus === 'won' || gameStatus === 'timeout_win'
-                        ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40 shadow-[0_0_30px_rgba(245,158,11,0.3)]'
+                        ? 'bg-amber-500/20 eb-warn border border-amber-500/40 shadow-[0_0_30px_rgba(245,158,11,0.3)]'
                         : gameStatus === 'drawn'
                         ? 'bg-slate-500/20 text-slate-300 border border-slate-500/40'
-                        : 'bg-rose-500/20 text-rose-400 border border-rose-500/40 shadow-[0_0_30px_rgba(244,63,94,0.3)]'
+                        : 'bg-rose-500/20 eb-danger border border-rose-500/40 shadow-[0_0_30px_rgba(244,63,94,0.3)]'
                     }`}
                   >
                     {gameStatus === 'won' || gameStatus === 'timeout_win' ? (
@@ -1155,7 +1155,7 @@ export const ChessGame: React.FC<{
                         <span>{userElo}</span>
                         <span
                           className={`flex items-center ${
-                            eloDelta >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                            eloDelta >= 0 ? 'eb-done' : 'eb-danger'
                           }`}
                         >
                           {eloDelta >= 0 ? (
@@ -1242,7 +1242,7 @@ export const ChessGame: React.FC<{
           {/* White / You Player Card */}
           <div className="bg-[#12161F] border border-[#2A313C] rounded-2xl px-4 py-3 flex items-center justify-between shadow-lg">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 font-black shadow-inner">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center eb-warn font-black shadow-inner">
                 <User className="w-5 h-5" />
               </div>
               <div>
@@ -1250,18 +1250,18 @@ export const ChessGame: React.FC<{
                   <h4 className="text-sm font-display font-extrabold text-white">
                     {(profile as any).name || 'You'}
                   </h4>
-                  <span className="px-2 py-0.5 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-mono font-bold rounded-md">
+                  <span className="px-2 py-0.5 bg-amber-500/10 border border-amber-500/30 eb-warn text-[10px] font-mono font-bold rounded-md">
                     {userElo} ELO
                   </span>
                 </div>
                 <div className="flex items-center gap-1 mt-0.5 min-h-[18px]">
                   {capturedByWhite.map((p, idx) => (
-                    <span key={idx} className="text-xs uppercase font-mono text-amber-300 font-black">
+                    <span key={idx} className="text-xs uppercase font-mono eb-warn font-black">
                       {p.type}
                     </span>
                   ))}
                   {diff > 0 && (
-                    <span className="text-[11px] font-mono font-bold text-emerald-400 ml-1">+{diff}</span>
+                    <span className="text-[11px] font-mono font-bold eb-done ml-1">+{diff}</span>
                   )}
                 </div>
               </div>
@@ -1272,8 +1272,8 @@ export const ChessGame: React.FC<{
               className={`px-4 py-2 rounded-xl border flex items-center gap-2 transition-all ${
                 game.turn() === 'w' && gameStatus === 'playing'
                   ? whiteTime <= 10
-                    ? 'bg-rose-500/20 border-rose-500 text-rose-400 animate-pulse'
-                    : 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
+                    ? 'bg-rose-500/20 border-rose-500 eb-danger animate-pulse'
+                    : 'bg-emerald-500/20 border-emerald-500/50 eb-done shadow-[0_0_15px_rgba(16,185,129,0.2)]'
                   : 'bg-[#0E1116] border-[#2A313C] text-[#98A2B3]'
               }`}
             >
@@ -1288,7 +1288,7 @@ export const ChessGame: React.FC<{
           {/* Match Info & Controls */}
           <div className="bg-[#12161F] border border-[#2A313C] rounded-3xl p-5 shadow-xl">
             <h3 className="text-sm font-display font-extrabold text-white mb-3 flex items-center gap-2">
-              <Zap className="w-4 h-4 text-rose-400" />
+              <Zap className="w-4 h-4 eb-danger" />
               <span>Match Status</span>
             </h3>
 
@@ -1306,7 +1306,7 @@ export const ChessGame: React.FC<{
               </div>
 
               {game.inCheck() && !game.isGameOver() && (
-                <div className="p-3 bg-rose-500/10 border border-rose-500/40 rounded-2xl text-xs font-mono font-bold text-rose-400 flex items-center gap-2 animate-pulse">
+                <div className="p-3 bg-rose-500/10 border border-rose-500/40 rounded-2xl text-xs font-mono font-bold eb-danger flex items-center gap-2 animate-pulse">
                   <ShieldAlert className="w-4 h-4" />
                   <span>KING IS IN CHECK!</span>
                 </div>
@@ -1315,7 +1315,7 @@ export const ChessGame: React.FC<{
               {gameStatus === 'playing' && (
                 <button
                   onClick={() => finishMatch('lost')}
-                  className="w-full py-3 border border-rose-500/40 hover:bg-rose-500/10 text-rose-400 font-mono text-xs font-bold uppercase rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                  className="w-full py-3 border border-rose-500/40 hover:bg-rose-500/10 eb-danger font-mono text-xs font-bold uppercase rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
                 >
                   <RotateCcw className="w-4 h-4" />
                   <span>Resign Match</span>
@@ -1328,7 +1328,7 @@ export const ChessGame: React.FC<{
           <div className="bg-[#12161F] border border-[#2A313C] rounded-3xl p-5 shadow-xl">
             <div className="flex justify-between items-center mb-3">
               <h3 className="text-sm font-display font-extrabold text-white flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-amber-400" />
+                <Sparkles className="w-4 h-4 eb-warn" />
                 <span>Move History</span>
               </h3>
               <span className="text-[10px] font-mono text-[#98A2B3]">{moveHistory.length} moves</span>

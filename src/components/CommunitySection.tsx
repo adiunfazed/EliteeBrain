@@ -160,7 +160,7 @@ export const CommunitySection: React.FC<CommunitySectionProps> = () => {
                   <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-sky-400 px-2 py-0.5 bg-sky-500/15 border border-sky-500/30 rounded-md">
                     Official Telegram Channel
                   </span>
-                  <span className="text-[11px] font-mono text-emerald-400 font-bold flex items-center gap-1">
+                  <span className="text-[11px] font-mono eb-done font-bold flex items-center gap-1">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                     Active Community
                   </span>
@@ -190,8 +190,8 @@ export const CommunitySection: React.FC<CommunitySectionProps> = () => {
               >
                 {copiedTg ? (
                   <>
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
-                    <span className="text-emerald-400">Copied</span>
+                    <Check className="w-3.5 h-3.5 eb-done" />
+                    <span className="eb-done">Copied</span>
                   </>
                 ) : (
                   <>
@@ -255,8 +255,8 @@ export const CommunitySection: React.FC<CommunitySectionProps> = () => {
               >
                 {copiedYt ? (
                   <>
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
-                    <span className="text-emerald-400">Copied</span>
+                    <Check className="w-3.5 h-3.5 eb-done" />
+                    <span className="eb-done">Copied</span>
                   </>
                 ) : (
                   <>

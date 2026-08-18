@@ -179,7 +179,7 @@ export const StroopModule: React.FC<Props> = ({ currentLevel, onFinishSession, o
             </div>
             <h3 className="text-2xl font-black text-slate-100 mb-2">Prefrontal Stroop Test</h3>
             <p className="text-xs text-slate-400 leading-relaxed mb-6">
-              A word will appear painted in a specific <span className="text-violet-300 font-bold">INK color</span>. Click the button matching the <span className="text-rose-400 font-bold uppercase underline">INK COLOR</span> of the text—do NOT click the text word!
+              A word will appear painted in a specific <span className="text-violet-300 font-bold">INK color</span>. Click the button matching the <span className="eb-danger font-bold uppercase underline">INK COLOR</span> of the text—do NOT click the text word!
             </p>
 
             {/* Visual Example Card */}

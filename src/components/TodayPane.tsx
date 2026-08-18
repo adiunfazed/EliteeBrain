@@ -195,7 +195,7 @@ export const TodayPane: React.FC<Props> = ({
 
       {empty && (
         <div className="text-center py-12 px-6 border border-dashed border-[#2A313C] rounded-2xl">
-          <p className="text-base font-black text-[#F4F6F8] font-mono">Nothing scheduled yet.</p>
+          <p className="eb-heading text-base">Nothing scheduled yet.</p>
           <p className="text-[11px] text-[#98A2B3] mt-1.5 max-w-sm mx-auto leading-relaxed">
             Build the routine you want to follow each day, then tick it off here. Link blocks to a
             goal and your goal moves as you do the work.

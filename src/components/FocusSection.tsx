@@ -44,6 +44,7 @@ export const FocusSection: React.FC<Props> = ({ userId, incomingTask, onConsumeI
   const [selectedTaskId, setSelectedTaskId] = useState<string>('');
   const [freeLabel, setFreeLabel] = useState('');
   const [justFinished, setJustFinished] = useState<FocusSession | null>(null);
+  const [reflected, setReflected] = useState(false);
   const [, forceTick] = useState(0);
 
   useEffect(() => subscribeTasks(userId, setTasks), [userId]);
@@ -116,6 +117,7 @@ export const FocusSection: React.FC<Props> = ({ userId, incomingTask, onConsumeI
       if (focusedSeconds < 60) return;
 
       setJustFinished(session);
+      setReflected(false);
       if (completed) soundFx.playSuccess();
 
       try {
@@ -255,7 +257,7 @@ export const FocusSection: React.FC<Props> = ({ userId, incomingTask, onConsumeI
               soundFx.playClick();
               persist(null);
             }}
-            className="px-4 py-3 rounded-xl bg-transparent hover:bg-rose-500/10 border border-[#2A313C] hover:border-rose-500/40 text-[#98A2B3] hover:text-rose-300 text-xs font-mono font-bold flex items-center gap-2 transition-colors"
+            className="px-4 py-3 rounded-xl bg-transparent hover:bg-rose-500/10 border border-[#2A313C] hover:border-rose-500/40 text-[#98A2B3] hover:eb-danger text-xs font-mono font-bold flex items-center gap-2 transition-colors"
           >
             <Square className="w-3.5 h-3.5" />
             Cancel
@@ -280,12 +282,43 @@ export const FocusSection: React.FC<Props> = ({ userId, incomingTask, onConsumeI
             exit={{ opacity: 0 }}
             className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 flex items-start gap-3"
           >
-            <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5 stroke-[3]" />
+            <Check className="w-4 h-4 eb-done shrink-0 mt-0.5 stroke-[3]" />
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-bold text-emerald-300 font-mono">Session complete</p>
+              <p className="text-sm font-bold eb-done font-mono">Session complete</p>
               <p className="text-[11px] text-[#98A2B3] mt-0.5 break-words">
                 {formatDuration(justFinished.focusedSeconds)} on {justFinished.taskTitle}
               </p>
+
+              {/* One question, answerable in a tap. A session that ends with
+                  no reflection leaves the user no better informed. */}
+              {justFinished.taskId && !reflected && (
+                <div className="flex items-center gap-2 mt-3 flex-wrap">
+                  <span className="text-[10px] text-[#8A93A5]">Did you finish it?</span>
+                  <button
+                    onClick={async () => {
+                      setReflected(true);
+                      soundFx.playSuccess();
+                      try {
+                        await patchTask(userId, justFinished.taskId!, {
+                          completed: true,
+                          completedAt: new Date().toISOString(),
+                        });
+                      } catch (e) {
+                        console.error('Could not complete task:', e);
+                      }
+                    }}
+                    className="eb-press text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/35 eb-done"
+                  >
+                    Yes, mark done
+                  </button>
+                  <button
+                    onClick={() => setReflected(true)}
+                    className="eb-press text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-lg border border-[#262C38] text-[#8A93A5]"
+                  >
+                    Not yet
+                  </button>
+                </div>
+              )}
             </div>
             <button
               onClick={() => setJustFinished(null)}

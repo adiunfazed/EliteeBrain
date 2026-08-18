@@ -46,10 +46,10 @@ const TIERS: TierInfo[] = [
   { id: 'silver-3', tierNumber: '3', baseName: 'SILVER', minXp: 2500, maxXp: 2999, color: '#94A3B8', badgeBg: 'bg-slate-800/50', badgeBorder: 'border-slate-500/60', textColor: 'text-slate-300' },
   
   // GOLD (1-4)
-  { id: 'gold-1', tierNumber: '1', baseName: 'GOLD', minXp: 3000, maxXp: 3999, color: '#F59E0B', badgeBg: 'bg-amber-500/15', badgeBorder: 'border-amber-400', textColor: 'text-amber-400' },
-  { id: 'gold-2', tierNumber: '2', baseName: 'GOLD', minXp: 4000, maxXp: 4999, color: '#F59E0B', badgeBg: 'bg-amber-500/15', badgeBorder: 'border-amber-400', textColor: 'text-amber-400' },
-  { id: 'gold-3', tierNumber: '3', baseName: 'GOLD', minXp: 5000, maxXp: 5999, color: '#F59E0B', badgeBg: 'bg-amber-500/15', badgeBorder: 'border-amber-400', textColor: 'text-amber-400' },
-  { id: 'gold-4', tierNumber: '4', baseName: 'GOLD', minXp: 6000, maxXp: 6999, color: '#F59E0B', badgeBg: 'bg-amber-500/15', badgeBorder: 'border-amber-400', textColor: 'text-amber-400' },
+  { id: 'gold-1', tierNumber: '1', baseName: 'GOLD', minXp: 3000, maxXp: 3999, color: '#F59E0B', badgeBg: 'bg-amber-500/15', badgeBorder: 'border-amber-400', textColor: 'eb-warn' },
+  { id: 'gold-2', tierNumber: '2', baseName: 'GOLD', minXp: 4000, maxXp: 4999, color: '#F59E0B', badgeBg: 'bg-amber-500/15', badgeBorder: 'border-amber-400', textColor: 'eb-warn' },
+  { id: 'gold-3', tierNumber: '3', baseName: 'GOLD', minXp: 5000, maxXp: 5999, color: '#F59E0B', badgeBg: 'bg-amber-500/15', badgeBorder: 'border-amber-400', textColor: 'eb-warn' },
+  { id: 'gold-4', tierNumber: '4', baseName: 'GOLD', minXp: 6000, maxXp: 6999, color: '#F59E0B', badgeBg: 'bg-amber-500/15', badgeBorder: 'border-amber-400', textColor: 'eb-warn' },
   
   // PLATINUM (1-4)
   { id: 'platinum-1', tierNumber: '1', baseName: 'PLATINUM', minXp: 7000, maxXp: 8499, color: '#38BDF8', badgeBg: 'bg-sky-500/15', badgeBorder: 'border-sky-400', textColor: 'text-sky-300' },
@@ -165,8 +165,8 @@ export const RankProgressionSection: React.FC<RankProgressionSectionProps> = ({
 
         {/* Streak Quick Pill */}
         <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 border border-amber-500/30 rounded-xl">
-          <Flame className="w-4 h-4 text-amber-400 animate-pulse" />
-          <span className="text-xs font-mono font-bold text-amber-300">
+          <Flame className="w-4 h-4 eb-warn animate-pulse" />
+          <span className="text-xs font-mono font-bold eb-warn">
             {derivedStreak ?? profile.streakDays} Day Streak
           </span>
         </div>

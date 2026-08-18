@@ -309,7 +309,7 @@ export const Game2048: React.FC<{ profile: UserProfile, onProfileUpdate?: (p: Us
               exit={{ opacity: 0 }}
               className="absolute inset-0 z-20 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center rounded-2xl"
             >
-              <h3 className={`text-4xl font-display font-black mb-4 ${gameWon ? 'text-amber-400' : 'text-white'}`}>
+              <h3 className={`text-4xl font-display font-black mb-4 ${gameWon ? 'eb-warn' : 'text-white'}`}>
                 {gameWon ? 'You Win!' : 'Game Over'}
               </h3>
               <p className="text-slate-300 font-mono mb-6">Score: {score}</p>

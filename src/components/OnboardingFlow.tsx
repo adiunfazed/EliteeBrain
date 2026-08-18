@@ -124,7 +124,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
       badge: 'Memory Capacity',
       icon: Binary,
       color: 'amber',
-      accentColor: 'text-amber-400 bg-amber-500/15 border-amber-500/40',
+      accentColor: 'eb-warn bg-amber-500/15 border-amber-500/40',
       description: 'Expand your mental workbench to store and manipulate complex information simultaneously.',
       modules: ['Digit Span Backwards', 'Spatial Dual N-Back'],
       miniDemoType: 'digit',
@@ -135,7 +135,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
       badge: 'Distraction Suppression',
       icon: Target,
       color: 'rose',
-      accentColor: 'text-rose-400 bg-rose-500/15 border-rose-500/40',
+      accentColor: 'eb-danger bg-rose-500/15 border-rose-500/40',
       description: 'Filter irrelevant sensory noise and zero in on crucial targets under tight temporal constraints.',
       modules: ['Stroop Interference Match', 'Mindful Stillness Hold'],
       miniDemoType: 'stroop',
@@ -157,7 +157,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
       badge: 'Executive Switch',
       icon: Shuffle,
       color: 'emerald',
-      accentColor: 'text-emerald-400 bg-emerald-500/15 border-emerald-500/40',
+      accentColor: 'eb-done bg-emerald-500/15 border-emerald-500/40',
       description: 'Switch between fluid cognitive rules seamlessly without loss of speed or accuracy.',
       modules: ['Cognitive Shift Sorting'],
       miniDemoType: 'flexibility',
@@ -282,11 +282,11 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                         <span className="text-[10px] text-ink-muted uppercase font-mono">Structured Plan</span>
                       </div>
                       <div className="p-2.5 bg-surface border border-rule rounded-xl text-center">
-                        <span className="block text-base font-extrabold font-mono text-emerald-400">100%</span>
+                        <span className="block text-base font-extrabold font-mono eb-done">100%</span>
                         <span className="text-[10px] text-ink-muted uppercase font-mono">Adaptive AI</span>
                       </div>
                       <div className="p-2.5 bg-surface border border-rule rounded-xl text-center">
-                        <span className="block text-base font-extrabold font-mono text-amber-400">8 Core</span>
+                        <span className="block text-base font-extrabold font-mono eb-warn">8 Core</span>
                         <span className="text-[10px] text-ink-muted uppercase font-mono">Cognitive Modules</span>
                       </div>
                       <div className="p-2.5 bg-surface border border-rule rounded-xl text-center">
@@ -299,7 +299,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                   <div className="p-3 bg-surface-sunk border border-rule rounded-xl flex items-start gap-2.5">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4 h-4 eb-done shrink-0 mt-0.5" />
                     <div>
                       <strong className="block text-ink font-bold">Daily Micro-Sessions</strong>
                       <span className="text-[11px] text-ink-muted">Consistently short, targeted workouts built to prevent cognitive burnout.</span>
@@ -313,7 +313,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                     </div>
                   </div>
                   <div className="p-3 bg-surface-sunk border border-rule rounded-xl flex items-start gap-2.5">
-                    <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4 h-4 eb-warn shrink-0 mt-0.5" />
                     <div>
                       <strong className="block text-ink font-bold">Real-time Metrics</strong>
                       <span className="text-[11px] text-ink-muted">Track your scores over time and see your personal bests.</span>
@@ -334,9 +334,9 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 className="space-y-5"
               >
                 <div>
-                  <div className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-mono font-bold rounded-md mb-1">
+                  <div className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-amber-500/15 border border-amber-500/30 eb-warn text-xs font-mono font-bold rounded-md mb-1">
                     <Calendar className="w-3.5 h-3.5" />
-                    <span>Neuro-Gym Roadmap</span>
+                    <span>Your 30-day plan</span>
                   </div>
                   <h2 className="text-xl sm:text-2xl font-display font-extrabold text-ink">
                     The 30-Day Cognitive Protocol
@@ -355,7 +355,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                     }}
                     className={`py-2 px-3 text-xs font-mono font-bold rounded-xl transition-all cursor-pointer text-center ${
                       activePhase === 1
-                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-xs'
+                        ? 'bg-amber-500/20 eb-warn border border-amber-500/40 shadow-xs'
                         : 'text-ink-muted hover:text-ink'
                     }`}
                   >
@@ -381,7 +381,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                     }}
                     className={`py-2 px-3 text-xs font-mono font-bold rounded-xl transition-all cursor-pointer text-center ${
                       activePhase === 3
-                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-xs'
+                        ? 'bg-emerald-500/20 eb-done border border-emerald-500/40 shadow-xs'
                         : 'text-ink-muted hover:text-ink'
                     }`}
                   >
@@ -457,10 +457,10 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 
                 <div className="p-3 bg-surface-sunk border border-rule rounded-xl text-xs font-mono text-ink-muted flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Flame className="w-4 h-4 text-amber-400" />
+                    <Flame className="w-4 h-4 eb-warn" />
                     <span>Consistency Multiplier: Missing a day resets your active streak!</span>
                   </div>
-                  <span className="text-ink font-bold">+100 XP Daily</span>
+                  <span className="text-ink font-bold">Earn XP for what you finish</span>
                 </div>
               </motion.div>
             )}
@@ -506,7 +506,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-xs font-mono">
                         <span className="text-ink-muted">Trial Accuracy:</span>
-                        <span className="text-emerald-400 font-bold">{simAccuracy}%</span>
+                        <span className="eb-done font-bold">{simAccuracy}%</span>
                       </div>
                       <input
                         type="range"
@@ -522,7 +522,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-xs font-mono">
                         <span className="text-ink-muted">Response Latency:</span>
-                        <span className="text-amber-400 font-bold">{simLatency} ms</span>
+                        <span className="eb-warn font-bold">{simLatency} ms</span>
                       </div>
                       <input
                         type="range"
@@ -539,18 +539,18 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                   {/* Dynamic Computed Outcome */}
                   {(() => {
                     let levelAction = 'MAINTAIN LEVEL 3 (Stabilizing)';
-                    let levelColor = 'text-amber-400 bg-amber-500/15 border-amber-500/30';
+                    let levelColor = 'eb-warn bg-amber-500/15 border-amber-500/30';
                     let description =
                       'That sat in the target difficulty range — hard enough to stretch you, not so hard it stops being useful.';
 
                     if (simAccuracy >= 88 && simLatency < 400) {
                       levelAction = '⚡ LEVEL UP! (Level 3 → Level 4)';
-                      levelColor = 'text-emerald-400 bg-emerald-500/15 border-emerald-500/30';
+                      levelColor = 'eb-done bg-emerald-500/15 border-emerald-500/30';
                       description =
                         'High accuracy and rapid response detected. Increasing digit span sequence and reducing time limit.';
                     } else if (simAccuracy < 65 || simLatency > 550) {
                       levelAction = '🛡️ AUTO-CALIBRATE (Level 3 → Level 2)';
-                      levelColor = 'text-rose-400 bg-rose-500/15 border-rose-500/30';
+                      levelColor = 'eb-danger bg-rose-500/15 border-rose-500/30';
                       description =
                         'Higher error margin detected. Easing sequence load to build confidence and prevent fatigue.';
                     }
@@ -569,7 +569,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 
                 <div className="grid grid-cols-2 gap-3 text-xs">
                   <div className="p-3 bg-surface border border-rule rounded-xl flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <TrendingUp className="w-4 h-4 eb-done shrink-0" />
                     <span><strong>High Accuracy:</strong> Speeds up sequence tempo and expands span length.</span>
                   </div>
                   <div className="p-3 bg-surface border border-rule rounded-xl flex items-center gap-2">
@@ -675,7 +675,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                         {currentPillar.miniDemoType === 'digit' && (
                           <div className="flex items-center justify-between gap-3">
                             <div className="text-xs font-mono text-ink">
-                              Sequence: <strong className="text-amber-400 font-bold text-sm tracking-widest">8 • 3 • 5 • 1</strong>
+                              Sequence: <strong className="eb-warn font-bold text-sm tracking-widest">8 • 3 • 5 • 1</strong>
                             </div>
                             <div className="flex items-center gap-2">
                               <input
@@ -695,13 +695,13 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                                     setDigitDemoSuccess(false);
                                   }
                                 }}
-                                className="px-2.5 py-1.5 bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-mono font-bold rounded-lg cursor-pointer"
+                                className="px-2.5 py-1.5 bg-amber-500/20 eb-warn border border-amber-500/40 text-xs font-mono font-bold rounded-lg cursor-pointer"
                               >
                                 Test
                               </button>
                             </div>
-                            {digitDemoSuccess === true && <span className="text-xs font-mono text-emerald-400 font-bold">✓ Match!</span>}
-                            {digitDemoSuccess === false && <span className="text-xs font-mono text-rose-400 font-bold">Try 8351</span>}
+                            {digitDemoSuccess === true && <span className="text-xs font-mono eb-done font-bold">✓ Match!</span>}
+                            {digitDemoSuccess === false && <span className="text-xs font-mono eb-danger font-bold">Try 8351</span>}
                           </div>
                         )}
 
@@ -730,7 +730,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                                 Blue Ink ✓
                               </button>
                             </div>
-                            {stroopAnswered === true && <span className="text-xs font-mono text-emerald-400 font-bold">Correct!</span>}
+                            {stroopAnswered === true && <span className="text-xs font-mono eb-done font-bold">Correct!</span>}
                           </div>
                         )}
 
@@ -750,7 +750,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                               {reactionState === 'done' && 'Test Again'}
                             </button>
                             {reactionDemoTime && (
-                              <span className="text-xs font-mono text-emerald-400 font-bold">
+                              <span className="text-xs font-mono eb-done font-bold">
                                 Latency: {reactionDemoTime} ms!
                               </span>
                             )}
@@ -781,7 +781,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 className="space-y-5"
               >
                 <div>
-                  <div className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-mono font-bold rounded-md mb-1">
+                  <div className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-emerald-500/15 border border-emerald-500/30 eb-done text-xs font-mono font-bold rounded-md mb-1">
                     <RocketIcon className="w-3.5 h-3.5" />
                     <span>Final Protocol Setup</span>
                   </div>
@@ -853,7 +853,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                           }}
                           className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center justify-between ${
                             selectedMinutes === opt.mins
-                              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-xs'
+                              ? 'bg-emerald-500/20 eb-done border-emerald-500/50 shadow-xs'
                               : 'bg-surface hover:bg-surface-sunk border-rule text-ink-muted'
                           }`}
                         >
@@ -867,7 +867,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                     <div className="p-3 bg-surface border border-rule rounded-xl text-xs font-mono text-ink-muted space-y-1">
                       <div className="flex items-center justify-between text-ink font-bold">
                         <span>Starting Day 1 Status:</span>
-                        <span className="text-emerald-400">Ready to Begin</span>
+                        <span className="eb-done">Ready to Begin</span>
                       </div>
                       <p className="text-[11px]">
                         Targeting <strong>{goalById(selectedFocusGoal)?.label || selectedFocusGoal}</strong> with <strong>{selectedMinutes} mins/day</strong>.

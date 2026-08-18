@@ -1,11 +1,13 @@
 import React, { useMemo } from 'react';
 import { motion } from 'motion/react';
-import { CalendarCheck, Check, AlertCircle, Compass } from 'lucide-react';
+import { CalendarCheck, Check, AlertCircle, Compass, ArrowRight } from 'lucide-react';
 import type { MomentumInput } from '../lib/momentum';
 import { lifeAreas, weeklyReview } from '../lib/review';
 
 interface Props {
   input: MomentumInput;
+  /** Opens the screen where the named bottleneck can actually be addressed. */
+  onGo?: (pane: 'today' | 'tasks' | 'goals' | 'routine' | 'focus') => void;
 }
 
 const AREA_TINT: Record<string, string> = {
@@ -19,7 +21,7 @@ const AREA_TINT: Record<string, string> = {
   goals: 'bg-[#A855F7]',
 };
 
-export const WeeklyReviewSection: React.FC<Props> = ({ input }) => {
+export const WeeklyReviewSection: React.FC<Props> = ({ input, onGo }) => {
   const review = useMemo(() => weeklyReview(input), [input]);
   const areas = useMemo(() => lifeAreas(input, 7), [input]);
 
@@ -68,7 +70,7 @@ export const WeeklyReviewSection: React.FC<Props> = ({ input }) => {
       {/* Weekly review */}
       <div className="eb-panel p-4 sm:p-5">
         <span className="eb-label flex items-center gap-1.5">
-          <CalendarCheck className="w-3 h-3 text-emerald-400" />
+          <CalendarCheck className="w-3 h-3 eb-done" />
           This week
         </span>
 
@@ -94,7 +96,7 @@ export const WeeklyReviewSection: React.FC<Props> = ({ input }) => {
                   className="eb-card-sunk p-2.5 min-w-0"
                 >
                   <p className="text-[9px] font-mono text-[#5A6472] truncate">{s.label}</p>
-                  <p className="text-sm font-black font-mono text-[#F4F6F8] tabular-nums mt-0.5">
+                  <p className="eb-heading text-sm tabular-nums mt-0.5">
                     {s.value}
                   </p>
                 </div>
@@ -103,13 +105,13 @@ export const WeeklyReviewSection: React.FC<Props> = ({ input }) => {
 
             {review.wentWell.length > 0 && (
               <div className="mt-3.5">
-                <p className="text-[10px] font-mono font-bold text-emerald-300 tracking-widest uppercase">
+                <p className="text-[10px] font-mono font-bold eb-done tracking-widest uppercase">
                   What went well
                 </p>
                 <ul className="mt-1.5 space-y-1">
                   {review.wentWell.map((t) => (
                     <li key={t} className="text-[11px] text-[#98A2B3] flex items-start gap-2">
-                      <Check className="w-3 h-3 text-emerald-400 shrink-0 mt-0.5 stroke-[3]" />
+                      <Check className="w-3 h-3 eb-done shrink-0 mt-0.5 stroke-[3]" />
                       {t}
                     </li>
                   ))}
@@ -119,13 +121,13 @@ export const WeeklyReviewSection: React.FC<Props> = ({ input }) => {
 
             {review.missed.length > 0 && (
               <div className="mt-3.5">
-                <p className="text-[10px] font-mono font-bold text-amber-300 tracking-widest uppercase">
+                <p className="text-[10px] font-mono font-bold eb-warn tracking-widest uppercase">
                   What slipped
                 </p>
                 <ul className="mt-1.5 space-y-1">
                   {review.missed.map((t) => (
                     <li key={t} className="text-[11px] text-[#98A2B3] flex items-start gap-2">
-                      <AlertCircle className="w-3 h-3 text-amber-400 shrink-0 mt-0.5" />
+                      <AlertCircle className="w-3 h-3 eb-warn shrink-0 mt-0.5" />
                       {t}
                     </li>
                   ))}
@@ -141,6 +143,26 @@ export const WeeklyReviewSection: React.FC<Props> = ({ input }) => {
                 <p className="text-[11px] text-[#F4F6F8] mt-1 leading-relaxed">
                   {review.oneThing}
                 </p>
+
+                {onGo && review.bottleneck && (
+                  <button
+                    onClick={() =>
+                      onGo(
+                        review.bottleneck === 'Habits'
+                          ? 'goals'
+                          : review.bottleneck === 'Focus'
+                            ? 'focus'
+                            : review.bottleneck === 'Routine'
+                              ? 'routine'
+                              : 'tasks'
+                      )
+                    }
+                    className="eb-btn-primary mt-3 px-3.5 py-2 text-[11px] font-mono flex items-center gap-1.5"
+                  >
+                    Fix it now
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
             )}
           </>

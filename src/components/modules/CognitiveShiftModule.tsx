@@ -167,17 +167,17 @@ export const CognitiveShiftModule: React.FC<Props> = ({ currentLevel, onFinishSe
         </button>
 
         <div className="flex items-center gap-2">
-          <Shuffle className="w-5 h-5 text-rose-400" />
+          <Shuffle className="w-5 h-5 eb-danger" />
           <h2 className="text-base font-bold text-slate-100">Cognitive Shift & Flexibility</h2>
-          <span className="text-xs px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 font-mono border border-rose-500/30">
+          <span className="text-xs px-2 py-0.5 rounded-full bg-rose-500/10 eb-danger font-mono border border-rose-500/30">
             Lvl {currentLevel}
           </span>
         </div>
 
         <div className="flex items-center gap-3">
           {sessionStartTime && (phase === 'active' || phase === 'feedback') && (
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 font-mono text-xs">
-              <Timer className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-rose-500/10 border border-rose-500/30 eb-danger font-mono text-xs">
+              <Timer className="w-3.5 h-3.5 eb-danger animate-pulse" />
               <span className="font-black">{elapsedTime.toFixed(1)}s</span>
               {personalBest && (
                 <span className="text-[10px] text-slate-400 border-l border-slate-700 pl-1.5 ml-0.5">
@@ -187,7 +187,7 @@ export const CognitiveShiftModule: React.FC<Props> = ({ currentLevel, onFinishSe
             </div>
           )}
           <div className="text-xs text-slate-400 font-mono">
-            Trial <span className="text-rose-400 font-bold">{trialIndex + 1}</span> / {TOTAL_TRIALS}
+            Trial <span className="eb-danger font-bold">{trialIndex + 1}</span> / {TOTAL_TRIALS}
           </div>
         </div>
       </div>
@@ -196,20 +196,20 @@ export const CognitiveShiftModule: React.FC<Props> = ({ currentLevel, onFinishSe
       <div className="flex-1 flex flex-col items-center justify-center p-4 max-w-xl mx-auto w-full">
         {phase === 'intro' && (
           <div className="text-center bg-slate-900/80 border border-slate-800 p-6 md:p-8 rounded-3xl shadow-2xl w-full">
-            <div className="inline-flex p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 mb-4">
+            <div className="inline-flex p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 eb-danger mb-4">
               <Shuffle className="w-8 h-8" />
             </div>
             <h3 className="text-2xl font-black text-slate-100 mb-2">Tri-Rule Set-Shifting</h3>
             <p className="text-xs text-slate-400 leading-relaxed mb-6">
               The active rule banner will dynamically shift between 3 cognitive rules:
               <br />
-              1. <span className="text-amber-300 font-bold">PARITY</span> (Even or Odd)
+              1. <span className="eb-warn font-bold">PARITY</span> (Even or Odd)
               <br />
-              2. <span className="text-emerald-300 font-bold">MAGNITUDE</span> (Greater or Less than 5)
+              2. <span className="eb-done font-bold">MAGNITUDE</span> (Greater or Less than 5)
               <br />
               3. <span className="text-cyan-300 font-bold">COLOR</span> (Cyan or Violet)
               <br />
-              Use <span className="text-rose-300 font-bold">Keys 1 / 2</span> or <span className="text-rose-300 font-bold">Arrow Keys</span> for rapid decision speed.
+              Use <span className="eb-danger font-bold">Keys 1 / 2</span> or <span className="eb-danger font-bold">Arrow Keys</span> for rapid decision speed.
             </p>
 
             <button
@@ -236,9 +236,9 @@ export const CognitiveShiftModule: React.FC<Props> = ({ currentLevel, onFinishSe
             <div
               className={`p-4 rounded-2xl border-2 mb-6 transition-all shadow-xl ${
                 currentStimulus.rule === 'PARITY'
-                  ? 'bg-amber-950/50 border-amber-500 text-amber-300'
+                  ? 'bg-amber-950/50 border-amber-500 eb-warn'
                   : currentStimulus.rule === 'MAGNITUDE'
-                  ? 'bg-emerald-950/50 border-emerald-500 text-emerald-300'
+                  ? 'bg-emerald-950/50 border-emerald-500 eb-done'
                   : 'bg-cyan-950/50 border-cyan-500 text-cyan-300'
               }`}
             >

@@ -81,7 +81,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 onClick={this.handleClearCache}
                 className="w-full h-11 bg-[#171B22] hover:bg-[#1E232D] border border-[#2A313C] text-[#C4B5FD] font-mono text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
               >
-                <Trash2 className="w-4 h-4 text-amber-400" />
+                <Trash2 className="w-4 h-4 eb-warn" />
                 <span>Reset Cache & Restore Default</span>
               </button>
             </div>

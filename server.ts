@@ -6,6 +6,7 @@ import path from 'path';
 import { GoogleGenAI } from '@google/genai';
 import { initAdmin, isAdminAvailable, verifyUser, lastVerifyFailure } from './serverAuth';
 import { getLeaderboard, syncLeaderboardEntry } from './serverLeaderboard';
+import { buildCoachContext, describeContext } from './serverCoachContext';
 
 /**
  * Groq models in preference order. Meta's Llama chat models were retired in
@@ -21,7 +22,8 @@ async function generateCoachReply(
   userProfile: any,
   userMessage: string,
   mode: string,
-  history?: any[]
+  history?: any[],
+  context: any = null
 ): Promise<string> {
   const groqKey = process.env.GROQ_API_KEY;
   const grokKey = process.env.GROK_API_KEY || process.env.XAI_API_KEY;
@@ -46,7 +48,10 @@ How to talk:
 - If you need more context to be useful, ask one short question instead of guessing.
 - Be honest. If something won't help much, say so. Don't inflate.
 - No medical or clinical claims, no promises about IQ or guaranteed results.
-- Never repeat a previous answer. If they rephrase, engage with the new angle.`;
+- Never repeat a previous answer. If they rephrase, engage with the new angle.
+- You can see their real data below. Use specifics from it — name the actual
+  task, habit or block. Never invent activity that is not listed, and if the
+  data does not answer their question, say so and ask.${describeContext(context)}`;
 
   lastProviderError = null;
 
@@ -479,7 +484,10 @@ async function startServer() {
         });
       }
 
-      const reply = await generateCoachReply(userProfile, userMessage, mode, history);
+      // Context is read from the database, not from the request. The client
+      // cannot invent a history for the coach to react to.
+      const context = await buildCoachContext(verified.uid);
+      const reply = await generateCoachReply(userProfile, userMessage, mode, history, context);
       res.json({ reply });
     } catch (err: any) {
       const detail = err?.message || String(err);

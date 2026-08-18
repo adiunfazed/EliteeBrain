@@ -27,8 +27,8 @@ export const SummaryModal: React.FC<Props> = ({ result, onClose }) => {
   const getLevelBadge = () => {
     if (result.levelChange === 'up') {
       return (
-        <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/40 text-emerald-400 px-4 py-2 rounded-xl">
-          <TrendingUp className="w-5 h-5 text-emerald-400 animate-bounce" />
+        <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/40 eb-done px-4 py-2 rounded-xl">
+          <TrendingUp className="w-5 h-5 eb-done animate-bounce" />
           <div>
             <span className="block text-xs font-bold uppercase tracking-wider">Level Increased!</span>
             <span className="text-sm font-extrabold">Promoted to Level {result.levelAfter}</span>
@@ -38,8 +38,8 @@ export const SummaryModal: React.FC<Props> = ({ result, onClose }) => {
     }
     if (result.levelChange === 'down') {
       return (
-        <div className="flex items-center gap-2 bg-rose-500/10 border border-rose-500/40 text-rose-400 px-4 py-2 rounded-xl">
-          <TrendingDown className="w-5 h-5 text-rose-400" />
+        <div className="flex items-center gap-2 bg-rose-500/10 border border-rose-500/40 eb-danger px-4 py-2 rounded-xl">
+          <TrendingDown className="w-5 h-5 eb-danger" />
           <div>
             <span className="block text-xs font-bold uppercase tracking-wider">Adaptive Recalibration</span>
             <span className="text-sm font-extrabold">Adjusted to Level {result.levelAfter}</span>
@@ -91,7 +91,7 @@ export const SummaryModal: React.FC<Props> = ({ result, onClose }) => {
           </div>
           <div className="bg-[#0E1116] border border-[#2A313C] p-3 rounded-2xl">
             <span className="text-[10px] uppercase font-bold text-[#98A2B3]">XP Gained</span>
-            <div className="text-xl font-black text-amber-400 mt-0.5">+{result.xpGained}</div>
+            <div className="text-xl font-black eb-warn mt-0.5">+{result.xpGained}</div>
           </div>
         </div>
 

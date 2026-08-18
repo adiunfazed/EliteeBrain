@@ -104,7 +104,7 @@ export const Header: React.FC<Props> = ({
                   title="View Active Subscription & Time Remaining"
                   className="text-[10px] font-mono font-bold text-[#A78BFA] px-2 py-0.5 bg-[#2A1B4B] hover:bg-[#3B2468] border border-[#8B5CF6]/40 rounded-full tracking-wide flex items-center gap-1 shrink-0 cursor-pointer transition-all active:scale-95"
                 >
-                  <Crown className="w-3 h-3 text-amber-400" />
+                  <Crown className="w-3 h-3 eb-warn" />
                   <span>{ent.status === 'trial' ? `TRIAL · ${ent.trialDaysLeft}D` : 'PRO'}</span>
                 </button>
               ) : (
@@ -113,9 +113,9 @@ export const Header: React.FC<Props> = ({
                     soundFx.playClick();
                     onOpenProModal();
                   }}
-                  className="text-[10px] font-mono font-bold text-amber-300 px-2 py-0.5 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 rounded-full transition-all flex items-center gap-1 cursor-pointer shrink-0 shadow-xs active:scale-95"
+                  className="text-[10px] font-mono font-bold eb-warn px-2 py-0.5 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 rounded-full transition-all flex items-center gap-1 cursor-pointer shrink-0 shadow-xs active:scale-95"
                 >
-                  <Crown className="w-3 h-3 text-amber-400" />
+                  <Crown className="w-3 h-3 eb-warn" />
                   <span>Get Pro</span>
                 </button>
               )}
@@ -148,9 +148,9 @@ export const Header: React.FC<Props> = ({
                 onOpenBadgesGallery();
               }}
               title="Badges & Milestones Gallery"
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-mono font-bold rounded-xl transition-all cursor-pointer shadow-xs"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 eb-warn text-xs font-mono font-bold rounded-xl transition-all cursor-pointer shadow-xs"
             >
-              <Trophy className="w-3.5 h-3.5 text-amber-400" />
+              <Trophy className="w-3.5 h-3.5 eb-warn" />
               <span>Badges</span>
               <span className="px-1.5 py-0.2 bg-amber-500/20 border border-amber-500/40 text-[10px] rounded-md text-amber-200">
                 {Object.keys(profile.unlockedAchievements || {}).length}
@@ -185,7 +185,7 @@ export const Header: React.FC<Props> = ({
             title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             className="p-2 bg-[#171B22] hover:bg-[#212631] border border-[#2A313C] text-[#F4F6F8] rounded-xl transition-all cursor-pointer active:scale-95"
           >
-            {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-300" />}
+            {isDarkMode ? <Sun className="w-4 h-4 eb-warn" /> : <Moon className="w-4 h-4 text-slate-300" />}
           </button>
 
           {/* Audio Synth Mute Toggle */}
@@ -261,7 +261,7 @@ export const Header: React.FC<Props> = ({
               title="View Active Subscription"
               className="text-[10px] font-mono font-bold text-[#A78BFA] px-1.5 sm:px-2 py-0.5 sm:py-1 bg-[#2A1B4B] hover:bg-[#3B2468] border border-[#8B5CF6]/40 rounded-lg sm:rounded-xl tracking-wide flex items-center gap-0.5 sm:gap-1 shrink-0 cursor-pointer transition-all"
             >
-              <Crown className="w-3 h-3 text-amber-400" />
+              <Crown className="w-3 h-3 eb-warn" />
               <span>{ent.status === 'trial' ? `${ent.trialDaysLeft}D` : 'PRO'}</span>
             </motion.button>
           ) : (
@@ -272,9 +272,9 @@ export const Header: React.FC<Props> = ({
                 soundFx.playClick();
                 onOpenProModal();
               }}
-              className="text-[10px] font-mono font-bold text-amber-300 px-1.5 sm:px-2 py-0.5 sm:py-1 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 rounded-lg sm:rounded-xl transition-all flex items-center gap-0.5 sm:gap-1 cursor-pointer shrink-0 shadow-xs"
+              className="text-[10px] font-mono font-bold eb-warn px-1.5 sm:px-2 py-0.5 sm:py-1 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 rounded-lg sm:rounded-xl transition-all flex items-center gap-0.5 sm:gap-1 cursor-pointer shrink-0 shadow-xs"
             >
-              <Crown className="w-3 h-3 text-amber-400" />
+              <Crown className="w-3 h-3 eb-warn" />
               <span>Get Pro</span>
             </motion.button>
           )}
@@ -288,9 +288,9 @@ export const Header: React.FC<Props> = ({
                 soundFx.playClick();
                 onOpenBadgesGallery();
               }}
-              className="flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-[10px] sm:text-xs font-mono font-bold rounded-lg sm:rounded-xl transition-all cursor-pointer shrink-0"
+              className="flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 eb-warn text-[10px] sm:text-xs font-mono font-bold rounded-lg sm:rounded-xl transition-all cursor-pointer shrink-0"
             >
-              <Trophy className="w-3 h-3 text-amber-400" />
+              <Trophy className="w-3 h-3 eb-warn" />
               <span>{Object.keys(profile.unlockedAchievements || {}).length}</span>
             </motion.button>
           )}
@@ -397,7 +397,7 @@ export const Header: React.FC<Props> = ({
               >
                 {isDarkMode ? (
                   <>
-                    <Sun className="w-4 h-4 text-amber-400" />
+                    <Sun className="w-4 h-4 eb-warn" />
                     <span>Dark Theme</span>
                   </>
                 ) : (
@@ -432,9 +432,9 @@ export const Header: React.FC<Props> = ({
                     onOpenAdminPortal();
                     setIsMobileMenuOpen(false);
                   }}
-                  className="flex items-center justify-center gap-2 px-3 py-2 border text-xs font-mono rounded-xl font-bold transition-all cursor-pointer active:scale-95 bg-rose-600/20 text-rose-300 border-rose-500/50 hover:bg-rose-600/30"
+                  className="flex items-center justify-center gap-2 px-3 py-2 border text-xs font-mono rounded-xl font-bold transition-all cursor-pointer active:scale-95 bg-rose-600/20 eb-danger border-rose-500/50 hover:bg-rose-600/30"
                 >
-                  <Shield className="w-4 h-4 text-rose-400" />
+                  <Shield className="w-4 h-4 eb-danger" />
                   <span>Admin Portal</span>
                 </button>
               )}
@@ -452,7 +452,7 @@ export const Header: React.FC<Props> = ({
                   
                   <div className="flex items-center gap-2">
                     {nameSavedSuccess && (
-                      <span className="text-emerald-400 font-bold flex items-center gap-1 text-[11px]">
+                      <span className="eb-done font-bold flex items-center gap-1 text-[11px]">
                         <Check className="w-3 h-3" />
                         <span>Saved!</span>
                       </span>

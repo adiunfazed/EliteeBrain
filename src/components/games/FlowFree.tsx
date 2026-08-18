@@ -469,7 +469,7 @@ export const FlowFree: React.FC<{ profile: UserProfile, onProfileUpdate?: (p: Us
               <h3 className="text-4xl font-display font-black text-white mb-2 uppercase tracking-wide">
                 Flow Complete
               </h3>
-              <p className="text-emerald-400 font-mono font-bold mb-6">
+              <p className="eb-done font-mono font-bold mb-6">
                 +{gridSize * 20} EXP
               </p>
               <button

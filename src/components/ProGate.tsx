@@ -34,7 +34,7 @@ export const ProGate: React.FC<Props> = ({ profile, feature, blurb, onOpenPro, c
       className="text-center py-12 px-6 rounded-2xl border border-amber-500/25 bg-amber-500/[0.05]"
     >
       <span className="w-12 h-12 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center mx-auto">
-        <Crown className="w-6 h-6 text-amber-400" />
+        <Crown className="w-6 h-6 eb-warn" />
       </span>
 
       <h3 className="text-base font-black font-mono text-[#F4F6F8] mt-3 tracking-tight">

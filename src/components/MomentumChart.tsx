@@ -1,8 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
-import { Activity } from 'lucide-react';
+import { Activity, ArrowUp, ArrowDown, Minus } from 'lucide-react';
 import type { MomentumInput, MomentumRange } from '../lib/momentum';
-import { momentumInsights, momentumSeries, summarise } from '../lib/momentum';
+import { momentumDrivers, momentumInsights, momentumSeries, summarise } from '../lib/momentum';
 
 interface Props {
   input: MomentumInput;
@@ -28,6 +28,7 @@ export const MomentumChart: React.FC<Props> = ({ input }) => {
   const series = useMemo(() => momentumSeries(input, range), [input, range]);
   const summary = useMemo(() => summarise(series), [series]);
   const insights = useMemo(() => momentumInsights(series), [series]);
+  const drivers = useMemo(() => momentumDrivers(series), [series]);
 
   const W = 320;
   const H = 90;
@@ -58,15 +59,15 @@ export const MomentumChart: React.FC<Props> = ({ input }) => {
             Life Momentum
           </span>
           {hasData ? (
-            <p className="text-2xl font-black font-mono text-[#F4F6F8] tabular-nums mt-1">
+            <p className="eb-heading text-2xl tabular-nums mt-1">
               {summary.current}
               {summary.trend !== null && (
                 <span
                   className={`text-xs font-bold ml-2 ${
                     summary.trend > 0
-                      ? 'text-emerald-300'
+                      ? 'eb-done'
                       : summary.trend < 0
-                        ? 'text-amber-300'
+                        ? 'eb-warn'
                         : 'text-[#5A6472]'
                   }`}
                 >
@@ -97,7 +98,19 @@ export const MomentumChart: React.FC<Props> = ({ input }) => {
         </div>
       </div>
 
-      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="w-full h-24 mt-4">
+      {hasData && summary.trend !== null && (
+        <p className="text-[11px] mt-2">
+          {summary.trend >= 5 ? (
+            <span className="text-[#00C2A8]">Improving</span>
+          ) : summary.trend <= -5 ? (
+            <span className="text-[#FFB020]">Slipping</span>
+          ) : (
+            <span className="text-[#8A93A5]">Holding steady</span>
+          )}
+        </p>
+      )}
+
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="w-full h-24 mt-3">
         {[0.25, 0.5, 0.75].map((f) => (
           <line key={f} x1="0" y1={H * f} x2={W} y2={H * f} stroke="#171B22" strokeWidth="1" />
         ))}

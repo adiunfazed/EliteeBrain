@@ -14,6 +14,7 @@ import {
   Pencil,
   Trash2,
   ChevronDown,
+  SlidersHorizontal,
 } from 'lucide-react';
 import type { Goal, Habit, HabitLog, Task } from '../types';
 import {
@@ -150,6 +151,8 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
   const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
   const [openMilestones, setOpenMilestones] = useState<Record<string, boolean>>({});
+  const [editingSchedule, setEditingSchedule] = useState<string | null>(null);
+  const [editingGoalSettings, setEditingGoalSettings] = useState<string | null>(null);
 
   const commitHabitRename = async (habit: Habit) => {
     const title = editText.trim();
@@ -251,7 +254,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
                 ) : (
                   <span
                     className={`text-sm font-bold break-words ${
-                      stats.completedToday ? 'text-emerald-300' : 'text-[#F4F6F8]'
+                      stats.completedToday ? 'eb-done' : 'text-[#F4F6F8]'
                     }`}
                   >
                     {habit.title}
@@ -328,8 +331,107 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
             )}
           </div>
 
-          {habit.metric !== 'yes_no' && (
-            <div className="flex items-center gap-1.5 mt-2.5 flex-wrap">
+          {editingSchedule === habit.id && (
+            <div className="mt-3 p-3 rounded-xl eb-card-sunk space-y-3">
+              <div>
+                <p className="eb-label mb-1.5">How often</p>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {([
+                    { id: 'daily' as const, label: 'Every day' },
+                    { id: 'weekly' as const, label: 'Weekly' },
+                    { id: 'selected_days' as const, label: 'Chosen days' },
+                  ]).map(({ id: c, label }) => (
+                    <button
+                      key={c}
+                      onClick={() => patchHabit(userId, habit.id, { cadence: c })}
+                      className={`eb-press text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border ${
+                        habit.cadence === c ? 'eb-chip-active' : 'text-[#5A6472] border-[#262C38]'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {habit.cadence === 'selected_days' && (
+                <div>
+                  <p className="eb-label mb-1.5">On these days</p>
+                  <div className="flex items-center gap-1">
+                    {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => {
+                      const on = (habit.weekdays || []).includes(i);
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => {
+                            const cur = habit.weekdays || [];
+                            const next = on ? cur.filter((x) => x !== i) : [...cur, i].sort();
+                            patchHabit(userId, habit.id, { weekdays: next });
+                          }}
+                          className={`eb-press flex-1 h-9 rounded-lg text-[10px] font-mono font-bold border ${
+                            on ? 'eb-chip-active' : 'text-[#5A6472] border-[#262C38]'
+                          }`}
+                        >
+                          {d}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {habit.metric !== 'yes_no' && (
+                <div>
+                  <p className="eb-label mb-1.5">Daily target</p>
+                  <input
+                    type="number"
+                    min={1}
+                    defaultValue={habit.targetValue || 1}
+                    onBlur={(e) => {
+                      const v = Math.max(1, Number(e.target.value) || 1);
+                      if (v !== habit.targetValue) patchHabit(userId, habit.id, { targetValue: v });
+                    }}
+                    className="w-24 bg-[#0E1116] border border-[#262C38] rounded-lg px-2.5 py-2 text-xs text-[#F2F4F7] outline-none"
+                  />
+                </div>
+              )}
+
+              {goals.filter((g) => g.status === 'active').length > 0 && (
+                <div>
+                  <p className="eb-label mb-1.5">Counts toward</p>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <button
+                      onClick={() => patchHabit(userId, habit.id, { goalId: undefined })}
+                      className={`eb-press text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border ${
+                        !habit.goalId ? 'eb-chip-active' : 'text-[#5A6472] border-[#262C38]'
+                      }`}
+                    >
+                      Nothing
+                    </button>
+                    {goals
+                      .filter((g) => g.status === 'active')
+                      .map((g) => (
+                        <button
+                          key={g.id}
+                          onClick={() =>
+                            patchHabit(userId, habit.id, {
+                              goalId: habit.goalId === g.id ? undefined : g.id,
+                            })
+                          }
+                          className={`eb-press text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border max-w-full truncate ${
+                            habit.goalId === g.id ? 'eb-chip-active' : 'text-[#5A6472] border-[#262C38]'
+                          }`}
+                        >
+                          {g.title}
+                        </button>
+                      ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="flex items-center gap-1.5 mt-2.5 flex-wrap">
               <button
                 onClick={() => record(habit, stats.todayValue + step)}
                 className="text-[10px] font-mono font-bold px-3 py-2 rounded-xl bg-[#171B22] hover:bg-[#20252E] border border-[#2A313C] text-[#F4F6F8]"
@@ -355,11 +457,110 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
                       habit.id
                     );
                   }}
-                  className="eb-press eb-glow-emerald eb-shine text-[10px] font-mono font-bold px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20 flex items-center gap-1.5"
+                  className="eb-press eb-glow-emerald eb-shine text-[10px] font-mono font-bold px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 eb-done hover:bg-emerald-500/20 flex items-center gap-1.5"
                 >
                   <Timer className="w-3 h-3" />
                   Start focus
                 </button>
+              )}
+            </div>
+
+          {editingSchedule === habit.id && (
+            <div className="mt-3 p-3 rounded-xl eb-card-sunk space-y-3">
+              <div>
+                <p className="eb-label mb-1.5">How often</p>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {([
+                    { id: 'daily' as const, label: 'Every day' },
+                    { id: 'weekly' as const, label: 'Weekly' },
+                    { id: 'selected_days' as const, label: 'Chosen days' },
+                  ]).map(({ id: c, label }) => (
+                    <button
+                      key={c}
+                      onClick={() => patchHabit(userId, habit.id, { cadence: c })}
+                      className={`eb-press text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border ${
+                        habit.cadence === c ? 'eb-chip-active' : 'text-[#5A6472] border-[#262C38]'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {habit.cadence === 'selected_days' && (
+                <div>
+                  <p className="eb-label mb-1.5">On these days</p>
+                  <div className="flex items-center gap-1">
+                    {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => {
+                      const on = (habit.weekdays || []).includes(i);
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => {
+                            const cur = habit.weekdays || [];
+                            const next = on ? cur.filter((x) => x !== i) : [...cur, i].sort();
+                            patchHabit(userId, habit.id, { weekdays: next });
+                          }}
+                          className={`eb-press flex-1 h-9 rounded-lg text-[10px] font-mono font-bold border ${
+                            on ? 'eb-chip-active' : 'text-[#5A6472] border-[#262C38]'
+                          }`}
+                        >
+                          {d}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {habit.metric !== 'yes_no' && (
+                <div>
+                  <p className="eb-label mb-1.5">Daily target</p>
+                  <input
+                    type="number"
+                    min={1}
+                    defaultValue={habit.targetValue || 1}
+                    onBlur={(e) => {
+                      const v = Math.max(1, Number(e.target.value) || 1);
+                      if (v !== habit.targetValue) patchHabit(userId, habit.id, { targetValue: v });
+                    }}
+                    className="w-24 bg-[#0E1116] border border-[#262C38] rounded-lg px-2.5 py-2 text-xs text-[#F2F4F7] outline-none"
+                  />
+                </div>
+              )}
+
+              {goals.filter((g) => g.status === 'active').length > 0 && (
+                <div>
+                  <p className="eb-label mb-1.5">Counts toward</p>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <button
+                      onClick={() => patchHabit(userId, habit.id, { goalId: undefined })}
+                      className={`eb-press text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border ${
+                        !habit.goalId ? 'eb-chip-active' : 'text-[#5A6472] border-[#262C38]'
+                      }`}
+                    >
+                      Nothing
+                    </button>
+                    {goals
+                      .filter((g) => g.status === 'active')
+                      .map((g) => (
+                        <button
+                          key={g.id}
+                          onClick={() =>
+                            patchHabit(userId, habit.id, {
+                              goalId: habit.goalId === g.id ? undefined : g.id,
+                            })
+                          }
+                          className={`eb-press text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border max-w-full truncate ${
+                            habit.goalId === g.id ? 'eb-chip-active' : 'text-[#5A6472] border-[#262C38]'
+                          }`}
+                        >
+                          {g.title}
+                        </button>
+                      ))}
+                  </div>
+                </div>
               )}
             </div>
           )}
@@ -372,6 +573,14 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
               {expandedHabit === habit.id ? '− Hide history' : '+ History'}
             </button>
 
+            <button
+              onClick={() => setEditingSchedule(editingSchedule === habit.id ? null : habit.id)}
+              aria-label="Change schedule"
+              title="Schedule and target"
+              className="eb-press w-9 h-9 rounded-lg text-[#5A6472] hover:text-[#F2F4F7] hover:bg-[#171B22] flex items-center justify-center"
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+            </button>
             <button
               onClick={() => {
                 setEditingHabitId(habit.id);
@@ -388,14 +597,14 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
                 onClick={() => archiveHabit(userId, habit.id)}
                 aria-label="Archive habit"
                 title="Archive (keeps history)"
-                className="eb-press w-9 h-9 rounded-lg text-[#5A6472] hover:text-amber-300 hover:bg-[#171B22] flex items-center justify-center"
+                className="eb-press w-9 h-9 rounded-lg text-[#5A6472] hover:eb-warn hover:bg-[#171B22] flex items-center justify-center"
               >
                 <Archive className="w-3.5 h-3.5" />
               </button>
             ) : (
               <button
                 onClick={() => patchHabit(userId, habit.id, { status: 'active' })}
-                className="eb-press text-[10px] font-mono font-bold px-2.5 py-2 rounded-lg text-emerald-300"
+                className="eb-press text-[10px] font-mono font-bold px-2.5 py-2 rounded-lg eb-done"
               >
                 Restore
               </button>
@@ -404,7 +613,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
               onClick={() => deleteHabitForever(habit)}
               aria-label="Delete habit"
               title="Delete permanently"
-              className="eb-press w-9 h-9 rounded-lg text-[#5A6472] hover:text-rose-300 hover:bg-rose-500/10 flex items-center justify-center"
+              className="eb-press w-9 h-9 rounded-lg text-[#5A6472] hover:eb-danger hover:bg-rose-500/10 flex items-center justify-center"
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>
@@ -630,7 +839,67 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
           );
         })()}
 
+        {editingGoalSettings === goal.id && (
+          <div className="p-3 rounded-xl eb-card-sunk space-y-3">
+            <div>
+              <p className="eb-label mb-1.5">Deadline</p>
+              <div className="flex items-center gap-2">
+                <input
+                  type="date"
+                  defaultValue={goal.deadline || ''}
+                  onBlur={(e) =>
+                    patchGoal(userId, goal.id, { deadline: e.target.value || undefined })
+                  }
+                  className="bg-[#0E1116] border border-[#262C38] rounded-lg px-2.5 py-2 text-xs text-[#F2F4F7] outline-none"
+                />
+                {goal.deadline && (
+                  <button
+                    onClick={() => patchGoal(userId, goal.id, { deadline: undefined })}
+                    className="eb-press text-[10px] font-mono text-[#5A6472] hover:eb-danger"
+                  >
+                    clear
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {(goal.metric === 'number' ||
+              goal.metric === 'count' ||
+              goal.metric === 'percentage') && (
+              <div>
+                <p className="eb-label mb-1.5">
+                  Target{goal.unit ? ` (${goal.unit})` : ''}
+                </p>
+                <input
+                  type="number"
+                  min={1}
+                  defaultValue={goal.targetValue || 1}
+                  onBlur={(e) => {
+                    const v = Math.max(1, Number(e.target.value) || 1);
+                    if (v !== goal.targetValue) patchGoal(userId, goal.id, { targetValue: v });
+                  }}
+                  className="w-28 bg-[#0E1116] border border-[#262C38] rounded-lg px-2.5 py-2 text-xs text-[#F2F4F7] outline-none"
+                />
+              </div>
+            )}
+
+            <p className="text-[10px] text-[#8A93A5] leading-relaxed">
+              Changing the target recalculates progress from your linked work — it never
+              discards milestones or history.
+            </p>
+          </div>
+        )}
+
         <div className="flex items-center gap-2 pt-1 flex-wrap">
+          <button
+            onClick={() =>
+              setEditingGoalSettings(editingGoalSettings === goal.id ? null : goal.id)
+            }
+            className="eb-press text-[10px] font-mono font-bold px-2.5 py-2 rounded-lg border border-[#2A313C] text-[#98A2B3] hover:text-[#F4F6F8] flex items-center gap-1.5"
+          >
+            <SlidersHorizontal className="w-3 h-3" />
+            Settings
+          </button>
           <button
             onClick={() => {
               setEditingGoalId(goal.id);
@@ -643,7 +912,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
           </button>
           <button
             onClick={() => patchGoal(userId, goal.id, { status: 'archived' })}
-            className="eb-press text-[10px] font-mono font-bold px-2.5 py-2 rounded-lg border border-[#2A313C] text-[#5A6472] hover:text-amber-300 flex items-center gap-1.5"
+            className="eb-press text-[10px] font-mono font-bold px-2.5 py-2 rounded-lg border border-[#2A313C] text-[#5A6472] hover:eb-warn flex items-center gap-1.5"
           >
             <Archive className="w-3 h-3" />
             Archive
@@ -654,7 +923,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
               setGoals((prev) => prev.filter((g) => g.id !== goal.id));
               removeGoal(userId, goal.id).catch((e) => console.error(e));
             }}
-            className="eb-press text-[10px] font-mono font-bold px-2.5 py-2 rounded-lg border border-[#2A313C] text-[#5A6472] hover:text-rose-300 flex items-center gap-1.5"
+            className="eb-press text-[10px] font-mono font-bold px-2.5 py-2 rounded-lg border border-[#2A313C] text-[#5A6472] hover:eb-danger flex items-center gap-1.5"
           >
             <Trash2 className="w-3 h-3" />
             Delete
@@ -691,7 +960,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
 
       {warning && (
         <div className="rounded-2xl border border-amber-500/25 bg-amber-500/[0.06] p-3.5 flex items-start gap-2.5">
-          <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+          <AlertTriangle className="w-3.5 h-3.5 eb-warn shrink-0 mt-0.5" />
           <p className="text-[11px] text-[#98A2B3] leading-relaxed">{warning}</p>
         </div>
       )}

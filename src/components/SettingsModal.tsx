@@ -78,7 +78,7 @@ export const SettingsModal: React.FC<Props> = ({
                 <span className="font-bold text-slate-200">Athlete Display Name</span>
               </div>
               {currentUser && (
-                <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/30">
+                <span className="text-[10px] font-mono eb-done bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/30">
                   Synced to Account
                 </span>
               )}
@@ -103,7 +103,7 @@ export const SettingsModal: React.FC<Props> = ({
             </form>
 
             {nameSavedSuccess && (
-              <div className="flex items-center gap-1.5 text-[11px] text-emerald-400 font-mono animate-in fade-in">
+              <div className="flex items-center gap-1.5 text-[11px] eb-done font-mono animate-in fade-in">
                 <Check className="w-3.5 h-3.5" />
                 <span>Name updated & synced across all your devices!</span>
               </div>
@@ -144,7 +144,7 @@ export const SettingsModal: React.FC<Props> = ({
           {onReplayOnboarding && (
             <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-950/80 border border-slate-800">
               <div className="flex items-center gap-3">
-                <Sparkles className="w-5 h-5 text-amber-400" />
+                <Sparkles className="w-5 h-5 eb-warn" />
                 <div>
                   <span className="block font-bold text-slate-200">Onboarding Sequence</span>
                   <span className="text-[10px] text-slate-400">Replay 5-step Protocol Tour & Core Concepts</span>
@@ -156,7 +156,7 @@ export const SettingsModal: React.FC<Props> = ({
                   onClose();
                   onReplayOnboarding();
                 }}
-                className="px-3 py-1.5 rounded-xl font-mono font-bold bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 cursor-pointer transition-all flex items-center gap-1"
+                className="px-3 py-1.5 rounded-xl font-mono font-bold bg-amber-500/15 hover:bg-amber-500/25 eb-warn border border-amber-500/30 cursor-pointer transition-all flex items-center gap-1"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Replay</span>
@@ -167,7 +167,7 @@ export const SettingsModal: React.FC<Props> = ({
           {/* Cloud Synchronization Status */}
           <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <CloudCheck className="w-5 h-5 text-emerald-400 shrink-0" />
+              <CloudCheck className="w-5 h-5 eb-done shrink-0" />
               <div>
                 <span className="block font-bold text-slate-200">Cloud Persistence</span>
                 <span className="text-[10px] text-slate-400">
@@ -175,7 +175,7 @@ export const SettingsModal: React.FC<Props> = ({
                 </span>
               </div>
             </div>
-            <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+            <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-emerald-500/20 eb-done border border-emerald-500/40">
               ACTIVE
             </span>
           </div>

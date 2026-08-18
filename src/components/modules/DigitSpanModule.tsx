@@ -340,8 +340,8 @@ export const DigitSpanModule: React.FC<Props> = ({ currentLevel, onFinishSession
               className={`bg-slate-900 border-2 rounded-3xl p-6 md:p-8 mb-6 shadow-xl transition-all ${
                 phase === 'feedback'
                   ? trialResults[trialResults.length - 1]?.correct
-                    ? 'border-emerald-500/80 bg-emerald-950/20 text-emerald-300'
-                    : 'border-rose-500/80 bg-rose-950/20 text-rose-300'
+                    ? 'border-emerald-500/80 bg-emerald-950/20 eb-done'
+                    : 'border-rose-500/80 bg-rose-950/20 eb-danger'
                   : 'border-slate-700 text-slate-100'
               }`}
             >
@@ -352,9 +352,9 @@ export const DigitSpanModule: React.FC<Props> = ({ currentLevel, onFinishSession
               {phase === 'feedback' && (
                 <div className="mt-3 text-xs font-bold flex items-center justify-center gap-2">
                   {trialResults[trialResults.length - 1]?.correct ? (
-                    <span className="text-emerald-400">Correct Engram Recorded!</span>
+                    <span className="eb-done">Correct Engram Recorded!</span>
                   ) : (
-                    <span className="text-rose-400">Incorrect. Target was: {currentSequence}</span>
+                    <span className="eb-danger">Incorrect. Target was: {currentSequence}</span>
                   )}
                 </div>
               )}

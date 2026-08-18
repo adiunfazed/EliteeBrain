@@ -56,14 +56,14 @@ export const ProgressSection: React.FC<Props> = ({ profile, userId }) => {
         focusTodaySeconds > 0
           ? `${formatDuration(focusTodaySeconds)} today`
           : `${focusCount} session${focusCount === 1 ? '' : 's'}`,
-      tint: 'text-amber-400',
+      tint: 'eb-warn',
     },
     {
       icon: CheckSquare,
       label: 'Tasks completed',
       value: `${tasksAllTime}`,
       sub: tasksToday > 0 ? `${tasksToday} today` : 'None today yet',
-      tint: 'text-emerald-400',
+      tint: 'eb-done',
     },
     {
       icon: Flame,
@@ -113,7 +113,7 @@ export const ProgressSection: React.FC<Props> = ({ profile, userId }) => {
                   {t.label}
                 </span>
               </div>
-              <p className="text-xl sm:text-2xl font-black font-mono text-[#F4F6F8] mt-1.5 tabular-nums">
+              <p className="text-xl sm:eb-heading text-2xl mt-1.5 tabular-nums">
                 {t.value}
               </p>
               <p className="text-[10px] text-[#5A6472] font-mono mt-0.5 truncate">{t.sub}</p>

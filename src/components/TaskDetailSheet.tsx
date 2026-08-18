@@ -126,7 +126,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
           <div className="sm:hidden w-10 h-1 rounded-full bg-[#2A313C] mx-auto" />
 
           <div className="flex items-start justify-between gap-3">
-            <h3 className="text-base font-black text-[#F4F6F8] font-mono tracking-tight break-words min-w-0">
+            <h3 className="eb-heading text-base tracking-tight break-words min-w-0">
               {task.title}
             </h3>
             <button
@@ -235,7 +235,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
                   <button
                     onClick={() => removeSub(s.id)}
                     aria-label="Remove subtask"
-                    className="shrink-0 w-9 h-9 rounded-lg text-[#5A6472] hover:text-rose-300 hover:bg-rose-500/10 flex items-center justify-center opacity-70 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                    className="shrink-0 w-9 h-9 rounded-lg text-[#5A6472] hover:eb-danger hover:bg-rose-500/10 flex items-center justify-center opacity-70 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                   >
                     <Trash2 className="w-3 h-3" />
                   </button>
@@ -307,7 +307,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
                     aria-label={`Toggle day ${i}`}
                     className={`w-9 h-9 rounded-lg text-[10px] font-mono font-bold border ${
                       task.recurrence?.weekdays?.includes(i)
-                        ? 'text-emerald-300 bg-emerald-500/15 border-emerald-500/30'
+                        ? 'eb-done bg-emerald-500/15 border-emerald-500/30'
                         : 'text-[#5A6472] border-[#2A313C]'
                     }`}
                   >
@@ -396,7 +396,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
                     }}
                     className={`text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border flex items-center gap-1.5 ${
                       task.reflection === r.id
-                        ? 'text-emerald-300 bg-emerald-500/12 border-emerald-500/30'
+                        ? 'eb-done bg-emerald-500/12 border-emerald-500/30'
                         : 'text-[#5A6472] border-[#2A313C] hover:border-[#3A424F]'
                     }`}
                   >
@@ -428,7 +428,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
                 onDelete();
                 onClose();
               }}
-              className="py-3 px-4 rounded-xl bg-transparent hover:bg-rose-500/10 border border-[#2A313C] hover:border-rose-500/40 text-[#98A2B3] hover:text-rose-300 text-xs font-mono font-bold flex items-center gap-1.5"
+              className="py-3 px-4 rounded-xl bg-transparent hover:bg-rose-500/10 border border-[#2A313C] hover:border-rose-500/40 text-[#98A2B3] hover:eb-danger text-xs font-mono font-bold flex items-center gap-1.5"
             >
               <Trash2 className="w-3.5 h-3.5" />
               Delete

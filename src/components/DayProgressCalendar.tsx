@@ -63,7 +63,7 @@ export const DayProgressCalendar: React.FC<DayProgressCalendarProps> = ({
 
           if (isCompleted) {
             cellStyle =
-              'bg-emerald-500/15 border-emerald-500/50 text-emerald-700 dark:text-emerald-400 font-bold shadow-xs hover:bg-emerald-500/25';
+              'bg-emerald-500/15 border-emerald-500/50 text-emerald-700 dark:eb-done font-bold shadow-xs hover:bg-emerald-500/25';
           } else if (isCurrent) {
             cellStyle =
               'bg-signal/15 border-2 border-signal text-signal font-bold shadow-sm hover:bg-signal/25';
@@ -119,7 +119,7 @@ export const DayProgressCalendar: React.FC<DayProgressCalendarProps> = ({
                 <span className="text-ink-muted">STATUS:</span>
                 <span className="font-bold text-ink uppercase">
                   {selectedDayLog.status === 'completed' && (
-                    <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                    <span className="text-emerald-600 dark:eb-done flex items-center gap-1">
                       <CheckCircle2 className="w-3.5 h-3.5" /> Fully Completed
                     </span>
                   )}
@@ -129,7 +129,7 @@ export const DayProgressCalendar: React.FC<DayProgressCalendarProps> = ({
                     </span>
                   )}
                   {selectedDayLog.status === 'missed' && (
-                    <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                    <span className="text-amber-600 dark:eb-warn flex items-center gap-1">
                       <AlertCircle className="w-3.5 h-3.5" /> Missed Gap
                     </span>
                   )}

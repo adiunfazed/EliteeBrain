@@ -258,3 +258,75 @@ export function momentumInsights(series: MomentumPoint[]): string[] {
   }
   return out;
 }
+
+
+/* ------------------------------------------------------------------ */
+/* Drivers                                                             */
+/* ------------------------------------------------------------------ */
+
+export interface MomentumDriver {
+  key: MomentumComponent['key'];
+  label: string;
+  /** Recent average, 0-1. Null when nothing is tracked for it. */
+  value: number | null;
+  /** Change versus the earlier part of the window, in points. */
+  delta: number | null;
+  direction: 'up' | 'flat' | 'down' | 'none';
+}
+
+/**
+ * Which parts of the user's routine are improving and which are slipping.
+ *
+ * A single momentum number tells someone whether things are better without
+ * telling them what to change. Comparing the recent half of the window with
+ * the earlier half turns the score into something actionable.
+ *
+ * A driver with fewer than three recorded days returns 'none' rather than a
+ * direction — two data points is not a trend, and pretending otherwise would
+ * send people chasing noise.
+ */
+export function momentumDrivers(series: MomentumPoint[]): MomentumDriver[] {
+  const half = Math.max(1, Math.floor(series.length / 2));
+  const earlier = series.slice(0, half);
+  const recent = series.slice(-half);
+
+  const average = (points: MomentumPoint[], key: string): { avg: number | null; n: number } => {
+    const values = points
+      .map((p) => p.components.find((c) => c.key === key)?.value)
+      .filter((v): v is number => v !== null && v !== undefined);
+    if (values.length === 0) return { avg: null, n: 0 };
+    return { avg: values.reduce((a, b) => a + b, 0) / values.length, n: values.length };
+  };
+
+  const keys: { key: MomentumComponent['key']; label: string }[] = [
+    { key: 'tasks', label: 'Tasks' },
+    { key: 'habits', label: 'Habits' },
+    { key: 'focus', label: 'Focus' },
+    { key: 'routine', label: 'Routine' },
+    { key: 'sleep', label: 'Sleep' },
+  ];
+
+  return keys.map(({ key, label }) => {
+    const now = average(recent, key);
+    const before = average(earlier, key);
+
+    if (now.avg === null) {
+      return { key, label, value: null, delta: null, direction: 'none' as const };
+    }
+
+    // Not enough history on either side to claim a direction.
+    if (before.avg === null || now.n < 3 || before.n < 3) {
+      return { key, label, value: now.avg, delta: null, direction: 'none' as const };
+    }
+
+    const delta = Math.round((now.avg - before.avg) * 100);
+    return {
+      key,
+      label,
+      value: now.avg,
+      delta,
+      // A few points either way is noise, not a trend.
+      direction: delta >= 5 ? 'up' : delta <= -5 ? 'down' : 'flat',
+    };
+  });
+}

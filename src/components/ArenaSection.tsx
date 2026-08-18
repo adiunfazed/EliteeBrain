@@ -154,7 +154,7 @@ export const ArenaSection: React.FC<ArenaProps> = ({ variant = 'full', onExpand 
   if (status === 'error') {
     return (
       <div className="eb-card p-6 text-center">
-        <AlertCircle className="w-6 h-6 text-amber-400 mx-auto" />
+        <AlertCircle className="w-6 h-6 eb-warn mx-auto" />
         <p className="eb-heading text-base mt-3">Arena unavailable</p>
         <p className="text-xs text-[#8A93A5] mt-1.5 max-w-sm mx-auto leading-relaxed">{error}</p>
         <button
@@ -349,9 +349,10 @@ export const ArenaSection: React.FC<ArenaProps> = ({ variant = 'full', onExpand 
         {page && page.entries.length === 0 ? (
           <div className="eb-card p-8 text-center">
             <Trophy className="w-6 h-6 text-[#5A6472] mx-auto" />
-            <p className="eb-heading text-base mt-3">No rankings yet</p>
-            <p className="text-xs text-[#8A93A5] mt-1.5">
-              Complete a task, habit or focus session to appear here.
+            <p className="eb-heading text-base mt-3">Nobody ranked yet</p>
+            <p className="text-xs text-[#8A93A5] mt-1.5 max-w-xs mx-auto leading-relaxed">
+              Finish a task, meet a habit or run a focus session and you'll appear here. XP comes
+              from work you complete, not time spent in the app.
             </p>
           </div>
         ) : (

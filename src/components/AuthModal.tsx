@@ -179,14 +179,14 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
         {/* Alerts */}
         {errorMsg && (
           <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-3 mb-4 text-left flex items-start gap-2.5">
-            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+            <AlertCircle className="w-4 h-4 eb-danger shrink-0 mt-0.5" />
             <p className="text-xs text-rose-200 font-medium leading-tight">{errorMsg}</p>
           </div>
         )}
 
         {successMsg && (
           <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-3 mb-4 text-left flex items-start gap-2.5">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+            <CheckCircle2 className="w-4 h-4 eb-done shrink-0 mt-0.5" />
             <p className="text-xs text-emerald-200 font-medium leading-tight">{successMsg}</p>
           </div>
         )}
@@ -196,7 +196,7 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
             {/* Features List */}
             <div className="bg-[#0E1116] rounded-2xl border border-[#2A313C] p-3.5 mb-5 text-left space-y-2">
               <div className="flex items-center gap-2 text-xs text-[#F4F6F8]">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                <CheckCircle2 className="w-4 h-4 eb-done shrink-0" />
                 <span>Instant 1-click Google authentication</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-[#F4F6F8]">
@@ -204,7 +204,7 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
                 <span>Encrypted cloud profile storage via Firebase</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-[#F4F6F8]">
-                <Award className="w-4 h-4 text-amber-400 shrink-0" />
+                <Award className="w-4 h-4 eb-warn shrink-0" />
                 <span>Seamless cross-device protocol sync</span>
               </div>
             </div>
@@ -303,7 +303,7 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
                 }}
                 className={`text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer ${
                   emailMode === 'reset'
-                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                    ? 'bg-amber-500/20 eb-warn border border-amber-500/40'
                     : 'text-[#98A2B3] hover:text-[#F4F6F8]'
                 }`}
               >

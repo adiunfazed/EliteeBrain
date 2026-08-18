@@ -132,7 +132,7 @@ export const NotificationSettings: React.FC<Props> = ({ isOpen, onClose }) => {
           {/* iOS install requirement */}
           {support === 'ios_needs_install' && (
             <div className="rounded-2xl border border-amber-500/25 bg-amber-500/[0.06] p-3.5">
-              <p className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+              <p className="text-xs font-bold eb-warn flex items-center gap-1.5">
                 <Smartphone className="w-3.5 h-3.5" />
                 Add to Home Screen first
               </p>
@@ -146,7 +146,7 @@ export const NotificationSettings: React.FC<Props> = ({ isOpen, onClose }) => {
 
           {support === 'denied' && (
             <div className="rounded-2xl border border-rose-500/25 bg-rose-500/[0.06] p-3.5">
-              <p className="text-xs font-bold text-rose-300 flex items-center gap-1.5">
+              <p className="text-xs font-bold eb-danger flex items-center gap-1.5">
                 <BellOff className="w-3.5 h-3.5" />
                 Blocked in your browser
               </p>
@@ -238,7 +238,7 @@ export const NotificationSettings: React.FC<Props> = ({ isOpen, onClose }) => {
                       {prefs.dailySummaryAt && (
                         <button
                           onClick={() => update({ dailySummaryAt: '' })}
-                          className="text-[10px] font-mono text-[#5A6472] hover:text-rose-300"
+                          className="text-[10px] font-mono text-[#5A6472] hover:eb-danger"
                         >
                           turn off
                         </button>

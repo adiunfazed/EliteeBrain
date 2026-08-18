@@ -239,10 +239,10 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#A78BFA] px-2 py-0.5 bg-[#8B5CF6]/15 border border-[#8B5CF6]/30 rounded-md">
-                  AI Neuro Coach Engine
+                  Your coach
                 </span>
                 {profile.isProUser ? (
-                  <span className="text-[10px] font-mono font-bold text-amber-300 px-2 py-0.5 bg-amber-500/20 border border-amber-500/30 rounded-md">
+                  <span className="text-[10px] font-mono font-bold eb-warn px-2 py-0.5 bg-amber-500/20 border border-amber-500/30 rounded-md">
                     Pro Active
                   </span>
                 ) : (
@@ -255,7 +255,7 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
                 AI Coach
               </h2>
               <p className="text-xs text-[#98A2B3] mt-0.5">
-                Real-time feedback on memory span, focus, latency, and cognitive growth.
+                Ask about your plan, your habits, or what to do next.
               </p>
             </div>
           </div>
@@ -435,7 +435,7 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
         {/* Non-Pro overlay if applicable */}
         {!profile.isProUser && (
           <div className="absolute inset-x-0 bottom-0 top-36 bg-[#0D1117]/85 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-20 space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-300 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 eb-warn flex items-center justify-center">
               <Lock className="w-6 h-6" />
             </div>
             <h3 className="text-lg font-display font-bold text-white">

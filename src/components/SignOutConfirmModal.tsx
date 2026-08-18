@@ -102,7 +102,7 @@ export const SignOutConfirmModal: React.FC<Props> = ({
             </span>
             <div className="flex items-center gap-2">
               {savedSuccess && (
-                <span className="text-emerald-400 font-bold flex items-center gap-1 text-[11px]">
+                <span className="eb-done font-bold flex items-center gap-1 text-[11px]">
                   <Check className="w-3 h-3" />
                   <span>Saved!</span>
                 </span>
@@ -174,7 +174,7 @@ export const SignOutConfirmModal: React.FC<Props> = ({
               soundFx.playClick();
               onConfirmSignOut();
             }}
-            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-slate-800/80 hover:bg-rose-950/60 border border-slate-700 hover:border-rose-500/40 text-slate-300 hover:text-rose-300 font-bold text-xs cursor-pointer transition-all"
+            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-slate-800/80 hover:bg-rose-950/60 border border-slate-700 hover:border-rose-500/40 text-slate-300 hover:eb-danger font-bold text-xs cursor-pointer transition-all"
           >
             <LogOut className="w-3.5 h-3.5" />
             <span>Sign Out of Google Account</span>

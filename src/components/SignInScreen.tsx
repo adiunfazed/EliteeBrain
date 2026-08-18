@@ -135,7 +135,7 @@ export const SignInScreen: React.FC<Props> = ({ onSignInSuccess, onContinueAsGue
           <EliteLifeLogo size="lg" showSubtext={false} />
           
           <div className="mt-3 flex items-center justify-center">
-            <h1 className="text-2xl font-black font-mono text-[#F4F6F8] tracking-wider">
+            <h1 className="eb-heading text-2xl tracking-wider">
               ELITE<span className="text-[#A855F7]">LIFE</span>
             </h1>
           </div>
@@ -183,14 +183,14 @@ export const SignInScreen: React.FC<Props> = ({ onSignInSuccess, onContinueAsGue
         {/* Alerts */}
         {errorMsg && (
           <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-3.5 mb-5 text-left flex items-start gap-2.5">
-            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+            <AlertCircle className="w-4 h-4 eb-danger shrink-0 mt-0.5" />
             <p className="text-xs text-rose-200 font-medium leading-relaxed">{errorMsg}</p>
           </div>
         )}
 
         {successMsg && (
           <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-3.5 mb-5 text-left flex items-start gap-2.5">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+            <CheckCircle2 className="w-4 h-4 eb-done shrink-0 mt-0.5" />
             <p className="text-xs text-emerald-200 font-medium leading-relaxed">{successMsg}</p>
           </div>
         )}
@@ -200,7 +200,7 @@ export const SignInScreen: React.FC<Props> = ({ onSignInSuccess, onContinueAsGue
             {/* Features List */}
             <div className="bg-[#0E1116] rounded-2xl border border-[#2A313C] p-4 mb-6 text-left space-y-2.5">
               <div className="flex items-center gap-2.5 text-xs text-[#F4F6F8] font-medium">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                <CheckCircle2 className="w-4 h-4 eb-done shrink-0" />
                 <span>Instant 1-click Google authentication</span>
               </div>
               <div className="flex items-center gap-2.5 text-xs text-[#F4F6F8] font-medium">
@@ -208,7 +208,7 @@ export const SignInScreen: React.FC<Props> = ({ onSignInSuccess, onContinueAsGue
                 <span>Encrypted cloud profile storage & score matrix</span>
               </div>
               <div className="flex items-center gap-2.5 text-xs text-[#F4F6F8] font-medium">
-                <Award className="w-4 h-4 text-amber-400 shrink-0" />
+                <Award className="w-4 h-4 eb-warn shrink-0" />
                 <span>30-Day Protocol & streak continuity</span>
               </div>
             </div>
@@ -307,7 +307,7 @@ export const SignInScreen: React.FC<Props> = ({ onSignInSuccess, onContinueAsGue
                 }}
                 className={`text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer ${
                   emailMode === 'reset'
-                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                    ? 'bg-amber-500/20 eb-warn border border-amber-500/40'
                     : 'text-[#98A2B3] hover:text-[#F4F6F8]'
                 }`}
               >

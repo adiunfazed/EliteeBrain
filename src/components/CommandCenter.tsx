@@ -136,6 +136,25 @@ export const CommandCenter: React.FC<Props> = ({ input, displayName, onOpenHub, 
                 style={{ background: dayScore.ratio >= 1 ? '#00C2A8' : undefined }}
               />
             </div>
+
+            {/* One honest sentence about where the day stands. Derived from
+                what was actually scheduled and completed — never invented. */}
+            <p className="text-[11px] mt-2 leading-relaxed">
+              {dayScore.ratio >= 1 ? (
+                <span className="text-[#00C2A8]">
+                  Everything you planned today is done.
+                </span>
+              ) : dayScore.done === 0 ? (
+                <span className="text-[#8A93A5]">
+                  Nothing ticked off yet. One item is enough to start.
+                </span>
+              ) : (
+                <span className="text-[#8A93A5]">
+                  {Math.round(dayScore.ratio * 100)}% of today done ·{' '}
+                  {dayScore.total - Math.round(dayScore.done)} still open
+                </span>
+              )}
+            </p>
           </div>
         ) : (
           <p className="text-[10px] text-[#8A93A5] mt-2">

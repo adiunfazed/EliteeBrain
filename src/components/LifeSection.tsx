@@ -80,6 +80,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
   /** Empty means every day. */
   const [blockDays, setBlockDays] = useState<number[]>([]);
   const [editingDaysFor, setEditingDaysFor] = useState<string | null>(null);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [start, setStart] = useState('09:00');
   const [end, setEnd] = useState('10:00');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -233,7 +234,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                 <span className="eb-label">
                   Today's routine
                 </span>
-                <span className="text-sm font-black font-mono text-[#F4F6F8] tabular-nums">
+                <span className="eb-heading text-sm tabular-nums">
                   {adherence.done} / {adherence.total}
                 </span>
               </div>
@@ -250,7 +251,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
 
           {overload && (
             <div className="rounded-2xl border border-amber-500/25 bg-amber-500/[0.06] p-3.5 flex items-start gap-2.5">
-              <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+              <AlertTriangle className="w-3.5 h-3.5 eb-warn shrink-0 mt-0.5" />
               <p className="text-[11px] text-[#98A2B3] leading-relaxed">{overload}</p>
             </div>
           )}
@@ -295,7 +296,14 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
               </label>
             </div>
 
-            <div>
+            <button
+              onClick={() => setShowAdvanced((v) => !v)}
+              className="eb-press text-[10px] font-mono font-bold text-[#8A93A5] hover:text-[#F2F4F7] flex items-center gap-1.5"
+            >
+              {showAdvanced ? '− Fewer options' : '+ Days, type and goal'}
+            </button>
+
+            <div className={showAdvanced ? '' : 'hidden'}>
               <p className="eb-label mb-1.5">
                 Repeats on
                 <span className="ml-1.5 normal-case tracking-normal text-[#5A6472]">
@@ -331,7 +339,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
               </div>
             </div>
 
-            {goals.length > 0 && (
+            {goals.length > 0 && showAdvanced && (
               <div>
                 <p className="eb-label mb-1.5">
                   Counts toward a goal
@@ -364,7 +372,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
               </div>
             )}
 
-            <div className="flex items-center gap-1.5 flex-wrap">
+            <div className={`items-center gap-1.5 flex-wrap ${showAdvanced ? 'flex' : 'hidden'}`}>
               {KINDS.map((k) => (
                 <button
                   key={k}
@@ -384,9 +392,10 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
           {/* Timeline */}
           {day.length === 0 ? (
             <div className="text-center py-12 px-6 border border-dashed border-[#2A313C] rounded-2xl">
-              <p className="text-base font-black text-[#F4F6F8] font-mono">No routine yet.</p>
-              <p className="text-[11px] text-[#98A2B3] mt-1.5 max-w-xs mx-auto leading-relaxed">
-                Block out when things happen and the day plans itself.
+              <p className="eb-heading text-base">Build your day</p>
+              <p className="text-[11px] text-[#8A93A5] mt-1.5 max-w-xs mx-auto leading-relaxed">
+                Add the blocks you actually repeat — study, gym, sleep. Tick them off as you go,
+                and link one to a goal so the goal moves when you do the work.
               </p>
             </div>
           ) : (
@@ -516,7 +525,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                     <button
                       onClick={() => deleteBlock(block)}
                       aria-label="Delete block"
-                      className="w-10 h-10 rounded-lg hover:bg-rose-500/15 text-[#98A2B3] hover:text-rose-300 flex items-center justify-center"
+                      className="w-10 h-10 rounded-lg hover:bg-rose-500/15 text-[#98A2B3] hover:eb-danger flex items-center justify-center"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -651,7 +660,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                     setSleep((prev) => prev.filter((s) => s.id !== today));
                     removeSleepLog(userId, today).catch((e) => console.error(e));
                   }}
-                  className="ml-2 text-[#5A6472] hover:text-rose-300"
+                  className="ml-2 text-[#5A6472] hover:eb-danger"
                 >
                   remove
                 </button>

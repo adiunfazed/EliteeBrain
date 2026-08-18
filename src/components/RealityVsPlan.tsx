@@ -1,11 +1,12 @@
 import React, { useMemo } from 'react';
 import { motion } from 'motion/react';
-import { Scale, Lightbulb } from 'lucide-react';
+import { Scale, Lightbulb, ArrowRight } from 'lucide-react';
 import type { MomentumInput } from '../lib/momentum';
 import { adaptiveSignals, realityVsPlan } from '../lib/adaptive';
 
 interface Props {
   input: MomentumInput;
+  onGo?: (pane: 'today' | 'tasks' | 'goals' | 'routine' | 'focus') => void;
 }
 
 /**
@@ -15,7 +16,7 @@ interface Props {
  * Framing matters here: a low number means the plan was too big, not that the
  * person failed — the copy says so explicitly.
  */
-export const RealityVsPlan: React.FC<Props> = ({ input }) => {
+export const RealityVsPlan: React.FC<Props> = ({ input, onGo }) => {
   const report = useMemo(() => realityVsPlan(input, 7), [input]);
   const signals = useMemo(() => adaptiveSignals(input), [input]);
 
@@ -34,7 +35,7 @@ export const RealityVsPlan: React.FC<Props> = ({ input }) => {
       ) : (
         <>
           {report.execution !== null && (
-            <p className="text-2xl font-black font-mono text-[#F4F6F8] tabular-nums mt-1">
+            <p className="eb-heading text-2xl tabular-nums mt-1">
               {Math.round(report.execution * 100)}%
               <span className="text-xs font-bold text-[#5A6472] ml-2">executed</span>
             </p>
@@ -78,13 +79,30 @@ export const RealityVsPlan: React.FC<Props> = ({ input }) => {
       {signals.length > 0 && (
         <div className="mt-4 pt-3.5 border-t border-[#2A313C] space-y-2">
           <span className="eb-label flex items-center gap-1.5">
-            <Lightbulb className="w-3 h-3 text-amber-400" />
+            <Lightbulb className="w-3 h-3 eb-warn" />
             From your history
           </span>
           {signals.map((s) => (
-            <p key={s.key} className="text-[11px] text-[#98A2B3] leading-relaxed">
-              {s.message}
-            </p>
+            <div key={s.key} className="flex items-start justify-between gap-3">
+              <p className="text-[11px] text-[#98A2B3] leading-relaxed min-w-0">{s.message}</p>
+              {onGo && (
+                <button
+                  onClick={() =>
+                    onGo(
+                      s.key === 'routine' || s.key === 'overload'
+                        ? 'routine'
+                        : s.key === 'estimates'
+                          ? 'focus'
+                          : 'tasks'
+                    )
+                  }
+                  className="eb-press shrink-0 text-[10px] font-mono font-bold text-[var(--signal-ink)] flex items-center gap-1"
+                >
+                  Open
+                  <ArrowRight className="w-3 h-3" />
+                </button>
+              )}
+            </div>
           ))}
         </div>
       )}

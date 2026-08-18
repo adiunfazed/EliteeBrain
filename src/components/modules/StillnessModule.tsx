@@ -135,14 +135,14 @@ export const StillnessModule: React.FC<Props> = ({ currentLevel, onFinishSession
         </button>
 
         <div className="flex items-center gap-2">
-          <Compass className="w-5 h-5 text-amber-400" />
+          <Compass className="w-5 h-5 eb-warn" />
           <h2 className="text-base font-bold text-slate-100">Gray Matter Stillness</h2>
-          <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 font-mono border border-amber-500/30">
+          <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 eb-warn font-mono border border-amber-500/30">
             Lvl {currentLevel}
           </span>
         </div>
 
-        <div className="text-xs text-amber-400 font-mono font-bold">
+        <div className="text-xs eb-warn font-mono font-bold">
           {resetCount > 0 ? `${resetCount} Resets` : 'Zero Movement'}
         </div>
       </div>
@@ -151,12 +151,12 @@ export const StillnessModule: React.FC<Props> = ({ currentLevel, onFinishSession
       <div className="flex-1 flex flex-col items-center justify-center p-4 max-w-xl mx-auto w-full">
         {phase === 'intro' && (
           <div className="text-center bg-slate-900/80 border border-slate-800 p-6 md:p-8 rounded-3xl shadow-2xl w-full">
-            <div className="inline-flex p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 mb-4">
+            <div className="inline-flex p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 eb-warn mb-4">
               <Compass className="w-8 h-8" />
             </div>
             <h3 className="text-2xl font-black text-slate-100 mb-2">Deep Focus & Physical Stillness</h3>
             <p className="text-xs text-slate-400 leading-relaxed mb-6">
-              Inhibit impulsive micro-movements to strengthen prefrontal cortex attentional regulation. Keep your cursor <span className="text-amber-300 font-bold underline">completely STILL</span>. If you move your mouse, the timer flashes red and resets!
+              Inhibit impulsive micro-movements to strengthen prefrontal cortex attentional regulation. Keep your cursor <span className="eb-warn font-bold underline">completely STILL</span>. If you move your mouse, the timer flashes red and resets!
             </p>
 
             {/* Target Duration Selector */}
@@ -182,7 +182,7 @@ export const StillnessModule: React.FC<Props> = ({ currentLevel, onFinishSession
                     }}
                     className={`py-2 px-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
                       targetDurationSec === item.sec
-                        ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-sm'
+                        ? 'bg-amber-500/20 eb-warn border-amber-500/50 shadow-sm'
                         : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-200'
                     }`}
                   >
@@ -203,9 +203,9 @@ export const StillnessModule: React.FC<Props> = ({ currentLevel, onFinishSession
                     const mins = Math.max(1, Math.min(120, parseInt(e.target.value) || 1));
                     setTargetDurationSec(mins * 60);
                   }}
-                  className="w-20 px-3 py-1 rounded-xl bg-slate-900 border border-slate-800 text-xs font-bold font-mono text-amber-300 focus:outline-none focus:border-amber-500"
+                  className="w-20 px-3 py-1 rounded-xl bg-slate-900 border border-slate-800 text-xs font-bold font-mono eb-warn focus:outline-none focus:border-amber-500"
                 />
-                <span className="text-xs font-bold text-amber-400">({Math.round(targetDurationSec / 60)} Minutes Selected)</span>
+                <span className="text-xs font-bold eb-warn">({Math.round(targetDurationSec / 60)} Minutes Selected)</span>
               </div>
             </div>
 
@@ -227,9 +227,9 @@ export const StillnessModule: React.FC<Props> = ({ currentLevel, onFinishSession
           <div className="w-full text-center">
             {phase === 'violation' ? (
               <div className="bg-rose-950 border-2 border-rose-500 rounded-3xl p-8 mb-6 animate-bounce text-rose-200 shadow-2xl">
-                <AlertTriangle className="w-12 h-12 text-rose-400 mx-auto mb-2" />
+                <AlertTriangle className="w-12 h-12 eb-danger mx-auto mb-2" />
                 <h3 className="text-2xl font-black uppercase tracking-wider">MOVEMENT DETECTED!</h3>
-                <p className="text-xs text-rose-300 mt-1">Timer reset back to {formatTime(targetDurationSec)}</p>
+                <p className="text-xs eb-danger mt-1">Timer reset back to {formatTime(targetDurationSec)}</p>
               </div>
             ) : (
               <div className="relative bg-slate-900/90 border-2 border-amber-500/40 rounded-3xl p-10 md:p-14 mb-8 shadow-2xl shadow-amber-500/10 overflow-hidden flex flex-col items-center justify-center min-h-[260px]">
@@ -238,7 +238,7 @@ export const StillnessModule: React.FC<Props> = ({ currentLevel, onFinishSession
                 <div className="absolute w-48 h-48 rounded-full border border-amber-500/20 animate-ping opacity-30 pointer-events-none" />
                 <div className="absolute w-32 h-32 rounded-full border border-amber-400/30 animate-pulse pointer-events-none" />
 
-                <span className="text-xs uppercase tracking-widest text-amber-400 font-bold block mb-2">
+                <span className="text-xs uppercase tracking-widest eb-warn font-bold block mb-2">
                   MAINTAIN ABSOLUTE STILLNESS
                 </span>
 

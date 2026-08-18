@@ -46,13 +46,13 @@ export const AchievementsDashboardSection: React.FC<Props> = ({ profile, onOpenG
       {/* Top Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-amber-500/15 border border-amber-500/30 text-amber-400 rounded-2xl shadow-inner">
+          <div className="p-2.5 bg-amber-500/15 border border-amber-500/30 eb-warn rounded-2xl shadow-inner">
             <Trophy className="w-5 h-5" />
           </div>
           <div>
             <h3 className="text-base sm:text-lg font-display font-extrabold text-white tracking-tight flex items-center gap-2">
               <span>Earned Badges & Milestones</span>
-              <span className="text-xs font-mono font-black px-2.5 py-0.5 bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded-lg">
+              <span className="text-xs font-mono font-black px-2.5 py-0.5 bg-amber-500/20 eb-warn border border-amber-500/40 rounded-lg">
                 {unlockedCount}/{totalCount}
               </span>
             </h3>
@@ -69,7 +69,7 @@ export const AchievementsDashboardSection: React.FC<Props> = ({ profile, onOpenG
             soundFx.playClick();
             onOpenGallery();
           }}
-          className="px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 text-xs font-mono font-bold rounded-2xl transition-all cursor-pointer flex items-center gap-1.5 shrink-0 self-start sm:self-auto"
+          className="px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 eb-danger text-xs font-mono font-bold rounded-2xl transition-all cursor-pointer flex items-center gap-1.5 shrink-0 self-start sm:self-auto"
         >
           <span>View Badges ({totalCount})</span>
           <ChevronRight className="w-3.5 h-3.5" />
@@ -99,7 +99,7 @@ export const AchievementsDashboardSection: React.FC<Props> = ({ profile, onOpenG
               <div
                 className={`w-10 h-10 rounded-xl border flex items-center justify-center mb-2 shadow-sm ${
                   isUnlocked
-                    ? 'bg-amber-500/20 border-amber-500/40 text-amber-300'
+                    ? 'bg-amber-500/20 border-amber-500/40 eb-warn'
                     : 'bg-[#12161F] border-[#2A313C] text-slate-500'
                 }`}
               >
@@ -110,7 +110,7 @@ export const AchievementsDashboardSection: React.FC<Props> = ({ profile, onOpenG
                 {badge.title}
               </div>
 
-              <span className={`text-[10px] font-mono font-bold ${isUnlocked ? 'text-amber-400' : 'text-slate-500'}`}>
+              <span className={`text-[10px] font-mono font-bold ${isUnlocked ? 'eb-warn' : 'text-slate-500'}`}>
                 {isUnlocked ? `+${badge.points} PTS` : 'Locked'}
               </span>
             </motion.div>

@@ -34,7 +34,7 @@ export const DailyChallengeCard: React.FC<Props> = ({ profile, onLaunchModule })
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2 min-w-0">
           <Target
-            className={`w-4 h-4 shrink-0 ${completed ? 'text-emerald-400' : 'text-rose-400'}`}
+            className={`w-4 h-4 shrink-0 ${completed ? 'eb-done' : 'eb-danger'}`}
           />
           <span className="eb-label">
             Today's challenge
@@ -79,7 +79,7 @@ export const DailyChallengeCard: React.FC<Props> = ({ profile, onLaunchModule })
 
           <p
             className={`text-[11px] font-mono mt-3 flex items-center gap-1.5 ${
-              beatRecord ? 'text-yellow-300 font-bold' : 'text-emerald-300'
+              beatRecord ? 'text-yellow-300 font-bold' : 'eb-done'
             }`}
           >
             {beatRecord ? (

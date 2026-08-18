@@ -656,3 +656,42 @@
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
+
+
+/* --- Safe areas. Phones with a home indicator otherwise clip the last row
+       of content behind the bar. --- */
+.eb-safe-bottom { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+.eb-safe-top { padding-top: env(safe-area-inset-top); }
+
+/* Scroll containers should not chain to the page behind them. */
+.eb-scroll { overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+
+
+/* ==================================================================
+   Semantic colour
+
+   Two palettes were in play — Tailwind's emerald/amber/rose and a set of
+   hex tokens — for the same three meanings. One vocabulary, so a colour
+   means the same thing on every screen:
+
+     done     teal    something finished
+     warn     amber   needs attention, not yet failed
+     danger   rose    overdue or destructive
+   ================================================================== */
+
+:root {
+  --done: #00C2A8;
+  --done-dim: rgba(0, 194, 168, 0.14);
+  --warn: #FFB020;
+  --warn-dim: rgba(255, 176, 32, 0.14);
+  --danger: #FF6B57;
+  --danger-dim: rgba(255, 107, 87, 0.14);
+}
+
+.eb-done { color: var(--done); }
+.eb-warn { color: var(--warn); }
+.eb-danger { color: var(--danger); }
+
+.eb-done-bg { background: var(--done-dim); border-color: rgba(0, 194, 168, 0.35); }
+.eb-warn-bg { background: var(--warn-dim); border-color: rgba(255, 176, 32, 0.35); }
+.eb-danger-bg { background: var(--danger-dim); border-color: rgba(255, 107, 87, 0.35); }
