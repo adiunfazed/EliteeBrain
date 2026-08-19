@@ -83,7 +83,7 @@ export const GamesSection: React.FC<{ profile: UserProfile; onProfileUpdate?: (p
             className="w-full"
           >
             <div className="mb-8">
-              <h2 className="eb-heading text-2xl sm:text-3xl">Games</h2>
+              <h2 className="eb-title">Games</h2>
             </div>
 
             {/* Vertical stack: each game gets full width so its colour and
@@ -135,7 +135,7 @@ export const GamesSection: React.FC<{ profile: UserProfile; onProfileUpdate?: (p
                         </span>
                       </div>
 
-                      <p className="text-[11px] text-[#8A93A5] leading-relaxed mt-3.5 max-w-lg">
+                      <p className="text-[13px] text-[#8A93A5] leading-relaxed mt-3.5 max-w-lg">
                         {g.blurb}
                       </p>
 

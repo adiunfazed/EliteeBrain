@@ -95,7 +95,7 @@ export const WeeklyReviewSection: React.FC<Props> = ({ input, onGo }) => {
                   key={s.label}
                   className="eb-card-sunk p-2.5 min-w-0"
                 >
-                  <p className="text-[9px] font-mono text-[#5A6472] truncate">{s.label}</p>
+                  <p className="text-[11px] font-mono text-[#5A6472] truncate">{s.label}</p>
                   <p className="eb-heading text-sm tabular-nums mt-0.5">
                     {s.value}
                   </p>

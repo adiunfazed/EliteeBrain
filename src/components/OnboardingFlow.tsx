@@ -859,7 +859,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                         >
                           <Clock className="w-4 h-4 mb-1" />
                           <span className="text-xs font-bold font-mono">{opt.mins} Mins</span>
-                          <span className="text-[9px] opacity-80">{opt.label}</span>
+                          <span className="text-[11px] opacity-80">{opt.label}</span>
                         </button>
                       ))}
                     </div>

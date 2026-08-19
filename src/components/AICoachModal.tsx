@@ -181,11 +181,11 @@ export const AICoachModal: React.FC<Props> = ({
                   <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
                 </h3>
                 {profile.isProUser ? (
-                  <span className="text-[9px] font-mono font-bold text-cyan-400 px-1.5 py-0.5 bg-cyan-950 border border-cyan-500/40 rounded-full">
+                  <span className="text-[11px] font-mono font-bold text-cyan-400 px-1.5 py-0.5 bg-cyan-950 border border-cyan-500/40 rounded-full">
                     PRO
                   </span>
                 ) : (
-                  <span className="text-[9px] font-mono font-bold eb-warn px-1.5 py-0.5 bg-amber-950/60 border border-amber-500/40 rounded-full flex items-center gap-0.5">
+                  <span className="text-[11px] font-mono font-bold eb-warn px-1.5 py-0.5 bg-amber-950/60 border border-amber-500/40 rounded-full flex items-center gap-0.5">
                     <Crown className="w-2.5 h-2.5" /> Free Mode
                   </span>
                 )}
@@ -248,7 +248,7 @@ export const AICoachModal: React.FC<Props> = ({
                 >
                   <p className="whitespace-pre-wrap">{m.text}</p>
                   <span
-                    className={`block text-[9px] font-mono mt-1.5 ${
+                    className={`block text-[11px] font-mono mt-1.5 ${
                       isCoach ? 'text-slate-500' : 'text-slate-900/70 text-right'
                     }`}
                   >

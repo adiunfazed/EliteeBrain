@@ -293,7 +293,7 @@ export const FocusSection: React.FC<Props> = ({ userId, incomingTask, onConsumeI
                   no reflection leaves the user no better informed. */}
               {justFinished.taskId && !reflected && (
                 <div className="flex items-center gap-2 mt-3 flex-wrap">
-                  <span className="text-[10px] text-[#8A93A5]">Did you finish it?</span>
+                  <span className="text-[12px] text-[#8A93A5]">Did you finish it?</span>
                   <button
                     onClick={async () => {
                       setReflected(true);

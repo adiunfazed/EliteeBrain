@@ -320,7 +320,7 @@ export const TodayPane: React.FC<Props> = ({
                         {stats.completedToday ? (
                           <Check className="w-4 h-4 stroke-[3]" />
                         ) : (
-                          <span className="text-[9px] font-mono font-bold">
+                          <span className="text-[11px] font-mono font-bold">
                             {Math.round(pct * 100)}%
                           </span>
                         )}
