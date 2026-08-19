@@ -22,7 +22,6 @@ import { LifeSection } from './LifeSection';
 import { TodayPane } from './TodayPane';
 import { MomentumChart } from './MomentumChart';
 import { CommandCenter } from './CommandCenter';
-import { DailyReset } from './DailyReset';
 import { StreakCard } from './StreakCard';
 import { LevelBar } from './LevelBar';
 import { careerXp } from '../lib/xp';
@@ -87,14 +86,7 @@ interface Props {
   onProfileUpdate?: (updatedProfile: UserProfile) => void;
 }
 
-export type DashboardSection =
-  | 'engine'
-  | 'exercises'
-  | 'coach'
-  | 'games'
-  | 'hub'
-  | 'focusTab'
-  | 'progress';
+export type DashboardSection = 'engine' | 'exercises' | 'coach' | 'games' | 'hub' | 'progress';
 
 export const Dashboard: React.FC<Props> = ({
   profile,
@@ -258,13 +250,6 @@ export const Dashboard: React.FC<Props> = ({
   // button had just set — so "Tasks" and "Focus" both opened Today.
   const paneRequestedRef = useRef(false);
   useEffect(() => {
-    // The Focus tab is Plan scoped to focus — one destination, not a
-    // duplicate screen.
-    if (activeSection === 'focusTab') {
-      setHubPane('focus');
-      setActiveSection('hub');
-      return;
-    }
     if (activeSection !== 'hub') return;
     if (paneRequestedRef.current) {
       paneRequestedRef.current = false;
@@ -331,7 +316,7 @@ export const Dashboard: React.FC<Props> = ({
     {
       id: 'engine' as DashboardSection,
       label: 'Engine',
-      shortLabel: 'TODAY',
+      shortLabel: 'HOME',
       icon: Flame,
       activeColor: 'eb-warn bg-amber-500/15 border-amber-500/40',
       badge: `${profile.streakDays}d`,
@@ -345,11 +330,20 @@ export const Dashboard: React.FC<Props> = ({
       badge: `${completedTodayCount}/8`,
     },
     {
-      id: 'focusTab' as DashboardSection,
-      label: 'Focus',
-      shortLabel: 'FOCUS',
-      icon: Timer,
+      id: 'coach' as DashboardSection,
+      label: 'AI Coach',
+      shortLabel: 'COACH',
+      icon: Bot,
       activeColor: 'text-violet-400 bg-violet-500/15 border-violet-500/40',
+      badge: profile.isProUser ? 'Pro' : 'AI',
+    },
+    {
+      id: 'games' as DashboardSection,
+      label: 'Games',
+      shortLabel: 'GAMES',
+      icon: Gamepad2,
+      activeColor: 'eb-danger bg-rose-500/15 border-rose-500/40',
+      badge: '',
     },
     {
       id: 'hub' as DashboardSection,
@@ -361,8 +355,8 @@ export const Dashboard: React.FC<Props> = ({
     },
     {
       id: 'progress' as DashboardSection,
-      label: 'More',
-      shortLabel: 'MORE',
+      label: 'Progress',
+      shortLabel: 'LIFE',
       icon: TrendingUp,
       activeColor: 'text-sky-400 bg-sky-500/15 border-sky-500/40',
       badge: '',
@@ -370,7 +364,7 @@ export const Dashboard: React.FC<Props> = ({
   ];
 
   return (
-    <div className="eb-page pb-[calc(7rem+env(safe-area-inset-bottom))] font-sans select-none relative min-h-[80vh]">
+    <div className="space-y-6 pb-[calc(7rem+env(safe-area-inset-bottom))] font-sans select-none relative min-h-[80vh]">
       
       {/* Prominent Non-Logged-In Guest Sync Banner */}
       {!currentUser && (
@@ -461,9 +455,20 @@ export const Dashboard: React.FC<Props> = ({
               }}
             />
 
+            <LevelBar
+              profile={profile}
+              input={{
+                tasks: allTasks,
+                habits: allHabits,
+                habitLogs: allHabitLogs,
+                focusSessions: allFocus,
+                routineBlocks,
+                routineLogs,
+                sleepLogs,
+              }}
+            />
 
-
-            <DailyReset userId={currentUser?.uid || null} tasks={allTasks} />
+            <StreakCard input={momentumInput} />
 
             <DailyMission
               modulesDone={completedTodayCount}
@@ -477,7 +482,7 @@ export const Dashboard: React.FC<Props> = ({
               onGoFocus={() => goToPane('focus')}
             />
 
-
+            <ArenaSection />
           </motion.div>
         )}
 
@@ -521,7 +526,7 @@ export const Dashboard: React.FC<Props> = ({
                             {info.blurb}
                           </span>
                           {emphasisedGroup(profile.focusGoal) === group && (
-                            <span className="text-[11px] font-mono font-bold text-[#5A6472] shrink-0">
+                            <span className="text-[9px] font-mono font-bold text-[#5A6472] shrink-0">
                               YOUR GOAL
                             </span>
                           )}
@@ -738,23 +743,6 @@ export const Dashboard: React.FC<Props> = ({
               onOpenPro={onOpenProModal}
             >
               <div className="space-y-4">
-                <LevelBar
-                  profile={profile}
-                  input={{
-                    tasks: allTasks,
-                    habits: allHabits,
-                    habitLogs: allHabitLogs,
-                    focusSessions: allFocus,
-                    routineBlocks,
-                    routineLogs,
-                    sleepLogs,
-                  }}
-                />
-
-                <StreakCard input={momentumInput} />
-
-                <ArenaSection />
-
                 <RankProgressionSection
                   profile={profile}
                   derivedStreak={derivedStreak}
@@ -813,7 +801,7 @@ export const Dashboard: React.FC<Props> = ({
                   }`}
                 />
 
-                <span className="text-[11px] font-mono tracking-tight font-black uppercase truncate max-w-full px-0.5 text-center">
+                <span className="text-[9px] font-mono tracking-tight font-black uppercase truncate max-w-full px-0.5 text-center">
                   {item.shortLabel || item.label}
                 </span>
 

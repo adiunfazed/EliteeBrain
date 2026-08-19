@@ -109,7 +109,7 @@ export const ProgressSection: React.FC<Props> = ({ profile, userId }) => {
             >
               <div className="flex items-center gap-1.5">
                 <Icon className={`w-3.5 h-3.5 shrink-0 ${t.tint}`} />
-                <span className="text-[11px] font-mono font-bold text-[#98A2B3] tracking-widest uppercase truncate">
+                <span className="text-[9px] font-mono font-bold text-[#98A2B3] tracking-widest uppercase truncate">
                   {t.label}
                 </span>
               </div>
@@ -154,7 +154,7 @@ export const ProgressSection: React.FC<Props> = ({ profile, userId }) => {
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-xs font-bold text-[#F4F6F8] truncate">{r.name}</span>
                     {r.isNewRecord && (
-                      <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-full bg-yellow-500/15 text-yellow-300 border border-yellow-500/30 shrink-0">
+                      <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-yellow-500/15 text-yellow-300 border border-yellow-500/30 shrink-0">
                         NEW RECORD
                       </span>
                     )}
@@ -169,7 +169,7 @@ export const ProgressSection: React.FC<Props> = ({ profile, userId }) => {
                   <p className="text-xl font-black font-mono text-yellow-400 tabular-nums leading-none">
                     {r.best}
                   </p>
-                  <p className="text-[11px] font-mono text-[#5A6472] mt-1">BEST</p>
+                  <p className="text-[9px] font-mono text-[#5A6472] mt-1">BEST</p>
                 </div>
               </motion.div>
             ))}

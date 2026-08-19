@@ -194,7 +194,7 @@ export const ChartRecorder: React.FC<ChartRecorderProps> = ({ profile, className
                 <text textAnchor="middle" className="fill-dom-memory font-mono text-[10px] font-bold">
                   MEMORY
                 </text>
-                <text textAnchor="middle" y="10" className="fill-ink-muted font-mono text-[11px]">
+                <text textAnchor="middle" y="10" className="fill-ink-muted font-mono text-[9px]">
                   Lv. {mods['digit-span']?.level || 1}
                 </text>
               </g>
@@ -204,7 +204,7 @@ export const ChartRecorder: React.FC<ChartRecorderProps> = ({ profile, className
                 <text textAnchor="start" className="fill-dom-focus font-mono text-[10px] font-bold">
                   FOCUS
                 </text>
-                <text textAnchor="start" y="10" className="fill-ink-muted font-mono text-[11px]">
+                <text textAnchor="start" y="10" className="fill-ink-muted font-mono text-[9px]">
                   Lv. {mods['stroop']?.level || 1}
                 </text>
               </g>
@@ -214,7 +214,7 @@ export const ChartRecorder: React.FC<ChartRecorderProps> = ({ profile, className
                 <text textAnchor="middle" className="fill-dom-reason font-mono text-[10px] font-bold">
                   REASONING
                 </text>
-                <text textAnchor="middle" y="10" className="fill-ink-muted font-mono text-[11px]">
+                <text textAnchor="middle" y="10" className="fill-ink-muted font-mono text-[9px]">
                   Lv. {mods['n-back']?.level || 1}
                 </text>
               </g>
@@ -224,7 +224,7 @@ export const ChartRecorder: React.FC<ChartRecorderProps> = ({ profile, className
                 <text textAnchor="end" className="fill-dom-speed font-mono text-[10px] font-bold">
                   SPEED
                 </text>
-                <text textAnchor="end" y="10" className="fill-ink-muted font-mono text-[11px]">
+                <text textAnchor="end" y="10" className="fill-ink-muted font-mono text-[9px]">
                   Lv. {mods['reaction-inhibitor']?.level || 1}
                 </text>
               </g>

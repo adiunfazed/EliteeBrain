@@ -880,7 +880,7 @@ export const AdminPortalModal: React.FC<Props> = ({
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-xs font-black text-[#F4F6F8] truncate max-w-full">{u.displayName}</span>
-                          <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-[#171B22] border border-[#2A313C] text-[#98A2B3] uppercase">
+                          <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-[#171B22] border border-[#2A313C] text-[#98A2B3] uppercase">
                             {u.authProvider}
                           </span>
                           {(() => {
@@ -897,7 +897,7 @@ export const AdminPortalModal: React.FC<Props> = ({
                               : e.status === 'expired' ? 'bg-rose-500/20 eb-danger border-rose-500/40'
                               : 'bg-[#171B22] text-[#98A2B3] border-[#2A313C]';
                             return (
-                              <span className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded-full border flex items-center gap-1 ${tone}`}>
+                              <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded-full border flex items-center gap-1 ${tone}`}>
                                 {e.status === 'lifetime' && <Crown className="w-3 h-3 eb-warn" />}
                                 {entitlementLabel(e).toUpperCase()}
                               </span>

@@ -305,7 +305,7 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
               >
                 {msg.text}
                 <span
-                  className={`block text-[11px] font-mono mt-1.5 ${
+                  className={`block text-[9px] font-mono mt-1.5 ${
                     msg.sender === 'user' ? 'text-white/60 text-right' : 'text-[#5A6472]'
                   }`}
                 >
@@ -372,7 +372,7 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
                       <p className="eb-heading text-xs text-[#F2F4F7] leading-snug break-words relative">
                         {action.title}
                       </p>
-                      <p className="text-[12px] text-[#8A93A5] mt-1 leading-snug break-words relative">
+                      <p className="text-[10px] text-[#8A93A5] mt-1 leading-snug break-words relative">
                         {action.hint}
                       </p>
                     </button>

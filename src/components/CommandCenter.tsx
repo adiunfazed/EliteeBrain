@@ -110,7 +110,7 @@ export const CommandCenter: React.FC<Props> = ({ input, displayName, onOpenHub, 
           })}
         </p>
         <div className="min-w-0">
-          <h2 className="eb-title mt-1 min-w-0">
+          <h2 className="eb-heading text-2xl sm:text-3xl mt-1 min-w-0">
             {greeting}
             {displayName ? <span className="text-[var(--signal-ink)]">, {displayName.split(' ')[0]}</span> : ''}
           </h2>
@@ -157,7 +157,7 @@ export const CommandCenter: React.FC<Props> = ({ input, displayName, onOpenHub, 
             </p>
           </div>
         ) : (
-          <p className="text-[12px] text-[#8A93A5] mt-2">
+          <p className="text-[10px] text-[#8A93A5] mt-2">
             Nothing scheduled today. Add a task or routine block to get started.
           </p>
         )}

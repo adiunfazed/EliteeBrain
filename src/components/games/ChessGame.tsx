@@ -890,7 +890,7 @@ export const ChessGame: React.FC<{
               Bot · {engineLevel}
             </span>
             {game.inCheck() && gameStatus === 'playing' && (
-              <span className="text-[11px] font-mono font-black px-2 py-0.5 rounded-full bg-rose-500/20 border border-rose-500/40 eb-danger shrink-0">
+              <span className="text-[9px] font-mono font-black px-2 py-0.5 rounded-full bg-rose-500/20 border border-rose-500/40 eb-danger shrink-0">
                 CHECK
               </span>
             )}

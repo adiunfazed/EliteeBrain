@@ -420,7 +420,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                 <button
                   onClick={() => cyclePriority(task)}
                   title="Change priority"
-                  className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded-full border flex items-center gap-1 ${pri.chip}`}
+                  className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded-full border flex items-center gap-1 ${pri.chip}`}
                 >
                   <PriIcon className="w-2.5 h-2.5" />
                   {pri.label}
@@ -428,37 +428,37 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
               )}
               {task.category && (
                 <span
-                  className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded-full border ${CATEGORY_META[task.category].tint}`}
+                  className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded-full border ${CATEGORY_META[task.category].tint}`}
                 >
                   {CATEGORY_META[task.category].label}
                 </span>
               )}
               {task.estimatedMinutes ? (
-                <span className="text-[11px] font-mono text-[#98A2B3] flex items-center gap-1">
+                <span className="text-[9px] font-mono text-[#98A2B3] flex items-center gap-1">
                   <Clock className="w-2.5 h-2.5" />~{task.estimatedMinutes}m
                 </span>
               ) : null}
               {task.energy && (
-                <span className="text-[11px] font-mono text-[#98A2B3] hidden sm:flex items-center gap-1">
+                <span className="text-[9px] font-mono text-[#98A2B3] hidden sm:flex items-center gap-1">
                   <Battery className="w-2.5 h-2.5" />
                   {ENERGY_META[task.energy].label}
                 </span>
               )}
               {(task.subtasks?.length || 0) > 0 && (
-                <span className="text-[11px] font-mono text-[#98A2B3] flex items-center gap-1">
+                <span className="text-[9px] font-mono text-[#98A2B3] flex items-center gap-1">
                   <ListChecks className="w-2.5 h-2.5" />
                   {subtaskProgress(task).done}/{subtaskProgress(task).total}
                 </span>
               )}
               {task.recurrence && (
-                <span className="text-[11px] font-mono text-[#98A2B3] flex items-center gap-1">
+                <span className="text-[9px] font-mono text-[#98A2B3] flex items-center gap-1">
                   <Repeat className="w-2.5 h-2.5" />
                   {describeRecurrence(task.recurrence)}
                 </span>
               )}
               {task.dueDate && (
                 <span
-                  className={`text-[11px] font-mono flex items-center gap-1 ${
+                  className={`text-[9px] font-mono flex items-center gap-1 ${
                     isOverdue ? 'eb-warn' : 'text-[#98A2B3]'
                   }`}
                 >
@@ -495,7 +495,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                         `Moved to ${o.label.toLowerCase()}.`
                       );
                     }}
-                    className="text-[11px] font-mono px-2 py-1 rounded-full border border-[#2A313C] text-[#5A6472] hover:text-[#98A2B3] hover:border-[#3A424F] transition-colors"
+                    className="text-[9px] font-mono px-2 py-1 rounded-full border border-[#2A313C] text-[#5A6472] hover:text-[#98A2B3] hover:border-[#3A424F] transition-colors"
                   >
                     {o.label}
                   </button>
@@ -506,7 +506,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                       soundFx.playClick();
                       onStartFocus(task);
                     }}
-                    className="text-[11px] font-mono font-bold px-2.5 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 eb-done hover:bg-emerald-500/20 transition-colors flex items-center gap-1"
+                    className="text-[9px] font-mono font-bold px-2.5 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 eb-done hover:bg-emerald-500/20 transition-colors flex items-center gap-1"
                   >
                     <Timer className="w-2.5 h-2.5" />
                     Focus
@@ -785,7 +785,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
             className="eb-tab eb-shine text-[11px] font-mono px-3.5 py-2.5 flex items-center gap-1.5 shrink-0" 
           >
             {t.label}
-            <span className="text-[11px] opacity-70">{t.count}</span>
+            <span className="text-[9px] opacity-70">{t.count}</span>
           </button>
         ))}
 

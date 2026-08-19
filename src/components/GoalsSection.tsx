@@ -261,13 +261,13 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
                   </span>
                 )}
                 {stats.currentStreak > 1 && (
-                  <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-full bg-orange-500/15 text-orange-300 border border-orange-500/30 flex items-center gap-1 shrink-0">
+                  <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-orange-500/15 text-orange-300 border border-orange-500/30 flex items-center gap-1 shrink-0">
                     <Flame className="w-2.5 h-2.5" />
                     {stats.currentStreak}
                   </span>
                 )}
                 {habit.status === 'archived' && (
-                  <span className="text-[11px] font-mono text-[#5A6472]">Archived</span>
+                  <span className="text-[9px] font-mono text-[#5A6472]">Archived</span>
                 )}
               </div>
 
@@ -324,7 +324,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
                     transition={{ duration: 0.45, ease: 'easeOut' }}
                   />
                 </svg>
-                <span className="absolute inset-0 flex items-center justify-center text-[11px] font-mono font-black text-[#F4F6F8] tabular-nums">
+                <span className="absolute inset-0 flex items-center justify-center text-[9px] font-mono font-black text-[#F4F6F8] tabular-nums">
                   {Math.round(pct * 100)}%
                 </span>
               </div>
@@ -642,7 +642,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
                       <p className="text-base font-black font-mono text-[#F4F6F8] tabular-nums leading-none">
                         {s.value}
                       </p>
-                      <p className="text-[11px] font-mono text-[#5A6472] mt-1">{s.label}</p>
+                      <p className="text-[9px] font-mono text-[#5A6472] mt-1">{s.label}</p>
                     </div>
                   ))}
                 </div>
@@ -710,7 +710,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
             <p className="text-[10px] font-mono text-[#98A2B3] mt-1">{progress.label}</p>
           </div>
           <span
-            className={`text-[11px] font-mono font-bold px-2 py-1 rounded-full border shrink-0 ${GOAL_HEALTH_STYLE[health.health]}`}
+            className={`text-[9px] font-mono font-bold px-2 py-1 rounded-full border shrink-0 ${GOAL_HEALTH_STYLE[health.health]}`}
           >
             {health.label}
           </span>
@@ -883,7 +883,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
               </div>
             )}
 
-            <p className="text-[12px] text-[#8A93A5] leading-relaxed">
+            <p className="text-[10px] text-[#8A93A5] leading-relaxed">
               Changing the target recalculates progress from your linked work — it never
               discards milestones or history.
             </p>

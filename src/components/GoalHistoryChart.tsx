@@ -36,7 +36,7 @@ export const GoalHistoryChart: React.FC<Props> = ({ snapshots }) => {
   return (
     <div className="pt-1">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-[11px] font-mono font-bold text-[#5A6472] tracking-widest uppercase">
+        <span className="text-[9px] font-mono font-bold text-[#5A6472] tracking-widest uppercase">
           Progress · {snapshots.length} days
         </span>
         <span

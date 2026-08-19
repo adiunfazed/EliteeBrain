@@ -82,7 +82,7 @@ export const DayProgressCalendar: React.FC<DayProgressCalendarProps> = ({
               className={`aspect-square flex flex-col items-center justify-center border rounded-xl p-1 font-mono transition-all cursor-pointer select-none active:scale-95 ${cellStyle}`}
             >
               <span className="text-xs md:text-sm">{dayNum}</span>
-              <span className="text-[8px] md:text-[11px] uppercase tracking-tighter mt-0.5">
+              <span className="text-[8px] md:text-[9px] uppercase tracking-tighter mt-0.5">
                 {isCompleted ? '✓ DONE' : isCurrent ? 'TODAY' : isMissed ? 'GAP' : `D${dayNum}`}
               </span>
             </button>

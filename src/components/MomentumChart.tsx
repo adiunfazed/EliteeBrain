@@ -56,7 +56,7 @@ export const MomentumChart: React.FC<Props> = ({ input }) => {
         <div className="min-w-0">
           <span className="eb-label flex items-center gap-1.5">
             <Activity className="w-3 h-3 text-[#A78BFA]" />
-            Consistency
+            Life Momentum
           </span>
           {hasData ? (
             <p className="eb-heading text-2xl tabular-nums mt-1">
@@ -136,7 +136,7 @@ export const MomentumChart: React.FC<Props> = ({ input }) => {
               key={c.key}
               className="eb-card-sunk rounded-lg px-2 py-1.5 min-w-0"
             >
-              <p className="text-[11px] font-mono text-[#5A6472] truncate">{c.label}</p>
+              <p className="text-[9px] font-mono text-[#5A6472] truncate">{c.label}</p>
               <p className="text-[11px] font-mono font-bold text-[#F4F6F8] tabular-nums">
                 {c.value === null ? '—' : `${Math.round(c.value * 100)}%`}
               </p>
@@ -155,9 +155,9 @@ export const MomentumChart: React.FC<Props> = ({ input }) => {
         </ul>
       )}
 
-      <p className="text-[13px] text-[#8A93A5] mt-3 leading-relaxed">
-        How much of what you planned you actually did. Days with nothing recorded are left
-        blank rather than counted as zero.
+      <p className="text-[10px] font-mono text-[#5A6472] mt-3 leading-relaxed">
+        Calculated from activity you logged. Days with nothing recorded are left blank rather
+        than counted as zero. This measures execution — not intelligence, health or worth.
       </p>
     </div>
   );

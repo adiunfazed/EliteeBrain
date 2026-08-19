@@ -201,7 +201,7 @@ export const ModuleCard: React.FC<Props> = ({ config, state, isProUser, index = 
                 {config.name}
               </h4>
               {config.isPro && (
-                <span className="inline-flex items-center gap-0.5 mt-1 px-2 py-0.5 rounded-full text-[11px] font-mono font-bold bg-amber-500/10 eb-warn border border-amber-500/30">
+                <span className="inline-flex items-center gap-0.5 mt-1 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-amber-500/10 eb-warn border border-amber-500/30">
                   <Crown className="w-2.5 h-2.5" /> PRO
                 </span>
               )}
@@ -210,7 +210,7 @@ export const ModuleCard: React.FC<Props> = ({ config, state, isProUser, index = 
 
           {/* Level Display */}
           <div className="text-right shrink-0">
-            <span className="block text-[11px] font-mono text-ink-muted uppercase">LEVEL</span>
+            <span className="block text-[9px] font-mono text-ink-muted uppercase">LEVEL</span>
             <span className="text-base font-mono font-bold text-ink">
               {isLocked ? 0 : state.level}
             </span>
@@ -228,14 +228,14 @@ export const ModuleCard: React.FC<Props> = ({ config, state, isProUser, index = 
           <div className="flex items-center gap-1.5">
             <Award className="w-3.5 h-3.5 text-ink-muted shrink-0" />
             <div>
-              <span className="block text-[11px] text-ink-muted">BEST SCORE</span>
+              <span className="block text-[9px] text-ink-muted">BEST SCORE</span>
               <span className="font-bold text-ink">{state.bestScore > 0 ? `${state.bestScore}%` : '--'}</span>
             </div>
           </div>
           <div className="flex items-center gap-1.5">
             <TrendingUp className="w-3.5 h-3.5 text-ink-muted shrink-0" />
             <div>
-              <span className="block text-[11px] text-ink-muted">TOTAL XP</span>
+              <span className="block text-[9px] text-ink-muted">TOTAL XP</span>
               <span className="font-bold text-ink">{state.xp} XP</span>
             </div>
           </div>
