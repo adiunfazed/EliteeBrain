@@ -1,6 +1,7 @@
 import {
   collection,
   deleteDoc,
+  deleteField,
   doc,
   onSnapshot,
   setDoc,
@@ -58,6 +59,21 @@ function writeLocal<T>(kind: Kind, list: T[]) {
  * containing `completedAt: undefined` (any unticked milestone) silently killed
  * the save — milestones appeared to work until the page was refreshed.
  */
+/**
+ * Turn explicit `undefined` values into Firestore delete instructions.
+ *
+ * strip() removes undefined, which is correct when a caller simply didn't
+ * supply a field — but it also silently swallowed deliberate clears, so
+ * unlinking a habit or goal appeared to do nothing.
+ */
+function withDeletes(patch: Record<string, any>): Record<string, any> {
+  const out: Record<string, any> = {};
+  for (const [key, value] of Object.entries(patch)) {
+    out[key] = value === undefined ? deleteField() : strip(value);
+  }
+  return out;
+}
+
 function strip<T>(value: T): T {
   if (Array.isArray(value)) {
     return value.map((v) => strip(v)) as unknown as T;
@@ -132,7 +148,7 @@ export async function patchGoal(
     readLocal<Goal>('goals').map((g) => (g.id === goalId ? { ...g, ...patch } : g))
   );
   if (!userId || !db) return;
-  await updateDoc(doc(db, 'users', userId, 'goals', goalId), strip(patch));
+  await updateDoc(doc(db, 'users', userId, 'goals', goalId), withDeletes(patch));
 }
 
 export async function removeGoal(userId: string | null, goalId: string): Promise<void> {
@@ -177,7 +193,7 @@ export async function patchHabit(
     readLocal<Habit>('habits').map((h) => (h.id === habitId ? { ...h, ...patch } : h))
   );
   if (!userId || !db) return;
-  await updateDoc(doc(db, 'users', userId, 'habits', habitId), strip(patch));
+  await updateDoc(doc(db, 'users', userId, 'habits', habitId), withDeletes(patch));
 }
 
 /**
@@ -281,7 +297,7 @@ export async function patchRoutineBlock(
     readLocal<RoutineBlock>('routineBlocks').map((b) => (b.id === blockId ? { ...b, ...patch } : b))
   );
   if (!userId || !db) return;
-  await updateDoc(doc(db, 'users', userId, 'routineBlocks', blockId), strip(patch));
+  await updateDoc(doc(db, 'users', userId, 'routineBlocks', blockId), withDeletes(patch));
 }
 
 export async function removeRoutineBlock(userId: string | null, blockId: string): Promise<void> {

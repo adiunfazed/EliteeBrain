@@ -1,8 +1,12 @@
 import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
-// Inter for everything readable: it was drawn for screens and stays legible
-// at the small sizes this interface actually uses. Clash Display was a display
-// face — its tight tracking collapsed words like "done today" at 11px.
+// Manrope for headings: rounder terminals and open counters make large text
+// friendlier than Inter without losing precision. Inter stays for body copy,
+// where its narrower forms fit more words per line legibly.
+import '@fontsource-variable/manrope';
+
+// Inter for everything readable: drawn for screens, legible at the small
+// sizes this interface uses.
 import '@fontsource/inter/400.css';
 import '@fontsource/inter/500.css';
 import '@fontsource/inter/600.css';

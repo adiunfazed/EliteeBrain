@@ -204,7 +204,7 @@ export const TodayScreen: React.FC<Props> = ({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, height: 0, marginTop: 0 }}
                 transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-                className={i === 0 ? 'panel' : 'row'}
+                className={i === 0 ? 'surface-accent p-5' : 'row'}
               >
                 {i === 0 ? (
                   /* The top suggestion gets real estate — it is the answer to

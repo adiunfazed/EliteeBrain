@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  --font-display: "Inter", system-ui, -apple-system, "SF Pro Display", sans-serif;
+  --font-display: "Manrope Variable", "Manrope", "Inter", system-ui, sans-serif;
   --font-sans: "Inter", system-ui, -apple-system, "SF Pro Text", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 
@@ -914,4 +914,56 @@
   color: var(--ink-muted);
   margin-top: 6px;
   display: block;
+}
+
+
+/* ==================================================================
+   Depth
+
+   Flat surfaces on a flat background read as unfinished. These give
+   panels a soft edge and a light source, in the Apple idiom: shadow
+   plus a hairline highlight along the top edge.
+   ================================================================== */
+
+.panel, .feature, .eb-card {
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.04) inset,
+    0 8px 24px -12px rgba(0, 0, 0, 0.7);
+}
+
+/* A surface that should read as raised and interactive. */
+.surface-lift {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 20px;
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.05) inset,
+    0 10px 30px -14px rgba(0, 0, 0, 0.8);
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease;
+}
+.surface-lift:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.07) inset,
+    0 16px 36px -14px rgba(0, 0, 0, 0.85);
+}
+.surface-lift:active { transform: translateY(0); }
+
+/* The primary action of a screen — accent tint plus a matching glow. */
+.surface-accent {
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--signal) 16%, var(--surface)),
+    var(--surface)
+  );
+  border: 1px solid color-mix(in oklab, var(--signal) 40%, var(--rule));
+  border-radius: 20px;
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.07) inset,
+    0 12px 32px -16px color-mix(in oklab, var(--signal) 70%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .surface-lift { transition: none; }
+  .surface-lift:hover, .surface-lift:active { transform: none; }
 }

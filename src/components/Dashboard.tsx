@@ -371,7 +371,7 @@ export const Dashboard: React.FC<Props> = ({
   ];
 
   return (
-    <div className="eb-page pb-[calc(6rem+env(safe-area-inset-bottom))] font-sans select-none relative">
+    <div className="eb-page pb-[calc(4.5rem+env(safe-area-inset-bottom))] font-sans select-none relative">
       
       {/* Prominent Non-Logged-In Guest Sync Banner */}
       {!currentUser && (
