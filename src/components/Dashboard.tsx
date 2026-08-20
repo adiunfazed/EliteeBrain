@@ -58,6 +58,10 @@ import {
   Cloud,
   LogIn,
   Bot,
+  CalendarCheck,
+  BarChart2,
+  Award,
+  ChevronDown,
   Crown,
   Zap,
   ShieldCheck,
@@ -93,7 +97,6 @@ export type DashboardSection =
   | 'coach'
   | 'games'
   | 'hub'
-  | 'focusTab'
   | 'progress';
 
 export const Dashboard: React.FC<Props> = ({
@@ -113,6 +116,8 @@ export const Dashboard: React.FC<Props> = ({
   const [focusHandoff, setFocusHandoff] = useState<Task | null>(null);
   const [lifePane, setLifePane] = useState<'routine' | 'week' | 'sleep' | undefined>();
   const [showDeepStats, setShowDeepStats] = useState(false);
+  const [trainTab, setTrainTab] = useState<'modules' | 'games'>('modules');
+  const [moreDrawer, setMoreDrawer] = useState<string | null>('rank');
   const lastUnlockSignatureRef = useRef<string>('');
   const [habitHandoff, setHabitHandoff] = useState<{ title: string; minutes: number; habitId: string } | null>(null);
   const [tasksDone, setTasksDone] = useState(0);
@@ -259,13 +264,6 @@ export const Dashboard: React.FC<Props> = ({
   // button had just set — so "Tasks" and "Focus" both opened Today.
   const paneRequestedRef = useRef(false);
   useEffect(() => {
-    // The Focus tab is Plan scoped to focus — one destination, not a
-    // duplicate screen.
-    if (activeSection === 'focusTab') {
-      setHubPane('focus');
-      setActiveSection('hub');
-      return;
-    }
     if (activeSection !== 'hub') return;
     if (paneRequestedRef.current) {
       paneRequestedRef.current = false;
@@ -346,11 +344,11 @@ export const Dashboard: React.FC<Props> = ({
       badge: `${completedTodayCount}/8`,
     },
     {
-      id: 'focusTab' as DashboardSection,
-      label: 'Focus',
-      shortLabel: 'FOCUS',
-      icon: Timer,
-      activeColor: 'text-violet-400 bg-violet-500/15 border-violet-500/40',
+      id: 'coach' as DashboardSection,
+      label: 'Coach',
+      shortLabel: 'COACH',
+      icon: Bot,
+      activeColor: 'eb-chip-active',
     },
     {
       id: 'hub' as DashboardSection,
@@ -371,7 +369,7 @@ export const Dashboard: React.FC<Props> = ({
   ];
 
   return (
-    <div className="eb-page pb-[calc(7rem+env(safe-area-inset-bottom))] font-sans select-none relative min-h-[80vh]">
+    <div className="eb-page pb-[calc(6rem+env(safe-area-inset-bottom))] font-sans select-none relative">
       
       {/* Prominent Non-Logged-In Guest Sync Banner */}
       {!currentUser && (
@@ -482,6 +480,34 @@ export const Dashboard: React.FC<Props> = ({
             transition={{ duration: 0.25 }}
             className="space-y-6"
           >
+            <div className="flex items-center gap-2">
+              {([
+                { id: 'modules' as const, label: 'Training' },
+                { id: 'games' as const, label: 'Games' },
+              ]).map(({ id, label }) => (
+                <button
+                  key={id}
+                  onClick={() => {
+                    soundFx.playClick();
+                    setTrainTab(id);
+                  }}
+                  className={`flex-1 min-h-[46px] rounded-xl text-sm font-semibold border transition-colors ${
+                    trainTab === id
+                      ? 'eb-chip-active'
+                      : 'text-[#8A93A5] border-[var(--rule)] hover:text-[#F2F4F7]'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {trainTab === 'games' && (
+              <GamesSection profile={profile} onProfileUpdate={onProfileUpdate} />
+            )}
+
+            {trainTab === 'modules' && (
+              <>
             <DailyChallengeCard profile={profile} onLaunchModule={onLaunchModule} />
 
             {/* Exercises Content Grid / Roster */}
@@ -559,6 +585,8 @@ export const Dashboard: React.FC<Props> = ({
                 />
               )}
             </div>
+              </>
+            )}
           </motion.div>
         )}
 
@@ -729,37 +757,77 @@ export const Dashboard: React.FC<Props> = ({
               blurb="Your rank, momentum, weekly review and full history."
               onOpenPro={onOpenProModal}
             >
-              <div className="space-y-4">
-                <ArenaSection />
-                <RankProgressionSection
-                  profile={profile}
-                  derivedStreak={derivedStreak}
-                  lifeXp={careerXpTotal}
-                  onLaunchModule={onLaunchModule}
-                  onOpenBadgesGallery={onOpenBadgesGallery}
-                />
-                <WeeklyReviewSection input={momentumInput} onGo={goToPane} />
+              <div className="panel">
+                {/* Menu. Tapping a row opens that area; tapping again closes
+                    it, so only one thing is ever on screen. */}
+                {([
+                  { id: 'rank', label: 'Rank & standings', hint: 'Your tier, XP and the leaderboard', icon: Trophy },
+                  { id: 'review', label: 'This week', hint: 'What went well and what slipped', icon: CalendarCheck },
+                  { id: 'records', label: 'Personal records', hint: 'Best scores across training', icon: BarChart2 },
+                  { id: 'badges', label: 'Achievements', hint: 'Milestones you have unlocked', icon: Award },
+                  { id: 'stats', label: 'Detailed analysis', hint: 'Consistency and planned vs done', icon: Activity },
+                ] as const).map(({ id, label, hint, icon: Icon }) => {
+                  const open = moreDrawer === id;
+                  return (
+                    <div key={id} className="border-b border-[var(--rule)] last:border-b-0">
+                      <button
+                        onClick={() => {
+                          soundFx.playClick();
+                          setMoreDrawer(open ? null : id);
+                        }}
+                        className="w-full flex items-center gap-4 py-4 text-left"
+                      >
+                        <span className="w-10 h-10 rounded-xl bg-[var(--surface-sunk)] flex items-center justify-center shrink-0">
+                          <Icon className="w-4 h-4 text-[var(--signal-ink)]" />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="t-section block truncate">{label}</span>
+                          <span className="t-sub block truncate">{hint}</span>
+                        </span>
+                        <ChevronDown
+                          className={`w-4 h-4 text-[#8A93A5] shrink-0 transition-transform ${
+                            open ? 'rotate-180' : ''
+                          }`}
+                        />
+                      </button>
 
-                <div>
-                  <button
-                    onClick={() => setShowDeepStats((v) => !v)}
-                    className="btn-quiet w-full"
-                  >
-                    {showDeepStats ? 'Hide detailed analysis' : 'Detailed analysis'}
-                  </button>
-
-                  {showDeepStats && (
-                    <div className="space-y-4 mt-4 anim-in">
-                      <MomentumChart input={momentumInput} />
-                      <RealityVsPlan input={momentumInput} onGo={goToPane} />
+                      {open && (
+                        <div className="pb-6 anim-in">
+                          {id === 'rank' && (
+                            <div className="space-y-4">
+                              <RankProgressionSection
+                                profile={profile}
+                                derivedStreak={derivedStreak}
+                                lifeXp={careerXpTotal}
+                                onLaunchModule={onLaunchModule}
+                                onOpenBadgesGallery={onOpenBadgesGallery}
+                              />
+                              <ArenaSection />
+                            </div>
+                          )}
+                          {id === 'review' && (
+                            <WeeklyReviewSection input={momentumInput} onGo={goToPane} />
+                          )}
+                          {id === 'records' && (
+                            <ProgressSection profile={profile} userId={currentUser?.uid || null} />
+                          )}
+                          {id === 'badges' && (
+                            <AchievementsDashboardSection
+                              profile={profile}
+                              onOpenGallery={onOpenBadgesGallery || (() => {})}
+                            />
+                          )}
+                          {id === 'stats' && (
+                            <div className="space-y-4">
+                              <MomentumChart input={momentumInput} />
+                              <RealityVsPlan input={momentumInput} onGo={goToPane} />
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-                <ProgressSection profile={profile} userId={currentUser?.uid || null} />
-                <AchievementsDashboardSection
-                  profile={profile}
-                  onOpenGallery={onOpenBadgesGallery || (() => {})}
-                />
+                  );
+                })}
               </div>
             </ProGate>
           </motion.div>

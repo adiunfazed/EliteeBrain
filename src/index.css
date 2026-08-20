@@ -769,8 +769,10 @@
 }
 
 /* --- Sections instead of cards. A quiet label and generous space above. --- */
-.sec { margin-top: 40px; }
-.sec:first-child { margin-top: 0; }
+/* Sections need a visible boundary, not just a gap — without one, groups
+   read as a single long list. */
+.sec { margin-top: 32px; padding-top: 32px; border-top: 1px solid var(--rule); }
+.sec:first-child { margin-top: 0; padding-top: 0; border-top: none; }
 .sec-head {
   display: flex;
   align-items: baseline;
@@ -856,4 +858,60 @@
 @media (prefers-reduced-motion: reduce) {
   .enter { animation: none; }
   .btn-lg, .btn-quiet, .row { transition: none; }
+}
+
+
+/* ==================================================================
+   Surfaces for grouped content
+
+   Text floating directly on the page background reads as unfinished.
+   Content that belongs together sits on a panel; standalone rows still
+   use dividers, so this doesn't become card-everything again.
+   ================================================================== */
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 18px;
+  padding: 18px;
+}
+.panel-tight { padding: 14px; }
+
+/* A list of rows inside a panel: dividers, no nested boxes. */
+.panel > .row:first-of-type { padding-top: 4px; }
+.panel > .row:last-of-type { padding-bottom: 4px; }
+
+/* Stat strip — values in a line on one surface. */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.stats > div {
+  background: var(--surface);
+  padding: 14px 10px;
+  text-align: center;
+  min-width: 0;
+}
+.stats .v {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 22px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.stats .k {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin-top: 6px;
+  display: block;
 }
