@@ -84,7 +84,7 @@ export const StreakCard: React.FC<Props> = ({ input }) => {
               )}
             </motion.div>
             <span
-              className={`text-[9px] font-mono font-bold ${
+              className={`text-[11px] font-mono font-bold ${
                 d.isToday ? 'text-[#A78BFA]' : 'text-[#5A6472]'
               }`}
             >

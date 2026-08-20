@@ -1,0 +1,403 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Check, ChevronRight, Play, Moon, Clock } from 'lucide-react';
+import type { Habit, HabitLog, RoutineBlock, RoutineLog, SleepLog, Task } from '../types';
+import { setHabitValue, setRoutineState } from '../lib/goalStore';
+import { patchTask, todayISO } from '../lib/tasks';
+import { reviewToday, suggestNextActions } from '../lib/nextAction';
+import { blocksForDate, minutesOf } from '../lib/routine';
+import { isScheduledOn, valueOn } from '../lib/habits';
+import { soundFx } from '../utils/audio';
+import { useXp } from './XpToast';
+import { XP } from '../lib/xp';
+
+interface Props {
+  userId: string | null;
+  displayName?: string;
+  tasks: Task[];
+  habits: Habit[];
+  habitLogs: HabitLog[];
+  routineBlocks: RoutineBlock[];
+  routineLogs: RoutineLog[];
+  sleepLogs: SleepLog[];
+  goals: { id: string; title: string }[];
+  onGo: (pane: 'today' | 'tasks' | 'goals' | 'routine' | 'focus') => void;
+  onStartFocus?: (task: Task) => void;
+}
+
+/**
+ * Today.
+ *
+ * The whole screen answers one question: what should I do right now, and am I
+ * doing it? Everything analytical lives elsewhere — a first screen full of
+ * statistics tells you how you did, which is not the same as telling you what
+ * to do.
+ *
+ * Built from sections and rows rather than cards. A card per item turned the
+ * page into a stack of boxes with no hierarchy.
+ */
+export const TodayScreen: React.FC<Props> = ({
+  userId,
+  displayName,
+  tasks,
+  habits,
+  habitLogs,
+  routineBlocks,
+  routineLogs,
+  sleepLogs,
+  goals,
+  onGo,
+  onStartFocus,
+}) => {
+  const today = todayISO();
+  const { awardXp } = useXp();
+
+  const [localHabits, setLocalHabits] = useState(habitLogs);
+  const [localRoutine, setLocalRoutine] = useState(routineLogs);
+  const [dismissed, setDismissed] = useState<string[]>([]);
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => setLocalHabits(habitLogs), [habitLogs]);
+  useEffect(() => setLocalRoutine(routineLogs), [routineLogs]);
+
+  // Keeps "right now" honest as the day moves.
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  const greeting = nowMin < 12 * 60 ? 'Good morning' : nowMin < 17 * 60 ? 'Good afternoon' : 'Good evening';
+  const firstName = displayName ? displayName.split(' ')[0] : '';
+
+  const suggestInput = useMemo(
+    () => ({ tasks, habits, habitLogs: localHabits, routineBlocks, routineLogs: localRoutine, now }),
+    [tasks, habits, localHabits, routineBlocks, localRoutine, now]
+  );
+
+  const suggestions = useMemo(
+    () => suggestNextActions(suggestInput, 3).filter((s) => !dismissed.includes(s.id)),
+    [suggestInput, dismissed]
+  );
+
+  const review = useMemo(() => reviewToday(suggestInput, today), [suggestInput, today]);
+
+  const day = useMemo(
+    () => blocksForDate(routineBlocks, localRoutine, today),
+    [routineBlocks, localRoutine, today]
+  );
+  const openHabits = useMemo(
+    () =>
+      habits.filter(
+        (h) =>
+          h.status === 'active' &&
+          isScheduledOn(h, today) &&
+          valueOn(localHabits, h.id, today) < Math.max(1, h.targetValue || 1)
+      ),
+    [habits, localHabits, today]
+  );
+
+  const sleptLastNight = sleepLogs.some((s) => s.date === today);
+  // Evening, and everything scheduled has been resolved one way or another.
+  const dayIsOver = nowMin >= 20 * 60 && review.total > 0;
+
+  const goalTitle = (id?: string) => goals.find((g) => g.id === id)?.title;
+
+  /* ---------------- actions ---------------- */
+
+  const completeTask = async (task: Task) => {
+    soundFx.playSuccess();
+    awardXp(XP.taskCompleted, task.title);
+    try {
+      await patchTask(userId, task.id, { completed: true, completedAt: new Date().toISOString() });
+    } catch (e) {
+      console.error('Could not complete task:', e);
+    }
+  };
+
+  const completeHabit = async (habit: Habit) => {
+    soundFx.playSuccess();
+    awardXp(XP.habitMet, habit.title);
+    const target = Math.max(1, habit.targetValue || 1);
+    setLocalHabits((prev) => [
+      { id: `${today}__${habit.id}`, habitId: habit.id, date: today, value: target, updatedAt: '' },
+      ...prev.filter((l) => !(l.habitId === habit.id && l.date === today)),
+    ]);
+    try {
+      await setHabitValue(userId, habit.id, today, target);
+    } catch (e) {
+      console.error('Could not update habit:', e);
+    }
+  };
+
+  const completeBlock = async (block: RoutineBlock) => {
+    soundFx.playSuccess();
+    awardXp(XP.routineBlockDone, block.title);
+    setLocalRoutine((prev) => [
+      { id: `${today}__${block.id}`, blockId: block.id, date: today, state: 'done', updatedAt: '' },
+      ...prev.filter((l) => !(l.blockId === block.id && l.date === today)),
+    ]);
+    try {
+      await setRoutineState(userId, block.id, today, 'done');
+    } catch (e) {
+      console.error('Could not update block:', e);
+    }
+  };
+
+  const act = (kind: string, id: string) => {
+    if (kind === 'task') {
+      const t = tasks.find((x) => x.id === id);
+      if (t) completeTask(t);
+    } else if (kind === 'habit') {
+      const h = habits.find((x) => x.id === id);
+      if (h) completeHabit(h);
+    } else {
+      const b = routineBlocks.find((x) => x.id === id);
+      if (b) completeBlock(b);
+    }
+  };
+
+  const startFocus = (id: string) => {
+    const t = tasks.find((x) => x.id === id);
+    if (t && onStartFocus) onStartFocus(t);
+    else onGo('focus');
+  };
+
+  const nothingPlanned = review.total === 0 && suggestions.length === 0;
+
+  return (
+    <div className="max-w-2xl mx-auto">
+      {/* ---------------- Header ---------------- */}
+      <header className="enter">
+        <p className="t-meta">
+          {now.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}
+        </p>
+        <h1 className="t-display mt-2">
+          {greeting}
+          {firstName && <span className="text-[var(--signal-ink)]">, {firstName}</span>}
+        </h1>
+
+        {review.total > 0 && (
+          <p className="t-sub mt-3">
+            <span className="text-[var(--ink)] font-semibold">
+              {review.done} of {review.total}
+            </span>{' '}
+            done today
+            {review.total - review.done > 0 && ` · ${review.total - review.done} left`}
+          </p>
+        )}
+      </header>
+
+      {/* ---------------- Do this next ---------------- */}
+      {suggestions.length > 0 && !dayIsOver && (
+        <section className="sec enter enter-1">
+          <div className="sec-head">
+            <span className="sec-label">Do this next</span>
+          </div>
+
+          <AnimatePresence initial={false}>
+            {suggestions.map((s, i) => (
+              <motion.div
+                key={s.id}
+                layout
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+                className={i === 0 ? 'panel' : 'row'}
+              >
+                {i === 0 ? (
+                  /* The top suggestion gets real estate — it is the answer to
+                     "what should I do right now". */
+                  <div>
+                    <h2 className="t-title">{s.title}</h2>
+
+                    <p className="t-sub mt-2">
+                      {s.reason}
+                      {s.minutes ? ` · about ${s.minutes} min` : ''}
+                      {goalTitle(s.goalId) ? ` · ${goalTitle(s.goalId)}` : ''}
+                    </p>
+
+                    <div className="flex items-center gap-3 mt-5 flex-wrap">
+                      {s.kind === 'task' && (
+                        <button onClick={() => startFocus(s.id)} className="btn-lg">
+                          <Play className="w-4 h-4" />
+                          Start
+                        </button>
+                      )}
+                      <button onClick={() => act(s.kind, s.id)} className={s.kind === 'task' ? 'btn-quiet' : 'btn-lg'}>
+                        <Check className="w-4 h-4" />
+                        Mark done
+                      </button>
+                      <button
+                        onClick={() => setDismissed((p) => [...p, s.id])}
+                        className="btn-quiet border-transparent text-[var(--ink-muted)]"
+                      >
+                        Not now
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => act(s.kind, s.id)}
+                      aria-label={`Complete ${s.title}`}
+                      className="shrink-0 w-6 h-6 rounded-full border border-[var(--rule)] hover:border-[var(--signal)] transition-colors"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="t-body font-medium truncate">{s.title}</p>
+                      <p className="t-meta mt-0.5 truncate">{s.reason}</p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-[var(--ink-muted)] shrink-0" />
+                  </>
+                )}
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </section>
+      )}
+
+      {/* ---------------- End of day ---------------- */}
+      {dayIsOver && (
+        <section className="sec enter enter-1">
+          <div className="panel">
+            <span className="sec-label">Today complete</span>
+            <h2 className="t-title mt-3">
+              {review.done} of {review.total} finished
+            </h2>
+
+            {review.missed.length > 0 ? (
+              <>
+                <p className="t-sub mt-3">
+                  {review.missed.map((m) => m.title).join(', ')}{' '}
+                  {review.missed.length === 1 ? 'was' : 'were'} not completed.
+                </p>
+                <button
+                  onClick={async () => {
+                    // Move unfinished tasks to tomorrow, and count it as a
+                    // postponement so the pattern stays visible.
+                    const tomorrow = new Date();
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    const iso = tomorrow.toISOString().slice(0, 10);
+                    for (const m of review.missed.filter((x) => x.kind === 'task')) {
+                      const t = tasks.find((x) => x.id === m.id);
+                      if (!t) continue;
+                      try {
+                        await patchTask(userId, t.id, {
+                          dueDate: iso,
+                          postponeCount: (t.postponeCount || 0) + 1,
+                          lastPostponedAt: new Date().toISOString(),
+                        });
+                      } catch (e) {
+                        console.error('Could not move task:', e);
+                      }
+                    }
+                    soundFx.playClick();
+                  }}
+                  className="btn-quiet mt-5"
+                >
+                  Move to tomorrow
+                </button>
+              </>
+            ) : (
+              <p className="t-sub mt-3">Everything you planned today is done.</p>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* ---------------- Routine ---------------- */}
+      {day.length > 0 && (
+        <section className="sec enter enter-2">
+          <div className="sec-head">
+            <span className="sec-label">Your day</span>
+            <button onClick={() => onGo('routine')} className="t-meta hover:text-[var(--ink)]">
+              Edit
+            </button>
+          </div>
+
+          {day.map(({ block, state }) => {
+            const live = minutesOf(block.startTime) <= nowMin && minutesOf(block.endTime) > nowMin;
+            return (
+              <div key={block.id} className="row">
+                <button
+                  onClick={() => completeBlock(block)}
+                  aria-label={`Complete ${block.title}`}
+                  className={`shrink-0 w-6 h-6 rounded-full border flex items-center justify-center transition-colors ${
+                    state === 'done'
+                      ? 'bg-[var(--done)] border-[var(--done)]'
+                      : 'border-[var(--rule)] hover:border-[var(--signal)]'
+                  }`}
+                >
+                  {state === 'done' && <Check className="w-3.5 h-3.5 text-[#04231F] stroke-[3]" />}
+                </button>
+
+                <div className="min-w-0 flex-1">
+                  <p
+                    className={`t-body truncate ${
+                      state === 'done' ? 'text-[var(--ink-muted)] line-through' : ''
+                    }`}
+                  >
+                    {block.title}
+                  </p>
+                  <p className="t-meta mt-0.5">
+                    {block.startTime}–{block.endTime}
+                    {live && state !== 'done' && (
+                      <span className="text-[var(--done)]"> · now</span>
+                    )}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </section>
+      )}
+
+      {/* ---------------- Habits ---------------- */}
+      {openHabits.length > 0 && (
+        <section className="sec enter enter-3">
+          <div className="sec-head">
+            <span className="sec-label">To repeat</span>
+          </div>
+
+          {openHabits.map((h) => (
+            <div key={h.id} className="row">
+              <button
+                onClick={() => completeHabit(h)}
+                aria-label={`Complete ${h.title}`}
+                className="shrink-0 w-6 h-6 rounded-full border border-[var(--rule)] hover:border-[var(--signal)] transition-colors"
+              />
+              <p className="t-body flex-1 min-w-0 truncate">{h.title}</p>
+            </div>
+          ))}
+        </section>
+      )}
+
+      {/* ---------------- Sleep ---------------- */}
+      <section className="sec enter enter-3">
+        <button onClick={() => onGo('routine')} className="row row-tap w-full text-left">
+          <Moon className="w-4 h-4 text-[#7C9CFF] shrink-0" />
+          <span className="t-body flex-1">Sleep</span>
+          <span className="t-meta">{sleptLastNight ? 'Logged' : 'Not logged'}</span>
+          <ChevronRight className="w-4 h-4 text-[var(--ink-muted)] shrink-0" />
+        </button>
+      </section>
+
+      {/* ---------------- Empty ---------------- */}
+      {nothingPlanned && (
+        <section className="sec enter enter-1">
+          <div className="panel text-center">
+            <Clock className="w-6 h-6 text-[var(--ink-muted)] mx-auto" />
+            <h2 className="t-section mt-4">Nothing planned yet</h2>
+            <p className="t-sub mt-2 max-w-sm mx-auto">
+              Add one thing you want to finish today. It'll show up here with a Start button.
+            </p>
+            <button onClick={() => onGo('tasks')} className="btn-lg mt-6">
+              Add a task
+            </button>
+          </div>
+        </section>
+      )}
+    </div>
+  );
+};

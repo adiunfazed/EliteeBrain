@@ -218,7 +218,7 @@ export const RankProgressionSection: React.FC<RankProgressionSectionProps> = ({
                   >
                     {stat.value}
                   </span>
-                  <span className="block text-[9px] text-[#8A93A5] mt-0.5 truncate">
+                  <span className="block text-[13px] text-[#8A93A5] mt-0.5 truncate">
                     {stat.sub}
                   </span>
                 </div>

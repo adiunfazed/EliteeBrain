@@ -24,7 +24,7 @@ export const RealityVsPlan: React.FC<Props> = ({ input, onGo }) => {
     <div className="eb-panel p-4 sm:p-5">
       <span className="eb-label flex items-center gap-1.5">
         <Scale className="w-3 h-3 text-[#A78BFA]" />
-        Plan vs reality · 7 days
+        Did you do what you planned?
       </span>
 
       {!report.hasPlan ? (
@@ -80,7 +80,7 @@ export const RealityVsPlan: React.FC<Props> = ({ input, onGo }) => {
         <div className="mt-4 pt-3.5 border-t border-[#2A313C] space-y-2">
           <span className="eb-label flex items-center gap-1.5">
             <Lightbulb className="w-3 h-3 eb-warn" />
-            From your history
+            What your data shows
           </span>
           {signals.map((s) => (
             <div key={s.key} className="flex items-start justify-between gap-3">

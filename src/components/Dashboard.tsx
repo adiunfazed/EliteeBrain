@@ -21,7 +21,8 @@ import { ProGate } from './ProGate';
 import { LifeSection } from './LifeSection';
 import { TodayPane } from './TodayPane';
 import { MomentumChart } from './MomentumChart';
-import { CommandCenter } from './CommandCenter';
+import { TodayScreen } from './TodayScreen';
+import { DailyReset } from './DailyReset';
 import { StreakCard } from './StreakCard';
 import { LevelBar } from './LevelBar';
 import { careerXp } from '../lib/xp';
@@ -86,7 +87,14 @@ interface Props {
   onProfileUpdate?: (updatedProfile: UserProfile) => void;
 }
 
-export type DashboardSection = 'engine' | 'exercises' | 'coach' | 'games' | 'hub' | 'progress';
+export type DashboardSection =
+  | 'engine'
+  | 'exercises'
+  | 'coach'
+  | 'games'
+  | 'hub'
+  | 'focusTab'
+  | 'progress';
 
 export const Dashboard: React.FC<Props> = ({
   profile,
@@ -104,6 +112,7 @@ export const Dashboard: React.FC<Props> = ({
   const [hubPane, setHubPane] = useState<'today' | 'tasks' | 'goals' | 'routine' | 'focus'>('today');
   const [focusHandoff, setFocusHandoff] = useState<Task | null>(null);
   const [lifePane, setLifePane] = useState<'routine' | 'week' | 'sleep' | undefined>();
+  const [showDeepStats, setShowDeepStats] = useState(false);
   const lastUnlockSignatureRef = useRef<string>('');
   const [habitHandoff, setHabitHandoff] = useState<{ title: string; minutes: number; habitId: string } | null>(null);
   const [tasksDone, setTasksDone] = useState(0);
@@ -250,6 +259,13 @@ export const Dashboard: React.FC<Props> = ({
   // button had just set — so "Tasks" and "Focus" both opened Today.
   const paneRequestedRef = useRef(false);
   useEffect(() => {
+    // The Focus tab is Plan scoped to focus — one destination, not a
+    // duplicate screen.
+    if (activeSection === 'focusTab') {
+      setHubPane('focus');
+      setActiveSection('hub');
+      return;
+    }
     if (activeSection !== 'hub') return;
     if (paneRequestedRef.current) {
       paneRequestedRef.current = false;
@@ -316,7 +332,7 @@ export const Dashboard: React.FC<Props> = ({
     {
       id: 'engine' as DashboardSection,
       label: 'Engine',
-      shortLabel: 'HOME',
+      shortLabel: 'TODAY',
       icon: Flame,
       activeColor: 'eb-warn bg-amber-500/15 border-amber-500/40',
       badge: `${profile.streakDays}d`,
@@ -330,20 +346,11 @@ export const Dashboard: React.FC<Props> = ({
       badge: `${completedTodayCount}/8`,
     },
     {
-      id: 'coach' as DashboardSection,
-      label: 'AI Coach',
-      shortLabel: 'COACH',
-      icon: Bot,
+      id: 'focusTab' as DashboardSection,
+      label: 'Focus',
+      shortLabel: 'FOCUS',
+      icon: Timer,
       activeColor: 'text-violet-400 bg-violet-500/15 border-violet-500/40',
-      badge: profile.isProUser ? 'Pro' : 'AI',
-    },
-    {
-      id: 'games' as DashboardSection,
-      label: 'Games',
-      shortLabel: 'GAMES',
-      icon: Gamepad2,
-      activeColor: 'eb-danger bg-rose-500/15 border-rose-500/40',
-      badge: '',
     },
     {
       id: 'hub' as DashboardSection,
@@ -355,8 +362,8 @@ export const Dashboard: React.FC<Props> = ({
     },
     {
       id: 'progress' as DashboardSection,
-      label: 'Progress',
-      shortLabel: 'LIFE',
+      label: 'More',
+      shortLabel: 'MORE',
       icon: TrendingUp,
       activeColor: 'text-sky-400 bg-sky-500/15 border-sky-500/40',
       badge: '',
@@ -364,7 +371,7 @@ export const Dashboard: React.FC<Props> = ({
   ];
 
   return (
-    <div className="space-y-6 pb-[calc(7rem+env(safe-area-inset-bottom))] font-sans select-none relative min-h-[80vh]">
+    <div className="eb-page pb-[calc(7rem+env(safe-area-inset-bottom))] font-sans select-none relative min-h-[80vh]">
       
       {/* Prominent Non-Logged-In Guest Sync Banner */}
       {!currentUser && (
@@ -445,48 +452,27 @@ export const Dashboard: React.FC<Props> = ({
             transition={{ duration: 0.25 }}
             className="space-y-4"
           >
-            <CommandCenter
-              input={momentumInput}
+            <TodayScreen
+              userId={currentUser?.uid || null}
               displayName={profile.displayName || currentUser?.displayName || undefined}
-              onOpenHub={goToPane}
-              onOpenSleep={() => {
-                setLifePane('sleep');
-                goToPane('routine');
+              tasks={allTasks}
+              habits={allHabits}
+              habitLogs={allHabitLogs}
+              routineBlocks={routineBlocks}
+              routineLogs={routineLogs}
+              sleepLogs={sleepLogs}
+              goals={allGoals
+                .filter((g: any) => g.status === 'active')
+                .map((g: any) => ({ id: g.id, title: g.title }))}
+              onGo={goToPane}
+              onStartFocus={(task) => {
+                setFocusHandoff(task);
+                goToPane('focus');
               }}
             />
-
-            <LevelBar
-              profile={profile}
-              input={{
-                tasks: allTasks,
-                habits: allHabits,
-                habitLogs: allHabitLogs,
-                focusSessions: allFocus,
-                routineBlocks,
-                routineLogs,
-                sleepLogs,
-              }}
-            />
-
-            <StreakCard input={momentumInput} />
-
-            <DailyMission
-              modulesDone={completedTodayCount}
-              modulesTarget={4}
-              tasksDone={tasksDone}
-              tasksTarget={tasksTarget}
-              focusSessions={focusToday.sessions}
-              focusSecondsToday={focusToday.seconds}
-              onGoTrain={() => setActiveSection('exercises')}
-              onGoTasks={() => goToPane('tasks')}
-              onGoFocus={() => goToPane('focus')}
-            />
-
-            <ArenaSection />
           </motion.div>
         )}
 
-        {/* SECTION 2: EXERCISES & TRAINING MODULES */}
         {activeSection === 'exercises' && (
           <motion.div
             key="section-exercises"
@@ -526,7 +512,7 @@ export const Dashboard: React.FC<Props> = ({
                             {info.blurb}
                           </span>
                           {emphasisedGroup(profile.focusGoal) === group && (
-                            <span className="text-[9px] font-mono font-bold text-[#5A6472] shrink-0">
+                            <span className="text-[11px] font-mono font-bold text-[#5A6472] shrink-0">
                               YOUR GOAL
                             </span>
                           )}
@@ -728,6 +714,7 @@ export const Dashboard: React.FC<Props> = ({
           </motion.div>
         )}
 
+        {/* PROGRESS & REVIEW */}
         {activeSection === 'progress' && (
           <motion.div
             key="section-progress"
@@ -738,11 +725,12 @@ export const Dashboard: React.FC<Props> = ({
           >
             <ProGate
               profile={profile}
-              feature="Progress analytics"
-              blurb="Personal records, consistency, focus time and full training history."
+              feature="Progress"
+              blurb="Your rank, momentum, weekly review and full history."
               onOpenPro={onOpenProModal}
             >
               <div className="space-y-4">
+                <ArenaSection />
                 <RankProgressionSection
                   profile={profile}
                   derivedStreak={derivedStreak}
@@ -750,9 +738,23 @@ export const Dashboard: React.FC<Props> = ({
                   onLaunchModule={onLaunchModule}
                   onOpenBadgesGallery={onOpenBadgesGallery}
                 />
-                <MomentumChart input={momentumInput} />
-                <RealityVsPlan input={momentumInput} onGo={goToPane} />
                 <WeeklyReviewSection input={momentumInput} onGo={goToPane} />
+
+                <div>
+                  <button
+                    onClick={() => setShowDeepStats((v) => !v)}
+                    className="btn-quiet w-full"
+                  >
+                    {showDeepStats ? 'Hide detailed analysis' : 'Detailed analysis'}
+                  </button>
+
+                  {showDeepStats && (
+                    <div className="space-y-4 mt-4 anim-in">
+                      <MomentumChart input={momentumInput} />
+                      <RealityVsPlan input={momentumInput} onGo={goToPane} />
+                    </div>
+                  )}
+                </div>
                 <ProgressSection profile={profile} userId={currentUser?.uid || null} />
                 <AchievementsDashboardSection
                   profile={profile}
@@ -801,7 +803,7 @@ export const Dashboard: React.FC<Props> = ({
                   }`}
                 />
 
-                <span className="text-[9px] font-mono tracking-tight font-black uppercase truncate max-w-full px-0.5 text-center">
+                <span className="text-[11px] font-mono tracking-tight font-black uppercase truncate max-w-full px-0.5 text-center">
                   {item.shortLabel || item.label}
                 </span>
 

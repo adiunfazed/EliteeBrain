@@ -695,3 +695,165 @@
 .eb-done-bg { background: var(--done-dim); border-color: rgba(0, 194, 168, 0.35); }
 .eb-warn-bg { background: var(--warn-dim); border-color: rgba(255, 176, 32, 0.35); }
 .eb-danger-bg { background: var(--danger-dim); border-color: rgba(255, 107, 87, 0.35); }
+
+
+/* ==================================================================
+   Premium pass
+
+   The interface had drifted to 9-11px type inside nested cards. Larger
+   text, more air, and fewer boxes — a card should mean "this is a
+   distinct thing", not "this is content".
+   ================================================================== */
+
+/* Readable minimum. Nothing informational sits below 11px. */
+.eb-label { font-size: 11px; letter-spacing: 0.08em; }
+
+.eb-heading { line-height: 1.2; }
+
+/* Section headings carry the hierarchy instead of borders. */
+.eb-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 28px;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+@media (min-width: 640px) { .eb-title { font-size: 34px; } }
+
+.eb-sub {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink-muted);
+}
+
+/* Cards: quieter borders, more room, no stacked shadows. */
+.eb-card { border-radius: 20px; padding: 20px; }
+.eb-card-sunk { border-radius: 16px; }
+
+/* A plain group — related content that does NOT need a box around it. */
+.eb-group > * + * { margin-top: 14px; }
+
+/* Breathing room between sections. */
+.eb-page > * + * { margin-top: 28px; }
+
+/* Softer offsets; the neo-brutalist shadow was heavy at this density. */
+.eb-raised { box-shadow: 2px 2px 0 0 var(--rule); }
+.eb-raised:hover { box-shadow: 3px 3px 0 0 var(--signal); transform: translate(-1px, -1px); }
+
+
+/* ==================================================================
+   Redesign layer
+
+   Two rules drive this:
+   1. Not everything is a card. Sections, rows and dividers carry most
+      content; a card is reserved for something that genuinely needs
+      lifting off the page.
+   2. Type is large and confident. The old scale topped out around 14px
+      for headings, which reads as a dashboard rather than a product.
+   ================================================================== */
+
+/* --- Type scale. One ladder, used everywhere. --- */
+.t-display { font-family: var(--font-display); font-weight: 700; font-size: 34px; line-height: 1.1;  letter-spacing: -0.022em; }
+.t-title   { font-family: var(--font-display); font-weight: 700; font-size: 26px; line-height: 1.15; letter-spacing: -0.018em; }
+.t-section { font-family: var(--font-display); font-weight: 700; font-size: 19px; line-height: 1.25; letter-spacing: -0.012em; }
+.t-body    { font-size: 15px; line-height: 1.55; letter-spacing: -0.003em; }
+.t-sub     { font-size: 13.5px; line-height: 1.5; color: var(--ink-muted); }
+.t-meta    { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; color: var(--ink-muted); }
+
+@media (min-width: 640px) {
+  .t-display { font-size: 44px; }
+  .t-title   { font-size: 32px; }
+  .t-section { font-size: 21px; }
+  .t-body    { font-size: 16px; }
+}
+
+/* --- Sections instead of cards. A quiet label and generous space above. --- */
+.sec { margin-top: 40px; }
+.sec:first-child { margin-top: 0; }
+.sec-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.sec-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+/* --- Rows: the default container. Divider, not a border-box. --- */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--rule);
+  transition: opacity 0.18s ease;
+}
+.row:last-child { border-bottom: none; }
+.row-tap { cursor: pointer; }
+.row-tap:active { opacity: 0.62; }
+
+/* --- The one card style that remains, for genuinely elevated content. --- */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 22px;
+  padding: 22px;
+}
+
+/* --- Primary action. Large, calm, unmistakable. --- */
+.btn-lg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 0 24px;
+  border-radius: 16px;
+  font-weight: 650;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+  background: var(--signal);
+  color: #fff;
+  transition: transform 0.16s cubic-bezier(0.22,1,0.36,1), filter 0.16s ease;
+}
+.btn-lg:hover { filter: brightness(1.07); }
+.btn-lg:active { transform: scale(0.978); }
+.btn-lg:disabled { opacity: 0.4; }
+
+.btn-quiet {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 0 18px;
+  border-radius: 14px;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--rule);
+  transition: border-color 0.16s ease, transform 0.16s cubic-bezier(0.22,1,0.36,1);
+}
+.btn-quiet:hover { border-color: var(--signal); }
+.btn-quiet:active { transform: scale(0.978); }
+
+/* --- Motion: one curve, one duration, used consistently. --- */
+@keyframes enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.enter { animation: enter 0.34s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.enter-1 { animation-delay: 0.04s; }
+.enter-2 { animation-delay: 0.08s; }
+.enter-3 { animation-delay: 0.12s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .enter { animation: none; }
+  .btn-lg, .btn-quiet, .row { transition: none; }
+}

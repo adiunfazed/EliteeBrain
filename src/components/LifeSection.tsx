@@ -81,6 +81,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
   const [blockDays, setBlockDays] = useState<number[]>([]);
   const [editingDaysFor, setEditingDaysFor] = useState<string | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [editingTimeFor, setEditingTimeFor] = useState<string | null>(null);
   const [start, setStart] = useState('09:00');
   const [end, setEnd] = useState('10:00');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -157,6 +158,16 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
       await patchRoutineBlock(userId, block.id, { title: t });
     } catch (e) {
       console.error('Could not rename block:', e);
+    }
+  };
+
+  /** Change a block's start or end time without losing its history. */
+  const updateBlockTime = async (block: RoutineBlock, changes: Partial<RoutineBlock>) => {
+    setBlocks((prev) => prev.map((b) => (b.id === block.id ? { ...b, ...changes } : b)));
+    try {
+      await patchRoutineBlock(userId, block.id, changes);
+    } catch (e) {
+      console.error('Could not update time:', e);
     }
   };
 
@@ -393,7 +404,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
           {day.length === 0 ? (
             <div className="text-center py-12 px-6 border border-dashed border-[#2A313C] rounded-2xl">
               <p className="eb-heading text-base">Build your day</p>
-              <p className="text-[11px] text-[#8A93A5] mt-1.5 max-w-xs mx-auto leading-relaxed">
+              <p className="text-[13px] text-[#8A93A5] mt-1.5 max-w-xs mx-auto leading-relaxed">
                 Add the blocks you actually repeat — study, gym, sleep. Tick them off as you go,
                 and link one to a goal so the goal moves when you do the work.
               </p>
@@ -405,7 +416,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                   key={block.id}
                   layout
                   className={`group eb-shine eb-lift relative overflow-hidden rounded-2xl border p-3.5 flex items-start gap-3 ${
-                  editingDaysFor === block.id ? 'pb-12' : ''
+                  editingDaysFor === block.id || editingTimeFor === block.id ? 'pb-14' : ''
                 } ${stateStyle[state]}`}
                 >
                   <span className={`absolute left-0 top-0 bottom-0 w-[3px] ${BLOCK_META[block.kind].bar}`} />
@@ -452,22 +463,79 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                       </p>
                     )}
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
-                      <span className="text-[10px] font-mono text-[#98A2B3]">
-                        {block.startTime} – {block.endTime}
-                      </span>
+                      {editingTimeFor === block.id ? (
+                        <span
+                          className="flex items-center gap-1.5"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <input
+                            type="time"
+                            defaultValue={block.startTime}
+                            onBlur={(e) => {
+                              if (e.target.value && e.target.value !== block.startTime) {
+                                patchRoutineBlock(userId, block.id, { startTime: e.target.value });
+                                setBlocks((prev) =>
+                                  prev.map((b) =>
+                                    b.id === block.id ? { ...b, startTime: e.target.value } : b
+                                  )
+                                );
+                              }
+                            }}
+                            className="bg-[#0E1116] border border-[#262C38] rounded-lg px-1.5 py-1 text-[10px] text-[#F2F4F7] outline-none"
+                          />
+                          <span className="text-[#5A6472] text-[10px]">→</span>
+                          <input
+                            type="time"
+                            defaultValue={block.endTime}
+                            onBlur={(e) => {
+                              if (e.target.value && e.target.value !== block.endTime) {
+                                patchRoutineBlock(userId, block.id, { endTime: e.target.value });
+                                setBlocks((prev) =>
+                                  prev.map((b) =>
+                                    b.id === block.id ? { ...b, endTime: e.target.value } : b
+                                  )
+                                );
+                              }
+                            }}
+                            className="bg-[#0E1116] border border-[#262C38] rounded-lg px-1.5 py-1 text-[10px] text-[#F2F4F7] outline-none"
+                          />
+                          <button
+                            onClick={() => setEditingTimeFor(null)}
+                            className="eb-press text-[10px] font-mono font-bold text-[var(--signal-ink)] px-1.5"
+                          >
+                            Done
+                          </button>
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => setEditingTimeFor(block.id)}
+                          className="eb-press text-[10px] font-mono text-[#98A2B3] hover:text-[#F2F4F7]"
+                        >
+                          {block.startTime} – {block.endTime}
+                        </button>
+                      )}
                       <span className="text-[10px] font-mono text-[#5A6472]">
                         {blockDuration(block)} min
                       </span>
                       <span
-                        className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded-full border ${BLOCK_META[block.kind].tint}`}
+                        className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded-full border ${BLOCK_META[block.kind].tint}`}
                       >
                         {BLOCK_META[block.kind].label}
                       </span>
                       <button
                         onClick={() =>
+                          setEditingTimeFor(editingTimeFor === block.id ? null : block.id)
+                        }
+                        className="eb-press text-[11px] font-mono text-[#8A93A5] hover:text-[#F2F4F7] flex items-center gap-1 relative"
+                      >
+                        <Clock className="w-2.5 h-2.5" />
+                        {block.startTime}–{block.endTime}
+                      </button>
+                      <button
+                        onClick={() =>
                           setEditingDaysFor(editingDaysFor === block.id ? null : block.id)
                         }
-                        className="eb-press text-[9px] font-mono text-[#8A93A5] hover:text-[#F2F4F7] flex items-center gap-1 relative"
+                        className="eb-press text-[11px] font-mono text-[#8A93A5] hover:text-[#F2F4F7] flex items-center gap-1 relative"
                       >
                         <CalendarDays className="w-2.5 h-2.5" />
                         {!block.weekdays || block.weekdays.length === 0
@@ -475,16 +543,100 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                           : block.weekdays.map((d) => DAY_LABELS[d]).join(' ')}
                       </button>
                       {block.goalId && (
-                        <span className="text-[9px] font-mono text-[#A78BFA] flex items-center gap-1">
+                        <span className="text-[11px] font-mono text-[#A78BFA] flex items-center gap-1">
                           <Target className="w-2.5 h-2.5" />
                           {goals.find((g) => g.id === block.goalId)?.title || 'Goal'}
                         </span>
                       )}
                       {state === 'skipped' && (
-                        <span className="text-[9px] font-mono text-[#5A6472]">Skipped</span>
+                        <span className="text-[11px] font-mono text-[#5A6472]">Skipped</span>
                       )}
                     </div>
                   </div>
+
+                  {editingTimeFor === block.id && (
+                    <div className="absolute left-3 right-3 bottom-2 z-10 flex items-center gap-2 flex-wrap">
+                      <input
+                        type="time"
+                        defaultValue={block.startTime}
+                        onClick={(e) => e.stopPropagation()}
+                        onBlur={(e) => {
+                          if (e.target.value && e.target.value !== block.startTime) {
+                            patchRoutineBlock(userId, block.id, { startTime: e.target.value });
+                            setBlocks((prev) =>
+                              prev.map((b) =>
+                                b.id === block.id ? { ...b, startTime: e.target.value } : b
+                              )
+                            );
+                          }
+                        }}
+                        className="bg-[#0B0D12] border border-[#262C38] rounded-lg px-2 py-1.5 text-[11px] text-[#F2F4F7] outline-none"
+                      />
+                      <span className="text-[#5A6472] text-[11px]">→</span>
+                      <input
+                        type="time"
+                        defaultValue={block.endTime}
+                        onClick={(e) => e.stopPropagation()}
+                        onBlur={(e) => {
+                          if (e.target.value && e.target.value !== block.endTime) {
+                            patchRoutineBlock(userId, block.id, { endTime: e.target.value });
+                            setBlocks((prev) =>
+                              prev.map((b) =>
+                                b.id === block.id ? { ...b, endTime: e.target.value } : b
+                              )
+                            );
+                          }
+                        }}
+                        className="bg-[#0B0D12] border border-[#262C38] rounded-lg px-2 py-1.5 text-[11px] text-[#F2F4F7] outline-none"
+                      />
+
+                      <select
+                        defaultValue={block.kind}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={(e) => {
+                          const kind = e.target.value as BlockKind;
+                          patchRoutineBlock(userId, block.id, { kind });
+                          setBlocks((prev) =>
+                            prev.map((b) => (b.id === block.id ? { ...b, kind } : b))
+                          );
+                        }}
+                        className="bg-[#0B0D12] border border-[#262C38] rounded-lg px-2 py-1.5 text-[11px] text-[#F2F4F7] outline-none"
+                      >
+                        {KINDS.map((k) => (
+                          <option key={k} value={k}>
+                            {BLOCK_META[k].label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {editingTimeFor === block.id && (
+                    <div
+                      className="absolute left-3 right-3 bottom-2 flex items-center gap-2 z-10"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <input
+                        type="time"
+                        defaultValue={block.startTime}
+                        onBlur={(e) =>
+                          e.target.value !== block.startTime &&
+                          updateBlockTime(block, { startTime: e.target.value })
+                        }
+                        className="flex-1 bg-[#0B0D12] border border-[#262C38] rounded-lg px-2 py-1.5 text-[11px] text-[#F2F4F7] outline-none"
+                      />
+                      <span className="text-[#5A6472] text-xs">→</span>
+                      <input
+                        type="time"
+                        defaultValue={block.endTime}
+                        onBlur={(e) =>
+                          e.target.value !== block.endTime &&
+                          updateBlockTime(block, { endTime: e.target.value })
+                        }
+                        className="flex-1 bg-[#0B0D12] border border-[#262C38] rounded-lg px-2 py-1.5 text-[11px] text-[#F2F4F7] outline-none"
+                      />
+                    </div>
+                  )}
 
                   {editingDaysFor === block.id && (
                     <div className="absolute left-3 right-3 bottom-2 flex items-center gap-1 z-10">
@@ -559,7 +711,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                       isToday ? 'border-[#8B5CF6]/45 bg-[#8B5CF6]/[0.07]' : 'border-[#2A313C] bg-[#0E1116]'
                     }`}
                   >
-                    <p className="text-[9px] font-mono font-bold text-[#98A2B3] uppercase text-center">
+                    <p className="text-[11px] font-mono font-bold text-[#98A2B3] uppercase text-center">
                       {d.toLocaleDateString(undefined, { weekday: 'short' })}
                     </p>
                     <p
@@ -572,7 +724,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
 
                     <div className="mt-2 space-y-1">
                       {dayBlocks.length === 0 ? (
-                        <p className="text-[9px] font-mono text-[#3A424F] text-center py-1">—</p>
+                        <p className="text-[11px] font-mono text-[#3A424F] text-center py-1">—</p>
                       ) : (
                         dayBlocks.slice(0, 5).map(({ block, state }) => (
                           <div
@@ -591,7 +743,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                             <p className="text-[8px] font-mono text-[#98A2B3] leading-tight truncate">
                               {block.startTime}
                             </p>
-                            <p className="text-[9px] font-bold text-[#F4F6F8] leading-tight truncate">
+                            <p className="text-[11px] font-bold text-[#F4F6F8] leading-tight truncate">
                               {block.title}
                             </p>
                           </div>
@@ -683,7 +835,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                     <p className="text-lg font-black font-mono text-[#F4F6F8] tabular-nums leading-none">
                       {s.value}
                     </p>
-                    <p className="text-[9px] font-mono text-[#5A6472] mt-1 truncate">{s.label}</p>
+                    <p className="text-[11px] font-mono text-[#5A6472] mt-1 truncate">{s.label}</p>
                   </div>
                 ))}
               </div>

@@ -11,6 +11,8 @@ import {
   Clock,
   StickyNote,
   Target,
+  Flag,
+  CalendarDays,
 } from 'lucide-react';
 import type { Recurrence, RecurrenceFreq, Subtask, Task, TaskReflection } from '../types';
 import { describeRecurrence, subtaskProgress } from '../lib/recurrence';
@@ -170,7 +172,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
                   key={f.label}
                   className="bg-[#171B22] border border-[#2A313C] rounded-xl p-2.5 min-w-0"
                 >
-                  <span className="text-[9px] font-mono font-bold text-[#5A6472] tracking-widest uppercase flex items-center gap-1">
+                  <span className="text-[11px] font-mono font-bold text-[#5A6472] tracking-widest uppercase flex items-center gap-1">
                     <Icon className="w-2.5 h-2.5" />
                     {f.label}
                   </span>
@@ -323,6 +325,57 @@ export const TaskDetailSheet: React.FC<Props> = ({
                 complete this.
               </p>
             )}
+          </div>
+
+          {/* Priority and date — the two fields most likely to need changing,
+              previously only reachable from the list row. */}
+          <div>
+            <span className="eb-label flex items-center gap-1.5">
+              <Flag className="w-3 h-3" />
+              Priority
+            </span>
+            <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+              {([
+                { id: 'low' as const, label: 'Low', color: '#8A93A5' },
+                { id: 'normal' as const, label: 'Normal', color: '#7C5CFF' },
+                { id: 'high' as const, label: 'High', color: '#FFB020' },
+                { id: 'critical' as const, label: 'Critical', color: '#FF6B57' },
+              ]).map(({ id, label, color }) => (
+                <button
+                  key={id}
+                  onClick={() => onPatch({ priority: id })}
+                  style={task.priority === id ? { borderColor: color, color } : undefined}
+                  className={`eb-press text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border ${
+                    task.priority === id ? 'bg-white/[0.06]' : 'text-[#5A6472] border-[#262C38]'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <span className="eb-label flex items-center gap-1.5">
+              <CalendarDays className="w-3 h-3" />
+              Due
+            </span>
+            <div className="flex items-center gap-2 mt-2 flex-wrap">
+              <input
+                type="date"
+                value={task.dueDate || ''}
+                onChange={(e) => onPatch({ dueDate: e.target.value || undefined })}
+                className="bg-[#0E1116] border border-[#262C38] rounded-lg px-2.5 py-2 text-xs text-[#F2F4F7] outline-none"
+              />
+              {task.dueDate && (
+                <button
+                  onClick={() => onPatch({ dueDate: undefined })}
+                  className="eb-press text-[10px] font-mono text-[#5A6472] hover:eb-danger"
+                >
+                  clear
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Goal link */}
