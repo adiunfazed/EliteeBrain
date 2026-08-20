@@ -1,0 +1,1004 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Manrope Variable", "Manrope", "Inter", system-ui, sans-serif;
+  --font-sans: "Inter", system-ui, -apple-system, "SF Pro Text", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-ground: var(--ground);
+  --color-surface: var(--surface);
+  --color-surface-sunk: var(--surface-sunk);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-rule: var(--rule);
+  --color-signal: var(--signal);
+  --color-signal-ink: var(--signal-ink);
+
+  --color-dom-memory: var(--dom-memory);
+  --color-dom-focus: var(--dom-focus);
+  --color-dom-reason: var(--dom-reason);
+  --color-dom-speed: var(--dom-speed);
+}
+
+:root {
+  --ground: #F4F6F8;
+  --surface: #FFFFFF;
+  --surface-sunk: #EBEFF5;
+  --ink: #0E1116;
+  --ink-muted: #647085;
+  --rule: #D1D8E2;
+
+  --signal: #7C5CFF;
+  --signal-ink: #5B3FD6;
+
+  --dom-memory: #E11D48;
+  --dom-focus: #8B5CF6;
+  --dom-reason: #10B981;
+  --dom-speed: #F59E0B;
+}
+
+.dark {
+  /* 60% — base. The canvas and the cards sitting on it. */
+  --ground: #0B0D12;
+  --surface: #14171F;
+  --surface-sunk: #1B1F29;
+
+  /* 30% — secondary. Text, rules, and structure. */
+  --ink: #F2F4F7;
+  --ink-muted: #8A93A5;
+  --rule: #262C38;
+
+  /* 10% — accent. Used sparingly: one primary action per view. */
+  --signal: #7C5CFF;
+  --signal-ink: #B9A6FF;
+
+  --dom-memory: #F43F5E;
+  --dom-focus: #8B5CF6;
+  --dom-reason: #34D399;
+  --dom-speed: #FBBF24;
+}
+
+.colorblind {
+  --dom-memory: #D55E00;
+  --dom-focus: #0072B2;
+  --dom-reason: #009E73;
+  --dom-speed: #E79F00;
+}
+
+@layer base {
+  *, ::after, ::before {
+    border-color: var(--rule);
+  }
+
+  body {
+    background-color: var(--ground);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .font-mono, code, kbd, samp, .tabular-nums {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.03em;
+  }
+}
+
+/* Paper noise texture overlay */
+.paper-tooth {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* Scrollbar styling - instrument style */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--surface-sunk);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--rule);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ink-muted);
+}
+
+/* Focus Ring */
+:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* ==================================================================
+   Interaction layer
+   Reusable effects so hovers, shines and glows stay consistent
+   instead of being re-invented per component. Every effect respects
+   prefers-reduced-motion.
+   ================================================================== */
+
+/* --- Shine sweep. Put on a relative, overflow-hidden element. --- */
+.eb-shine { position: relative; overflow: hidden; }
+.eb-shine::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-120%) skewX(-18deg);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.06) 45%,
+    rgba(255, 255, 255, 0.14) 50%,
+    rgba(255, 255, 255, 0.06) 55%,
+    transparent 100%
+  );
+  transition: transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+.eb-shine:hover::after,
+.eb-shine:focus-visible::after { transform: translateX(120%) skewX(-18deg); }
+
+/* --- Continuous marquee shine, for the single primary CTA only. --- */
+@keyframes eb-sweep {
+  0%   { transform: translateX(-120%) skewX(-18deg); }
+  60%  { transform: translateX(120%) skewX(-18deg); }
+  100% { transform: translateX(120%) skewX(-18deg); }
+}
+.eb-marquee { position: relative; overflow: hidden; }
+.eb-marquee::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.18) 50%,
+    transparent 100%
+  );
+  animation: eb-sweep 3.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* --- Lift + coloured glow on hover. --- */
+.eb-lift { transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.22s ease, border-color 0.22s ease; }
+.eb-lift:hover { transform: translateY(-2px); }
+.eb-lift:active { transform: translateY(0) scale(0.985); }
+
+.eb-glow-brand:hover  { box-shadow: 0 8px 26px -8px rgba(139, 92, 246, 0.55); }
+.eb-glow-emerald:hover { box-shadow: 0 8px 26px -8px rgba(16, 185, 129, 0.5); }
+.eb-glow-amber:hover   { box-shadow: 0 8px 26px -8px rgba(245, 158, 11, 0.5); }
+.eb-glow-rose:hover    { box-shadow: 0 8px 26px -8px rgba(244, 63, 94, 0.45); }
+.eb-glow-sky:hover     { box-shadow: 0 8px 26px -8px rgba(56, 189, 248, 0.45); }
+
+/* --- Pressable: for nav tabs and small controls. --- */
+.eb-press { transition: transform 0.14s ease, background-color 0.18s ease, color 0.18s ease; }
+.eb-press:active { transform: scale(0.94); }
+
+/* --- Soft breathing ring, for an active rank or live state. --- */
+@keyframes eb-pulse-ring {
+  0%, 100% { opacity: 0.35; transform: scale(0.97); }
+  50%      { opacity: 0.7;  transform: scale(1.03); }
+}
+.eb-pulse-ring { animation: eb-pulse-ring 3.2s ease-in-out infinite; }
+
+/* --- Focus visibility: keyboard users must always see where they are. --- */
+.eb-press:focus-visible,
+.eb-lift:focus-visible,
+.eb-shine:focus-visible {
+  outline: 2px solid rgba(129, 140, 248, 0.85);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eb-shine::after,
+  .eb-marquee::after { animation: none; transition: none; }
+  .eb-lift, .eb-press { transition: none; }
+  .eb-lift:hover, .eb-lift:active, .eb-press:active { transform: none; }
+  .eb-pulse-ring { animation: none; }
+}
+
+
+/* --- Primary action: solid brand fill with a lift and a matching glow. --- */
+.eb-btn-primary {
+  background: linear-gradient(180deg, #9F6BFF 0%, #8B5CF6 100%);
+  color: #fff;
+  border: 1px solid rgba(196, 181, 253, 0.35);
+  box-shadow: 0 6px 18px -6px rgba(139, 92, 246, 0.7), inset 0 1px 0 rgba(255,255,255,0.18);
+  transition: transform 0.16s cubic-bezier(0.22,1,0.36,1), box-shadow 0.2s ease, filter 0.2s ease;
+}
+.eb-btn-primary:hover { filter: brightness(1.08); box-shadow: 0 10px 26px -8px rgba(139,92,246,0.85), inset 0 1px 0 rgba(255,255,255,0.22); transform: translateY(-1px); }
+.eb-btn-primary:active { transform: translateY(0) scale(0.985); }
+.eb-btn-primary:disabled { filter: grayscale(0.4); opacity: 0.45; box-shadow: none; transform: none; }
+
+/* --- Secondary action: quieter, still clearly a control. --- */
+.eb-btn-ghost {
+  background: #171B22;
+  color: #F4F6F8;
+  border: 1px solid #2A313C;
+  transition: transform 0.16s cubic-bezier(0.22,1,0.36,1), border-color 0.2s ease, background-color 0.2s ease;
+}
+.eb-btn-ghost:hover { background: #20252E; border-color: #3A424F; transform: translateY(-1px); }
+.eb-btn-ghost:active { transform: translateY(0) scale(0.985); }
+
+/* --- Selected chip/tab: reads as ON, not merely tinted. --- */
+.eb-chip-active {
+  background: rgba(139, 92, 246, 0.16);
+  border-color: rgba(139, 92, 246, 0.5);
+  color: #C4B5FD;
+  box-shadow: 0 0 18px -6px rgba(139, 92, 246, 0.85), inset 0 0 0 1px rgba(139,92,246,0.12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eb-btn-primary, .eb-btn-ghost { transition: none; }
+  .eb-btn-primary:hover, .eb-btn-ghost:hover,
+  .eb-btn-primary:active, .eb-btn-ghost:active { transform: none; }
+}
+
+/* ==================================================================
+   Neo-brutalist surface system
+
+   Principles taken from the references and the brief:
+   - Hard edges and solid offset shadows instead of soft blur. A blurred
+     drop shadow reads as a default; a solid offset reads as a decision.
+   - Flat colour only. No gradients on content.
+   - The accent occupies roughly a tenth of any view — one primary action.
+   - Type does the heavy lifting: Inter for anything read, JetBrains Mono
+     reserved for numbers, times and labels.
+   ================================================================== */
+
+.eb-card {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 18px;
+}
+
+.eb-card-sunk {
+  background: var(--surface-sunk);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+}
+
+/* Solid offset shadow — the defining neo-brutalist detail. */
+.eb-raised {
+  box-shadow: 3px 3px 0 0 var(--rule);
+  transition: box-shadow 0.16s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.16s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.eb-raised:hover { box-shadow: 5px 5px 0 0 var(--signal); transform: translate(-2px, -2px); }
+.eb-raised:active { box-shadow: 1px 1px 0 0 var(--signal); transform: translate(1px, 1px); }
+
+.eb-card-tap {
+  transition: transform 0.16s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.16s ease, background-color 0.16s ease;
+}
+.eb-card-tap:hover { border-color: var(--signal); }
+.eb-card-tap:active { transform: scale(0.985); }
+
+/* --- Type scale --- */
+.eb-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+.eb-stat {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  /* Inter needs far less negative tracking than a display face. */
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  line-height: 1.05;
+}
+/* Nested prose inside a stat must not inherit numeral tracking. */
+.eb-stat span,
+.eb-heading span {
+  letter-spacing: normal;
+  font-variant-numeric: normal;
+}
+.eb-heading {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.011em;
+  line-height: 1.25;
+  color: var(--ink);
+}
+
+/* --- Buttons --- */
+.eb-btn-primary {
+  background: var(--signal);
+  color: #fff;
+  border: 1px solid var(--signal);
+  border-radius: 14px;
+  font-weight: 700;
+  box-shadow: 3px 3px 0 0 rgba(0, 0, 0, 0.45);
+  transition: transform 0.14s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.14s ease,
+    filter 0.14s ease;
+}
+.eb-btn-primary:hover { filter: brightness(1.08); transform: translate(-1px, -1px); box-shadow: 4px 4px 0 0 rgba(0,0,0,0.5); }
+.eb-btn-primary:active { transform: translate(2px, 2px); box-shadow: 0 0 0 0 rgba(0,0,0,0.5); }
+.eb-btn-primary:disabled { opacity: 0.4; box-shadow: none; transform: none; filter: grayscale(0.5); }
+
+.eb-btn-ghost {
+  background: var(--surface-sunk);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  font-weight: 700;
+  transition: transform 0.14s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.16s ease;
+}
+.eb-btn-ghost:hover { border-color: var(--signal); transform: translate(-1px, -1px); }
+.eb-btn-ghost:active { transform: translate(1px, 1px); }
+
+.eb-chip-active {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: #fff;
+  box-shadow: 2px 2px 0 0 rgba(0, 0, 0, 0.4);
+}
+
+/* --- Solid tiles. Flat so several can coexist without competing. --- */
+.eb-tile-violet { background: #7C5CFF; color: #fff; }
+.eb-tile-coral  { background: #FF6B57; color: #fff; }
+.eb-tile-amber  { background: #FFB020; color: #1A1205; }
+.eb-tile-teal   { background: #00C2A8; color: #04231F; }
+.eb-tile-slate  { background: #384153; color: #fff; }
+
+/* --- Week strip --- */
+.eb-day {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  transition: transform 0.16s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.16s ease;
+}
+.eb-day-on { background: var(--signal); color: #fff; box-shadow: 2px 2px 0 0 rgba(0,0,0,0.35); }
+.eb-day-today { box-shadow: inset 0 0 0 2px var(--signal); color: var(--signal-ink); }
+.eb-day-off { background: var(--surface-sunk); color: var(--ink-muted); }
+
+/* --- Progress --- */
+.eb-bar { height: 6px; border-radius: 999px; background: var(--surface-sunk); overflow: hidden; }
+.eb-bar-fill { height: 100%; border-radius: 999px; background: var(--signal); }
+
+/* --- Motion --- */
+@keyframes eb-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.eb-rise { animation: eb-rise 0.32s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+.eb-press { transition: transform 0.13s cubic-bezier(0.22, 1, 0.36, 1); }
+.eb-press:active { transform: scale(0.94); }
+
+.eb-shine { position: relative; overflow: hidden; }
+.eb-shine::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-120%) skewX(-18deg);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent);
+  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+.eb-shine:hover::after { transform: translateX(120%) skewX(-18deg); }
+
+.eb-press:focus-visible,
+.eb-raised:focus-visible,
+.eb-card-tap:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+
+.eb-stack > * + * { margin-top: 10px; }
+.eb-stack-lg > * + * { margin-top: 18px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .eb-raised, .eb-btn-primary, .eb-btn-ghost, .eb-card-tap, .eb-press, .eb-day { transition: none; }
+  .eb-raised:hover, .eb-raised:active,
+  .eb-btn-primary:hover, .eb-btn-primary:active,
+  .eb-btn-ghost:hover, .eb-btn-ghost:active,
+  .eb-card-tap:active, .eb-press:active { transform: none; }
+  .eb-rise { animation: none; }
+  .eb-shine::after { transition: none; }
+}
+
+
+/* --- Active nav indicator: a glowing rail rather than a flat underline. --- */
+.eb-nav-active { position: relative; }
+.eb-nav-active::after {
+  content: '';
+  position: absolute;
+  left: 22%;
+  right: 22%;
+  bottom: 2px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--signal);
+  box-shadow: 0 0 10px 1px var(--signal);
+}
+
+/* --- Section reveal on scroll, for module and card lists. --- */
+@keyframes eb-reveal {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.eb-reveal { animation: eb-reveal 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .eb-reveal { animation: none; }
+}
+
+
+/* --- Green action glow, for the payment path. Pulses gently so the primary
+       action is obvious without an animation that distracts. --- */
+@keyframes eb-glow-pulse {
+  0%, 100% { box-shadow: 0 0 22px -4px rgba(0, 201, 122, 0.55), 0 4px 0 0 rgba(0,0,0,0.35); }
+  50%      { box-shadow: 0 0 34px -2px rgba(0, 201, 122, 0.85), 0 4px 0 0 rgba(0,0,0,0.35); }
+}
+.eb-glow-green {
+  animation: eb-glow-pulse 2.6s ease-in-out infinite;
+  transition: transform 0.16s cubic-bezier(0.22, 1, 0.36, 1), filter 0.16s ease;
+}
+.eb-glow-green:hover { transform: translateY(-1px); }
+.eb-glow-green:active { transform: translateY(1px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .eb-glow-green { animation: none; box-shadow: 0 0 22px -4px rgba(0,201,122,0.6); }
+  .eb-glow-green:hover, .eb-glow-green:active { transform: none; }
+}
+
+
+/* ==================================================================
+   Ambient depth
+
+   The canvas was a single flat black, which made every card look like
+   it was floating on nothing. Two very low-opacity radial pools give
+   the page a subtle sense of light without becoming a gradient
+   background — they sit at 4-5% and never compete with content.
+   ================================================================== */
+
+.eb-ambient {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(900px 520px at 12% -8%, rgba(124, 92, 255, 0.10), transparent 60%),
+    radial-gradient(760px 480px at 92% 8%, rgba(0, 194, 168, 0.055), transparent 62%),
+    radial-gradient(680px 420px at 50% 108%, rgba(124, 92, 255, 0.06), transparent 60%);
+}
+
+/* Fine grid, barely visible — gives large empty areas some structure. */
+.eb-ambient::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse 90% 60% at 50% 0%, #000 40%, transparent 100%);
+}
+
+/* --- Tinted card. Carries a hint of a colour without becoming a block. --- */
+.eb-tint {
+  position: relative;
+  overflow: hidden;
+}
+.eb-tint::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.07;
+  background: currentColor;
+  pointer-events: none;
+}
+
+/* --- Left accent rail on list rows: reads as a category at a glance. --- */
+.eb-rail { position: relative; overflow: hidden; }
+.eb-rail::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: currentColor;
+  border-radius: 0 3px 3px 0;
+}
+
+/* --- Nav: the active item gets a soft pool behind it, not just a colour. --- */
+.eb-nav-item { position: relative; transition: color 0.18s ease; }
+.eb-nav-item::before {
+  content: '';
+  position: absolute;
+  inset: 4px 2px;
+  border-radius: 12px;
+  background: var(--signal);
+  opacity: 0;
+  transform: scale(0.82);
+  transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.eb-nav-item[data-active='true']::before { opacity: 0.16; transform: scale(1); }
+
+@media (prefers-reduced-motion: reduce) {
+  .eb-nav-item, .eb-nav-item::before { transition: none; }
+}
+
+
+/* ==================================================================
+   Section and tab treatments
+
+   These were flat rectangles with a border. Each now has an accent
+   pool behind it, a shine sweep, and a press state — so the interface
+   responds to touch rather than just changing colour.
+   ================================================================== */
+
+/* --- Section panel: card with an accent pool bleeding in from a corner. --- */
+.eb-panel {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 20px;
+}
+.eb-panel::before {
+  content: '';
+  position: absolute;
+  top: -60%;
+  right: -30%;
+  width: 70%;
+  height: 180%;
+  border-radius: 50%;
+  background: var(--signal);
+  opacity: 0.07;
+  filter: blur(48px);
+  pointer-events: none;
+}
+
+/* --- Tab row: a sunk track, so the group reads as one control. --- */
+.eb-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px;
+  background: var(--surface-sunk);
+  border: 1px solid var(--rule);
+  border-radius: 16px;
+}
+
+.eb-tab {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  font-weight: 700;
+  color: var(--ink-muted);
+  transition: color 0.18s ease, transform 0.14s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.eb-tab:hover { color: var(--ink); }
+.eb-tab:active { transform: scale(0.95); }
+.eb-tab[data-active='true'] {
+  color: #fff;
+  background: var(--signal);
+  box-shadow: 0 2px 0 0 rgba(0, 0, 0, 0.45), 0 0 18px -4px var(--signal);
+}
+
+/* --- Section header rule: a short accent bar under a heading. --- */
+.eb-underline { position: relative; padding-bottom: 10px; }
+.eb-underline::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 34px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--signal);
+  box-shadow: 0 0 10px 0 var(--signal);
+}
+
+/* --- Stat tile: subtle inner light from the top, per the lighting rule. --- */
+.eb-tile {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-sunk);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+  transition: border-color 0.18s ease, transform 0.16s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.eb-tile:hover { border-color: var(--signal); transform: translateY(-2px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .eb-tab, .eb-tile { transition: none; }
+  .eb-tab:active, .eb-tile:hover { transform: none; }
+}
+
+
+/* --- Numerals: tabular everywhere a value can change, so counters and
+       timers don't shift width as digits tick over. --- */
+.tabular-nums, .eb-stat, .eb-label { font-variant-numeric: tabular-nums; }
+
+/* Inter ships optional features that improve small-size legibility. */
+:root {
+  font-feature-settings: 'cv05' 1, 'ss03' 1;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+
+/* --- Safe areas. Phones with a home indicator otherwise clip the last row
+       of content behind the bar. --- */
+.eb-safe-bottom { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+.eb-safe-top { padding-top: env(safe-area-inset-top); }
+
+/* Scroll containers should not chain to the page behind them. */
+.eb-scroll { overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+
+
+/* ==================================================================
+   Semantic colour
+
+   Two palettes were in play — Tailwind's emerald/amber/rose and a set of
+   hex tokens — for the same three meanings. One vocabulary, so a colour
+   means the same thing on every screen:
+
+     done     teal    something finished
+     warn     amber   needs attention, not yet failed
+     danger   rose    overdue or destructive
+   ================================================================== */
+
+:root {
+  --done: #00C2A8;
+  --done-dim: rgba(0, 194, 168, 0.14);
+  --warn: #FFB020;
+  --warn-dim: rgba(255, 176, 32, 0.14);
+  --danger: #FF6B57;
+  --danger-dim: rgba(255, 107, 87, 0.14);
+}
+
+.eb-done { color: var(--done); }
+.eb-warn { color: var(--warn); }
+.eb-danger { color: var(--danger); }
+
+.eb-done-bg { background: var(--done-dim); border-color: rgba(0, 194, 168, 0.35); }
+.eb-warn-bg { background: var(--warn-dim); border-color: rgba(255, 176, 32, 0.35); }
+.eb-danger-bg { background: var(--danger-dim); border-color: rgba(255, 107, 87, 0.35); }
+
+
+/* ==================================================================
+   Premium pass
+
+   The interface had drifted to 9-11px type inside nested cards. Larger
+   text, more air, and fewer boxes — a card should mean "this is a
+   distinct thing", not "this is content".
+   ================================================================== */
+
+/* Readable minimum. Nothing informational sits below 11px. */
+.eb-label { font-size: 11px; letter-spacing: 0.08em; }
+
+.eb-heading { line-height: 1.2; }
+
+/* Section headings carry the hierarchy instead of borders. */
+.eb-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 28px;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+@media (min-width: 640px) { .eb-title { font-size: 34px; } }
+
+.eb-sub {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink-muted);
+}
+
+/* Cards: quieter borders, more room, no stacked shadows. */
+.eb-card { border-radius: 20px; padding: 20px; }
+.eb-card-sunk { border-radius: 16px; }
+
+/* A plain group — related content that does NOT need a box around it. */
+.eb-group > * + * { margin-top: 14px; }
+
+/* Breathing room between sections. */
+.eb-page > * + * { margin-top: 28px; }
+
+/* Softer offsets; the neo-brutalist shadow was heavy at this density. */
+.eb-raised { box-shadow: 2px 2px 0 0 var(--rule); }
+.eb-raised:hover { box-shadow: 3px 3px 0 0 var(--signal); transform: translate(-1px, -1px); }
+
+
+/* ==================================================================
+   Redesign layer
+
+   Two rules drive this:
+   1. Not everything is a card. Sections, rows and dividers carry most
+      content; a card is reserved for something that genuinely needs
+      lifting off the page.
+   2. Type is large and confident. The old scale topped out around 14px
+      for headings, which reads as a dashboard rather than a product.
+   ================================================================== */
+
+/* --- Type scale. One ladder, used everywhere. --- */
+.t-display { font-family: var(--font-display); font-weight: 800; font-size: 36px; line-height: 1.08; letter-spacing: -0.028em; }
+.t-title   { font-family: var(--font-display); font-weight: 800; font-size: 26px; line-height: 1.15; letter-spacing: -0.02em; }
+.t-section { font-family: var(--font-display); font-weight: 700; font-size: 19px; line-height: 1.25; letter-spacing: -0.014em; }
+.t-body    { font-size: 15px; line-height: 1.55; letter-spacing: -0.003em; }
+.t-sub     { font-size: 14px; line-height: 1.5; color: var(--ink-muted); }
+.t-meta    { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; color: var(--ink-muted); }
+
+@media (min-width: 640px) {
+  .t-display { font-size: 44px; }
+  .t-title   { font-size: 32px; }
+  .t-section { font-size: 21px; }
+  .t-body    { font-size: 16px; }
+}
+
+/* --- Sections instead of cards. A quiet label and generous space above. --- */
+/* Sections need a visible boundary, not just a gap — without one, groups
+   read as a single long list. */
+.sec { margin-top: 40px; padding-top: 40px; border-top: 1px solid var(--rule); }
+.sec:first-child { margin-top: 0; padding-top: 0; border-top: none; }
+.sec-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.sec-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+/* --- Rows: the default container. Divider, not a border-box. --- */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--rule);
+  transition: opacity 0.18s ease;
+}
+.row:last-child { border-bottom: none; }
+.row-tap { cursor: pointer; }
+.row-tap:active { opacity: 0.62; }
+
+/* --- The one card style that remains, for genuinely elevated content. --- */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 22px;
+  padding: 22px;
+}
+
+/* --- Primary action. Large, calm, unmistakable. --- */
+.btn-lg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 0 24px;
+  border-radius: 16px;
+  font-weight: 650;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+  background: var(--signal);
+  color: #fff;
+  transition: transform 0.16s cubic-bezier(0.22,1,0.36,1), filter 0.16s ease;
+}
+.btn-lg:hover { filter: brightness(1.07); }
+.btn-lg:active { transform: scale(0.978); }
+.btn-lg:disabled { opacity: 0.4; }
+
+.btn-quiet {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 0 18px;
+  border-radius: 14px;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--rule);
+  transition: border-color 0.16s ease, transform 0.16s cubic-bezier(0.22,1,0.36,1);
+}
+.btn-quiet:hover { border-color: var(--signal); }
+.btn-quiet:active { transform: scale(0.978); }
+
+/* --- Motion: one curve, one duration, used consistently. --- */
+@keyframes enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.enter { animation: enter 0.34s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.enter-1 { animation-delay: 0.04s; }
+.enter-2 { animation-delay: 0.08s; }
+.enter-3 { animation-delay: 0.12s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .enter { animation: none; }
+  .btn-lg, .btn-quiet, .row { transition: none; }
+}
+
+
+/* ==================================================================
+   Surfaces for grouped content
+
+   Text floating directly on the page background reads as unfinished.
+   Content that belongs together sits on a panel; standalone rows still
+   use dividers, so this doesn't become card-everything again.
+   ================================================================== */
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 18px;
+  padding: 18px;
+}
+.panel-tight { padding: 14px; }
+
+/* A list of rows inside a panel: dividers, no nested boxes. */
+.panel > .row:first-of-type { padding-top: 4px; }
+.panel > .row:last-of-type { padding-bottom: 4px; }
+
+/* Stat strip — values in a line on one surface. */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.stats > div {
+  background: var(--surface);
+  padding: 14px 10px;
+  text-align: center;
+  min-width: 0;
+}
+.stats .v {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 22px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.stats .k {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin-top: 6px;
+  display: block;
+}
+
+
+/* ==================================================================
+   Depth
+
+   Flat surfaces on a flat background read as unfinished. These give
+   panels a soft edge and a light source, in the Apple idiom: shadow
+   plus a hairline highlight along the top edge.
+   ================================================================== */
+
+.panel, .feature, .eb-card {
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.04) inset,
+    0 8px 24px -12px rgba(0, 0, 0, 0.7);
+}
+
+/* A surface that should read as raised and interactive. */
+.surface-lift {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 20px;
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.05) inset,
+    0 10px 30px -14px rgba(0, 0, 0, 0.8);
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease;
+}
+.surface-lift:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.07) inset,
+    0 16px 36px -14px rgba(0, 0, 0, 0.85);
+}
+.surface-lift:active { transform: translateY(0); }
+
+/* The primary action of a screen — accent tint plus a matching glow. */
+.surface-accent {
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--signal) 16%, var(--surface)),
+    var(--surface)
+  );
+  border: 1px solid color-mix(in oklab, var(--signal) 40%, var(--rule));
+  border-radius: 20px;
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.07) inset,
+    0 12px 32px -16px color-mix(in oklab, var(--signal) 70%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .surface-lift { transition: none; }
+  .surface-lift:hover, .surface-lift:active { transform: none; }
+}
+
+
+/* The last section should breathe rather than stopping short of the nav. */
+.eb-page > section:last-of-type { padding-bottom: 12px; }
+
+
+/* ==================================================================
+   Fluid sizing
+
+   Fixed pixel sizes overflow on a 320px phone and look undersized on a
+   tablet. clamp() ties the scale to viewport width with hard floors and
+   ceilings, so one rule covers every device without breakpoints.
+   ================================================================== */
+
+.t-display {
+  font-size: clamp(30px, 8.5vw, 44px);
+  font-weight: 800;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45);
+}
+.t-title   { font-size: clamp(21px, 5.5vw, 28px); }
+.t-section { font-size: clamp(17px, 4.2vw, 20px); }
+.t-body    { font-size: clamp(14.5px, 3.9vw, 16px); }
+
+/* Section rhythm scales with the screen too — 40px is tight on a tablet
+   and generous on a small phone. */
+.sec {
+  margin-top: clamp(28px, 7vw, 48px);
+  padding-top: clamp(28px, 7vw, 48px);
+}
+
+/* Horizontal padding follows suit so nothing touches the screen edge. */
+.eb-page { padding-inline: clamp(14px, 4.5vw, 28px); }
+
+/* Nav labels must not wrap or clip on a narrow phone. */
+.eb-nav-item span { font-size: clamp(9px, 2.6vw, 11px); }
