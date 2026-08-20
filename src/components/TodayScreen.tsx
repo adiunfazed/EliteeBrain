@@ -106,6 +106,20 @@ export const TodayScreen: React.FC<Props> = ({
   }, [habits, localHabits, today, day]);
 
   const sleptLastNight = sleepLogs.some((s) => s.date === today);
+
+  /** Tasks due today, plus anything overdue — the work that needs doing now. */
+  const todayTasks = useMemo(
+    () =>
+      tasks
+        .filter((t) => !t.completed && t.dueDate && t.dueDate <= today)
+        .sort((a, b) => String(a.dueDate).localeCompare(String(b.dueDate))),
+    [tasks, today]
+  );
+
+  const doneTasks = useMemo(
+    () => tasks.filter((t) => t.completed && (t.completedAt || '').startsWith(today)),
+    [tasks, today]
+  );
   // Evening, and everything scheduled has been resolved one way or another.
   const dayIsOver = nowMin >= 20 * 60 && review.total > 0;
 
@@ -176,17 +190,23 @@ export const TodayScreen: React.FC<Props> = ({
   return (
     <div className="max-w-2xl mx-auto">
       {/* ---------------- Header ---------------- */}
-      <header className="enter">
-        <p className="t-meta">
+      <header className="enter relative overflow-hidden rounded-3xl p-5 sm:p-6 surface-accent">
+        {/* Soft accent pool, clipped by the header. */}
+        <div
+          className="pointer-events-none absolute -top-24 -right-16 w-64 h-64 rounded-full opacity-25 blur-3xl"
+          style={{ background: 'var(--signal)' }}
+        />
+
+        <p className="t-meta relative">
           {now.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}
         </p>
-        <h1 className="t-display mt-2">
+        <h1 className="t-display mt-2 relative">
           {greeting}
           {firstName && <span className="text-[var(--signal-ink)]">, {firstName}</span>}
         </h1>
 
         {review.total > 0 && (
-          <div className="mt-4">
+          <div className="mt-4 relative">
             <p className="t-sub">
               <span className="text-[var(--ink)] font-semibold">
                 {review.done} of {review.total}
@@ -376,6 +396,52 @@ export const TodayScreen: React.FC<Props> = ({
               </div>
             );
           })}
+          </div>
+        </section>
+      )}
+
+      {/* ---------------- Tasks ---------------- */}
+      {(todayTasks.length > 0 || doneTasks.length > 0) && (
+        <section className="sec enter enter-2">
+          <div className="sec-head">
+            <span className="sec-label">To do today</span>
+            <button onClick={() => onGo('tasks')} className="t-meta hover:text-[var(--ink)]">
+              All tasks
+            </button>
+          </div>
+
+          <div className="surface-lift px-4">
+            {todayTasks.map((t) => {
+              const overdue = !!t.dueDate && t.dueDate < today;
+              return (
+                <div key={t.id} className="row">
+                  <button
+                    onClick={() => completeTask(t)}
+                    aria-label={`Complete ${t.title}`}
+                    className="shrink-0 w-6 h-6 rounded-full border border-[var(--rule)] hover:border-[var(--signal)] transition-colors"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="t-body truncate">{t.title}</p>
+                    {(overdue || t.estimatedMinutes) && (
+                      <p className="t-meta mt-0.5">
+                        {overdue && <span className="eb-warn">Overdue</span>}
+                        {overdue && t.estimatedMinutes ? ' · ' : ''}
+                        {t.estimatedMinutes ? `${t.estimatedMinutes} min` : ''}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+
+            {doneTasks.map((t) => (
+              <div key={t.id} className="row opacity-50">
+                <span className="shrink-0 w-6 h-6 rounded-full bg-[var(--done)] flex items-center justify-center">
+                  <Check className="w-3.5 h-3.5 text-[#04231F] stroke-[3]" />
+                </span>
+                <p className="t-body flex-1 min-w-0 truncate line-through">{t.title}</p>
+              </div>
+            ))}
           </div>
         </section>
       )}

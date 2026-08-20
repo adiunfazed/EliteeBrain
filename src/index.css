@@ -754,11 +754,11 @@
    ================================================================== */
 
 /* --- Type scale. One ladder, used everywhere. --- */
-.t-display { font-family: var(--font-display); font-weight: 700; font-size: 34px; line-height: 1.1;  letter-spacing: -0.022em; }
-.t-title   { font-family: var(--font-display); font-weight: 700; font-size: 26px; line-height: 1.15; letter-spacing: -0.018em; }
-.t-section { font-family: var(--font-display); font-weight: 700; font-size: 19px; line-height: 1.25; letter-spacing: -0.012em; }
+.t-display { font-family: var(--font-display); font-weight: 800; font-size: 36px; line-height: 1.08; letter-spacing: -0.028em; }
+.t-title   { font-family: var(--font-display); font-weight: 800; font-size: 26px; line-height: 1.15; letter-spacing: -0.02em; }
+.t-section { font-family: var(--font-display); font-weight: 700; font-size: 19px; line-height: 1.25; letter-spacing: -0.014em; }
 .t-body    { font-size: 15px; line-height: 1.55; letter-spacing: -0.003em; }
-.t-sub     { font-size: 13.5px; line-height: 1.5; color: var(--ink-muted); }
+.t-sub     { font-size: 14px; line-height: 1.5; color: var(--ink-muted); }
 .t-meta    { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; color: var(--ink-muted); }
 
 @media (min-width: 640px) {
@@ -971,3 +971,30 @@
 
 /* The last section should breathe rather than stopping short of the nav. */
 .eb-page > section:last-of-type { padding-bottom: 12px; }
+
+
+/* ==================================================================
+   Fluid sizing
+
+   Fixed pixel sizes overflow on a 320px phone and look undersized on a
+   tablet. clamp() ties the scale to viewport width with hard floors and
+   ceilings, so one rule covers every device without breakpoints.
+   ================================================================== */
+
+.t-display { font-size: clamp(28px, 8vw, 40px); }
+.t-title   { font-size: clamp(21px, 5.5vw, 28px); }
+.t-section { font-size: clamp(17px, 4.2vw, 20px); }
+.t-body    { font-size: clamp(14.5px, 3.9vw, 16px); }
+
+/* Section rhythm scales with the screen too — 40px is tight on a tablet
+   and generous on a small phone. */
+.sec {
+  margin-top: clamp(28px, 7vw, 48px);
+  padding-top: clamp(28px, 7vw, 48px);
+}
+
+/* Horizontal padding follows suit so nothing touches the screen edge. */
+.eb-page { padding-inline: clamp(14px, 4.5vw, 28px); }
+
+/* Nav labels must not wrap or clip on a narrow phone. */
+.eb-nav-item span { font-size: clamp(9px, 2.6vw, 11px); }

@@ -841,7 +841,10 @@ export const Dashboard: React.FC<Props> = ({
 
       {/* PERSISTENT BOTTOM NAVIGATION BAR (Fixed at bottom of screen, sleek & compact) */}
       <div className="fixed bottom-0 inset-x-0 z-40 bg-[#0D1117]/95 backdrop-blur-2xl border-t border-[#2A313C] px-1.5 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] shadow-2xl">
-        <div className="max-w-md mx-auto grid grid-cols-6 gap-0.5">
+        <div
+          className="max-w-md mx-auto grid gap-0.5"
+          style={{ gridTemplateColumns: `repeat(${navItems.length}, minmax(0, 1fr))` }}
+        >
           {navItems.map((item) => {
             const IconComp = item.icon;
             const isActive = activeSection === item.id;

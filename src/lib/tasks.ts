@@ -23,20 +23,26 @@ import type { Task, TaskPriority } from '../types';
 
 const LOCAL_KEY = 'elitebrain_tasks_v1';
 
-function readLocal(): Task[] {
+function keyFor(userId?: string | null): string {
+  // Per-account: a shared key meant signing into a second account on the same
+  // device clobbered the first account's cached tasks.
+  return userId ? `${LOCAL_KEY}:${userId}` : LOCAL_KEY;
+}
+
+function readLocal(userId?: string | null): Task[] {
   if (typeof window === 'undefined') return [];
   try {
-    const raw = localStorage.getItem(LOCAL_KEY);
+    const raw = localStorage.getItem(keyFor(userId));
     return raw ? (JSON.parse(raw) as Task[]) : [];
   } catch {
     return [];
   }
 }
 
-function writeLocal(tasks: Task[]) {
+function writeLocal(tasks: Task[], userId?: string | null) {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.setItem(LOCAL_KEY, JSON.stringify(tasks));
+    localStorage.setItem(keyFor(userId), JSON.stringify(tasks));
   } catch {
     /* quota or private mode — the in-memory list still works */
   }
@@ -107,30 +113,37 @@ export function subscribeTasks(
   onChange: (tasks: Task[]) => void
 ): () => void {
   if (!userId || !db) {
-    onChange(readLocal());
+    onChange(readLocal(userId));
     return () => {};
   }
 
   const ref = collection(db, 'users', userId, 'tasks');
-  const q = query(ref, orderBy('createdAt', 'desc'));
 
   return onSnapshot(
-    q,
+    ref,
     (snap) => {
-      const tasks = snap.docs.map((d) => d.data() as Task);
-      writeLocal(tasks);
+      // Sorting here rather than with orderBy: a Firestore orderBy excludes
+      // documents that lack the field entirely, so one task saved without
+      // createdAt would disappear from the list without any error.
+      const tasks = snap.docs
+        .map((d) => ({ ...(d.data() as Task), id: d.id }))
+        .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+
+      writeLocal(tasks, userId);
       onChange(tasks);
     },
     (err) => {
-      console.warn('Task subscription notice:', err?.message || err);
-      onChange(readLocal());
+      // Surface this properly: a permissions failure here looks identical to
+      // "you have no tasks", which is how a save can appear to be lost.
+      console.error('Task subscription failed:', err?.code || '', err?.message || err);
+      onChange(readLocal(userId));
     }
   );
 }
 
 export async function saveTask(userId: string | null, task: Task): Promise<void> {
-  const next = readLocal().filter((t) => t.id !== task.id);
-  writeLocal([task, ...next]);
+  const next = readLocal(userId).filter((t) => t.id !== task.id);
+  writeLocal([task, ...next], userId);
 
   if (!userId || !db) return;
   await setDoc(doc(db, 'users', userId, 'tasks', task.id), stripUndefined(task), { merge: true });
@@ -143,7 +156,7 @@ export async function patchTask(
 ): Promise<void> {
   const patch = { ...changes, updatedAt: new Date().toISOString() };
 
-  writeLocal(readLocal().map((t) => (t.id === taskId ? { ...t, ...patch } : t)));
+  writeLocal(readLocal(userId).map((t) => (t.id === taskId ? { ...t, ...patch } : t)), userId);
 
   if (!userId || !db) return;
 
@@ -157,7 +170,7 @@ export async function patchTask(
 }
 
 export async function removeTask(userId: string | null, taskId: string): Promise<void> {
-  writeLocal(readLocal().filter((t) => t.id !== taskId));
+  writeLocal(readLocal(userId).filter((t) => t.id !== taskId), userId);
 
   if (!userId || !db) return;
   await deleteDoc(doc(db, 'users', userId, 'tasks', taskId));
