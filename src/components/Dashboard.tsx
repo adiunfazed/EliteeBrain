@@ -21,6 +21,8 @@ import { ProGate } from './ProGate';
 import { LifeSection } from './LifeSection';
 import { TodayPane } from './TodayPane';
 import { MomentumChart } from './MomentumChart';
+import { AttributesRadar } from './AttributesRadar';
+import { ConsistencyCalendar } from './ConsistencyCalendar';
 import { TodayScreen } from './TodayScreen';
 import { DailyReset } from './DailyReset';
 import { StreakCard } from './StreakCard';
@@ -819,6 +821,8 @@ export const Dashboard: React.FC<Props> = ({
                           )}
                           {id === 'stats' && (
                             <div className="space-y-4">
+                              <AttributesRadar input={momentumInput} />
+                              <ConsistencyCalendar input={momentumInput} />
                               <MomentumChart input={momentumInput} />
                               <RealityVsPlan input={momentumInput} onGo={goToPane} />
                             </div>
