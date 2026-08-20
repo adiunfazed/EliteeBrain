@@ -86,16 +86,24 @@ export const TodayScreen: React.FC<Props> = ({
     () => blocksForDate(routineBlocks, localRoutine, today),
     [routineBlocks, localRoutine, today]
   );
-  const openHabits = useMemo(
-    () =>
-      habits.filter(
-        (h) =>
-          h.status === 'active' &&
-          isScheduledOn(h, today) &&
-          valueOn(localHabits, h.id, today) < Math.max(1, h.targetValue || 1)
-      ),
-    [habits, localHabits, today]
-  );
+  const openHabits = useMemo(() => {
+    // Anything already listed under "Your day" is not repeated here.
+    const shown = new Set(day.map((d) => d.block.title.trim().toLowerCase()));
+    const seen = new Set<string>();
+
+    return habits.filter((h) => {
+      if (h.status !== 'active') return false;
+      if (!isScheduledOn(h, today)) return false;
+      if (valueOn(localHabits, h.id, today) >= Math.max(1, h.targetValue || 1)) return false;
+
+      const key = h.title.trim().toLowerCase();
+      if (shown.has(key)) return false;
+      // Guard against duplicate habits created with the same name.
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [habits, localHabits, today, day]);
 
   const sleptLastNight = sleepLogs.some((s) => s.date === today);
   // Evening, and everything scheduled has been resolved one way or another.
@@ -178,13 +186,30 @@ export const TodayScreen: React.FC<Props> = ({
         </h1>
 
         {review.total > 0 && (
-          <p className="t-sub mt-3">
-            <span className="text-[var(--ink)] font-semibold">
-              {review.done} of {review.total}
-            </span>{' '}
-            done today
-            {review.total - review.done > 0 && ` · ${review.total - review.done} left`}
-          </p>
+          <div className="mt-4">
+            <p className="t-sub">
+              <span className="text-[var(--ink)] font-semibold">
+                {review.done} of {review.total}
+              </span>{' '}
+              done today
+              {review.total - review.done > 0 && ` · ${review.total - review.done} left`}
+            </p>
+
+            <div className="h-1.5 rounded-full bg-[var(--surface-sunk)] overflow-hidden mt-3">
+              <motion.div
+                className="h-full rounded-full"
+                style={{
+                  background:
+                    review.done >= review.total
+                      ? 'var(--done)'
+                      : 'linear-gradient(90deg, var(--signal), color-mix(in oklab, var(--signal) 60%, #fff))',
+                }}
+                initial={false}
+                animate={{ width: `${(review.done / Math.max(1, review.total)) * 100}%` }}
+                transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              />
+            </div>
+          </div>
         )}
       </header>
 
@@ -316,6 +341,7 @@ export const TodayScreen: React.FC<Props> = ({
             </button>
           </div>
 
+          <div className="surface-lift px-4">
           {day.map(({ block, state }) => {
             const live = minutesOf(block.startTime) <= nowMin && minutesOf(block.endTime) > nowMin;
             return (
@@ -350,6 +376,7 @@ export const TodayScreen: React.FC<Props> = ({
               </div>
             );
           })}
+          </div>
         </section>
       )}
 
@@ -360,6 +387,7 @@ export const TodayScreen: React.FC<Props> = ({
             <span className="sec-label">To repeat</span>
           </div>
 
+          <div className="surface-lift px-4">
           {openHabits.map((h) => (
             <div key={h.id} className="row">
               <button
@@ -370,12 +398,13 @@ export const TodayScreen: React.FC<Props> = ({
               <p className="t-body flex-1 min-w-0 truncate">{h.title}</p>
             </div>
           ))}
+          </div>
         </section>
       )}
 
       {/* ---------------- Sleep ---------------- */}
       <section className="sec enter enter-3">
-        <button onClick={() => onGo('routine')} className="row row-tap w-full text-left">
+        <button onClick={() => onGo('routine')} className="surface-lift row row-tap w-full text-left px-4">
           <Moon className="w-4 h-4 text-[#7C9CFF] shrink-0" />
           <span className="t-body flex-1">Sleep</span>
           <span className="t-meta">{sleptLastNight ? 'Logged' : 'Not logged'}</span>

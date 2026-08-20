@@ -771,7 +771,7 @@
 /* --- Sections instead of cards. A quiet label and generous space above. --- */
 /* Sections need a visible boundary, not just a gap — without one, groups
    read as a single long list. */
-.sec { margin-top: 32px; padding-top: 32px; border-top: 1px solid var(--rule); }
+.sec { margin-top: 40px; padding-top: 40px; border-top: 1px solid var(--rule); }
 .sec:first-child { margin-top: 0; padding-top: 0; border-top: none; }
 .sec-head {
   display: flex;
@@ -967,3 +967,7 @@
   .surface-lift { transition: none; }
   .surface-lift:hover, .surface-lift:active { transform: none; }
 }
+
+
+/* The last section should breathe rather than stopping short of the nav. */
+.eb-page > section:last-of-type { padding-bottom: 12px; }
