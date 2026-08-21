@@ -1002,3 +1002,21 @@
 
 /* Nav labels must not wrap or clip on a narrow phone. */
 .eb-nav-item span { font-size: clamp(9px, 2.6vw, 11px); }
+
+
+/* --- Depth for game surfaces. Contained within the element so a shadow can
+       never spill past the viewport edge on a phone. --- */
+.panel-tight, .panel {
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.045) inset,
+    0 6px 20px -14px rgba(0, 0, 0, 0.9);
+}
+
+/* The side to move — a soft ring rather than another border. */
+.panel-active {
+  border-color: color-mix(in oklab, var(--signal) 45%, var(--rule));
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.06) inset,
+    0 0 0 1px color-mix(in oklab, var(--signal) 22%, transparent),
+    0 8px 24px -16px color-mix(in oklab, var(--signal) 80%, transparent);
+}

@@ -19,6 +19,7 @@ import { ChevronDown, Flag,
   Minimize2,
 } from 'lucide-react';
 import { soundFx } from '../../utils/audio';
+import { applyResult, ratingTitle, MatchResult, PROVISIONAL_GAMES } from '../../lib/chessRating';
 
 /** Minimum time the bot appears to think before playing. */
 const MIN_THINK_MS = 2000;
@@ -224,7 +225,12 @@ export const ChessGame: React.FC<{
   const thinkStartedAtRef = useRef<number>(0);
   const botDelayTimerRef = useRef<any>(null);
 
-  const userElo = profile.chessElo || 1200;
+  const rawElo = profile.chessElo ?? null;
+  const chessGames = profile.chessGames || 0;
+  /** Displayed rating. Unrated until a first game establishes one. */
+  const userElo = rawElo ?? 0;
+  const isUnrated = rawElo === null;
+  const isProvisional = !isUnrated && chessGames < PROVISIONAL_GAMES;
 
   // Measure Container Width
   useEffect(() => {
@@ -338,30 +344,31 @@ export const ChessGame: React.FC<{
     (result: 'won' | 'lost' | 'drawn' | 'timeout_win' | 'timeout_loss') => {
       setGameStatus(result);
 
-      // Competitive Chess ELO Formula (K-Factor = 24)
-      const K = 24;
-      const expectedScore = 1 / (1 + Math.pow(10, (engineLevel - userElo) / 400));
-      let actualScore = 0;
+      const outcome: MatchResult =
+        result === 'won' || result === 'timeout_win'
+          ? 'win'
+          : result === 'drawn'
+            ? 'draw'
+            : 'loss';
 
-      if (result === 'won' || result === 'timeout_win') {
-        actualScore = 1;
-      } else if (result === 'drawn') {
-        actualScore = 0.5;
-      } else {
-        actualScore = 0;
-      }
+      // Provisional seeding, K-factor tiers and a rating floor all live in
+      // one tested module rather than being re-derived here.
+      const change = applyResult(
+        { rating: profile.chessElo ?? null, gamesPlayed: profile.chessGames || 0 },
+        engineLevel,
+        outcome
+      );
 
-      const delta = Math.round(K * (actualScore - expectedScore));
-      setEloDelta(delta);
+      setEloDelta(change.delta);
 
-      const newElo = Math.max(100, userElo + delta);
-      // Realistic competitive EXP: Win = +25 XP, Draw = +10 XP, Loss = +3 XP
-      const expEarned = actualScore === 1 ? 25 : actualScore === 0.5 ? 10 : 3;
+      const actualScore = outcome === 'win' ? 1 : outcome === 'draw' ? 0.5 : 0;
+      const expEarned = outcome === 'win' ? 25 : outcome === 'draw' ? 10 : 3;
 
       if (onProfileUpdate) {
         onProfileUpdate({
           ...profile,
-          chessElo: newElo,
+          chessElo: change.rating,
+          chessGames: change.gamesPlayed,
           gamesXp: (profile.gamesXp || 0) + expEarned,
         });
       }
@@ -848,7 +855,7 @@ export const ChessGame: React.FC<{
 
               {eloDelta !== null && (
                 <p className="text-sm font-mono text-[#98A2B3] mt-2">
-                  ELO {userElo}{' '}
+                  {isUnrated ? 'Unrated' : `ELO ${userElo}`}{' '}
                   <span className={eloDelta >= 0 ? 'eb-done' : 'eb-danger'}>
                     {eloDelta >= 0 ? `+${eloDelta}` : eloDelta}
                   </span>
@@ -919,7 +926,7 @@ export const ChessGame: React.FC<{
         {/* Player row */}
         <div className="w-full max-w-[640px] flex items-center justify-between gap-2">
           <span className="text-xs font-mono font-bold text-[#F4F6F8] truncate min-w-0">
-            You · {userElo}
+            You · {isUnrated ? 'Unrated' : userElo}
           </span>
           {clock('w')}
         </div>
@@ -959,7 +966,18 @@ export const ChessGame: React.FC<{
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <h2 className="t-title">Chess</h2>
-              <p className="t-sub mt-1">Your rating {userElo}</p>
+              <p className="t-sub mt-1">
+                {isUnrated ? (
+                  'Unrated — your first match sets your rating'
+                ) : (
+                  <>
+                    {userElo} · {ratingTitle(userElo)}
+                    {isProvisional && (
+                      <span className="eb-warn"> · provisional</span>
+                    )}
+                  </>
+                )}
+              </p>
             </div>
             <button
               onClick={() => setIsMuted(!isMuted)}
@@ -1026,16 +1044,8 @@ export const ChessGame: React.FC<{
 
       {/* Main Arena Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
-        {/* Board Column (8 cols) */}
+        {/* Board */}
         <div className="lg:col-span-2 space-y-3 min-w-0" ref={boardContainerRef}>
-          <button
-            onClick={() => setIsFullscreen(true)}
-            className="eb-press eb-shine lg:hidden w-full py-2.5 rounded-xl bg-[#8B5CF6]/12 border border-[#8B5CF6]/35 text-[#A78BFA] text-[11px] font-mono font-bold flex items-center justify-center gap-1.5 min-h-[42px]"
-          >
-            <Maximize2 className="w-3.5 h-3.5 shrink-0" />
-            Fullscreen board
-          </button>
-
           {/* Black / AI Opponent Card */}
           <div className="panel panel-tight flex items-center justify-between gap-3 min-w-0">
             <div className="flex items-center gap-3">

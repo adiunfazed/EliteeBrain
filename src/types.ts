@@ -91,6 +91,8 @@ export interface UserProfile {
   dailyLogs: Record<number, DailyLog>;
   gamesXp?: number;
   chessElo?: number;
+  /** Rated games played — drives the provisional K-factor. */
+  chessGames?: number;
   adminResetDone?: boolean;
   /** One-time flag: the inflated streak counter has been recomputed. */
   streakRepairedV2?: boolean;
