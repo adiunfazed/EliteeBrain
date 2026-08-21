@@ -364,12 +364,14 @@ export function loadProfile(): UserProfile {
     // profile cache that leaked between accounts. Recomputing from the daily
     // logs is the only trustworthy value, so every account is rebased once.
     if (!parsed.streakResetV3) {
-      const before = parsed.streakDays;
-      parsed.streakDays = countConsecutiveCompletedDays(parsed);
+      // Clean slate for every account, admin included. Both streaks reset:
+      // the module streak to zero, and the activity streak by recording today
+      // as the earliest date it may count from. No history is deleted — tasks,
+      // habits and logs all remain — only the streak restarts.
+      parsed.streakDays = 0;
+      parsed.streakResetAt = today;
       parsed.streakResetV3 = true;
-      if (before !== parsed.streakDays) {
-        console.info(`Streak rebased: was ${before}, now ${parsed.streakDays} (from daily logs).`);
-      }
+      console.info('Streak reset — counting fresh from', today);
       saveProfile(parsed);
     }
 

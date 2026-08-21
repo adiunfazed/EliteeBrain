@@ -25,7 +25,6 @@ import { AttributesRadar } from './AttributesRadar';
 import { ConsistencyCalendar } from './ConsistencyCalendar';
 import { TodayScreen } from './TodayScreen';
 import { DailyReset } from './DailyReset';
-import { StreakCard } from './StreakCard';
 import { LevelBar } from './LevelBar';
 import { careerXp } from '../lib/xp';
 import { computeStreak } from '../lib/streak';
@@ -255,7 +254,7 @@ export const Dashboard: React.FC<Props> = ({
   );
 
   const derivedStreak = useMemo(
-    () => computeStreak(momentumInput).current,
+    () => computeStreak(momentumInput, todayISO(), profile.streakResetAt).current,
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [allTasks, allHabits, allHabitLogs, allFocus, routineLogs, sleepLogs]
   );

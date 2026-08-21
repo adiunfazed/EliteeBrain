@@ -3,18 +3,15 @@ import { Chess, Square, PieceSymbol, Color } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile } from '../../types';
-import { Eyebrow } from '../ui/Eyebrow';
-import {
+import { ChevronDown, Flag,
   Trophy,
   RotateCcw,
   BrainCircuit,
   Swords,
   ShieldAlert,
   Clock,
-  Zap,
   Volume2,
   VolumeX,
-  Sparkles,
   TrendingUp,
   TrendingDown,
   User,
@@ -218,6 +215,7 @@ export const ChessGame: React.FC<{
   const boardContainerRef = useRef<HTMLDivElement>(null);
   const [boardWidth, setBoardWidth] = useState<number>(560);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
 
   const engineRef = useRef<any>(null);
   const onEngineMove = useRef<((moveUci: string) => void) | null>(null);
@@ -954,106 +952,82 @@ export const ChessGame: React.FC<{
 
   return (
     <div className="w-full max-w-5xl mx-auto space-y-6">
-      {/* Top Header & Rating Card */}
-      <div className="bg-[#12161F] border border-[#2A313C] rounded-3xl p-5 sm:p-6 shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <div className="flex items-center gap-3 mb-1">
-              <Eyebrow className="eb-danger border-rose-500/30 bg-rose-500/10">
-                CHESS.COM ARENA ENGINE
-              </Eyebrow>
-              <button
-                onClick={() => setIsMuted(!isMuted)}
-                className="p-1.5 bg-[#0E1116] border border-[#2A313C] rounded-lg text-[#98A2B3] hover:text-white transition-colors cursor-pointer"
-                title={isMuted ? 'Unmute Audio' : 'Mute Audio'}
-              >
-                {isMuted ? <VolumeX className="w-4 h-4 shrink-0 eb-danger" /> : <Volume2 className="w-4 h-4 shrink-0" />}
-              </button>
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-white">Cognitive Chess</h2>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Persistent User Chess ELO Badge */}
-            <div className="flex items-center gap-2.5 px-4 py-2 bg-gradient-to-r from-amber-500/20 to-amber-600/10 border border-amber-500/40 rounded-2xl shadow-lg">
-              <Trophy className="w-4 h-4 shrink-0 eb-warn" />
-              <div>
-                <div className="text-[10px] font-mono uppercase tracking-wider eb-warn font-bold">
-                  Your Rating
-                </div>
-                <div className="text-sm font-mono font-black text-white">{userElo} ELO</div>
-              </div>
-            </div>
-
-            {/* AI ELO Display */}
-            <div className="flex items-center gap-2 px-3.5 py-2 bg-[#0E1116] border border-[#2A313C] rounded-2xl">
-              <span className="text-xs text-[#98A2B3]">Bot ELO:</span>
-              <span className="text-xs font-mono font-black eb-danger">{engineLevel} ELO</span>
-            </div>
-
-            {/* Time Control Options */}
-            {gameStatus === 'idle' && (
-              <div className="flex items-center gap-1.5 bg-[#0E1116] p-1 border border-[#2A313C] rounded-2xl">
-                {TIMER_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.seconds}
-                    onClick={() => setSelectedTimeOption(opt.seconds)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer ${
-                      selectedTimeOption === opt.seconds
-                        ? 'bg-rose-500 text-slate-950 shadow-md'
-                        : 'text-[#98A2B3] hover:text-white'
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {gameStatus === 'idle' && (
-          <div className="mt-5 pt-4 border-t border-[#2A313C]/80 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex-1 min-w-0 w-full">
-              <div className="flex justify-between items-center mb-1.5 text-xs font-mono">
-                <span className="text-[#98A2B3]">Bot Difficulty Level</span>
-                <span className="eb-danger font-bold">
-                  {engineLevel <= 500
-                    ? 'Beginner Bot'
-                    : engineLevel <= 1200
-                    ? 'Intermediate Bot'
-                    : engineLevel <= 2000
-                    ? 'Advanced Master'
-                    : 'Grandmaster AI'}
-                </span>
-              </div>
-              <input
-                type="range"
-                min="100"
-                max="3000"
-                step="50"
-                value={engineLevel}
-                onChange={(e) => setEngineLevel(Number(e.target.value))}
-                className="w-full accent-rose-500 h-2 bg-[#171B22] rounded-lg appearance-none cursor-pointer"
-              />
+      {/* Setup — only shown before a match. Once the game starts, the board
+          is the interface and this is noise. */}
+      {gameStatus === 'idle' ? (
+        <div className="panel">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h2 className="t-title">Chess</h2>
+              <p className="t-sub mt-1">Your rating {userElo}</p>
             </div>
             <button
-              onClick={startGame}
-              className="w-full sm:w-auto px-8 py-3.5 bg-rose-500 hover:bg-rose-400 text-slate-950 font-display text-sm font-black uppercase tracking-wider rounded-2xl flex items-center justify-center gap-2.5 shadow-[0_0_25px_rgba(244,63,94,0.4)] transition-all transform hover:scale-105 active:scale-95 cursor-pointer"
+              onClick={() => setIsMuted(!isMuted)}
+              aria-label={isMuted ? 'Unmute' : 'Mute'}
+              className="shrink-0 w-10 h-10 rounded-xl border border-[var(--rule)] flex items-center justify-center text-[#8A93A5]"
             >
-              <Swords className="w-5 h-5 shrink-0" />
-              <span>Start Match</span>
+              {isMuted ? <VolumeX className="w-4 h-4 shrink-0" /> : <Volume2 className="w-4 h-4 shrink-0" />}
             </button>
           </div>
-        )}
-      </div>
+
+          <div className="mt-5">
+            <div className="flex items-center justify-between gap-2">
+              <span className="eb-label">Time</span>
+            </div>
+            <div className="grid grid-cols-4 gap-1.5 mt-2">
+              {TIMER_OPTIONS.map((opt) => (
+                <button
+                  key={opt.seconds}
+                  onClick={() => setSelectedTimeOption(opt.seconds)}
+                  className={`min-h-[44px] rounded-xl text-xs font-semibold border transition-colors ${
+                    selectedTimeOption === opt.seconds
+                      ? 'eb-chip-active'
+                      : 'text-[#8A93A5] border-[var(--rule)]'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-5">
+            <div className="flex items-center justify-between gap-2">
+              <span className="eb-label">Opponent</span>
+              <span className="text-xs font-semibold text-[var(--signal-ink)]">
+                {engineLevel <= 500
+                  ? 'Beginner'
+                  : engineLevel <= 1200
+                    ? 'Intermediate'
+                    : engineLevel <= 2000
+                      ? 'Advanced'
+                      : 'Expert'}{' '}
+                · {engineLevel}
+              </span>
+            </div>
+            <input
+              type="range"
+              min="100"
+              max="3000"
+              step="50"
+              value={engineLevel}
+              onChange={(e) => setEngineLevel(Number(e.target.value))}
+              className="w-full mt-3 h-2 rounded-lg appearance-none cursor-pointer bg-[var(--surface-sunk)]"
+              style={{ accentColor: 'var(--signal)' }}
+            />
+          </div>
+
+          <button onClick={startGame} className="btn-lg w-full mt-6">
+            <Swords className="w-4 h-4 shrink-0" />
+            Start match
+          </button>
+        </div>
+      ) : null}
 
       {/* Main Arena Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
         {/* Board Column (8 cols) */}
-        <div className="lg:col-span-8 space-y-3" ref={boardContainerRef}>
+        <div className="lg:col-span-2 space-y-3 min-w-0" ref={boardContainerRef}>
           <button
             onClick={() => setIsFullscreen(true)}
             className="eb-press eb-shine lg:hidden w-full py-2.5 rounded-xl bg-[#8B5CF6]/12 border border-[#8B5CF6]/35 text-[#A78BFA] text-[11px] font-mono font-bold flex items-center justify-center gap-1.5 min-h-[42px]"
@@ -1063,7 +1037,7 @@ export const ChessGame: React.FC<{
           </button>
 
           {/* Black / AI Opponent Card */}
-          <div className="bg-[#12161F] border border-[#2A313C] rounded-2xl px-4 py-3 flex items-center justify-between shadow-lg">
+          <div className="panel panel-tight flex items-center justify-between gap-3 min-w-0">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 shrink-0 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-center text-slate-200 shadow-inner">
                 <BrainCircuit className={`w-5 h-5 ${isEngineThinking ? 'eb-danger animate-pulse' : ''}`} />
@@ -1240,7 +1214,7 @@ export const ChessGame: React.FC<{
           </div>
 
           {/* White / You Player Card */}
-          <div className="bg-[#12161F] border border-[#2A313C] rounded-2xl px-4 py-3 flex items-center justify-between shadow-lg">
+          <div className="panel panel-tight flex items-center justify-between gap-3 min-w-0">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 shrink-0 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center eb-warn font-black shadow-inner">
                 <User className="w-5 h-5 shrink-0" />
@@ -1284,57 +1258,44 @@ export const ChessGame: React.FC<{
         </div>
 
         {/* Sidebar Log & Game Stats (4 cols) */}
-        <div className="lg:col-span-4 space-y-4">
-          {/* Match Info & Controls */}
-          <div className="bg-[#12161F] border border-[#2A313C] rounded-3xl p-5 shadow-xl">
-            <h3 className="text-sm font-display font-extrabold text-white mb-3 flex items-center gap-2">
-              <Zap className="w-4 h-4 shrink-0 eb-danger" />
-              <span>Match Status</span>
-            </h3>
-
-            <div className="space-y-3">
-              <div className="flex justify-between items-center text-xs font-mono p-3 bg-[#0E1116] rounded-2xl border border-[#2A313C]">
-                <span className="text-[#98A2B3]">Active Turn:</span>
-                <span className="font-bold text-white uppercase flex items-center gap-1.5">
-                  <div
-                    className={`w-2.5 h-2.5 rounded-full ${
-                      game.turn() === 'w' ? 'bg-white' : 'bg-slate-800 border border-slate-500'
-                    }`}
-                  />
-                  {game.turn() === 'w' ? 'White (You)' : 'Black (Bot)'}
-                </span>
-              </div>
-
-              {game.inCheck() && !game.isGameOver() && (
-                <div className="p-3 bg-rose-500/10 border border-rose-500/40 rounded-2xl text-xs font-mono font-bold eb-danger flex items-center gap-2 animate-pulse">
-                  <ShieldAlert className="w-4 h-4 shrink-0" />
-                  <span>KING IS IN CHECK!</span>
-                </div>
-              )}
-
-              {gameStatus === 'playing' && (
-                <button
-                  onClick={() => finishMatch('lost')}
-                  className="w-full py-3 border border-rose-500/40 hover:bg-rose-500/10 eb-danger font-mono text-xs font-bold uppercase rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
-                >
-                  <RotateCcw className="w-4 h-4 shrink-0" />
-                  <span>Resign Match</span>
-                </button>
-              )}
-            </div>
-          </div>
+        <div className="lg:col-span-1 space-y-3 min-w-0">
+          {/* One control, not a status panel. Whose turn it is and whether
+              the king is in check are already visible on the board. */}
+          {gameStatus === 'playing' && (
+            <button
+              onClick={() => {
+                if (!window.confirm('Resign this match? It counts as a loss.')) return;
+                finishMatch('lost');
+              }}
+              className="btn-quiet w-full eb-danger border-[color-mix(in_oklab,var(--danger)_40%,var(--rule))]"
+            >
+              <Flag className="w-4 h-4 shrink-0" />
+              Resign
+            </button>
+          )}
 
           {/* Live Move History Notation */}
-          <div className="bg-[#12161F] border border-[#2A313C] rounded-3xl p-5 shadow-xl">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-sm font-display font-extrabold text-white flex items-center gap-2">
-                <Sparkles className="w-4 h-4 shrink-0 eb-warn" />
-                <span>Move History</span>
+          <div className="panel">
+            <button
+              onClick={() => setShowHistory((v) => !v)}
+              className="w-full flex justify-between items-center gap-2"
+            >
+              <h3 className="t-section">
+                Moves
+                <span className="t-sub ml-2">{moveHistory.length}</span>
               </h3>
-              <span className="text-[10px] font-mono text-[#98A2B3]">{moveHistory.length} moves</span>
-            </div>
+              <ChevronDown
+                className={`w-4 h-4 shrink-0 text-[#8A93A5] transition-transform ${
+                  showHistory ? 'rotate-180' : ''
+                }`}
+              />
+            </button>
 
-            <div className="h-56 overflow-y-auto pr-1 space-y-1 font-mono text-xs custom-scrollbar">
+            <div
+              className={`${
+                showHistory ? 'h-56' : 'h-0'
+              } overflow-y-auto pr-1 space-y-1 font-mono text-xs custom-scrollbar transition-[height] duration-200`}
+            >
               {moveHistory.length === 0 ? (
                 <div className="text-center py-12 text-[#6C757D] text-xs">
                   No moves made yet

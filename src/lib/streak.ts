@@ -95,13 +95,26 @@ function daysBetween(from: string, to: string): number {
   return Math.max(0, Math.round((b - a) / 86400000));
 }
 
-export function computeStreak(input: MomentumInput, today: string = todayISO()): StreakInfo {
+export function computeStreak(
+  input: MomentumInput,
+  today: string = todayISO(),
+  /**
+   * Ignore all activity before this date.
+   *
+   * Streak figures accumulated under several bugs — an incrementing counter,
+   * a rollover that never closed days, and a profile cache that leaked between
+   * accounts. Rather than carry those forward, every account starts counting
+   * from a known-good date. History is untouched; only the streak restarts.
+   */
+  resetFrom?: string
+): StreakInfo {
   const activeToday = wasActiveOn(input, today);
 
   // Scan only as far back as this user actually has records. No fixed ceiling,
   // so a streak can run indefinitely; a user with two days of history costs
   // two iterations rather than four hundred.
-  const firstRecord = earliestRecord(input, today);
+  let firstRecord = earliestRecord(input, today);
+  if (resetFrom && resetFrom > firstRecord) firstRecord = resetFrom;
   const span = daysBetween(firstRecord, today) + 1;
 
   // One protection for every 7 active days recorded, capped at 3 so a long
@@ -128,9 +141,8 @@ export function computeStreak(input: MomentumInput, today: string = todayISO()):
     }
     if (i === 0) continue;
 
-    // Days before the user's first record are not missed days — there was
-    // nothing to miss. Spending a protection there silently drained the
-    // balance the moment it was earned.
+    // Days before the user's first record — or before the streak reset — are
+    // not missed days; there was nothing to miss.
     if (iso < firstRecord) break;
 
     // A missed day: spend a protection if one is available, otherwise stop.

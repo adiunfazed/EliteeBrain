@@ -94,8 +94,10 @@ export interface UserProfile {
   adminResetDone?: boolean;
   /** One-time flag: the inflated streak counter has been recomputed. */
   streakRepairedV2?: boolean;
-  /** One-time flag: streak rebased from daily logs after the counter bugs. */
+  /** One-time flag: streaks reset to a clean slate. */
   streakResetV3?: boolean;
+  /** Activity before this date does not count toward the streak. */
+  streakResetAt?: string;
   /** Goal chosen during onboarding — see lib/goals.ts. */
   focusGoal?: string;
   dailyMinutes?: number;

@@ -6,14 +6,16 @@ import { WEEKDAY_INITIALS, computeStreak } from '../lib/streak';
 
 interface Props {
   input: MomentumInput;
+  /** Activity before this date does not count. */
+  resetFrom?: string;
 }
 
 /**
  * Daily streak, derived from recorded activity rather than a stored counter —
  * so it is identical on every device the moment the underlying data syncs.
  */
-export const StreakCard: React.FC<Props> = ({ input }) => {
-  const streak = useMemo(() => computeStreak(input), [input]);
+export const StreakCard: React.FC<Props> = ({ input, resetFrom }) => {
+  const streak = useMemo(() => computeStreak(input, undefined, resetFrom), [input, resetFrom]);
 
   return (
     <div className="eb-panel p-4 sm:p-5">
