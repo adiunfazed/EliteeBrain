@@ -1020,3 +1020,35 @@
     0 0 0 1px color-mix(in oklab, var(--signal) 22%, transparent),
     0 8px 24px -16px color-mix(in oklab, var(--signal) 80%, transparent);
 }
+
+
+/* ==================================================================
+   Small-text legibility
+
+   JetBrains Mono at regular weight reads thin below about 13px, which is
+   where most labels and metadata sit. Monospace still earns its place on
+   figures that must align — timers, scores, clock ranges — so rather than
+   replacing it, small monospace text gets weight and a touch more spacing.
+   ================================================================== */
+
+.font-mono,
+.t-meta,
+.eb-label,
+.sec-label {
+  font-weight: 600;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Uppercase labels need looser tracking to stay readable when bolder. */
+.eb-label,
+.sec-label,
+.t-eyebrow {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+/* Nothing below 11px — the old 8-10px labels were unreadable on a phone. */
+.text-\[8px\], .text-\[9px\], .text-\[10px\] { font-size: 11px !important; }
+
+/* Body-adjacent monospace should not go below this either. */
+.font-mono.text-xs { font-size: 12.5px; }

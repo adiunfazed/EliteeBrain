@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { AnimatePresence } from 'motion/react';
 import { UserProfile, ModuleId, SessionResult } from './types';
 import { loadProfile, saveProfile, processModuleResult, MODULE_METADATA, createInitialProfile, resetAdminProfile, countConsecutiveCompletedDays, setActiveUser } from './utils/storage';
 import { soundFx } from './utils/audio';
@@ -13,13 +13,11 @@ import { NotificationSettings } from './components/NotificationSettings';
 import { Dashboard } from './components/Dashboard';
 import { SummaryModal } from './components/SummaryModal';
 import { SettingsModal } from './components/SettingsModal';
-import { AuthModal } from './components/AuthModal';
 import { SignOutConfirmModal } from './components/SignOutConfirmModal';
 import { AICoachModal } from './components/AICoachModal';
 import { ProSubscriptionModal } from './components/ProSubscriptionModal';
 import { AdminPortalModal } from './components/AdminPortalModal';
 import { MethodsModal } from './components/MethodsModal';
-import { OnboardingFlow } from './components/OnboardingFlow';
 import { SplashScreen } from './components/SplashScreen';
 import { AchievementUnlockedModal } from './components/AchievementUnlockedModal';
 import { AchievementsGalleryModal } from './components/AchievementsGalleryModal';
@@ -36,9 +34,7 @@ import { resolveEntitlement, startTrialFields } from './lib/entitlement';
 import { goalById } from './lib/goals';
 import { ScrollProgress } from './components/ScrollProgress';
 import { XpProvider } from './components/XpToast';
-import { FirstRunFlow } from './components/FirstRunFlow';
-import { subscribeGoals } from './lib/goalStore';
-import { subscribeTasks } from './lib/tasks';
+import { WelcomeScreen } from './components/WelcomeScreen';
 
 export default function App() {
   const [profile, setProfile] = useState<UserProfile>(() => loadProfile());
@@ -72,9 +68,9 @@ export default function App() {
   // Shown once per account, and only when there is genuinely nothing to show.
   const [showFirstRun, setShowFirstRun] = useState(false);
 
-  // Decide once per sign-in. The flow only appears for an account with no
-  // goals and no tasks — an existing user must never be walked through setup
-  // they already completed.
+  // Show the welcome screen once per account, and only when we don't yet
+  // have a name for them. No extra subscriptions — the previous version
+  // opened goal and task listeners purely to make this decision.
   useEffect(() => {
     if (!currentUser) return;
 
@@ -85,28 +81,7 @@ export default function App() {
       return;
     }
 
-    let cancelled = false;
-    const unsubGoals = subscribeGoals(currentUser.uid, (goals) => {
-      const unsubTasks = subscribeTasks(currentUser.uid, (tasks) => {
-        if (cancelled) return;
-        if (goals.length === 0 && tasks.length === 0) {
-          setShowFirstRun(true);
-        } else {
-          // Already has data — never show setup again.
-          try {
-            localStorage.setItem(key, 'done');
-          } catch {
-            /* ignore */
-          }
-        }
-        unsubTasks();
-      });
-      unsubGoals();
-    });
-
-    return () => {
-      cancelled = true;
-    };
+    setShowFirstRun(true);
   }, [currentUser]);
   const [isAdminPortalOpen, setIsAdminPortalOpen] = useState(false);
   const [isMethodsOpen, setIsMethodsOpen] = useState(false);
@@ -379,16 +354,6 @@ export default function App() {
         {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
       </AnimatePresence>
       <div className="paper-tooth" />
-      {/* 90s Baseline Calibration Onboarding Flow */}
-      {isOnboardingOpen && (
-        <OnboardingFlow
-          onCompleteOnboarding={handleCompleteOnboarding}
-          onSkipOnboarding={() => {
-            localStorage.setItem('elitebrain_onboarded', 'true');
-            setIsOnboardingOpen(false);
-          }}
-        />
-      )}
 
       {/* Primary Header Bar */}
       <Header
@@ -549,13 +514,19 @@ export default function App() {
 
       {/* Pro Subscription Modal */}
       {showFirstRun && currentUser && (
-        <FirstRunFlow
-          userId={currentUser.uid}
-          onDone={() => {
+        <WelcomeScreen
+          suggested={profile.displayName || currentUser.displayName || undefined}
+          onDone={(name) => {
+            const updated = { ...profile, displayName: name };
+            setProfile(updated);
+            saveProfile(updated);
+            if (currentUser) syncProfileToCloud(updated, currentUser).catch(() => {});
+
             try {
               localStorage.setItem(`elitebrain_firstrun_v1:${currentUser.uid}`, 'done');
+              localStorage.setItem('elitebrain_onboarded', 'true');
             } catch {
-              /* private mode — the flow simply may reappear */
+              /* private mode — the screen may reappear, which is harmless */
             }
             setShowFirstRun(false);
           }}

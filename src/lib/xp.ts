@@ -167,10 +167,92 @@ export function lifetimeXp(input: XpInput, today: string = todayISO()): number {
     ? Math.min(400, Math.max(0, Math.round((b - a) / 86400000)) + 1)
     : 1;
 
-  let total = 0;
-  for (let i = 0; i < span; i++) {
-    total += xpForDate(input, shift(today, -i)).total;
+  // Index every record by date ONCE, then walk the days. The previous version
+  // called xpForDate per day, and each of those re-scanned the full task,
+  // habit, focus and routine lists — roughly a million operations for a user
+  // with a year of history, which blocked the main thread on every change.
+  const tasksByDate = new Map<string, Task[]>();
+  const dueByDate = new Map<string, number>();
+  for (const t of input.tasks) {
+    if (t.completed && t.completedAt) {
+      const d = t.completedAt.slice(0, 10);
+      if (!tasksByDate.has(d)) tasksByDate.set(d, []);
+      tasksByDate.get(d)!.push(t);
+    }
+    if (t.dueDate) dueByDate.set(t.dueDate, (dueByDate.get(t.dueDate) || 0) + 1);
   }
+
+  const habitByDate = new Map<string, Map<string, number>>();
+  for (const l of input.habitLogs) {
+    if (!habitByDate.has(l.date)) habitByDate.set(l.date, new Map());
+    habitByDate.get(l.date)!.set(l.habitId, l.value || 0);
+  }
+
+  const routineByDate = new Map<string, Map<string, string>>();
+  for (const l of input.routineLogs) {
+    if (!routineByDate.has(l.date)) routineByDate.set(l.date, new Map());
+    routineByDate.get(l.date)!.set(l.blockId, l.state);
+  }
+
+  const focusByDate = new Map<string, number>();
+  for (const s of input.focusSessions) {
+    const d = (s.startedAt || '').slice(0, 10);
+    if (!d) continue;
+    focusByDate.set(d, (focusByDate.get(d) || 0) + (s.focusedSeconds || 0) / 60);
+  }
+
+  const sleepDates = new Set(input.sleepLogs.map((l) => l.date));
+  const activeHabits = input.habits.filter((h) => h.status === 'active');
+
+  let total = 0;
+
+  for (let i = 0; i < span; i++) {
+    const iso = shift(today, -i);
+
+    let scheduled = 0;
+    let completed = 0;
+
+    const doneTasks = (tasksByDate.get(iso) || []).length;
+    const dueTasks = dueByDate.get(iso) || 0;
+    scheduled += dueTasks;
+    completed += Math.min(doneTasks, dueTasks);
+    const tasks = Math.min(doneTasks * XP.taskCompleted, XP.taskDailyCap);
+
+    const logs = habitByDate.get(iso);
+    let metHabits = 0;
+    let dueHabits = 0;
+    for (const h of activeHabits) {
+      if (!isScheduledOn(h, iso)) continue;
+      dueHabits++;
+      if ((logs?.get(h.id) || 0) >= Math.max(1, h.targetValue || 1)) metHabits++;
+    }
+    scheduled += dueHabits;
+    completed += metHabits;
+    const habits = Math.min(metHabits * XP.habitMet, XP.habitDailyCap);
+
+    const states = routineByDate.get(iso);
+    let doneBlocks = 0;
+    let dayBlocks = 0;
+    for (const b of input.routineBlocks) {
+      if (!b.active) continue;
+      const weekday = new Date(`${iso}T00:00:00`).getDay();
+      if (b.weekdays && b.weekdays.length > 0 && !b.weekdays.includes(weekday)) continue;
+      dayBlocks++;
+      if (states?.get(b.id) === 'done') doneBlocks++;
+    }
+    scheduled += dayBlocks;
+    completed += doneBlocks;
+    const routine = Math.min(doneBlocks * XP.routineBlockDone, XP.routineDailyCap);
+
+    const focusMinutes = Math.round(focusByDate.get(iso) || 0);
+    const focus = Math.min(Math.floor(focusMinutes / 25) * XP.focusPerBlock, XP.focusDailyCap);
+
+    const sleep = sleepDates.has(iso) ? XP.sleepLogged : 0;
+    const bonus = scheduled >= 3 && completed >= scheduled ? XP.perfectDayBonus : 0;
+
+    total += tasks + habits + routine + focus + sleep + bonus;
+  }
+
   return total;
 }
 
