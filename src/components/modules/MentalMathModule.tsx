@@ -33,6 +33,7 @@ export const MentalMathModule: React.FC<Props> = ({ currentLevel, onFinishSessio
   const [timeLeft, setTimeLeft] = useState(perQuestion);
   const [phase, setPhase] = useState<'playing' | 'done'>('playing');
   const [times, setTimes] = useState<number[]>([]);
+  const [results, setResults] = useState<boolean[]>([]);
 
   // Guards against a late timer firing after the answer was given.
   const lockedRef = useRef(false);
@@ -44,6 +45,7 @@ export const MentalMathModule: React.FC<Props> = ({ currentLevel, onFinishSessio
     (wasCorrect: boolean, elapsed: number) => {
       if (wasCorrect) setCorrect((c) => c + 1);
       setTimes((t) => [...t, elapsed]);
+      setResults((r) => [...r, wasCorrect]);
 
       // Brief pause so the result is visible before moving on.
       window.setTimeout(() => {
@@ -127,13 +129,33 @@ export const MentalMathModule: React.FC<Props> = ({ currentLevel, onFinishSessio
 
   if (phase === 'done') {
     return (
-      <div className="text-center py-10">
-        <Calculator className="w-10 h-10 shrink-0 mx-auto text-[var(--signal-ink)]" />
+      <div className="fixed inset-0 z-50 bg-[var(--ground)] flex flex-col items-center justify-center p-6 text-center">
+        <Calculator className="w-10 h-10 shrink-0 text-[var(--signal-ink)]" />
         <h2 className="t-title mt-4">Round complete</h2>
-        <p className="t-sub mt-2">
-          {correct} of {QUESTIONS} correct · {stats.avg.toFixed(1)}s average
+
+        <p
+          className="font-display font-extrabold tabular-nums mt-6"
+          style={{ fontSize: 'clamp(44px, 14vw, 64px)', lineHeight: 1 }}
+        >
+          {correct}
+          <span className="text-[#8A93A5]">/{QUESTIONS}</span>
         </p>
-        <button onClick={onClose} className="btn-lg mt-8">
+
+        <div className="flex items-center gap-1.5 mt-5">
+          {results.map((ok, i) => (
+            <span
+              key={i}
+              className="w-2.5 h-2.5 rounded-full"
+              style={{ background: ok ? 'var(--done)' : 'var(--danger)' }}
+            />
+          ))}
+        </div>
+
+        <p className="t-sub mt-5">
+          {stats.avg.toFixed(1)}s average · {perQuestion}s limit
+        </p>
+
+        <button onClick={onClose} className="btn-lg mt-8 w-full max-w-xs">
           Done
         </button>
       </div>
@@ -143,7 +165,20 @@ export const MentalMathModule: React.FC<Props> = ({ currentLevel, onFinishSessio
   const timeFraction = Math.max(0, timeLeft / perQuestion);
 
   return (
-    <div className="max-w-lg mx-auto">
+    <div className="fixed inset-0 z-50 bg-[var(--ground)] flex flex-col overflow-y-auto">
+      {/* Exit — leaving mid-round should always be possible. */}
+      <div className="flex items-center justify-between gap-3 p-4 shrink-0">
+        <span className="t-meta">Mental Math</span>
+        <button
+          onClick={onClose}
+          aria-label="Quit"
+          className="w-10 h-10 rounded-xl border border-[var(--rule)] flex items-center justify-center text-[#8A93A5]"
+        >
+          <X className="w-4 h-4 shrink-0" />
+        </button>
+      </div>
+
+      <div className="flex-1 w-full max-w-lg mx-auto px-5 pb-8 flex flex-col justify-center">
       {/* Progress and clock */}
       <div className="flex items-center justify-between gap-3">
         <span className="t-meta">
@@ -175,9 +210,14 @@ export const MentalMathModule: React.FC<Props> = ({ currentLevel, onFinishSessio
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.18 }}
-          className="panel text-center py-10 mt-5"
+          className="text-center py-8 mt-6"
         >
-          <p className="t-display tabular-nums">{question.prompt}</p>
+          <p
+            className="font-display font-extrabold tabular-nums leading-none text-[var(--ink)]"
+            style={{ fontSize: 'clamp(44px, 14vw, 72px)', letterSpacing: '-0.03em' }}
+          >
+            {question.prompt}
+          </p>
         </motion.div>
       </AnimatePresence>
 
@@ -193,7 +233,7 @@ export const MentalMathModule: React.FC<Props> = ({ currentLevel, onFinishSessio
               key={opt}
               onClick={() => choose(opt)}
               disabled={revealed}
-              className={`min-h-[64px] rounded-2xl border text-xl font-bold tabular-nums transition-colors ${
+              className={`min-h-[76px] rounded-2xl border text-2xl font-bold tabular-nums transition-all active:scale-[0.97] ${
                 revealed && isAnswer
                   ? 'border-[var(--done)] bg-[color-mix(in_oklab,var(--done)_16%,transparent)] eb-done'
                   : revealed && isChosen
@@ -211,9 +251,25 @@ export const MentalMathModule: React.FC<Props> = ({ currentLevel, onFinishSessio
         })}
       </div>
 
-      <p className="t-sub text-center mt-5">
-        {correct} correct so far · {operationsForLevel(currentLevel).join('  ')}
-      </p>
+      <div className="flex items-center justify-center gap-1.5 mt-6">
+        {questions.map((_, i) => (
+          <span
+            key={i}
+            className="h-1.5 flex-1 max-w-[26px] rounded-full"
+            style={{
+              background:
+                i < index
+                  ? results[i]
+                    ? 'var(--done)'
+                    : 'var(--danger)'
+                  : i === index
+                    ? 'var(--signal)'
+                    : 'var(--surface-sunk)',
+            }}
+          />
+        ))}
+      </div>
+      </div>
     </div>
   );
 };

@@ -19,17 +19,19 @@ export interface ArithmeticQuestion {
 
 /** Seconds allowed per question at a given level. Faster as skill grows. */
 export function secondsForLevel(level: number): number {
-  if (level <= 2) return 12;
-  if (level <= 5) return 10;
-  if (level <= 8) return 8;
-  return 6;
+  if (level <= 2) return 8;
+  if (level <= 4) return 7;
+  if (level <= 7) return 6;
+  return 5;
 }
 
 /** Which operations are in play at a given level. */
 export function operationsForLevel(level: number): Operation[] {
-  if (level <= 1) return ['+'];
-  if (level <= 2) return ['+', '-'];
-  if (level <= 4) return ['+', '-', '×'];
+  // Addition and subtraction from the start — a drill that only ever asks
+  // "5 + 3" looks like it failed to load. Difficulty comes from bigger
+  // numbers and less time, not from withholding operations.
+  if (level <= 1) return ['+', '-'];
+  if (level <= 3) return ['+', '-', '×'];
   return ['+', '-', '×', '÷'];
 }
 
@@ -126,8 +128,8 @@ function buildOptions(answer: number, operation: Operation): number[] {
   return Array.from(options).sort(() => Math.random() - 0.5);
 }
 
-export function generateQuestion(level: number): ArithmeticQuestion {
-  const operation = pick(operationsForLevel(level));
+/** A question using a specific operation. */
+export function generateQuestionFor(operation: Operation, level: number): ArithmeticQuestion {
   const [a, b] = operandsFor(operation, level);
   const answer = compute(a, b, operation);
 
@@ -139,16 +141,27 @@ export function generateQuestion(level: number): ArithmeticQuestion {
   };
 }
 
+export function generateQuestion(level: number): ArithmeticQuestion {
+  return generateQuestionFor(pick(operationsForLevel(level)), level);
+}
+
 /** A full round. Consecutive duplicates are avoided so it doesn't feel lazy. */
 export function generateRound(level: number, count = 10): ArithmeticQuestion[] {
+  const ops = operationsForLevel(level);
   const out: ArithmeticQuestion[] = [];
-  let lastPrompt = '';
 
-  for (let i = 0; i < count; i++) {
-    let q = generateQuestion(level);
+  // Deal the available operations round-robin, then shuffle. Pure random
+  // choice can produce ten additions in a row, which players read as a bug.
+  const plan: Operation[] = [];
+  for (let i = 0; i < count; i++) plan.push(ops[i % ops.length]);
+  plan.sort(() => Math.random() - 0.5);
+
+  let lastPrompt = '';
+  for (const operation of plan) {
+    let q = generateQuestionFor(operation, level);
     let guard = 0;
     while (q.prompt === lastPrompt && guard < 10) {
-      q = generateQuestion(level);
+      q = generateQuestionFor(operation, level);
       guard++;
     }
     lastPrompt = q.prompt;
