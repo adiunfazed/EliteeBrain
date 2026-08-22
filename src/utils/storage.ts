@@ -164,6 +164,18 @@ export const MODULE_METADATA = [
     description: 'Tap targets with fast reflexes while stopping yourself on red traps.',
     isPro: true,
   },
+  {
+    id: 'mental-math' as ModuleId,
+    name: 'Mental Math Sprint',
+    tagline: 'Fast Arithmetic',
+    category: 'Logic' as const,
+    domain: 'Speed',
+    domainColor: 'var(--dom-speed)',
+    icon: 'Calculator',
+    color: 'violet',
+    description: 'Answer ten arithmetic questions against the clock. Gets faster as you improve.',
+    isPro: false,
+  },
 ];
 
 export function getTodayDateString(): string {
@@ -202,6 +214,7 @@ export function createInitialProfile(): UserProfile {
       'cognitive-shift': { level: 1, xp: 0, bestScore: 0, totalSessions: 0, completedToday: false, history: [] },
       'visuospatial': { level: 1, xp: 0, bestScore: 0, totalSessions: 0, completedToday: false, history: [] },
       'reaction-inhibitor': { level: 1, xp: 0, bestScore: 0, totalSessions: 0, completedToday: false, history: [] },
+      'mental-math': { level: 1, xp: 0, bestScore: 0, totalSessions: 0, completedToday: false, history: [] },
     },
     dailyLogs,
   };

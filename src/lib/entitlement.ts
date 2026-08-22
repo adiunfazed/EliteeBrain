@@ -136,8 +136,22 @@ export function entitlementLabel(e: Entitlement): string {
  * Callers must only apply these when `trialStartedAt` is absent, so a user
  * cannot restart the clock by signing out and back in.
  */
+/**
+ * Has this account ever started a trial?
+ *
+ * Checked separately from trialStartedAt because the flag is permanent: it is
+ * never cleared, so a lost or reset start date cannot make someone eligible
+ * for a second free month.
+ */
+export function hasUsedTrial(profile: any): boolean {
+  if (!profile) return false;
+  return profile.trialEverStarted === true || !!profile.trialStartedAt;
+}
+
 export function startTrialFields(now: number = Date.now()) {
   return {
+    // Permanent marker — survives cache clears and re-syncs.
+    trialEverStarted: true,
     trialStartedAt: new Date(now).toISOString(),
     proPlanType: 'trial' as const,
   };

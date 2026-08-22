@@ -6,7 +6,7 @@ import { X, Check, Crown, ArrowRight, QrCode, Clock, Zap, Smartphone, RefreshCw,
 import { User, createPaymentRequest, getAdminMerchantUpiId } from '../lib/firebase';
 import { syncProfileToCloud, fetchProfileFromCloud } from '../lib/sync';
 import { saveProfile } from '../utils/storage';
-import { LIFETIME_PRICE_INR, resolveEntitlement, entitlementLabel, startTrialFields } from '../lib/entitlement';
+import { hasUsedTrial, LIFETIME_PRICE_INR, resolveEntitlement, entitlementLabel, startTrialFields } from '../lib/entitlement';
 
 interface Props {
   isOpen: boolean;
@@ -117,7 +117,7 @@ export const ProSubscriptionModal: React.FC<Props> = ({
       setSuccessMsg('Your trial is already running.');
       return;
     }
-    if (ent.status === 'expired') {
+    if (ent.status === 'expired' || hasUsedTrial(profile)) {
       alert('Your free month has already been used on this account.');
       return;
     }

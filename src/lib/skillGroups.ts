@@ -49,6 +49,7 @@ export const MODULE_SKILL_GROUP: Record<string, SkillGroup> = {
 
   'pattern-matrix': 'reasoning',
   'cognitive-shift': 'reasoning',
+  'mental-math': 'reasoning',
 };
 
 export function skillGroupOf(id: ModuleId): SkillGroup {

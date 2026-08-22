@@ -30,6 +30,7 @@ import { PatternMatrixModule } from './components/modules/PatternMatrixModule';
 import { CognitiveShiftModule } from './components/modules/CognitiveShiftModule';
 import { VisuospatialModule } from './components/modules/VisuospatialModule';
 import { ReactionInhibitorModule } from './components/modules/ReactionInhibitorModule';
+import { MentalMathModule } from './components/modules/MentalMathModule';
 import { resolveEntitlement, startTrialFields } from './lib/entitlement';
 import { goalById } from './lib/goals';
 import { ScrollProgress } from './components/ScrollProgress';
@@ -44,6 +45,8 @@ export default function App() {
   // `profile` gets pushed up in the window between auth firing and the fetch
   // resolving — which is how two devices end up overwriting each other.
   const hydratedRef = useRef(false);
+  /** True once the cloud profile has been applied for this account. */
+  const [isHydrated, setIsHydrated] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isGuestMode, setIsGuestMode] = useState<boolean>(() => {
     return localStorage.getItem('elitebrain_guest') === 'true';
@@ -131,11 +134,15 @@ export default function App() {
         unsubscribeDoc();
         unsubscribeDoc = null;
       }
-      if (!user) hydratedRef.current = false;
+      if (!user) {
+        hydratedRef.current = false;
+        setIsHydrated(false);
+      }
 
       if (user) {
         setIsAuthModalOpen(false);
         hydratedRef.current = false;
+        setIsHydrated(false);
 
         // Re-read now that ownership is established — the initial load ran
         // before auth resolved and may have returned a stale profile.
@@ -169,6 +176,7 @@ export default function App() {
 
         // Cloud state is now authoritative; local writes may resume.
         hydratedRef.current = true;
+        setIsHydrated(true);
 
         // Real-time listener
         if (db) {
@@ -358,6 +366,7 @@ export default function App() {
       {/* Primary Header Bar */}
       <Header
         profile={profile}
+        isHydrated={!currentUser || isHydrated}
         currentUser={currentUser}
         onToggleSound={handleToggleSound}
         onOpenSettings={() => setIsSettingsOpen(true)}
@@ -449,6 +458,14 @@ export default function App() {
       {activeModuleId === 'reaction-inhibitor' && (
         <ReactionInhibitorModule
           currentLevel={profile.modules['reaction-inhibitor']?.level || 1}
+          onFinishSession={handleFinishModule}
+          onClose={() => setActiveModuleId(null)}
+        />
+      )}
+
+      {activeModuleId === 'mental-math' && (
+        <MentalMathModule
+          currentLevel={profile.modules['mental-math']?.level || 1}
           onFinishSession={handleFinishModule}
           onClose={() => setActiveModuleId(null)}
         />

@@ -183,14 +183,8 @@ export const RankProgressionSection: React.FC<RankProgressionSectionProps> = ({
             className="space-y-6"
           >
             {/* HERO RANK CARD (Directly matching screenshot layout) */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               {[
-                {
-                  label: 'Rank',
-                  value: currentRankLabel,
-                  sub: nextTier !== currentTier ? `${xpToGo.toLocaleString()} XP to ${nextTier.baseName} ${nextTier.tierNumber}` : 'Top tier',
-                  color: currentTier.color,
-                },
                 {
                   label: 'Total XP',
                   value: careerXp.toLocaleString(),
@@ -223,6 +217,25 @@ export const RankProgressionSection: React.FC<RankProgressionSectionProps> = ({
                   </span>
                 </div>
               ))}
+            </div>
+
+            {/* Rank gets its own full-width row — a tier name never fits in a
+                quarter-width tile without being cut off. */}
+            <div className="eb-card p-4 flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <span className="eb-label block">Rank</span>
+                <span
+                  className="eb-stat block text-2xl mt-1 break-words"
+                  style={{ color: currentTier.color }}
+                >
+                  {currentRankLabel}
+                </span>
+              </div>
+              <span className="t-sub text-right shrink-0 max-w-[45%]">
+                {nextTier !== currentTier
+                  ? `${xpToGo.toLocaleString()} XP to ${nextTier.baseName} ${nextTier.tierNumber}`
+                  : 'Top tier'}
+              </span>
             </div>
 
             {/* Tier progress — one bar rather than a six-card ladder. */}

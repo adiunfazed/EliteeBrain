@@ -9,6 +9,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { resolveEntitlement } from '../lib/entitlement';
 
 interface Props {
+  /** False until the cloud profile is applied; entitlement is unknown before then. */
+  isHydrated?: boolean;
   profile: UserProfile;
   currentUser: User | null;
   onToggleSound: () => void;
@@ -30,6 +32,7 @@ interface Props {
 
 export const Header: React.FC<Props> = ({
   profile,
+  isHydrated,
   currentUser,
   onToggleSound,
   onOpenAuthModal,
@@ -95,7 +98,10 @@ export const Header: React.FC<Props> = ({
 
             {/* Pro Badge or Get Pro Button (Desktop View) */}
             <div className="hidden md:block">
-              {profile.isProUser ? (
+              {isHydrated === false ? (
+                // Status unknown — show nothing rather than a wrong answer.
+                <span className="inline-block w-16 h-6 rounded-full bg-[var(--surface-sunk)] animate-pulse" />
+              ) : profile.isProUser ? (
                 <button
                   onClick={() => {
                     soundFx.playClick();
@@ -249,8 +255,11 @@ export const Header: React.FC<Props> = ({
 
         {/* MOBILE CONTROLS HEADER BAR (Visible on screens < md) */}
         <div className="flex items-center gap-1 sm:gap-1.5 md:hidden shrink-0">
-          {/* Mobile Pro Badge / Get Pro Pill */}
-          {profile.isProUser ? (
+          {/* Mobile Pro Badge / Get Pro Pill. Same gate as desktop: an
+              unknown status must not render as "not Pro". */}
+          {isHydrated === false ? (
+            <span className="inline-block w-14 h-6 rounded-lg bg-[var(--surface-sunk)] animate-pulse shrink-0" />
+          ) : profile.isProUser ? (
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.92 }}

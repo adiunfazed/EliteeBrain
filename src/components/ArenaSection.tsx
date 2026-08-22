@@ -47,8 +47,12 @@ function subTier(xp: number): number {
   return Math.min(3, Math.floor((xp - tier.min) / span) + 1);
 }
 
+const ROMAN = ['I', 'II', 'III'];
+
 const TierBadge: React.FC<{ xp: number; size?: 'sm' | 'lg' }> = ({ xp, size = 'sm' }) => {
   const tier = tierFor(xp);
+  // Sub-tier, so Bronze 1/2/3 are visibly different rather than all "I".
+  const sub = ROMAN[subTier(xp) - 1] || 'I';
   const px = size === 'lg' ? 52 : 40;
   return (
     <span
@@ -68,7 +72,7 @@ const TierBadge: React.FC<{ xp: number; size?: 'sm' | 'lg' }> = ({ xp, size = 's
         className="relative text-[10px] font-mono font-bold"
         style={{ color: tier.color }}
       >
-        {tier.roman}
+        {sub}
       </span>
     </span>
   );

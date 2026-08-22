@@ -6,7 +6,8 @@ export type ModuleId =
   | 'pattern-matrix'
   | 'cognitive-shift'
   | 'visuospatial'
-  | 'reaction-inhibitor';
+  | 'reaction-inhibitor'
+  | 'mental-math';
 
 export interface ModuleConfig {
   id: ModuleId;
@@ -80,6 +81,8 @@ export interface UserProfile {
   proPlanType?: 'monthly' | 'annual' | 'lifetime' | 'trial';
   /** ISO timestamp when the 1-month free trial began. Set once, never reset. */
   trialStartedAt?: string;
+  /** Permanent: this account has claimed its one free trial. Never cleared. */
+  trialEverStarted?: boolean;
   /** True only for a paid or admin-granted lifetime unlock. Never expires. */
   lifetimePro?: boolean;
   proPaidAt?: string;
