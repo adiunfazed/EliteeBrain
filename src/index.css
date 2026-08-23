@@ -1052,3 +1052,30 @@
 
 /* Body-adjacent monospace should not go below this either. */
 .font-mono.text-xs { font-size: 12.5px; }
+
+
+/* ==================================================================
+   Small text
+
+   Two separate problems were making labels hard to read: the colour was
+   too dim to resolve against a dark background, and JetBrains Mono is
+   drawn light at small sizes. Both are addressed here rather than in
+   individual components, so nothing drifts back.
+   ================================================================== */
+
+/* Muted text is quiet, not faded. */
+:root { --ink-muted: #8A93A5; }
+.dark { --ink-muted: #8F98A9; }
+
+/* Anything monospaced and small carries weight, or it disappears. */
+.font-mono { font-weight: 600; letter-spacing: 0.01em; }
+.eb-label, .sec-label, .t-eyebrow, .t-meta { font-weight: 700; }
+
+/* Sub-labels sit above the old dim value. */
+.t-sub { color: #96A0B0; }
+
+/* Placeholders were the faintest text in the app. */
+input::placeholder, textarea::placeholder { color: #7E8899; opacity: 1; }
+
+/* Disabled controls should read as disabled, not invisible. */
+button:disabled { opacity: 0.55; }

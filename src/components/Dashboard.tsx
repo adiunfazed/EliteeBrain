@@ -539,7 +539,7 @@ export const Dashboard: React.FC<Props> = ({
                             {info.blurb}
                           </span>
                           {emphasisedGroup(profile.focusGoal) === group && (
-                            <span className="text-[11px] font-mono font-bold text-[#5A6472] shrink-0">
+                            <span className="text-[11px] font-mono font-bold text-[#7E8899] shrink-0">
                               YOUR GOAL
                             </span>
                           )}
@@ -655,7 +655,7 @@ export const Dashboard: React.FC<Props> = ({
               ))}
             </div>
 
-            <p className="text-[10px] font-mono text-[#5A6472]">
+            <p className="text-[10px] font-mono text-[#7E8899]">
               {hubPane === 'today'
                 ? 'Everything scheduled for today — tick it as you go.'
                 : hubPane === 'tasks'

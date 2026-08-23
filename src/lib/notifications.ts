@@ -286,3 +286,112 @@ export function fireReminders(reminders: DueReminder[]) {
     markFired(r.tag);
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Web push                                                            */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Server-sent push, as distinct from the in-page reminders above.
+ *
+ * The scheduled reminders in this file only fire while the app is open. Web
+ * push reaches the device when it is closed, which is the whole point of a
+ * reminder — but it needs a subscription registered with the server first.
+ */
+
+/** VAPID keys arrive base64url-encoded and the API wants a byte array. */
+function urlBase64ToUint8Array(base64: string): Uint8Array {
+  const padding = '='.repeat((4 - (base64.length % 4)) % 4);
+  const normalised = (base64 + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(normalised);
+  const out = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+  return out;
+}
+
+export async function isPushSubscribed(): Promise<boolean> {
+  try {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return false;
+    const reg = await navigator.serviceWorker.ready;
+    return !!(await reg.pushManager.getSubscription());
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Register this device for push.
+ *
+ * Returns a plain result rather than throwing, because every failure here is
+ * expected in normal use — permission denied, unsupported browser, keys not
+ * configured — and none of them should surface as a crash.
+ */
+export async function subscribeToPush(
+  getToken: () => Promise<string | null>
+): Promise<{ ok: boolean; reason?: string }> {
+  try {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      return { ok: false, reason: 'This browser does not support push notifications.' };
+    }
+
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') {
+      return { ok: false, reason: 'Notifications are blocked. Enable them in browser settings.' };
+    }
+
+    const keyRes = await fetch('/api/push/key');
+    if (!keyRes.ok) return { ok: false, reason: 'Push is not configured on the server yet.' };
+    const { key } = await keyRes.json();
+
+    const reg = await navigator.serviceWorker.ready;
+
+    // Reuse an existing subscription rather than creating a duplicate.
+    const existing = await reg.pushManager.getSubscription();
+    const sub =
+      existing ||
+      (await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(key),
+      }));
+
+    const token = await getToken();
+    if (!token) return { ok: false, reason: 'Sign in to enable notifications.' };
+
+    const json = sub.toJSON();
+    const res = await fetch('/api/push/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ endpoint: json.endpoint, keys: json.keys }),
+    });
+
+    if (!res.ok) return { ok: false, reason: 'Could not register this device.' };
+    return { ok: true };
+  } catch (err) {
+    console.warn('Push subscription failed:', err);
+    return { ok: false, reason: 'Something went wrong enabling notifications.' };
+  }
+}
+
+export async function unsubscribeFromPush(
+  getToken: () => Promise<string | null>
+): Promise<void> {
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription();
+    if (!sub) return;
+
+    const endpoint = sub.endpoint;
+    await sub.unsubscribe();
+
+    const token = await getToken();
+    if (!token) return;
+
+    await fetch('/api/push/unsubscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ endpoint }),
+    });
+  } catch (err) {
+    console.warn('Could not unsubscribe:', err);
+  }
+}

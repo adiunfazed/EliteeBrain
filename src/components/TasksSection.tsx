@@ -409,7 +409,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
               <button
                 onClick={() => setDetailId(task.id)}
                 className={`text-left text-sm leading-snug break-words w-full ${
-                  task.completed ? 'text-[#5A6472] line-through' : 'text-[#F4F6F8]'
+                  task.completed ? 'text-[#7E8899] line-through' : 'text-[#F4F6F8]'
                 }`}
               >
                 {task.pinned && !task.completed && (
@@ -499,7 +499,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                         `Moved to ${o.label.toLowerCase()}.`
                       );
                     }}
-                    className="text-[11px] font-mono px-2 py-1 rounded-full border border-[#2A313C] text-[#5A6472] hover:text-[#98A2B3] hover:border-[#3A424F] transition-colors"
+                    className="text-[11px] font-mono px-2 py-1 rounded-full border border-[#2A313C] text-[#7E8899] hover:text-[#98A2B3] hover:border-[#3A424F] transition-colors"
                   >
                     {o.label}
                   </button>
@@ -593,7 +593,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
           </p>
           <p className="text-xl sm:eb-heading text-2xl tabular-nums mt-0.5">
             {progress.done} / {progress.total}
-            <span className="text-xs font-bold text-[#5A6472] ml-2">complete</span>
+            <span className="text-xs font-bold text-[#7E8899] ml-2">complete</span>
           </p>
           {priorities.total > 0 && (
             <p className="text-[10px] font-mono text-[#98A2B3] mt-1">
@@ -645,7 +645,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
             }}
             placeholder="What will you do?"
             maxLength={180}
-            className="flex-1 min-w-0 eb-card-sunk focus:border-[#8B5CF6]/60 rounded-xl px-3 py-2.5 text-sm text-[#F4F6F8] placeholder:text-[#5A6472] outline-none transition-colors"
+            className="flex-1 min-w-0 eb-card-sunk focus:border-[#8B5CF6]/60 rounded-xl px-3 py-2.5 text-sm text-[#F4F6F8] placeholder:text-[#7E8899] outline-none transition-colors"
           />
           <motion.button
             whileTap={{ scale: 0.94 }}
@@ -692,7 +692,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
           {draftDue && (
             <button
               onClick={() => setDraftDue(undefined)}
-              className="text-[11px] text-[#5A6472] hover:eb-danger px-2 py-2"
+              className="text-[11px] text-[#7E8899] hover:eb-danger px-2 py-2"
             >
               Clear date
             </button>
@@ -707,7 +707,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
               exit={{ opacity: 0, height: 0 }}
               className="overflow-hidden"
             >
-              <p className="text-[10px] font-mono text-[#5A6472] mt-2">
+              <p className="text-[10px] font-mono text-[#7E8899] mt-2">
                 Understood:{' '}
                 <span className="eb-done">{parsed.detected.join(' · ')}</span>
               </p>
@@ -717,7 +717,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
 
         <button
           onClick={() => setExpanded((v) => !v)}
-          className="text-[10px] font-mono font-bold text-[#5A6472] hover:text-[#98A2B3] mt-2.5 transition-colors"
+          className="text-[10px] font-mono font-bold text-[#7E8899] hover:text-[#98A2B3] mt-2.5 transition-colors"
         >
           {expanded ? '− Fewer options' : '+ More options'}
         </button>
@@ -739,7 +739,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                       className={`text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border transition-all ${
                         draftCategory === c
                           ? CATEGORY_META[c].tint
-                          : 'text-[#5A6472] border-[#2A313C] hover:border-[#3A424F]'
+                          : 'text-[#7E8899] border-[#2A313C] hover:border-[#3A424F]'
                       }`}
                     >
                       {CATEGORY_META[c].label}
@@ -755,7 +755,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                       className={`text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border transition-all ${
                         draftMinutes === m
                           ? 'text-[#A78BFA] bg-[#8B5CF6]/15 border-[#8B5CF6]/30'
-                          : 'text-[#5A6472] border-[#2A313C] hover:border-[#3A424F]'
+                          : 'text-[#7E8899] border-[#2A313C] hover:border-[#3A424F]'
                       }`}
                     >
                       {m < 60 ? `${m}m` : `${m / 60}h`}
@@ -772,7 +772,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                       className={`text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border transition-all flex items-center gap-1 ${
                         draftEnergy === e
                           ? 'eb-done bg-emerald-500/12 border-emerald-500/30'
-                          : 'text-[#5A6472] border-[#2A313C] hover:border-[#3A424F]'
+                          : 'text-[#7E8899] border-[#2A313C] hover:border-[#3A424F]'
                       }`}
                     >
                       <Battery className="w-2.5 h-2.5 shrink-0" />
@@ -788,7 +788,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#5A6472] pointer-events-none" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#7E8899] pointer-events-none" />
         <input
           ref={searchRef}
           value={search}
@@ -800,13 +800,13 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
             }
           }}
           placeholder="Search tasks"
-          className="w-full eb-card focus:border-[#8B5CF6]/60 rounded-xl pl-9 pr-9 py-2.5 text-xs text-[#F4F6F8] placeholder:text-[#5A6472] outline-none transition-colors"
+          className="w-full eb-card focus:border-[#8B5CF6]/60 rounded-xl pl-9 pr-9 py-2.5 text-xs text-[#F4F6F8] placeholder:text-[#7E8899] outline-none transition-colors"
         />
         {search && (
           <button
             onClick={() => setSearch('')}
             aria-label="Clear search"
-            className="absolute right-1.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-lg text-[#5A6472] hover:text-[#F4F6F8] flex items-center justify-center"
+            className="absolute right-1.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-lg text-[#7E8899] hover:text-[#F4F6F8] flex items-center justify-center"
           >
             <X className="w-3.5 h-3.5 shrink-0" />
           </button>
@@ -844,7 +844,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                 className={`text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-lg border transition-all ${
                   timeFilter === m
                     ? 'eb-done bg-emerald-500/12 border-emerald-500/30'
-                    : 'text-[#5A6472] border-[#2A313C] hover:border-[#3A424F]'
+                    : 'text-[#7E8899] border-[#2A313C] hover:border-[#3A424F]'
                 }`}
               >
                 {m}m
@@ -946,7 +946,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
               <button
                 onClick={() => setToasts((list) => list.filter((x) => x.id !== t.id))}
                 aria-label="Dismiss"
-                className="w-9 h-9 rounded-lg hover:bg-[#20252E] text-[#5A6472] flex items-center justify-center shrink-0"
+                className="w-9 h-9 rounded-lg hover:bg-[#20252E] text-[#7E8899] flex items-center justify-center shrink-0"
               >
                 <X className="w-3 h-3 shrink-0" />
               </button>

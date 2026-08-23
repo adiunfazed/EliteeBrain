@@ -288,7 +288,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
                   </span>
                 )}
                 {habit.status === 'archived' && (
-                  <span className="text-[11px] font-mono text-[#5A6472]">Archived</span>
+                  <span className="text-[11px] font-mono text-[#7E8899]">Archived</span>
                 )}
               </div>
 
@@ -366,7 +366,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
                       key={c}
                       onClick={() => patchHabit(userId, habit.id, { cadence: c })}
                       className={`eb-press text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border ${
-                        habit.cadence === c ? 'eb-chip-active' : 'text-[#5A6472] border-[#262C38]'
+                        habit.cadence === c ? 'eb-chip-active' : 'text-[#7E8899] border-[#262C38]'
                       }`}
                     >
                       {label}
@@ -390,7 +390,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
                             patchHabit(userId, habit.id, { weekdays: next });
                           }}
                           className={`eb-press flex-1 h-9 rounded-lg text-[10px] font-mono font-bold border ${
-                            on ? 'eb-chip-active' : 'text-[#5A6472] border-[#262C38]'
+                            on ? 'eb-chip-active' : 'text-[#7E8899] border-[#262C38]'
                           }`}
                         >
                           {d}
@@ -424,7 +424,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
                     <button
                       onClick={() => patchHabit(userId, habit.id, { goalId: undefined })}
                       className={`eb-press text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border ${
-                        !habit.goalId ? 'eb-chip-active' : 'text-[#5A6472] border-[#262C38]'
+                        !habit.goalId ? 'eb-chip-active' : 'text-[#7E8899] border-[#262C38]'
                       }`}
                     >
                       Nothing
@@ -440,7 +440,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
                             })
                           }
                           className={`eb-press text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border max-w-full truncate ${
-                            habit.goalId === g.id ? 'eb-chip-active' : 'text-[#5A6472] border-[#262C38]'
+                            habit.goalId === g.id ? 'eb-chip-active' : 'text-[#7E8899] border-[#262C38]'
                           }`}
                         >
                           {g.title}
@@ -463,7 +463,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
               {stats.todayValue > 0 && (
                 <button
                   onClick={() => record(habit, Math.max(0, stats.todayValue - step))}
-                  className="text-[10px] font-mono font-bold px-3 py-2 rounded-xl bg-transparent border border-[#2A313C] text-[#5A6472] hover:text-[#98A2B3]"
+                  className="text-[10px] font-mono font-bold px-3 py-2 rounded-xl bg-transparent border border-[#2A313C] text-[#7E8899] hover:text-[#98A2B3]"
                 >
                   −{step}
                 </button>
@@ -489,7 +489,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
           <div className="flex items-center gap-1.5 mt-2.5 flex-wrap">
             <button
               onClick={() => setExpandedHabit(expandedHabit === habit.id ? null : habit.id)}
-              className="eb-press text-[10px] font-mono font-bold text-[#5A6472] hover:text-[#98A2B3] px-2 py-1.5"
+              className="eb-press text-[10px] font-mono font-bold text-[#7E8899] hover:text-[#98A2B3] px-2 py-1.5"
             >
               {expandedHabit === habit.id ? '− Hide history' : '+ History'}
             </button>
@@ -498,7 +498,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
               onClick={() => setEditingSchedule(editingSchedule === habit.id ? null : habit.id)}
               aria-label="Change schedule"
               title="Schedule and target"
-              className="eb-press w-9 h-9 rounded-lg text-[#5A6472] hover:text-[#F2F4F7] hover:bg-[#171B22] flex items-center justify-center"
+              className="eb-press w-9 h-9 rounded-lg text-[#7E8899] hover:text-[#F2F4F7] hover:bg-[#171B22] flex items-center justify-center"
             >
               <SlidersHorizontal className="w-3.5 h-3.5 shrink-0" />
             </button>
@@ -509,7 +509,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
               }}
               aria-label="Rename habit"
               title="Rename"
-              className="eb-press ml-auto w-9 h-9 rounded-lg text-[#5A6472] hover:text-[#F4F6F8] hover:bg-[#171B22] flex items-center justify-center"
+              className="eb-press ml-auto w-9 h-9 rounded-lg text-[#7E8899] hover:text-[#F4F6F8] hover:bg-[#171B22] flex items-center justify-center"
             >
               <Pencil className="w-3.5 h-3.5 shrink-0" />
             </button>
@@ -518,7 +518,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
                 onClick={() => archiveHabit(userId, habit.id)}
                 aria-label="Archive habit"
                 title="Archive (keeps history)"
-                className="eb-press w-9 h-9 rounded-lg text-[#5A6472] hover:eb-warn hover:bg-[#171B22] flex items-center justify-center"
+                className="eb-press w-9 h-9 rounded-lg text-[#7E8899] hover:eb-warn hover:bg-[#171B22] flex items-center justify-center"
               >
                 <Archive className="w-3.5 h-3.5 shrink-0" />
               </button>
@@ -534,7 +534,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
               onClick={() => deleteHabitForever(habit)}
               aria-label="Delete habit"
               title="Delete permanently"
-              className="eb-press w-9 h-9 rounded-lg text-[#5A6472] hover:eb-danger hover:bg-rose-500/10 flex items-center justify-center"
+              className="eb-press w-9 h-9 rounded-lg text-[#7E8899] hover:eb-danger hover:bg-rose-500/10 flex items-center justify-center"
             >
               <Trash2 className="w-3.5 h-3.5 shrink-0" />
             </button>
@@ -563,7 +563,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
                       <p className="text-base font-black font-mono text-[#F4F6F8] tabular-nums leading-none">
                         {s.value}
                       </p>
-                      <p className="text-[11px] font-mono text-[#5A6472] mt-1">{s.label}</p>
+                      <p className="text-[11px] font-mono text-[#7E8899] mt-1">{s.label}</p>
                     </div>
                   ))}
                 </div>
@@ -652,7 +652,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
           />
         </div>
 
-        <p className="text-[10px] text-[#5A6472] leading-relaxed">{health.reason}</p>
+        <p className="text-[10px] text-[#7E8899] leading-relaxed">{health.reason}</p>
 
         {left !== null && left >= 0 && (
           <p className="text-[10px] font-mono text-[#98A2B3]">
@@ -702,7 +702,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
                 </span>
                 <span
                   className={`text-xs min-w-0 break-words ${
-                    m.done ? 'text-[#5A6472] line-through' : 'text-[#F4F6F8]'
+                    m.done ? 'text-[#7E8899] line-through' : 'text-[#F4F6F8]'
                   }`}
                 >
                   {m.title}
@@ -723,7 +723,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
               }
             }}
             placeholder="Add a milestone"
-            className="flex-1 min-w-0 eb-card-sunk focus:border-[#8B5CF6]/60 rounded-lg px-2.5 py-2 text-[11px] text-[#F4F6F8] placeholder:text-[#5A6472] outline-none"
+            className="flex-1 min-w-0 eb-card-sunk focus:border-[#8B5CF6]/60 rounded-lg px-2.5 py-2 text-[11px] text-[#F4F6F8] placeholder:text-[#7E8899] outline-none"
           />
           <button
             onClick={() => {
@@ -753,7 +753,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
               {bits.join(' · ')} feeding this goal
             </p>
           ) : (
-            <p className="text-[10px] text-[#5A6472] leading-relaxed">
+            <p className="text-[10px] text-[#7E8899] leading-relaxed">
               Nothing linked yet. Attach a routine block, habit or task and this goal moves when
               you do the work.
             </p>
@@ -776,7 +776,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
                 {goal.deadline && (
                   <button
                     onClick={() => patchGoal(userId, goal.id, { deadline: undefined })}
-                    className="eb-press text-[10px] font-mono text-[#5A6472] hover:eb-danger"
+                    className="eb-press text-[10px] font-mono text-[#7E8899] hover:eb-danger"
                   >
                     clear
                   </button>
@@ -833,7 +833,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
           </button>
           <button
             onClick={() => patchGoal(userId, goal.id, { status: 'archived' })}
-            className="eb-press text-[10px] font-mono font-bold px-2.5 py-2 rounded-lg border border-[#2A313C] text-[#5A6472] hover:eb-warn flex items-center gap-1.5"
+            className="eb-press text-[10px] font-mono font-bold px-2.5 py-2 rounded-lg border border-[#2A313C] text-[#7E8899] hover:eb-warn flex items-center gap-1.5"
           >
             <Archive className="w-3 h-3 shrink-0" />
             Archive
@@ -844,7 +844,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
               setGoals((prev) => prev.filter((g) => g.id !== goal.id));
               removeGoal(userId, goal.id).catch((e) => console.error(e));
             }}
-            className="eb-press text-[10px] font-mono font-bold px-2.5 py-2 rounded-lg border border-[#2A313C] text-[#5A6472] hover:eb-danger flex items-center gap-1.5"
+            className="eb-press text-[10px] font-mono font-bold px-2.5 py-2 rounded-lg border border-[#2A313C] text-[#7E8899] hover:eb-danger flex items-center gap-1.5"
           >
             <Trash2 className="w-3 h-3 shrink-0" />
             Delete
@@ -896,7 +896,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
               onKeyDown={(e) => e.key === 'Enter' && addGoal()}
               placeholder="What are you working toward?"
               maxLength={120}
-              className="flex-1 min-w-0 eb-card focus:border-[#8B5CF6]/60 rounded-xl px-3 py-2.5 text-sm text-[#F4F6F8] placeholder:text-[#5A6472] outline-none"
+              className="flex-1 min-w-0 eb-card focus:border-[#8B5CF6]/60 rounded-xl px-3 py-2.5 text-sm text-[#F4F6F8] placeholder:text-[#7E8899] outline-none"
             />
             <button
               onClick={addGoal}
@@ -931,7 +931,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
               onKeyDown={(e) => e.key === 'Enter' && addHabit()}
               placeholder="What will you repeat?"
               maxLength={120}
-              className="flex-1 min-w-0 eb-card focus:border-[#8B5CF6]/60 rounded-xl px-3 py-2.5 text-sm text-[#F4F6F8] placeholder:text-[#5A6472] outline-none"
+              className="flex-1 min-w-0 eb-card focus:border-[#8B5CF6]/60 rounded-xl px-3 py-2.5 text-sm text-[#F4F6F8] placeholder:text-[#7E8899] outline-none"
             />
             <button
               onClick={addHabit}
@@ -991,7 +991,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
                             )
                           }
                           className={`flex-1 h-10 rounded-lg text-[11px] font-semibold border ${
-                            on ? 'eb-chip-active' : 'text-[#5A6472] border-[var(--rule)]'
+                            on ? 'eb-chip-active' : 'text-[#7E8899] border-[var(--rule)]'
                           }`}
                         >
                           {d}
@@ -1073,7 +1073,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
           {habits.some((h) => h.status === 'archived') && (
             <button
               onClick={() => setShowArchived((v) => !v)}
-              className="text-[10px] font-mono font-bold text-[#5A6472] hover:text-[#98A2B3]"
+              className="text-[10px] font-mono font-bold text-[#7E8899] hover:text-[#98A2B3]"
             >
               {showArchived ? 'Hide archived' : 'Show archived'}
             </button>

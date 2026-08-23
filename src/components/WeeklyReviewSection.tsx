@@ -52,7 +52,7 @@ export const WeeklyReviewSection: React.FC<Props> = ({ input, onGo }) => {
               </div>
               <span
                 className={`text-[10px] font-mono tabular-nums w-10 text-right shrink-0 ${
-                  a.value === null ? 'text-[#5A6472]' : 'text-[#F4F6F8]'
+                  a.value === null ? 'text-[#7E8899]' : 'text-[#F4F6F8]'
                 }`}
               >
                 {a.value === null ? '—' : `${Math.round(a.value * 100)}%`}
@@ -61,7 +61,7 @@ export const WeeklyReviewSection: React.FC<Props> = ({ input, onGo }) => {
           ))}
         </div>
 
-        <p className="text-[10px] font-mono text-[#5A6472] mt-3 leading-relaxed">
+        <p className="text-[10px] font-mono text-[#7E8899] mt-3 leading-relaxed">
           Areas you don't track show a dash rather than zero — no data isn't the same as no
           effort.
         </p>
@@ -95,7 +95,7 @@ export const WeeklyReviewSection: React.FC<Props> = ({ input, onGo }) => {
                   key={s.label}
                   className="eb-card-sunk p-2.5 min-w-0"
                 >
-                  <p className="text-[11px] font-mono text-[#5A6472] truncate">{s.label}</p>
+                  <p className="text-[11px] font-mono text-[#7E8899] truncate">{s.label}</p>
                   <p className="eb-heading text-sm tabular-nums mt-0.5">
                     {s.value}
                   </p>

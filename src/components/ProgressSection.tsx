@@ -116,7 +116,7 @@ export const ProgressSection: React.FC<Props> = ({ profile, userId }) => {
               <p className="text-xl sm:eb-heading text-2xl mt-1.5 tabular-nums">
                 {t.value}
               </p>
-              <p className="text-[10px] text-[#5A6472] font-mono mt-0.5 truncate">{t.sub}</p>
+              <p className="text-[10px] text-[#7E8899] font-mono mt-0.5 truncate">{t.sub}</p>
             </div>
           );
         })}
@@ -134,7 +134,7 @@ export const ProgressSection: React.FC<Props> = ({ profile, userId }) => {
 
         {records.length === 0 ? (
           <div className="mt-3 text-center py-10 px-6 border border-dashed border-[#2A313C] rounded-2xl">
-            <Trophy className="w-7 h-7 shrink-0 text-[#5A6472] mx-auto mb-2.5" />
+            <Trophy className="w-7 h-7 shrink-0 text-[#7E8899] mx-auto mb-2.5" />
             <p className="text-sm font-bold text-[#F4F6F8] font-mono">No records yet</p>
             <p className="text-[11px] text-[#98A2B3] mt-1 max-w-xs mx-auto leading-relaxed">
               Finish a training module and your best score will appear here.
@@ -169,7 +169,7 @@ export const ProgressSection: React.FC<Props> = ({ profile, userId }) => {
                   <p className="text-xl font-black font-mono text-yellow-400 tabular-nums leading-none">
                     {r.best}
                   </p>
-                  <p className="text-[11px] font-mono text-[#5A6472] mt-1">BEST</p>
+                  <p className="text-[11px] font-mono text-[#7E8899] mt-1">BEST</p>
                 </div>
               </motion.div>
             ))}
@@ -177,7 +177,7 @@ export const ProgressSection: React.FC<Props> = ({ profile, userId }) => {
         )}
       </div>
 
-      <p className="text-[10px] text-[#5A6472] font-mono leading-relaxed text-center max-w-md mx-auto">
+      <p className="text-[10px] text-[#7E8899] font-mono leading-relaxed text-center max-w-md mx-auto">
         These are EliteLife activity and training metrics. They measure your practice on
         this app — not intelligence, and not a clinical assessment.
       </p>

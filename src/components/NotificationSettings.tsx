@@ -214,7 +214,7 @@ export const NotificationSettings: React.FC<Props> = ({ isOpen, onClose }) => {
                           className={`text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border ${
                             prefs.leadMinutes === m
                               ? 'eb-chip-active'
-                              : 'text-[#5A6472] border-[#2A313C]'
+                              : 'text-[#7E8899] border-[#2A313C]'
                           }`}
                         >
                           {m === 0 ? 'On time' : `${m} min`}
@@ -238,7 +238,7 @@ export const NotificationSettings: React.FC<Props> = ({ isOpen, onClose }) => {
                       {prefs.dailySummaryAt && (
                         <button
                           onClick={() => update({ dailySummaryAt: '' })}
-                          className="text-[10px] font-mono text-[#5A6472] hover:eb-danger"
+                          className="text-[10px] font-mono text-[#7E8899] hover:eb-danger"
                         >
                           turn off
                         </button>
@@ -264,7 +264,7 @@ export const NotificationSettings: React.FC<Props> = ({ isOpen, onClose }) => {
             </>
           )}
 
-          <p className="text-[10px] text-[#5A6472] leading-relaxed">
+          <p className="text-[10px] text-[#7E8899] leading-relaxed">
             Reminders are scheduled by the app while it's open or running in the background. If
             you fully close it, some may not arrive.
           </p>

@@ -267,6 +267,35 @@ export function resetAdminProfile(existing?: UserProfile): UserProfile {
   return resetProf;
 }
 
+/**
+ * Apply a calendar-day rollover to any profile.
+ *
+ * Resets only what belongs to a single day — module completion flags and the
+ * current day's log. Level, XP, rank, streak, badges and history are never
+ * touched: those accumulate across days and resetting them would destroy the
+ * user's progress.
+ *
+ * Safe to call repeatedly; it does nothing when the profile is already current.
+ */
+export function applyDayRollover(profile: UserProfile): UserProfile {
+  const today = new Date().toISOString().slice(0, 10);
+  if (!profile) return profile;
+  if (profile.lastActiveDate === today) return profile;
+
+  const next: UserProfile = { ...profile, modules: { ...profile.modules } };
+
+  // Per-day flags reset.
+  for (const key of Object.keys(next.modules)) {
+    const m = next.modules[key as ModuleId];
+    if (m?.completedToday) {
+      next.modules[key as ModuleId] = { ...m, completedToday: false };
+    }
+  }
+
+  next.lastActiveDate = today;
+  return next;
+}
+
 export function loadProfile(): UserProfile {
   // Never hand back another account's profile. This is what caused a new
   // sign-in to show the previous user's name, streak and trial.

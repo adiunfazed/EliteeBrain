@@ -306,7 +306,7 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
                 {msg.text}
                 <span
                   className={`block text-[11px] font-mono mt-1.5 ${
-                    msg.sender === 'user' ? 'text-white/60 text-right' : 'text-[#5A6472]'
+                    msg.sender === 'user' ? 'text-white/60 text-right' : 'text-[#7E8899]'
                   }`}
                 >
                   {msg.timestamp}

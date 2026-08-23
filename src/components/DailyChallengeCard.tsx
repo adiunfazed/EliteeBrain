@@ -61,19 +61,19 @@ export const DailyChallengeCard: React.FC<Props> = ({ profile, onLaunchModule })
               <p className="text-lg font-black font-mono text-[#F4F6F8] tabular-nums leading-none">
                 {todayScore}
               </p>
-              <p className="text-[11px] font-mono text-[#5A6472] mt-1">TODAY</p>
+              <p className="text-[11px] font-mono text-[#7E8899] mt-1">TODAY</p>
             </div>
             <div className="bg-[#0E1116]/60 border border-[#2A313C] rounded-xl p-2.5 text-center min-w-0">
               <p className="text-lg font-black font-mono text-yellow-400 tabular-nums leading-none">
                 {best}
               </p>
-              <p className="text-[11px] font-mono text-[#5A6472] mt-1">BEST</p>
+              <p className="text-[11px] font-mono text-[#7E8899] mt-1">BEST</p>
             </div>
             <div className="bg-[#0E1116]/60 border border-[#2A313C] rounded-xl p-2.5 text-center min-w-0">
               <p className="text-lg font-black font-mono text-[#98A2B3] tabular-nums leading-none">
                 {attempts}
               </p>
-              <p className="text-[11px] font-mono text-[#5A6472] mt-1">ATTEMPTS</p>
+              <p className="text-[11px] font-mono text-[#7E8899] mt-1">ATTEMPTS</p>
             </div>
           </div>
 

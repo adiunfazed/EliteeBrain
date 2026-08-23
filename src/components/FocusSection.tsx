@@ -195,7 +195,7 @@ export const FocusSection: React.FC<Props> = ({ userId, incomingTask, onConsumeI
               cy="60"
               r="54"
               fill="none"
-              stroke={paused ? '#5A6472' : '#10B981'}
+              stroke={paused ? '#7E8899' : '#10B981'}
               strokeWidth="6"
               strokeLinecap="round"
               strokeDasharray={2 * Math.PI * 54}
@@ -218,12 +218,12 @@ export const FocusSection: React.FC<Props> = ({ userId, incomingTask, onConsumeI
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <span
               className={`font-mono font-black tabular-nums tracking-tight transition-colors text-4xl sm:text-5xl ${
-                paused ? 'text-[#5A6472]' : 'text-[#F4F6F8]'
+                paused ? 'text-[#7E8899]' : 'text-[#F4F6F8]'
               }`}
             >
               {formatClock(remaining)}
             </span>
-            <span className="text-[10px] font-mono text-[#5A6472] mt-1">
+            <span className="text-[10px] font-mono text-[#7E8899] mt-1">
               of {active.plannedMinutes} min
             </span>
           </div>
@@ -264,7 +264,7 @@ export const FocusSection: React.FC<Props> = ({ userId, incomingTask, onConsumeI
           </motion.button>
         </div>
 
-        <p className="text-[10px] text-[#5A6472] font-mono mt-5">
+        <p className="text-[10px] text-[#7E8899] font-mono mt-5">
           Cancelling discards this session. Finishing keeps the time you did.
         </p>
       </motion.div>
@@ -367,7 +367,7 @@ export const FocusSection: React.FC<Props> = ({ userId, incomingTask, onConsumeI
               onChange={(e) => setFreeLabel(e.target.value)}
               placeholder="Name this session"
               maxLength={100}
-              className="w-full eb-card-sunk focus:border-[#8B5CF6]/60 rounded-xl px-3 py-2.5 text-sm text-[#F4F6F8] placeholder:text-[#5A6472] outline-none transition-colors"
+              className="w-full eb-card-sunk focus:border-[#8B5CF6]/60 rounded-xl px-3 py-2.5 text-sm text-[#F4F6F8] placeholder:text-[#7E8899] outline-none transition-colors"
             />
           )}
         </div>

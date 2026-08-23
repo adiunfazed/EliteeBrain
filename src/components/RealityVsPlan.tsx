@@ -37,7 +37,7 @@ export const RealityVsPlan: React.FC<Props> = ({ input, onGo }) => {
           {report.execution !== null && (
             <p className="eb-heading text-2xl tabular-nums mt-1">
               {Math.round(report.execution * 100)}%
-              <span className="text-xs font-bold text-[#5A6472] ml-2">executed</span>
+              <span className="text-xs font-bold text-[#7E8899] ml-2">executed</span>
             </p>
           )}
 
@@ -48,7 +48,7 @@ export const RealityVsPlan: React.FC<Props> = ({ input, onGo }) => {
                 <div key={r.label}>
                   <div className="flex items-center justify-between gap-2 text-[10px] font-mono">
                     <span className="text-[#98A2B3]">{r.label}</span>
-                    <span className="text-[#5A6472] tabular-nums">
+                    <span className="text-[#7E8899] tabular-nums">
                       {r.actual} / {r.planned} {r.unit}
                     </span>
                   </div>

@@ -352,7 +352,7 @@ export const ArenaSection: React.FC<ArenaProps> = ({ variant = 'full', onExpand 
 
         {page && page.entries.length === 0 ? (
           <div className="eb-card p-8 text-center">
-            <Trophy className="w-6 h-6 shrink-0 text-[#5A6472] mx-auto" />
+            <Trophy className="w-6 h-6 shrink-0 text-[#7E8899] mx-auto" />
             <p className="eb-heading text-base mt-3">Nobody ranked yet</p>
             <p className="text-xs text-[#8A93A5] mt-1.5 max-w-xs mx-auto leading-relaxed">
               Finish a task, meet a habit or run a focus session and you'll appear here. XP comes
@@ -444,7 +444,7 @@ export const ArenaSection: React.FC<ArenaProps> = ({ variant = 'full', onExpand 
                       <span className="eb-stat block text-base leading-none">
                         {value(e).toLocaleString()}
                       </span>
-                      <span className="block text-[8px] font-mono text-[#5A6472] tracking-wide mt-1">
+                      <span className="block text-[8px] font-mono text-[#7E8899] tracking-wide mt-1">
                         {mode === 'weekly' ? 'WEEK' : 'XP'}
                       </span>
                     </span>
@@ -456,7 +456,7 @@ export const ArenaSection: React.FC<ArenaProps> = ({ variant = 'full', onExpand 
             {/* Outside the top 20: show the real position rather than pretending */}
             {you && you.rank > (page?.entries.length ?? 0) && (
               <>
-                <p className="text-center text-[10px] font-mono text-[#5A6472] py-1">
+                <p className="text-center text-[10px] font-mono text-[#7E8899] py-1">
                   <ChevronUp className="w-3 h-3 shrink-0 inline" /> your position
                 </p>
                 <div className="eb-card-tap rounded-2xl border border-[var(--signal)] bg-[var(--signal)]/[0.09] p-3 flex items-center gap-3">
@@ -483,7 +483,7 @@ export const ArenaSection: React.FC<ArenaProps> = ({ variant = 'full', onExpand 
         )}
       </div>
 
-      <p className="text-[10px] text-[#5A6472] text-center leading-relaxed">
+      <p className="text-[10px] text-[#7E8899] text-center leading-relaxed">
         Rankings are calculated on the server from recorded activity. XP cannot be set from the
         app.
       </p>

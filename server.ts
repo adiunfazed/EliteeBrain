@@ -7,6 +7,13 @@ import { GoogleGenAI } from '@google/genai';
 import { initAdmin, isAdminAvailable, verifyUser, lastVerifyFailure } from './serverAuth';
 import { getLeaderboard, syncLeaderboardEntry } from './serverLeaderboard';
 import { buildCoachContext, describeContext } from './serverCoachContext';
+import {
+  initPush,
+  saveSubscription,
+  removeSubscription,
+  runDailyReminders,
+  sendToUser,
+} from './serverPush';
 
 /**
  * Groq models in preference order. Meta's Llama chat models were retired in
@@ -426,6 +433,93 @@ async function startServer() {
       res.json({ count: rows.length, users: rows });
     } catch (err: any) {
       res.status(500).json({ error: err?.message || String(err) });
+    }
+  });
+
+  /** The public VAPID key, needed by the browser to subscribe. */
+  app.get('/api/push/key', (req, res) => {
+    const key = process.env.VAPID_PUBLIC_KEY;
+    if (!key) return res.status(503).json({ error: 'Push not configured.' });
+    res.json({ key });
+  });
+
+  /** Register a device. Stored under the verified user, never trusting a uid
+      supplied by the client. */
+  app.post('/api/push/subscribe', async (req, res) => {
+    if (!isAdminAvailable()) return res.status(503).json({ error: 'Unavailable.' });
+    try {
+      const idToken = (req.headers.authorization || '').replace(/^Bearer\s+/i, '') || undefined;
+      const verified = await verifyUser(idToken);
+      if (!verified) return res.status(401).json({ error: 'Sign in first.' });
+
+      const { endpoint, keys } = req.body || {};
+      if (!endpoint || !keys?.p256dh || !keys?.auth) {
+        return res.status(400).json({ error: 'Invalid subscription.' });
+      }
+
+      await saveSubscription(verified.uid, {
+        endpoint,
+        keys,
+        createdAt: new Date().toISOString(),
+      });
+      res.json({ ok: true });
+    } catch (err: any) {
+      console.error('Subscribe failed:', err?.message || err);
+      res.status(500).json({ error: 'Could not register this device.' });
+    }
+  });
+
+  app.post('/api/push/unsubscribe', async (req, res) => {
+    if (!isAdminAvailable()) return res.status(503).json({ error: 'Unavailable.' });
+    try {
+      const idToken = (req.headers.authorization || '').replace(/^Bearer\s+/i, '') || undefined;
+      const verified = await verifyUser(idToken);
+      if (!verified) return res.status(401).json({ error: 'Sign in first.' });
+
+      const { endpoint } = req.body || {};
+      if (endpoint) await removeSubscription(verified.uid, endpoint);
+      res.json({ ok: true });
+    } catch (err: any) {
+      res.status(500).json({ error: 'Could not remove this device.' });
+    }
+  });
+
+  /** Send a test push to the caller's own devices. */
+  app.post('/api/push/test', coachLimiter, async (req, res) => {
+    if (!isAdminAvailable()) return res.status(503).json({ error: 'Unavailable.' });
+    try {
+      const idToken = (req.headers.authorization || '').replace(/^Bearer\s+/i, '') || undefined;
+      const verified = await verifyUser(idToken);
+      if (!verified) return res.status(401).json({ error: 'Sign in first.' });
+
+      const sent = await sendToUser(verified.uid, {
+        title: 'EliteLife',
+        body: 'Notifications are working.',
+        tag: 'test',
+      });
+      res.json({ sent });
+    } catch (err: any) {
+      res.status(500).json({ error: 'Could not send.' });
+    }
+  });
+
+  /**
+   * Daily reminder run, triggered by the same scheduler that keeps the service
+   * awake. Protected by a key so it cannot be invoked by anyone who finds it.
+   */
+  app.post('/api/push/run-daily', async (req, res) => {
+    const key = req.headers['x-cron-key'];
+    if (!process.env.CRON_KEY || key !== process.env.CRON_KEY) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+    if (!isAdminAvailable()) return res.status(503).json({ error: 'Unavailable.' });
+
+    try {
+      const result = await runDailyReminders();
+      res.json(result);
+    } catch (err: any) {
+      console.error('Daily reminders failed:', err?.message || err);
+      res.status(500).json({ error: 'Run failed.' });
     }
   });
 

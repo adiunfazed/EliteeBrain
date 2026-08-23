@@ -36,12 +36,12 @@ export const GoalHistoryChart: React.FC<Props> = ({ snapshots }) => {
   return (
     <div className="pt-1">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-[11px] font-mono font-bold text-[#5A6472] tracking-widest uppercase">
+        <span className="text-[11px] font-mono font-bold text-[#7E8899] tracking-widest uppercase">
           Progress · {snapshots.length} days
         </span>
         <span
           className={`text-[10px] font-mono font-bold tabular-nums ${
-            delta > 0 ? 'eb-done' : delta < 0 ? 'eb-warn' : 'text-[#5A6472]'
+            delta > 0 ? 'eb-done' : delta < 0 ? 'eb-warn' : 'text-[#7E8899]'
           }`}
         >
           {delta > 0 ? '+' : ''}

@@ -131,7 +131,7 @@ export const FirstRunFlow: React.FC<Props> = ({ userId, onDone }) => {
               }}
               placeholder={current.placeholder}
               maxLength={90}
-              className="w-full mt-5 bg-[var(--surface-sunk)] border border-[var(--rule)] focus:border-[var(--signal)] rounded-xl px-4 py-3.5 text-sm text-[#F2F4F7] placeholder:text-[#5A6472] outline-none"
+              className="w-full mt-5 bg-[var(--surface-sunk)] border border-[var(--rule)] focus:border-[var(--signal)] rounded-xl px-4 py-3.5 text-sm text-[#F2F4F7] placeholder:text-[#7E8899] outline-none"
             />
 
             <button
@@ -157,7 +157,7 @@ export const FirstRunFlow: React.FC<Props> = ({ userId, onDone }) => {
 
               <button
                 onClick={onDone}
-                className="text-[11px] font-mono text-[#5A6472] hover:text-[#8A93A5]"
+                className="text-[11px] font-mono text-[#7E8899] hover:text-[#8A93A5]"
               >
                 Skip for now
               </button>

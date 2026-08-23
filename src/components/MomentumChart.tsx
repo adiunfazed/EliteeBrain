@@ -68,7 +68,7 @@ export const MomentumChart: React.FC<Props> = ({ input }) => {
                       ? 'eb-done'
                       : summary.trend < 0
                         ? 'eb-warn'
-                        : 'text-[#5A6472]'
+                        : 'text-[#7E8899]'
                   }`}
                 >
                   {summary.trend > 0 ? '+' : ''}
@@ -89,7 +89,7 @@ export const MomentumChart: React.FC<Props> = ({ input }) => {
               className={`eb-press text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-lg border ${
                 range === r.id
                   ? 'eb-chip-active'
-                  : 'text-[#5A6472] border-[#2A313C] hover:border-[#3A424F]'
+                  : 'text-[#7E8899] border-[#2A313C] hover:border-[#3A424F]'
               }`}
             >
               {r.label}
@@ -136,7 +136,7 @@ export const MomentumChart: React.FC<Props> = ({ input }) => {
               key={c.key}
               className="eb-card-sunk rounded-lg px-2 py-1.5 min-w-0"
             >
-              <p className="text-[11px] font-mono text-[#5A6472] truncate">{c.label}</p>
+              <p className="text-[11px] font-mono text-[#7E8899] truncate">{c.label}</p>
               <p className="text-[11px] font-mono font-bold text-[#F4F6F8] tabular-nums">
                 {c.value === null ? '—' : `${Math.round(c.value * 100)}%`}
               </p>

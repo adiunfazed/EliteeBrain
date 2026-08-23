@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { AnimatePresence } from 'motion/react';
 import { UserProfile, ModuleId, SessionResult } from './types';
-import { loadProfile, saveProfile, processModuleResult, MODULE_METADATA, createInitialProfile, resetAdminProfile, countConsecutiveCompletedDays, setActiveUser } from './utils/storage';
+import { applyDayRollover, loadProfile, saveProfile, processModuleResult, MODULE_METADATA, createInitialProfile, resetAdminProfile, countConsecutiveCompletedDays, setActiveUser } from './utils/storage';
 import { soundFx } from './utils/audio';
 import { auth, db, onAuthStateChanged, logoutUser, User } from './lib/firebase';
 import { syncProfileToCloud, fetchProfileFromCloud } from './lib/sync';
@@ -47,6 +47,20 @@ export default function App() {
   const hydratedRef = useRef(false);
   /** True once the cloud profile has been applied for this account. */
   const [isHydrated, setIsHydrated] = useState(false);
+
+  // Roll the day over while the app is open. Someone who leaves it running
+  // overnight would otherwise still see yesterday's completed modules.
+  useEffect(() => {
+    const id = setInterval(() => {
+      setProfile((prev) => {
+        const rolled = applyDayRollover(prev);
+        if (rolled === prev) return prev;
+        saveProfile(rolled);
+        return rolled;
+      });
+    }, 60_000);
+    return () => clearInterval(id);
+  }, []);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isGuestMode, setIsGuestMode] = useState<boolean>(() => {
     return localStorage.getItem('elitebrain_guest') === 'true';
@@ -154,15 +168,18 @@ export default function App() {
         const cloudProf = await fetchProfileFromCloud(user.uid);
         
         if (isAdminUser) {
-          const zeroAdminProf = resetAdminProfile(cloudProf || undefined);
+          const zeroAdminProf = applyDayRollover(resetAdminProfile(cloudProf || undefined));
           // Admins are not exempt from the entitlement system — otherwise a
           // revoke never takes effect on the admin's own account.
           zeroAdminProf.isProUser = resolveEntitlement(zeroAdminProf).isPro;
           setProfile(zeroAdminProf);
           await syncProfileToCloud(zeroAdminProf, user);
         } else if (cloudProf) {
-          setProfile(cloudProf);
-          saveProfile(cloudProf);
+          // Roll forward BEFORE it reaches state, or yesterday's completion
+          // flags render for a moment and then correct themselves.
+          const rolledCloud = applyDayRollover(cloudProf);
+          setProfile(rolledCloud);
+          saveProfile(rolledCloud);
         } else {
           const newProf = createInitialProfile();
           // The trial is started deliberately from the Get Pro screen rather
@@ -239,8 +256,12 @@ export default function App() {
                     // the actual record.
                     merged.streakDays = countConsecutiveCompletedDays(merged);
 
-                    saveProfile(merged);
-                    return merged;
+                    // A profile arriving from the cloud may have been written
+                    // yesterday. Roll it forward before it reaches the UI.
+                    const rolled = applyDayRollover(merged);
+
+                    saveProfile(rolled);
+                    return rolled;
                   });
                 }
               }
@@ -578,7 +599,8 @@ export default function App() {
             const cloudProf = await fetchProfileFromCloud(currentUser.uid);
             if (cloudProf) {
               setProfile(cloudProf);
-              saveProfile(cloudProf);
+              const rolledCloud = applyDayRollover(cloudProf);
+          saveProfile(rolledCloud);
             }
           }
         }}

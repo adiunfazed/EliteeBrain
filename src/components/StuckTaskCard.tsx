@@ -39,7 +39,7 @@ export const StuckTaskCard: React.FC<Props> = ({ task, onStartFocus, onSplit, on
         <button
           onClick={onDismiss}
           aria-label="Dismiss"
-          className="shrink-0 w-8 h-8 -m-1 rounded-lg hover:bg-[#171B22] text-[#5A6472] flex items-center justify-center"
+          className="shrink-0 w-8 h-8 -m-1 rounded-lg hover:bg-[#171B22] text-[#7E8899] flex items-center justify-center"
         >
           <X className="w-3.5 h-3.5 shrink-0" />
         </button>
@@ -99,7 +99,7 @@ export const StuckTaskCard: React.FC<Props> = ({ task, onStartFocus, onSplit, on
               )}
               <button
                 onClick={() => setReason(null)}
-                className="eb-press px-3 py-2.5 text-[10px] font-mono font-bold text-[#5A6472] hover:text-[#98A2B3]"
+                className="eb-press px-3 py-2.5 text-[10px] font-mono font-bold text-[#7E8899] hover:text-[#98A2B3]"
               >
                 Back
               </button>

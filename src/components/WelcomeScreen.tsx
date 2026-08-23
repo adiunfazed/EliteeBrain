@@ -61,7 +61,7 @@ export const WelcomeScreen: React.FC<Props> = ({ suggested, onDone }) => {
             placeholder="Your name"
             maxLength={40}
             autoComplete="given-name"
-            className="w-full mt-4 bg-[var(--surface)] border border-[var(--rule)] focus:border-[var(--signal)] rounded-2xl px-5 py-4 text-base text-[var(--ink)] placeholder:text-[#5A6472] outline-none transition-colors"
+            className="w-full mt-4 bg-[var(--surface)] border border-[var(--rule)] focus:border-[var(--signal)] rounded-2xl px-5 py-4 text-base text-[var(--ink)] placeholder:text-[#7E8899] outline-none transition-colors"
           />
 
           <button onClick={submit} disabled={!name.trim() || saving} className="btn-lg w-full mt-4">

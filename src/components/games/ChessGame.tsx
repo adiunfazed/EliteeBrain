@@ -862,7 +862,7 @@ export const ChessGame: React.FC<{
                 </p>
               )}
 
-              <p className="text-[11px] font-mono text-[#5A6472] mt-1">
+              <p className="text-[11px] font-mono text-[#7E8899] mt-1">
                 {moveHistory.length} moves
               </p>
 
@@ -949,7 +949,7 @@ export const ChessGame: React.FC<{
         </div>
 
         {moveHistory.length > 0 && (
-          <p className="text-[10px] font-mono text-[#5A6472] mt-1.5">
+          <p className="text-[10px] font-mono text-[#7E8899] mt-1.5">
             Move {moveHistory.length} · {moveHistory[moveHistory.length - 1]}
           </p>
         )}

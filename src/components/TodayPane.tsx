@@ -188,7 +188,7 @@ export const TodayPane: React.FC<Props> = ({
           </p>
           <p className="eb-stat text-2xl sm:text-3xl mt-1">
             {doneCount} / {totalCount}
-            <span className="text-xs font-bold text-[#5A6472] ml-2">done today</span>
+            <span className="text-xs font-bold text-[#7E8899] ml-2">done today</span>
           </p>
         </div>
       </div>
@@ -224,7 +224,7 @@ export const TodayPane: React.FC<Props> = ({
             <span className="eb-label">
               Your routine
             </span>
-            <span className="text-[10px] font-mono text-[#5A6472] tabular-nums">
+            <span className="text-[10px] font-mono text-[#7E8899] tabular-nums">
               {adherence.done}/{adherence.total}
             </span>
           </div>
@@ -253,7 +253,7 @@ export const TodayPane: React.FC<Props> = ({
                 <div className="min-w-0 flex-1">
                   <p
                     className={`eb-heading text-sm break-words relative ${
-                      state === 'skipped' ? 'text-[#5A6472] line-through' : 'text-[#F2F4F7]'
+                      state === 'skipped' ? 'text-[#7E8899] line-through' : 'text-[#F2F4F7]'
                     }`}
                   >
                     {block.title}

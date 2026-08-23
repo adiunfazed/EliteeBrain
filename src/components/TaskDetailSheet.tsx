@@ -172,7 +172,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
                   key={f.label}
                   className="bg-[#171B22] border border-[#2A313C] rounded-xl p-2.5 min-w-0"
                 >
-                  <span className="text-[11px] font-mono font-bold text-[#5A6472] tracking-widest uppercase flex items-center gap-1">
+                  <span className="text-[11px] font-mono font-bold text-[#7E8899] tracking-widest uppercase flex items-center gap-1">
                     <Icon className="w-2.5 h-2.5 shrink-0" />
                     {f.label}
                   </span>
@@ -203,7 +203,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
                 Subtasks
               </span>
               {progress.total > 0 && (
-                <span className="text-[10px] font-mono text-[#5A6472]">
+                <span className="text-[10px] font-mono text-[#7E8899]">
                   {progress.done} / {progress.total}
                 </span>
               )}
@@ -229,7 +229,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
                   </button>
                   <span
                     className={`text-xs flex-1 min-w-0 break-words ${
-                      s.done ? 'text-[#5A6472] line-through' : 'text-[#F4F6F8]'
+                      s.done ? 'text-[#7E8899] line-through' : 'text-[#F4F6F8]'
                     }`}
                   >
                     {s.title}
@@ -237,7 +237,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
                   <button
                     onClick={() => removeSub(s.id)}
                     aria-label="Remove subtask"
-                    className="shrink-0 w-9 h-9 rounded-lg text-[#5A6472] hover:eb-danger hover:bg-rose-500/10 flex items-center justify-center opacity-70 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                    className="shrink-0 w-9 h-9 rounded-lg text-[#7E8899] hover:eb-danger hover:bg-rose-500/10 flex items-center justify-center opacity-70 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                   >
                     <Trash2 className="w-3 h-3 shrink-0" />
                   </button>
@@ -254,7 +254,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
                 }}
                 placeholder="Add a step"
                 maxLength={120}
-                className="flex-1 min-w-0 bg-[#171B22] border border-[#2A313C] focus:border-[#8B5CF6]/60 rounded-lg px-2.5 py-2 text-xs text-[#F4F6F8] placeholder:text-[#5A6472] outline-none"
+                className="flex-1 min-w-0 bg-[#171B22] border border-[#2A313C] focus:border-[#8B5CF6]/60 rounded-lg px-2.5 py-2 text-xs text-[#F4F6F8] placeholder:text-[#7E8899] outline-none"
               />
               <button
                 onClick={addSubtask}
@@ -280,7 +280,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
                 className={`text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border ${
                   !task.recurrence
                     ? 'text-[#A78BFA] bg-[#8B5CF6]/15 border-[#8B5CF6]/30'
-                    : 'text-[#5A6472] border-[#2A313C]'
+                    : 'text-[#7E8899] border-[#2A313C]'
                 }`}
               >
                 Never
@@ -292,7 +292,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
                   className={`text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border capitalize ${
                     task.recurrence?.freq === f
                       ? 'text-[#A78BFA] bg-[#8B5CF6]/15 border-[#8B5CF6]/30'
-                      : 'text-[#5A6472] border-[#2A313C]'
+                      : 'text-[#7E8899] border-[#2A313C]'
                   }`}
                 >
                   {f}
@@ -310,7 +310,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
                     className={`w-9 h-9 rounded-lg text-[10px] font-mono font-bold border ${
                       task.recurrence?.weekdays?.includes(i)
                         ? 'eb-done bg-emerald-500/15 border-emerald-500/30'
-                        : 'text-[#5A6472] border-[#2A313C]'
+                        : 'text-[#7E8899] border-[#2A313C]'
                     }`}
                   >
                     {label}
@@ -320,7 +320,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
             )}
 
             {task.recurrence && (
-              <p className="text-[10px] font-mono text-[#5A6472] mt-2">
+              <p className="text-[10px] font-mono text-[#7E8899] mt-2">
                 {describeRecurrence(task.recurrence)} · the next one is created when you
                 complete this.
               </p>
@@ -346,7 +346,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
                   onClick={() => onPatch({ priority: id })}
                   style={task.priority === id ? { borderColor: color, color } : undefined}
                   className={`eb-press text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border ${
-                    task.priority === id ? 'bg-white/[0.06]' : 'text-[#5A6472] border-[#262C38]'
+                    task.priority === id ? 'bg-white/[0.06]' : 'text-[#7E8899] border-[#262C38]'
                   }`}
                 >
                   {label}
@@ -370,7 +370,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
               {task.dueDate && (
                 <button
                   onClick={() => onPatch({ dueDate: undefined })}
-                  className="eb-press text-[10px] font-mono text-[#5A6472] hover:eb-danger"
+                  className="eb-press text-[10px] font-mono text-[#7E8899] hover:eb-danger"
                 >
                   clear
                 </button>
@@ -391,7 +391,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
                   className={`eb-press text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border ${
                     !task.goalId
                       ? 'text-[#A78BFA] bg-[#8B5CF6]/15 border-[#8B5CF6]/30'
-                      : 'text-[#5A6472] border-[#2A313C]'
+                      : 'text-[#7E8899] border-[#2A313C]'
                   }`}
                 >
                   Nothing
@@ -403,14 +403,14 @@ export const TaskDetailSheet: React.FC<Props> = ({
                     className={`eb-press text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border max-w-full truncate ${
                       task.goalId === g.id
                         ? 'eb-chip-active'
-                        : 'text-[#5A6472] border-[#2A313C] hover:border-[#3A424F]'
+                        : 'text-[#7E8899] border-[#2A313C] hover:border-[#3A424F]'
                     }`}
                   >
                     {g.title}
                   </button>
                 ))}
               </div>
-              <p className="text-[10px] font-mono text-[#5A6472] mt-1.5">
+              <p className="text-[10px] font-mono text-[#7E8899] mt-1.5">
                 Completing this moves the goal forward.
               </p>
             </div>
@@ -429,7 +429,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
               }}
               rows={3}
               placeholder="Anything worth remembering"
-              className="w-full mt-2 bg-[#171B22] border border-[#2A313C] focus:border-[#8B5CF6]/60 rounded-xl px-3 py-2 text-xs text-[#F4F6F8] placeholder:text-[#5A6472] outline-none resize-none"
+              className="w-full mt-2 bg-[#171B22] border border-[#2A313C] focus:border-[#8B5CF6]/60 rounded-xl px-3 py-2 text-xs text-[#F4F6F8] placeholder:text-[#7E8899] outline-none resize-none"
             />
           </div>
 
@@ -450,7 +450,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
                     className={`text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border flex items-center gap-1.5 ${
                       task.reflection === r.id
                         ? 'eb-done bg-emerald-500/12 border-emerald-500/30'
-                        : 'text-[#5A6472] border-[#2A313C] hover:border-[#3A424F]'
+                        : 'text-[#7E8899] border-[#2A313C] hover:border-[#3A424F]'
                     }`}
                   >
                     <span>{r.emoji}</span>
@@ -458,7 +458,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
                   </button>
                 ))}
               </div>
-              <p className="text-[10px] text-[#5A6472] font-mono mt-1.5">Optional.</p>
+              <p className="text-[10px] text-[#7E8899] font-mono mt-1.5">Optional.</p>
             </div>
           )}
 

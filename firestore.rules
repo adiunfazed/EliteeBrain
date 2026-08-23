@@ -87,6 +87,13 @@ service cloud.firestore {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
     }
 
+    // --- Push subscriptions. A push endpoint is a capability: anyone holding
+    //     it can notify that device. Written only by the server, and readable
+    //     by nobody from a client. ---
+    match /users/{userId}/pushSubscriptions/{subId} {
+      allow read, write: if false;
+    }
+
     // --- Leaderboard ---
     // Readable by any signed-in user because it contains ONLY public fields
     // (display name, XP, level). Never readable anonymously, and never

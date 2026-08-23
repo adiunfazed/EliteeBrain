@@ -183,12 +183,21 @@ export const RankProgressionSection: React.FC<RankProgressionSectionProps> = ({
             className="space-y-6"
           >
             {/* HERO RANK CARD (Directly matching screenshot layout) */}
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2.5">
               {[
+                {
+                  label: 'Rank',
+                  value: currentRankLabel,
+                  sub:
+                    nextTier !== currentTier
+                      ? `${xpToGo.toLocaleString()} XP to ${nextTier.baseName} ${nextTier.tierNumber}`
+                      : 'Top tier',
+                  color: currentTier.color,
+                },
                 {
                   label: 'Total XP',
                   value: careerXp.toLocaleString(),
-                  sub: 'earned',
+                  sub: 'earned so far',
                   color: '#F2F4F7',
                 },
                 {
@@ -204,38 +213,27 @@ export const RankProgressionSection: React.FC<RankProgressionSectionProps> = ({
                   color: '#00C2A8',
                 },
               ].map((stat) => (
-                <div key={stat.label} className="eb-card p-3 min-w-0">
-                  <span className="eb-label block truncate">{stat.label}</span>
+                <div key={stat.label} className="eb-card p-4 min-w-0 flex flex-col">
+                  <span className="eb-label">{stat.label}</span>
+
+                  {/* Fluid size with a floor: a long tier name shrinks to fit
+                      rather than being cut off, and wraps if it still needs to. */}
                   <span
-                    className="eb-stat block text-lg mt-1 truncate"
-                    style={{ color: stat.color }}
+                    className="font-display font-extrabold mt-1.5 leading-tight break-words"
+                    style={{
+                      color: stat.color,
+                      fontSize: 'clamp(17px, 5.2vw, 24px)',
+                      letterSpacing: '-0.02em',
+                    }}
                   >
                     {stat.value}
                   </span>
-                  <span className="block text-[13px] text-[#8A93A5] mt-0.5 truncate">
+
+                  <span className="text-[12px] text-[#8A93A5] mt-1.5 leading-snug break-words">
                     {stat.sub}
                   </span>
                 </div>
               ))}
-            </div>
-
-            {/* Rank gets its own full-width row — a tier name never fits in a
-                quarter-width tile without being cut off. */}
-            <div className="eb-card p-4 flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <span className="eb-label block">Rank</span>
-                <span
-                  className="eb-stat block text-2xl mt-1 break-words"
-                  style={{ color: currentTier.color }}
-                >
-                  {currentRankLabel}
-                </span>
-              </div>
-              <span className="t-sub text-right shrink-0 max-w-[45%]">
-                {nextTier !== currentTier
-                  ? `${xpToGo.toLocaleString()} XP to ${nextTier.baseName} ${nextTier.tierNumber}`
-                  : 'Top tier'}
-              </span>
             </div>
 
             {/* Tier progress — one bar rather than a six-card ladder. */}
