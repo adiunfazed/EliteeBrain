@@ -11,7 +11,7 @@ import {
   initPush,
   saveSubscription,
   removeSubscription,
-  runDailyReminders,
+  runScheduledReminders,
   sendToUser,
 } from './serverPush';
 
@@ -452,7 +452,7 @@ async function startServer() {
       const verified = await verifyUser(idToken);
       if (!verified) return res.status(401).json({ error: 'Sign in first.' });
 
-      const { endpoint, keys } = req.body || {};
+      const { endpoint, keys, utcOffsetMinutes } = req.body || {};
       if (!endpoint || !keys?.p256dh || !keys?.auth) {
         return res.status(400).json({ error: 'Invalid subscription.' });
       }
@@ -460,6 +460,9 @@ async function startServer() {
       await saveSubscription(verified.uid, {
         endpoint,
         keys,
+        // Clamped to the real range of world offsets so a bad value cannot
+        // shift someone's reminders to an absurd hour.
+        utcOffsetMinutes: Math.max(-780, Math.min(840, Number(utcOffsetMinutes) || 0)),
         createdAt: new Date().toISOString(),
       });
       res.json({ ok: true });
@@ -504,8 +507,9 @@ async function startServer() {
   });
 
   /**
-   * Daily reminder run, triggered by the same scheduler that keeps the service
-   * awake. Protected by a key so it cannot be invoked by anyone who finds it.
+   * Scheduler pass. Called every 15 minutes; decides per user whether
+   * anything is worth sending right now. Key-protected so it cannot be
+   * invoked by anyone who finds the URL.
    */
   app.post('/api/push/run-daily', async (req, res) => {
     const key = req.headers['x-cron-key'];
@@ -515,7 +519,7 @@ async function startServer() {
     if (!isAdminAvailable()) return res.status(503).json({ error: 'Unavailable.' });
 
     try {
-      const result = await runDailyReminders();
+      const result = await runScheduledReminders();
       res.json(result);
     } catch (err: any) {
       console.error('Daily reminders failed:', err?.message || err);

@@ -361,7 +361,13 @@ export async function subscribeToPush(
     const res = await fetch('/api/push/subscribe', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ endpoint: json.endpoint, keys: json.keys }),
+      body: JSON.stringify({
+        endpoint: json.endpoint,
+        keys: json.keys,
+        // Minutes this device is ahead of UTC. Without it the server has no
+        // way to send "at 8am" — it would be 8am somewhere else entirely.
+        utcOffsetMinutes: -new Date().getTimezoneOffset(),
+      }),
     });
 
     if (!res.ok) return { ok: false, reason: 'Could not register this device.' };
