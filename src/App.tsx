@@ -640,7 +640,7 @@ export default function App() {
         />
       )}
 
-      <UpdateBanner />
+      <UpdateBanner ready={!showSplash && authResolved} />
 
       <div className="eb-ambient" aria-hidden="true" />
 

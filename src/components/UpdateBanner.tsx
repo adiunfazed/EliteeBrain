@@ -10,14 +10,21 @@ import { applyUpdate, watchForUpdates } from '../lib/appUpdate';
  * install, never on a timer. Dismissible, because interrupting someone
  * mid-task to demand a reload is worse than letting them update later.
  */
-export const UpdateBanner: React.FC = () => {
+interface Props {
+  /** Hold the prompt until the app is actually on screen. */
+  ready?: boolean;
+}
+
+export const UpdateBanner: React.FC<Props> = ({ ready = true }) => {
   const [available, setAvailable] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const [applying, setApplying] = useState(false);
 
   useEffect(() => watchForUpdates(setAvailable), []);
 
-  const show = available && !dismissed;
+  // Never over the splash screen: an update prompt during loading looks like
+  // an error, and there is nothing to relaunch away from yet.
+  const show = ready && available && !dismissed;
 
   return (
     <AnimatePresence>

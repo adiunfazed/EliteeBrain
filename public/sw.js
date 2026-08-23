@@ -1,3 +1,7 @@
+// Replaced at build time. Its only job is to make this file's bytes differ
+// between deploys, which is how a browser detects a worker update at all.
+const BUILD_ID = '__BUILD_ID__';
+
 /**
  * EliteLife service worker.
  *
