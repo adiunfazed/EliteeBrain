@@ -5,6 +5,7 @@ import { soundFx } from '../utils/audio';
 import { calculateBrainScore } from '../utils/storage';
 import { Send, Sparkles, Bot, User as UserIcon, RefreshCw, Crown, Lock, ArrowRight, Zap, Lightbulb, CalendarCheck, LifeBuoy, TrendingUp, Target, Repeat, Flag, Scale, Brain, Plus } from 'lucide-react';
 import { getIdToken } from '../lib/firebase';
+import { pushEntitlement } from '../lib/sync';
 import {
   COACH_ACTIONS,
   clearChatEverywhere,
@@ -36,6 +37,8 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
   const userId = currentUser?.uid || null;
   /** Guards against reacting to this device's own cloud write. */
   const lastWriteRef = useRef<string>('');
+  /** Guards the one-shot re-sync retry so it cannot loop. */
+  const proRetriedRef = useRef(false);
   const messagesRef = useRef<CoachChatMessage[]>([]);
 
   const brainScore = calculateBrainScore(profile);
@@ -169,6 +172,18 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
         } else {
           throw new Error(data?.error || 'Could not verify your sign-in.');
         }
+      } else if (res.status === 403 && profile.isProUser && !proRetriedRef.current) {
+        // The client shows Pro and the server says otherwise — the cloud copy
+        // is stale. Re-sync and try once more before blaming the user.
+        proRetriedRef.current = true;
+        if (userId) {
+          try {
+            await pushEntitlement(userId, profile);
+          } catch {
+            /* if this fails the original error still surfaces below */
+          }
+        }
+        return handleSendMessage(query);
       } else if (!res.ok) {
         throw new Error(data?.error || `Request failed (${res.status})`);
       }
@@ -392,14 +407,14 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
           <div className="flex justify-end gap-2 pt-2">
             <button
               onClick={() => setActionsOpen((v) => !v)}
-              className="eb-press text-[10px] font-mono font-bold px-3 py-2 rounded-xl border border-[#2A313C] text-[#98A2B3] hover:text-[#F4F6F8] hover:border-[#3A424F] flex items-center gap-1.5"
+              className="eb-press text-[11px] font-semibold px-3 py-2 rounded-xl border border-[#2A313C] text-[#98A2B3] hover:text-[#F4F6F8] hover:border-[#3A424F] flex items-center gap-1.5"
             >
               <Sparkles className="w-3 h-3 shrink-0" />
               {actionsOpen ? 'Hide ideas' : 'Ideas'}
             </button>
             <button
               onClick={startNewChat}
-              className="eb-press text-[10px] font-mono font-bold px-3 py-2 rounded-xl border border-[#2A313C] text-[#98A2B3] hover:text-[#F4F6F8] hover:border-[#3A424F] flex items-center gap-1.5"
+              className="eb-press text-[11px] font-semibold px-3 py-2 rounded-xl border border-[#2A313C] text-[#98A2B3] hover:text-[#F4F6F8] hover:border-[#3A424F] flex items-center gap-1.5"
             >
               <Plus className="w-3 h-3 shrink-0" />
               New chat

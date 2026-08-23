@@ -175,7 +175,7 @@ export const SettingsModal: React.FC<Props> = ({
                 </span>
               </div>
             </div>
-            <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-emerald-500/20 eb-done border border-emerald-500/40">
+            <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-emerald-500/20 eb-done border border-emerald-500/40">
               ACTIVE
             </span>
           </div>

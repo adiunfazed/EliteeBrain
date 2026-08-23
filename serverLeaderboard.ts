@@ -26,6 +26,8 @@ export interface LeaderboardEntry {
   level: number;
   /** Lifetime or active trial — shown as a badge, never inferred client-side. */
   isPro: boolean;
+  /** Provider avatar, when one exists. Falls back to an initial in the UI. */
+  photoURL?: string;
   updatedAt: string;
 }
 
@@ -256,7 +258,7 @@ export interface LeaderboardPage {
 export async function getLeaderboard(
   uid: string | null,
   mode: 'career' | 'weekly' = 'career',
-  limit = 20
+  limit = 50
 ): Promise<LeaderboardPage> {
   const db = getFirestore();
   const field = mode === 'weekly' ? 'weeklyXp' : 'careerXp';
@@ -286,11 +288,12 @@ export async function getLeaderboard(
 
     const displayName = readDisplayName(data);
     const pro = resolveEntitlement(data).isPro;
+    const photoURL = typeof data.photoURL === 'string' ? data.photoURL : undefined;
 
     if (fresh) {
       // Name and Pro status are cheap to read, so keep them current even when
       // the XP figure is being served from cache.
-      entries.push({ ...cached!, displayName, isPro: pro });
+      entries.push({ ...cached!, displayName, isPro: pro, photoURL });
       continue;
     }
 
@@ -298,7 +301,7 @@ export async function getLeaderboard(
     // Only a few accounts are refreshed per request, so the first load stays
     // fast no matter how many members exist.
     if (cached && recomputed >= MAX_RECOMPUTE_PER_REQUEST) {
-      entries.push({ ...cached, displayName, isPro: pro });
+      entries.push({ ...cached, displayName, isPro: pro, photoURL });
       continue;
     }
 
@@ -312,6 +315,7 @@ export async function getLeaderboard(
         weeklyXp: weekly,
         level: levelFromXp(career),
         isPro: pro,
+        photoURL,
         updatedAt: new Date().toISOString(),
       };
       entries.push(entry);

@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Trophy, RefreshCw, AlertCircle, Crown, ChevronUp } from 'lucide-react';
 import { getIdToken } from '../lib/firebase';
+import { TIERS, tierFor, tierLabel } from '../lib/tiers';
 
 interface Entry {
   uid: string;
@@ -21,38 +22,8 @@ interface Page {
   yourEntry: Entry | null;
 }
 
-/** Tiers derived from the same XP the rest of the app uses. */
-const TIERS = [
-  { name: 'BRONZE', min: 0, color: '#C97B3C', roman: 'I' },
-  { name: 'SILVER', min: 1500, color: '#A8B4C4', roman: 'II' },
-  { name: 'GOLD', min: 3000, color: '#E8A33D', roman: 'III' },
-  { name: 'PLATINUM', min: 7000, color: '#7FD4E8', roman: 'IV' },
-  { name: 'DIAMOND', min: 13000, color: '#7C9CFF', roman: 'V' },
-  { name: 'ELITE', min: 25000, color: '#B98BFF', roman: 'VI' },
-];
-
-function tierFor(xp: number) {
-  let tier = TIERS[0];
-  for (const t of TIERS) if (xp >= t.min) tier = t;
-  return tier;
-}
-
-/** Sub-tier 1–3 within a tier, so progress is visible between big jumps. */
-function subTier(xp: number): number {
-  const tier = tierFor(xp);
-  const idx = TIERS.indexOf(tier);
-  const next = TIERS[idx + 1];
-  if (!next) return 3;
-  const span = (next.min - tier.min) / 3;
-  return Math.min(3, Math.floor((xp - tier.min) / span) + 1);
-}
-
-const ROMAN = ['I', 'II', 'III'];
-
 const TierBadge: React.FC<{ xp: number; size?: 'sm' | 'lg' }> = ({ xp, size = 'sm' }) => {
   const tier = tierFor(xp);
-  // Sub-tier, so Bronze 1/2/3 are visibly different rather than all "I".
-  const sub = ROMAN[subTier(xp) - 1] || 'I';
   const px = size === 'lg' ? 52 : 40;
   return (
     <span
@@ -72,7 +43,7 @@ const TierBadge: React.FC<{ xp: number; size?: 'sm' | 'lg' }> = ({ xp, size = 's
         className="relative text-[10px] font-mono font-bold"
         style={{ color: tier.color }}
       >
-        {sub}
+        {tier.roman}
       </span>
     </span>
   );
@@ -289,7 +260,9 @@ export const ArenaSection: React.FC<ArenaProps> = ({ variant = 'full', onExpand 
       {/* Your position */}
       <div className="eb-card p-4">
         <span className="eb-label">EliteLife Arena</span>
-        {you ? (
+        {loading ? (
+          <p className="eb-heading text-lg mt-1 opacity-50">Loading the Arena…</p>
+        ) : you ? (
           <p className="eb-heading text-lg mt-1">
             You're #{you.rank} of {members} {members === 1 ? 'member' : 'members'}
           </p>
@@ -345,12 +318,31 @@ export const ArenaSection: React.FC<ArenaProps> = ({ variant = 'full', onExpand 
           <span className="eb-label">
             {mode === 'weekly' ? 'This week' : 'All-time rankings'}
           </span>
-          <span className="text-[10px] font-mono text-[#8A93A5]">
-            {members} {members === 1 ? 'member' : 'members'}
+          <span className="text-[11px] font-mono text-[#8A93A5]">
+            {loading ? 'Loading…' : `${members} ${members === 1 ? 'member' : 'members'}`}
           </span>
         </div>
 
-        {page && page.entries.length === 0 ? (
+        {loading ? (
+          <div className="space-y-2">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="eb-card rounded-2xl p-3 flex items-center gap-3 animate-pulse"
+                style={{ animationDelay: `${i * 80}ms` }}
+              >
+                <span className="w-7 h-4 rounded bg-[var(--surface-sunk)]" />
+                <span className="w-10 h-10 rounded-lg bg-[var(--surface-sunk)]" />
+                <span className="flex-1 min-w-0">
+                  <span className="block h-3.5 w-1/2 rounded bg-[var(--surface-sunk)]" />
+                  <span className="block h-2.5 w-1/4 rounded bg-[var(--surface-sunk)] mt-2" />
+                </span>
+                <span className="w-12 h-5 rounded bg-[var(--surface-sunk)]" />
+              </div>
+            ))}
+            <p className="t-sub text-center pt-2">Loading rankings…</p>
+          </div>
+        ) : page && page.entries.length === 0 ? (
           <div className="eb-card p-8 text-center">
             <Trophy className="w-6 h-6 shrink-0 text-[#7E8899] mx-auto" />
             <p className="eb-heading text-base mt-3">Nobody ranked yet</p>
@@ -426,7 +418,7 @@ export const ArenaSection: React.FC<ArenaProps> = ({ variant = 'full', onExpand 
                           className="text-[10px] font-mono font-bold"
                           style={{ color: t.color }}
                         >
-                          {t.name} {subTier(e.careerXp)}
+                          {tierLabel(t)}
                         </span>
                         {e.isPro && (
                           <span
@@ -470,7 +462,7 @@ export const ArenaSection: React.FC<ArenaProps> = ({ variant = 'full', onExpand 
                       className="block text-[10px] font-mono font-bold mt-0.5"
                       style={{ color: tier.color }}
                     >
-                      {tier.name} {subTier(you.careerXp)}
+                      {tierLabel(tier)}
                     </span>
                   </span>
                   <span className="eb-stat text-base shrink-0">

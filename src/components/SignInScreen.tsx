@@ -123,7 +123,7 @@ export const SignInScreen: React.FC<Props> = ({ onSignInSuccess, onContinueAsGue
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0E1116] overflow-y-auto font-sans select-none animate-fadeIn">
+    <div className="fixed inset-0 z-[95] flex items-center justify-center p-4 bg-[#0E1116] overflow-y-auto overscroll-contain font-sans select-none animate-fadeIn">
       {/* Background Grid */}
       <div className="absolute inset-0 bg-[radial-gradient(#2A313C_1px,transparent_1px)] [background-size:32px_32px] opacity-20 pointer-events-none" />
 

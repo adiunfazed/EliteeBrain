@@ -63,7 +63,7 @@ export const StuckTaskCard: React.FC<Props> = ({ task, onStartFocus, onSplit, on
                   soundFx.playClick();
                   setReason(o.id);
                 }}
-                className="eb-press text-[10px] font-mono font-bold px-2.5 py-2 rounded-full border border-[#2A313C] text-[#98A2B3] hover:text-[#F4F6F8] hover:border-[#3A424F]"
+                className="eb-press text-[11px] font-semibold px-2.5 py-2 rounded-full border border-[#2A313C] text-[#98A2B3] hover:text-[#F4F6F8] hover:border-[#3A424F]"
               >
                 {o.label}
               </button>

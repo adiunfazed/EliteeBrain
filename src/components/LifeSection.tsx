@@ -358,7 +358,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                 <div className="eb-tabs w-fit max-w-full overflow-x-auto no-scrollbar">
                   <button
                     onClick={() => setBlockGoalId(undefined)}
-                    className={`eb-press text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border ${
+                    className={`eb-press text-[11px] font-semibold px-2.5 py-1.5 rounded-full border ${
                       !blockGoalId
                         ? 'eb-chip-active'
                         : 'text-[#7E8899] border-[#2A313C]'
@@ -370,7 +370,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                     <button
                       key={g.id}
                       onClick={() => setBlockGoalId(blockGoalId === g.id ? undefined : g.id)}
-                      className={`eb-press text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border max-w-full truncate ${
+                      className={`eb-press text-[11px] font-semibold px-2.5 py-1.5 rounded-full border max-w-full truncate ${
                         blockGoalId === g.id
                           ? 'eb-chip-active'
                           : 'text-[#7E8899] border-[#2A313C] hover:border-[#3A424F]'
@@ -388,7 +388,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                 <button
                   key={k}
                   onClick={() => setKind(k)}
-                  className={`eb-press text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border ${
+                  className={`eb-press text-[11px] font-semibold px-2.5 py-1.5 rounded-full border ${
                     kind === k
                       ? BLOCK_META[k].tint
                       : 'text-[#7E8899] border-[#2A313C] hover:border-[#3A424F]'
@@ -518,7 +518,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                         {blockDuration(block)} min
                       </span>
                       <span
-                        className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded-full border ${BLOCK_META[block.kind].tint}`}
+                        className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${BLOCK_META[block.kind].tint}`}
                       >
                         {BLOCK_META[block.kind].label}
                       </span>

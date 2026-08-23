@@ -7,6 +7,7 @@ import { GoogleGenAI } from '@google/genai';
 import { initAdmin, isAdminAvailable, verifyUser, lastVerifyFailure } from './serverAuth';
 import { getLeaderboard, syncLeaderboardEntry } from './serverLeaderboard';
 import { buildCoachContext, describeContext } from './serverCoachContext';
+import { readField, resolveEntitlement } from './serverEntitlement';
 import {
   initPush,
   saveSubscription,
@@ -360,7 +361,8 @@ async function startServer() {
       const verified = await verifyUser(idToken);
       const mode = req.query.mode === 'weekly' ? 'weekly' : 'career';
 
-      const page = await getLeaderboard(verified?.uid || null, mode, 20);
+      // Top 50, matching the leaderboard design.
+      const page = await getLeaderboard(verified?.uid || null, mode, 50);
       res.json(page);
     } catch (err: any) {
       console.error('Leaderboard read failed:', err?.message || err);
@@ -527,6 +529,95 @@ async function startServer() {
     }
   });
 
+  /**
+   * Start a free trial — server-side and authoritative.
+   *
+   * Previously the browser wrote the trial and synced it. If that sync failed
+   * (offline, tab closed, quota) the device showed Pro while the database had
+   * no record, so the coach correctly refused — which is why it worked for
+   * some users and not others. The server now owns this: it writes the record
+   * itself and returns the result, so the two can never disagree.
+   */
+  app.post('/api/trial/start', coachLimiter, async (req, res) => {
+    if (!isAdminAvailable()) {
+      return res.status(503).json({ error: 'Trials are temporarily unavailable.' });
+    }
+
+    try {
+      const idToken = (req.headers.authorization || '').replace(/^Bearer\s+/i, '') || undefined;
+      const verified = await verifyUser(idToken);
+      if (!verified) return res.status(401).json({ error: 'Sign in to start your trial.' });
+
+      const { getFirestore, FieldValue } = await import('firebase-admin/firestore');
+      const db = getFirestore();
+      const ref = db.collection('users').doc(verified.uid);
+      const snap = await ref.get();
+      const data = snap.exists ? snap.data() : null;
+
+      // Already lifetime — nothing to do.
+      if (readField(data, 'lifetimePro') === true || readField(data, 'proPlanType') === 'lifetime') {
+        return res.json({ status: 'lifetime', isPro: true });
+      }
+
+      const existingStart = readField(data, 'trialStartedAt');
+      const everStarted = readField(data, 'trialEverStarted') === true || !!existingStart;
+
+      if (everStarted) {
+        // Idempotent: re-claiming returns the current state rather than
+        // granting a second month or erroring.
+        const ent = resolveEntitlement(data);
+        return res.json({
+          status: ent.status,
+          isPro: ent.isPro,
+          trialStartedAt: existingStart || null,
+          alreadyUsed: true,
+        });
+      }
+
+      const startedAt = new Date().toISOString();
+      await ref.set(
+        {
+          trialStartedAt: startedAt,
+          trialEverStarted: true,
+          isProUser: true,
+          updatedAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+      res.json({ status: 'trial', isPro: true, trialStartedAt: startedAt });
+    } catch (err: any) {
+      console.error('Trial start failed:', err?.message || err);
+      res.status(500).json({ error: 'Could not start your trial. Please try again.' });
+    }
+  });
+
+  /**
+   * The caller's authoritative entitlement, straight from the database.
+   * Lets the client reconcile when its local copy disagrees.
+   */
+  app.get('/api/entitlement', async (req, res) => {
+    if (!isAdminAvailable()) return res.status(503).json({ error: 'Unavailable.' });
+    try {
+      const idToken = (req.headers.authorization || '').replace(/^Bearer\s+/i, '') || undefined;
+      const verified = await verifyUser(idToken);
+      if (!verified) return res.status(401).json({ error: 'Sign in first.' });
+
+      const { getFirestore } = await import('firebase-admin/firestore');
+      const snap = await getFirestore().collection('users').doc(verified.uid).get();
+      const data = snap.exists ? snap.data() : null;
+      const ent = resolveEntitlement(data);
+
+      res.json({
+        status: ent.status,
+        isPro: ent.isPro,
+        trialStartedAt: readField(data, 'trialStartedAt') || null,
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: 'Could not read your plan.' });
+    }
+  });
+
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
@@ -579,6 +670,9 @@ async function startServer() {
             verified.status === 'expired'
               ? 'Your free month has ended. Unlock Pro to keep using the AI Coach.'
               : 'The AI Coach is a Pro feature. Start your free month to unlock it.',
+          // Surfaced to the client so a mismatch is diagnosable from a
+          // screenshot rather than needing server logs.
+          status: verified.status,
         });
       }
 

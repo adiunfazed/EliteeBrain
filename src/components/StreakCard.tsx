@@ -44,14 +44,14 @@ export const StreakCard: React.FC<Props> = ({ input, resetFrom }) => {
 
         <div className="flex flex-col items-end gap-1.5 shrink-0">
           {streak.best > 0 && (
-            <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-[#8B5CF6]/12 border border-[#8B5CF6]/30 text-[#A78BFA]">
+            <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-[#8B5CF6]/12 border border-[#8B5CF6]/30 text-[#A78BFA]">
               Best {streak.best}
             </span>
           )}
           {streak.freezesAvailable > 0 && (
             <span
               title="Earned by staying consistent. Covers one missed day."
-              className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-[#4C9AFF]/12 border border-[#4C9AFF]/30 text-[#7FA6FF] flex items-center gap-1"
+              className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-[#4C9AFF]/12 border border-[#4C9AFF]/30 text-[#7FA6FF] flex items-center gap-1"
             >
               <Shield className="w-2.5 h-2.5 shrink-0" />
               {streak.freezesAvailable}

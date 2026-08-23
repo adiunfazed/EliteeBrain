@@ -1079,3 +1079,52 @@ input::placeholder, textarea::placeholder { color: #7E8899; opacity: 1; }
 
 /* Disabled controls should read as disabled, not invisible. */
 button:disabled { opacity: 0.55; }
+
+
+/* ==================================================================
+   Where monospace belongs
+
+   JetBrains Mono earns its place on figures that must align — timers,
+   scores, clock ranges. On navigation labels and button text it reads as
+   technical rather than premium, and its narrow forms look thin.
+   Interface chrome uses the UI font.
+   ================================================================== */
+
+.eb-nav-item span,
+button.btn-lg,
+button.btn-quiet,
+.eb-btn-primary,
+.eb-btn-ghost {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: 0.005em;
+}
+
+/* Section labels: the UI font at small caps reads cleaner than mono. */
+.sec-label,
+.eb-label {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  letter-spacing: 0.09em;
+}
+
+/* Nav labels sized for legibility rather than density. */
+.eb-nav-item span {
+  font-size: 11px;
+  text-transform: none;
+  letter-spacing: 0.01em;
+}
+
+/* Keep monospace only where alignment matters. */
+.tabular-nums,
+.eb-stat,
+.t-meta {
+  font-variant-numeric: tabular-nums;
+}
+.t-meta { font-family: var(--font-mono); font-weight: 600; }
+
+
+/* --- Full-screen overlays must not let the page behind them scroll or
+       rubber-band into view on iOS. --- */
+.eb-overlay-lock { overscroll-behavior: none; }
+body.eb-locked { overflow: hidden; position: relative; }

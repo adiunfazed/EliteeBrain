@@ -6,13 +6,26 @@
  * before notifications are permitted at all.
  */
 
-self.addEventListener('install', (event) => {
-  // Take over immediately so a returning user isn't stuck on an old worker.
-  self.skipWaiting();
+/**
+ * Deliberately does NOT call skipWaiting() here.
+ *
+ * Taking over immediately means there is never a "waiting" worker, so the app
+ * has no way to know an update exists — and a user mid-task can have the page
+ * swapped underneath them. Instead the new worker waits until the user taps
+ * Relaunch, which posts SKIP_WAITING below.
+ */
+self.addEventListener('install', () => {
+  // Intentionally empty: wait for the user.
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(self.clients.claim());
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 /**

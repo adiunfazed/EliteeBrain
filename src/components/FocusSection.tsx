@@ -307,13 +307,13 @@ export const FocusSection: React.FC<Props> = ({ userId, incomingTask, onConsumeI
                         console.error('Could not complete task:', e);
                       }
                     }}
-                    className="eb-press text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/35 eb-done"
+                    className="eb-press text-[11px] font-semibold px-2.5 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/35 eb-done"
                   >
                     Yes, mark done
                   </button>
                   <button
                     onClick={() => setReflected(true)}
-                    className="eb-press text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-lg border border-[#262C38] text-[#8A93A5]"
+                    className="eb-press text-[11px] font-semibold px-2.5 py-1.5 rounded-lg border border-[#262C38] text-[#8A93A5]"
                   >
                     Not yet
                   </button>
@@ -393,6 +393,27 @@ export const FocusSection: React.FC<Props> = ({ userId, incomingTask, onConsumeI
                 {m} min
               </button>
             ))}
+
+            {/* Custom duration. Presets cover the common cases; this covers
+                everyone whose work does not fit them. */}
+            <label className="flex items-center gap-2 px-3 py-2 rounded-xl border border-[var(--rule)] focus-within:border-[var(--signal)]">
+              <input
+                type="number"
+                min={1}
+                max={240}
+                value={FOCUS_PRESETS.includes(minutes) ? '' : minutes}
+                placeholder="Custom"
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  // Clamped: a zero-minute session is meaningless and four
+                  // hours is already beyond what anyone sustains.
+                  if (!Number.isFinite(v)) return;
+                  setMinutes(Math.max(1, Math.min(240, Math.round(v))));
+                }}
+                className="w-16 bg-transparent text-sm font-semibold text-[var(--ink)] outline-none tabular-nums"
+              />
+              <span className="text-xs text-[#7E8899]">min</span>
+            </label>
           </div>
         </div>
 

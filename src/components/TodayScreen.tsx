@@ -4,6 +4,8 @@ import { ArrowRight, Check, ChevronRight, Play, Moon, Clock } from 'lucide-react
 import type { Habit, HabitLog, RoutineBlock, RoutineLog, SleepLog, Task } from '../types';
 import { setHabitValue, setRoutineState } from '../lib/goalStore';
 import { addDays, patchTask, todayISO } from '../lib/tasks';
+import { DailyQuestCard } from './DailyQuestCard';
+import { praiseFor } from '../lib/praise';
 import { reviewToday, suggestNextActions } from '../lib/nextAction';
 import { blocksForDate, minutesOf } from '../lib/routine';
 import { isScheduledOn, valueOn } from '../lib/habits';
@@ -15,6 +17,11 @@ interface Props {
   userId: string | null;
   displayName?: string;
   tasks: Task[];
+  /** Level drives quest difficulty. */
+  level: number;
+  questDoneToday: boolean;
+  recentQuestIds?: string[];
+  onCompleteQuest: (quest: { id: string; title: string; xp: number }) => void;
   habits: Habit[];
   habitLogs: HabitLog[];
   routineBlocks: RoutineBlock[];
@@ -40,6 +47,10 @@ export const TodayScreen: React.FC<Props> = ({
   userId,
   displayName,
   tasks,
+  level,
+  questDoneToday,
+  recentQuestIds,
+  onCompleteQuest,
   habits,
   habitLogs,
   routineBlocks,
@@ -175,7 +186,21 @@ export const TodayScreen: React.FC<Props> = ({
 
   const completeTask = async (task: Task) => {
     soundFx.playSuccess();
-    awardXp(XP.taskCompleted, task.title);
+    // The message names what was actually achieved rather than praising
+    // everything identically.
+    awardXp(
+      XP.taskCompleted,
+      praiseFor(
+        {
+          kind: 'task',
+          minutes: task.estimatedMinutes,
+          priority: task.priority,
+          postponed: task.postponeCount,
+          title: task.title,
+        },
+        task.id
+      )
+    );
     try {
       await patchTask(userId, task.id, { completed: true, completedAt: new Date().toISOString() });
     } catch (e) {
@@ -283,6 +308,17 @@ export const TodayScreen: React.FC<Props> = ({
           </div>
         )}
       </header>
+
+      {/* ---------------- Daily quest ---------------- */}
+      <section className="sec enter enter-1">
+        <DailyQuestCard
+          userId={userId}
+          level={level}
+          completedToday={questDoneToday}
+          recentQuestIds={recentQuestIds}
+          onComplete={onCompleteQuest}
+        />
+      </section>
 
       {/* ---------------- Do this next ---------------- */}
       {suggestions.length > 0 && !dayIsOver && (

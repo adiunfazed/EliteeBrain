@@ -211,7 +211,7 @@ export const NotificationSettings: React.FC<Props> = ({ isOpen, onClose }) => {
                         <button
                           key={m}
                           onClick={() => update({ leadMinutes: m })}
-                          className={`text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border ${
+                          className={`text-[11px] font-semibold px-2.5 py-1.5 rounded-full border ${
                             prefs.leadMinutes === m
                               ? 'eb-chip-active'
                               : 'text-[#7E8899] border-[#2A313C]'

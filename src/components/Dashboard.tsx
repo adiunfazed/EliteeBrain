@@ -10,7 +10,7 @@ import { ModuleRoster } from './ModuleRoster';
 import { ModuleCard } from './ModuleCard';
 import { DayProgressCalendar } from './DayProgressCalendar';
 import { AchievementsDashboardSection } from './AchievementsDashboardSection';
-import { ArenaSection } from './ArenaSection';
+import { LeaderboardScreen } from './LeaderboardScreen';
 import { RankProgressionSection } from './RankProgressionSection';
 import { AICoachSection } from './AICoachSection';
 import { GamesSection } from './GamesSection';
@@ -26,7 +26,7 @@ import { ConsistencyCalendar } from './ConsistencyCalendar';
 import { TodayScreen } from './TodayScreen';
 import { DailyReset } from './DailyReset';
 import { LevelBar } from './LevelBar';
-import { careerXp } from '../lib/xp';
+import { careerXp, levelFromXp } from '../lib/xp';
 import { computeStreak } from '../lib/streak';
 import { checkAchievements } from '../utils/achievements';
 import { habitStats, valueOn } from '../lib/habits';
@@ -63,6 +63,8 @@ import {
   BarChart2,
   Award,
   ChevronDown,
+  ChevronRight,
+  Medal,
   Crown,
   Zap,
   ShieldCheck,
@@ -83,6 +85,8 @@ import {
 } from 'lucide-react';
 
 interface Props {
+  /** False until the cloud profile is applied — values are unknown before then. */
+  isHydrated?: boolean;
   profile: UserProfile;
   currentUser?: User | null;
   onLaunchModule: (id: ModuleId) => void;
@@ -102,6 +106,7 @@ export type DashboardSection =
 
 export const Dashboard: React.FC<Props> = ({
   profile,
+  isHydrated = true,
   currentUser,
   onLaunchModule,
   onOpenProModal,
@@ -119,6 +124,7 @@ export const Dashboard: React.FC<Props> = ({
   const [showDeepStats, setShowDeepStats] = useState(false);
   const [trainTab, setTrainTab] = useState<'modules' | 'games'>('modules');
   const [moreDrawer, setMoreDrawer] = useState<string | null>('rank');
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
   const lastUnlockSignatureRef = useRef<string>('');
   const [habitHandoff, setHabitHandoff] = useState<{ title: string; minutes: number; habitId: string } | null>(null);
   const [tasksDone, setTasksDone] = useState(0);
@@ -468,6 +474,24 @@ export const Dashboard: React.FC<Props> = ({
                 setFocusHandoff(task);
                 goToPane('focus');
               }}
+              level={levelFromXp(careerXpTotal).level}
+              questDoneToday={profile.questLog?.date === todayISO()}
+              recentQuestIds={profile.recentQuestIds || []}
+              onCompleteQuest={(quest) => {
+                const today = todayISO();
+                // Guarded by date: a second completion on the same day is a
+                // no-op rather than a second XP award.
+                if (profile.questLog?.date === today) return;
+
+                onProfileUpdate?.({
+                  ...profile,
+                  gamesXp: (profile.gamesXp || 0) + quest.xp,
+                  questLog: { date: today, questId: quest.id, xp: quest.xp },
+                  // Keep a short history so the same quest does not reappear
+                  // within a few days.
+                  recentQuestIds: [quest.id, ...(profile.recentQuestIds || [])].slice(0, 12),
+                });
+              }}
             />
           </motion.div>
         )}
@@ -531,7 +555,7 @@ export const Dashboard: React.FC<Props> = ({
                       <div key={group}>
                         <div className="flex items-baseline gap-2.5 flex-wrap mb-3">
                           <span
-                            className={`text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border ${info.accent} ${info.tint}`}
+                            className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border ${info.accent} ${info.tint}`}
                           >
                             {info.label.toUpperCase()}
                           </span>
@@ -744,7 +768,19 @@ export const Dashboard: React.FC<Props> = ({
         )}
 
         {/* PROGRESS & REVIEW */}
-        {activeSection === 'progress' && (
+        {activeSection === 'progress' && showLeaderboard && (
+          <motion.div
+            key="section-leaderboard"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.22 }}
+          >
+            <LeaderboardScreen onBack={() => setShowLeaderboard(false)} />
+          </motion.div>
+        )}
+
+        {activeSection === 'progress' && !showLeaderboard && (
           <motion.div
             key="section-progress"
             initial={{ opacity: 0, y: 15, scale: 0.98 }}
@@ -762,7 +798,8 @@ export const Dashboard: React.FC<Props> = ({
                 {/* Menu. Tapping a row opens that area; tapping again closes
                     it, so only one thing is ever on screen. */}
                 {([
-                  { id: 'rank', label: 'Rank & standings', hint: 'Your tier, XP and the leaderboard', icon: Trophy },
+                  { id: 'rank', label: 'Your rank', hint: 'Tier, XP, streak and badges', icon: Trophy },
+                  { id: 'leaderboard', label: 'Leaderboard', hint: 'How you compare with everyone else', icon: Medal },
                   { id: 'review', label: 'This week', hint: 'What went well and what slipped', icon: CalendarCheck },
                   { id: 'records', label: 'Personal records', hint: 'Best scores across training', icon: BarChart2 },
                   { id: 'badges', label: 'Achievements', hint: 'Milestones you have unlocked', icon: Award },
@@ -774,6 +811,10 @@ export const Dashboard: React.FC<Props> = ({
                       <button
                         onClick={() => {
                           soundFx.playClick();
+                          if (id === 'leaderboard') {
+                            setShowLeaderboard(true);
+                            return;
+                          }
                           setMoreDrawer(open ? null : id);
                         }}
                         className="w-full flex items-center gap-4 py-4 text-left"
@@ -795,16 +836,13 @@ export const Dashboard: React.FC<Props> = ({
                       {open && (
                         <div className="pb-6 anim-in">
                           {id === 'rank' && (
-                            <div className="space-y-4">
-                              <RankProgressionSection
-                                profile={profile}
-                                derivedStreak={derivedStreak}
-                                lifeXp={careerXpTotal}
-                                onLaunchModule={onLaunchModule}
-                                onOpenBadgesGallery={onOpenBadgesGallery}
-                              />
-                              <ArenaSection />
-                            </div>
+                            <RankProgressionSection
+                              profile={profile}
+                              derivedStreak={derivedStreak}
+                              lifeXp={careerXpTotal}
+                              onLaunchModule={onLaunchModule}
+                              onOpenBadgesGallery={onOpenBadgesGallery}
+                            />
                           )}
                           {id === 'review' && (
                             <WeeklyReviewSection input={momentumInput} onGo={goToPane} />

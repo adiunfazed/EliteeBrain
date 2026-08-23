@@ -181,8 +181,24 @@ export const AchievementUnlockedModal: React.FC<Props> = ({ unlockedIds, onClose
             <span>Achievement Unlocked!</span>
           </div>
 
+          {/* Shockwave — expands once on reveal, then stops. A looping effect
+              would keep pulling the eye after the moment has passed. */}
+          <motion.div
+            key={`wave-${currentAchievement.id}`}
+            initial={{ scale: 0.3, opacity: 0.85 }}
+            animate={{ scale: 2.6, opacity: 0 }}
+            transition={{ duration: 1.1, ease: 'easeOut' }}
+            className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 rounded-full border-2 ${style.border} pointer-events-none`}
+          />
+
           {/* Animated Glowing Badge Circle */}
-          <div className="relative mx-auto w-28 h-28 mb-6 flex items-center justify-center">
+          <motion.div
+            key={`badge-${currentAchievement.id}`}
+            initial={{ scale: 0, rotate: -25, opacity: 0 }}
+            animate={{ scale: 1, rotate: 0, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 14, delay: 0.12 }}
+            className="relative mx-auto w-28 h-28 mb-6 flex items-center justify-center"
+          >
             {/* Outer Rotating Pulse Ring */}
             <motion.div
               animate={{ rotate: 360 }}
@@ -205,7 +221,7 @@ export const AchievementUnlockedModal: React.FC<Props> = ({ unlockedIds, onClose
             >
               {renderBadgeIcon(currentAchievement.icon, 'w-12 h-12')}
             </motion.div>
-          </div>
+          </motion.div>
 
           {/* Category Pill & XP Points */}
           <div className="flex items-center justify-center gap-2 mb-3">

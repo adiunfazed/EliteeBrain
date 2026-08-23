@@ -128,7 +128,7 @@ export const GamesSection: React.FC<{ profile: UserProfile; onProfileUpdate?: (p
                         </div>
 
                         <span
-                          className="shrink-0 text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border"
+                          className="shrink-0 text-[11px] font-semibold px-2.5 py-1 rounded-full border"
                           style={{ borderColor: `${g.accent}55`, color: g.accent }}
                         >
                           {g.difficulty}

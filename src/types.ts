@@ -103,6 +103,10 @@ export interface UserProfile {
   streakResetV3?: boolean;
   /** Activity before this date does not count toward the streak. */
   streakResetAt?: string;
+  /** Today's completed quest. Date-keyed so it resets at midnight naturally. */
+  questLog?: { date: string; questId: string; xp: number };
+  /** Recent quest ids, to avoid immediate repeats. */
+  recentQuestIds?: string[];
   /** Goal chosen during onboarding — see lib/goals.ts. */
   focusGoal?: string;
   dailyMinutes?: number;

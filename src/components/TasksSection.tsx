@@ -424,7 +424,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                 <button
                   onClick={() => cyclePriority(task)}
                   title="Change priority"
-                  className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded-full border flex items-center gap-1 ${pri.chip}`}
+                  className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border flex items-center gap-1 ${pri.chip}`}
                 >
                   <PriIcon className="w-2.5 h-2.5 shrink-0" />
                   {pri.label}
@@ -432,7 +432,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
               )}
               {task.category && (
                 <span
-                  className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded-full border ${CATEGORY_META[task.category].tint}`}
+                  className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${CATEGORY_META[task.category].tint}`}
                 >
                   {CATEGORY_META[task.category].label}
                 </span>
@@ -510,7 +510,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                       soundFx.playClick();
                       onStartFocus(task);
                     }}
-                    className="text-[11px] font-mono font-bold px-2.5 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 eb-done hover:bg-emerald-500/20 transition-colors flex items-center gap-1"
+                    className="text-[11px] font-semibold px-2.5 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 eb-done hover:bg-emerald-500/20 transition-colors flex items-center gap-1"
                   >
                     <Timer className="w-2.5 h-2.5 shrink-0" />
                     Focus
@@ -736,7 +736,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                     <button
                       key={c}
                       onClick={() => setDraftCategory(draftCategory === c ? undefined : c)}
-                      className={`text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border transition-all ${
+                      className={`text-[11px] font-semibold px-2.5 py-1.5 rounded-full border transition-all ${
                         draftCategory === c
                           ? CATEGORY_META[c].tint
                           : 'text-[#7E8899] border-[#2A313C] hover:border-[#3A424F]'
@@ -752,7 +752,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                     <button
                       key={m}
                       onClick={() => setDraftMinutes(draftMinutes === m ? undefined : m)}
-                      className={`text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border transition-all ${
+                      className={`text-[11px] font-semibold px-2.5 py-1.5 rounded-full border transition-all ${
                         draftMinutes === m
                           ? 'text-[#A78BFA] bg-[#8B5CF6]/15 border-[#8B5CF6]/30'
                           : 'text-[#7E8899] border-[#2A313C] hover:border-[#3A424F]'
@@ -769,7 +769,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                       key={e}
                       onClick={() => setDraftEnergy(draftEnergy === e ? undefined : e)}
                       title={ENERGY_META[e].hint}
-                      className={`text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border transition-all flex items-center gap-1 ${
+                      className={`text-[11px] font-semibold px-2.5 py-1.5 rounded-full border transition-all flex items-center gap-1 ${
                         draftEnergy === e
                           ? 'eb-done bg-emerald-500/12 border-emerald-500/30'
                           : 'text-[#7E8899] border-[#2A313C] hover:border-[#3A424F]'
@@ -841,7 +841,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                 key={m}
                 onClick={() => setTimeFilter(timeFilter === m ? undefined : m)}
                 title={`Show what fits in ${m} minutes`}
-                className={`text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-lg border transition-all ${
+                className={`text-[11px] font-semibold px-2.5 py-1.5 rounded-lg border transition-all ${
                   timeFilter === m
                     ? 'eb-done bg-emerald-500/12 border-emerald-500/30'
                     : 'text-[#7E8899] border-[#2A313C] hover:border-[#3A424F]'

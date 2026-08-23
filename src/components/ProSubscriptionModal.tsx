@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile } from '../types';
 import { soundFx } from '../utils/audio';
 import { X, Check, Crown, ArrowRight, QrCode, Clock, Zap, Smartphone, RefreshCw, Shield, MessageCircle, Gift } from 'lucide-react';
-import { User, createPaymentRequest, getAdminMerchantUpiId } from '../lib/firebase';
+import { getIdToken, User, createPaymentRequest, getAdminMerchantUpiId } from '../lib/firebase';
 import { syncProfileToCloud, fetchProfileFromCloud } from '../lib/sync';
 import { saveProfile } from '../utils/storage';
 import { hasUsedTrial, LIFETIME_PRICE_INR, resolveEntitlement, entitlementLabel, startTrialFields } from '../lib/entitlement';
@@ -125,18 +125,33 @@ export const ProSubscriptionModal: React.FC<Props> = ({
     soundFx.playClick();
     setLoading(true);
     try {
-      // Build a NEW object. Object.assign mutated the profile React was
-      // holding, so state never changed and the screen fell back to its
-      // previous render — which is why the trial appeared to start and then
-      // revert.
+      // The SERVER starts the trial, not the browser. A locally-written trial
+      // that failed to sync left the device showing Pro while the database
+      // said free — which is exactly why the coach refused some users.
+      const token = await getIdToken();
+      if (!token) throw new Error('Please sign in again.');
+
+      const res = await fetch('/api/trial/start', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const result = await res.json();
+
+      if (!res.ok) throw new Error(result?.error || 'Could not start your trial.');
+
+      if (result.alreadyUsed && !result.isPro) {
+        alert('Your free month has already been used on this account.');
+        return;
+      }
+
+      // Mirror the server's answer locally so the UI updates immediately.
       const updated: UserProfile = {
         ...profile,
-        ...startTrialFields(),
-        isProUser: true,
+        trialStartedAt: result.trialStartedAt || profile.trialStartedAt,
+        trialEverStarted: true,
+        isProUser: result.isPro,
       };
-
       saveProfile(updated);
-      if (currentUser) await syncProfileToCloud(updated, currentUser);
 
       soundFx.playSuccess();
       setSuccessMsg('Trial started. You have full Pro access for 30 days.');

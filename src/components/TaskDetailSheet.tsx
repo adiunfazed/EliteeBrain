@@ -277,7 +277,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
             <div className="flex items-center gap-1.5 mt-2 flex-wrap">
               <button
                 onClick={() => setRecurrence(undefined)}
-                className={`text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border ${
+                className={`text-[11px] font-semibold px-2.5 py-1.5 rounded-full border ${
                   !task.recurrence
                     ? 'text-[#A78BFA] bg-[#8B5CF6]/15 border-[#8B5CF6]/30'
                     : 'text-[#7E8899] border-[#2A313C]'
@@ -289,7 +289,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
                 <button
                   key={f}
                   onClick={() => setRecurrence({ freq: f, interval: 1 })}
-                  className={`text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border capitalize ${
+                  className={`text-[11px] font-semibold px-2.5 py-1.5 rounded-full border capitalize ${
                     task.recurrence?.freq === f
                       ? 'text-[#A78BFA] bg-[#8B5CF6]/15 border-[#8B5CF6]/30'
                       : 'text-[#7E8899] border-[#2A313C]'
@@ -345,7 +345,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
                   key={id}
                   onClick={() => onPatch({ priority: id })}
                   style={task.priority === id ? { borderColor: color, color } : undefined}
-                  className={`eb-press text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border ${
+                  className={`eb-press text-[11px] font-semibold px-2.5 py-1.5 rounded-full border ${
                     task.priority === id ? 'bg-white/[0.06]' : 'text-[#7E8899] border-[#262C38]'
                   }`}
                 >
@@ -388,7 +388,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
               <div className="flex items-center gap-1.5 mt-2 flex-wrap">
                 <button
                   onClick={() => onPatch({ goalId: undefined })}
-                  className={`eb-press text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border ${
+                  className={`eb-press text-[11px] font-semibold px-2.5 py-1.5 rounded-full border ${
                     !task.goalId
                       ? 'text-[#A78BFA] bg-[#8B5CF6]/15 border-[#8B5CF6]/30'
                       : 'text-[#7E8899] border-[#2A313C]'
@@ -400,7 +400,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
                   <button
                     key={g.id}
                     onClick={() => onPatch({ goalId: task.goalId === g.id ? undefined : g.id })}
-                    className={`eb-press text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border max-w-full truncate ${
+                    className={`eb-press text-[11px] font-semibold px-2.5 py-1.5 rounded-full border max-w-full truncate ${
                       task.goalId === g.id
                         ? 'eb-chip-active'
                         : 'text-[#7E8899] border-[#2A313C] hover:border-[#3A424F]'
@@ -447,7 +447,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
                       soundFx.playClick();
                       onPatch({ reflection: task.reflection === r.id ? undefined : r.id });
                     }}
-                    className={`text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border flex items-center gap-1.5 ${
+                    className={`text-[11px] font-semibold px-2.5 py-1.5 rounded-full border flex items-center gap-1.5 ${
                       task.reflection === r.id
                         ? 'eb-done bg-emerald-500/12 border-emerald-500/30'
                         : 'text-[#7E8899] border-[#2A313C] hover:border-[#3A424F]'

@@ -86,7 +86,7 @@ export const DailyMission: React.FC<MissionProps> = ({
           </p>
         </div>
         <span
-          className={`text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border shrink-0 ${
+          className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border shrink-0 ${
             allDone
               ? 'eb-chip-active'
               : 'text-[#98A2B3] bg-[#171B22] border-[#2A313C]'

@@ -42,7 +42,7 @@ export const DailyChallengeCard: React.FC<Props> = ({ profile, onLaunchModule })
         </div>
 
         {streak > 1 && (
-          <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-orange-500/15 text-orange-300 border border-orange-500/30 flex items-center gap-1 shrink-0">
+          <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-orange-500/15 text-orange-300 border border-orange-500/30 flex items-center gap-1 shrink-0">
             <Flame className="w-3 h-3 shrink-0" />
             {streak} day{streak === 1 ? '' : 's'}
           </span>

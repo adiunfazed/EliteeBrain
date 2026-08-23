@@ -34,9 +34,13 @@ export async function syncProfileToCloud(profile: UserProfile, user: User) {
       brainScore,
       streak: profile.streakDays || 0,
       currentDay: profile.currentDay || 1,
-      isProUser: Boolean(profile.isProUser),
+      // Written from the RESOLVED entitlement so the document always carries
+      // the fields the server checks, in the shape it expects. A client that
+      // shows Pro and a server that denies it was the whole bug.
+      isProUser: resolveEntitlement(profile).isPro,
       lifetimePro: profile.lifetimePro === true,
       trialStartedAt: profile.trialStartedAt || null,
+      trialEverStarted: profile.trialEverStarted === true || !!profile.trialStartedAt,
       proExpiresAt: profile.proExpiresAt || null,
       proPlanType: profile.proPlanType || null,
       proPaidAt: profile.proPaidAt || null,
@@ -138,3 +142,30 @@ export async function fetchProfileFromCloud(userId: string): Promise<UserProfile
 }
 
 
+
+
+/**
+ * Write just the entitlement fields the server reads.
+ *
+ * Used when the app believes the user is Pro but the server disagrees — the
+ * cloud document is behind. Lighter than a full profile sync and callable
+ * from anywhere that has a uid, without needing a Firebase User object.
+ */
+export async function pushEntitlement(userId: string, profile: UserProfile): Promise<void> {
+  if (!userId || !db) return;
+
+  const ent = resolveEntitlement(profile);
+  await setDoc(
+    doc(db, 'users', userId),
+    sanitizeForFirestore({
+      isProUser: ent.isPro,
+      lifetimePro: profile.lifetimePro === true,
+      trialStartedAt: profile.trialStartedAt || null,
+      trialEverStarted: profile.trialEverStarted === true || !!profile.trialStartedAt,
+      proPlanType: profile.proPlanType || null,
+      proExpiresAt: profile.proExpiresAt || null,
+      updatedAt: new Date().toISOString(),
+    }),
+    { merge: true }
+  );
+}

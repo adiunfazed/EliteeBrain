@@ -154,7 +154,7 @@ export const ProgressSection: React.FC<Props> = ({ profile, userId }) => {
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-xs font-bold text-[#F4F6F8] truncate">{r.name}</span>
                     {r.isNewRecord && (
-                      <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-full bg-yellow-500/15 text-yellow-300 border border-yellow-500/30 shrink-0">
+                      <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-yellow-500/15 text-yellow-300 border border-yellow-500/30 shrink-0">
                         NEW RECORD
                       </span>
                     )}

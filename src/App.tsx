@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { AnimatePresence } from 'motion/react';
 import { UserProfile, ModuleId, SessionResult } from './types';
-import { applyDayRollover, loadProfile, saveProfile, processModuleResult, MODULE_METADATA, createInitialProfile, resetAdminProfile, countConsecutiveCompletedDays, setActiveUser } from './utils/storage';
+import { applyDayRollover, applyStreakReset, loadProfile, saveProfile, processModuleResult, MODULE_METADATA, createInitialProfile, resetAdminProfile, countConsecutiveCompletedDays, setActiveUser } from './utils/storage';
 import { soundFx } from './utils/audio';
-import { auth, db, onAuthStateChanged, logoutUser, User } from './lib/firebase';
+import { getIdToken, auth, db, onAuthStateChanged, logoutUser, User } from './lib/firebase';
 import { syncProfileToCloud, fetchProfileFromCloud } from './lib/sync';
 import { doc, onSnapshot } from 'firebase/firestore';
 
@@ -36,6 +36,7 @@ import { goalById } from './lib/goals';
 import { ScrollProgress } from './components/ScrollProgress';
 import { XpProvider } from './components/XpToast';
 import { WelcomeScreen } from './components/WelcomeScreen';
+import { UpdateBanner } from './components/UpdateBanner';
 
 export default function App() {
   const [profile, setProfile] = useState<UserProfile>(() => loadProfile());
@@ -68,6 +69,8 @@ export default function App() {
   
   // App Splash Screen State
   const [showSplash, setShowSplash] = useState(true);
+  /** False until Firebase has reported whether anyone is signed in. */
+  const [authResolved, setAuthResolved] = useState(false);
 
   // Theme & Accessibility States
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true); // Dark mode by default
@@ -141,6 +144,7 @@ export default function App() {
       // clears the previous user's cached data so their name, streak and
       // trial cannot appear on a different account.
       setActiveUser(user?.uid || null);
+      setAuthResolved(true);
 
       setCurrentUser(user);
 
@@ -168,7 +172,7 @@ export default function App() {
         const cloudProf = await fetchProfileFromCloud(user.uid);
         
         if (isAdminUser) {
-          const zeroAdminProf = applyDayRollover(resetAdminProfile(cloudProf || undefined));
+          const zeroAdminProf = applyStreakReset(applyDayRollover(resetAdminProfile(cloudProf || undefined)));
           // Admins are not exempt from the entitlement system — otherwise a
           // revoke never takes effect on the admin's own account.
           zeroAdminProf.isProUser = resolveEntitlement(zeroAdminProf).isPro;
@@ -177,7 +181,7 @@ export default function App() {
         } else if (cloudProf) {
           // Roll forward BEFORE it reaches state, or yesterday's completion
           // flags render for a moment and then correct themselves.
-          const rolledCloud = applyDayRollover(cloudProf);
+          const rolledCloud = applyStreakReset(applyDayRollover(cloudProf));
           setProfile(rolledCloud);
           saveProfile(rolledCloud);
         } else {
@@ -258,7 +262,7 @@ export default function App() {
 
                     // A profile arriving from the cloud may have been written
                     // yesterday. Roll it forward before it reaches the UI.
-                    const rolled = applyDayRollover(merged);
+                    const rolled = applyStreakReset(applyDayRollover(merged));
 
                     saveProfile(rolled);
                     return rolled;
@@ -293,6 +297,56 @@ export default function App() {
       syncProfileToCloud(newProfile, currentUser);
     }
   }, [currentUser]);
+
+  /**
+   * Reconcile entitlement with the server.
+   *
+   * Existing users may already be in the broken state: a trial recorded only
+   * on their device, never written to the database. Asking the server once per
+   * sign-in repairs those accounts without anyone having to contact support.
+   */
+  useEffect(() => {
+    if (!currentUser || !isHydrated) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const token = await getIdToken();
+        if (!token) return;
+
+        const res = await fetch('/api/entitlement', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok || cancelled) return;
+        const server = await res.json();
+
+        setProfile((prev) => {
+          // The device believes it has a trial the server has no record of —
+          // claim it properly so the two agree from now on.
+          if (prev.trialStartedAt && !server.trialStartedAt && server.status === 'free') {
+            fetch('/api/trial/start', {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${token}` },
+            }).catch(() => {});
+            return prev;
+          }
+
+          // Otherwise the server is authoritative.
+          if (prev.isProUser === server.isPro) return prev;
+          const next = { ...prev, isProUser: server.isPro };
+          saveProfile(next);
+          return next;
+        });
+      } catch {
+        /* offline — the local copy stands until next sign-in */
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUser, isHydrated]);
+
 
   const handleSignOut = async () => {
     await logoutUser();
@@ -380,7 +434,9 @@ export default function App() {
     <XpProvider>
     <div className="min-h-screen bg-ground text-ink font-sans selection:bg-signal selection:text-white transition-colors duration-150 relative">
       <AnimatePresence>
-        {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
+        {(showSplash || !authResolved) && (
+          <SplashScreen onFinish={() => setShowSplash(false)} />
+        )}
       </AnimatePresence>
       <div className="paper-tooth" />
 
@@ -410,6 +466,7 @@ export default function App() {
       <main className="max-w-7xl mx-auto px-4 md:px-8 py-6">
         <Dashboard
           profile={profile}
+          isHydrated={!currentUser || isHydrated}
           currentUser={currentUser}
           onLaunchModule={handleLaunchModule}
           onOpenProModal={() => setIsProModalOpen(true)}
@@ -512,7 +569,7 @@ export default function App() {
       <MethodsModal isOpen={isMethodsOpen} onClose={() => setIsMethodsOpen(false)} />
 
       {/* Mandatory / Interactive Full-Screen Sign-In Gate */}
-      {((!currentUser && !isGuestMode) || isAuthModalOpen) && (
+      {authResolved && ((!currentUser && !isGuestMode) || isAuthModalOpen) && (
         <SignInScreen
           onSignInSuccess={(user) => {
             if (user) {
@@ -571,6 +628,8 @@ export default function App() {
         />
       )}
 
+      <UpdateBanner />
+
       <div className="eb-ambient" aria-hidden="true" />
 
       <ScrollProgress />
@@ -599,7 +658,7 @@ export default function App() {
             const cloudProf = await fetchProfileFromCloud(currentUser.uid);
             if (cloudProf) {
               setProfile(cloudProf);
-              const rolledCloud = applyDayRollover(cloudProf);
+              const rolledCloud = applyStreakReset(applyDayRollover(cloudProf));
           saveProfile(rolledCloud);
             }
           }

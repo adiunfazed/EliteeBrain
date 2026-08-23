@@ -282,7 +282,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
                   </span>
                 )}
                 {stats.currentStreak > 1 && (
-                  <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-full bg-orange-500/15 text-orange-300 border border-orange-500/30 flex items-center gap-1 shrink-0">
+                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-orange-500/15 text-orange-300 border border-orange-500/30 flex items-center gap-1 shrink-0">
                     <Flame className="w-2.5 h-2.5 shrink-0" />
                     {stats.currentStreak}
                   </span>
@@ -365,7 +365,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
                     <button
                       key={c}
                       onClick={() => patchHabit(userId, habit.id, { cadence: c })}
-                      className={`eb-press text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border ${
+                      className={`eb-press text-[11px] font-semibold px-2.5 py-1.5 rounded-full border ${
                         habit.cadence === c ? 'eb-chip-active' : 'text-[#7E8899] border-[#262C38]'
                       }`}
                     >
@@ -423,7 +423,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <button
                       onClick={() => patchHabit(userId, habit.id, { goalId: undefined })}
-                      className={`eb-press text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border ${
+                      className={`eb-press text-[11px] font-semibold px-2.5 py-1.5 rounded-full border ${
                         !habit.goalId ? 'eb-chip-active' : 'text-[#7E8899] border-[#262C38]'
                       }`}
                     >
@@ -439,7 +439,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
                               goalId: habit.goalId === g.id ? undefined : g.id,
                             })
                           }
-                          className={`eb-press text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-full border max-w-full truncate ${
+                          className={`eb-press text-[11px] font-semibold px-2.5 py-1.5 rounded-full border max-w-full truncate ${
                             habit.goalId === g.id ? 'eb-chip-active' : 'text-[#7E8899] border-[#262C38]'
                           }`}
                         >
@@ -455,7 +455,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
           <div className="flex items-center gap-1.5 mt-2.5 flex-wrap">
               <button
                 onClick={() => record(habit, stats.todayValue + step)}
-                className="text-[10px] font-mono font-bold px-3 py-2 rounded-xl bg-[#171B22] hover:bg-[#20252E] border border-[#2A313C] text-[#F4F6F8]"
+                className="text-[11px] font-semibold px-3 py-2 rounded-xl bg-[#171B22] hover:bg-[#20252E] border border-[#2A313C] text-[#F4F6F8]"
               >
                 +{step}
                 {habit.metric === 'duration' ? ' min' : ''}
@@ -463,7 +463,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
               {stats.todayValue > 0 && (
                 <button
                   onClick={() => record(habit, Math.max(0, stats.todayValue - step))}
-                  className="text-[10px] font-mono font-bold px-3 py-2 rounded-xl bg-transparent border border-[#2A313C] text-[#7E8899] hover:text-[#98A2B3]"
+                  className="text-[11px] font-semibold px-3 py-2 rounded-xl bg-transparent border border-[#2A313C] text-[#7E8899] hover:text-[#98A2B3]"
                 >
                   −{step}
                 </button>
@@ -478,7 +478,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
                       habit.id
                     );
                   }}
-                  className="eb-press eb-glow-emerald eb-shine text-[10px] font-mono font-bold px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 eb-done hover:bg-emerald-500/20 flex items-center gap-1.5"
+                  className="eb-press eb-glow-emerald eb-shine text-[11px] font-semibold px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 eb-done hover:bg-emerald-500/20 flex items-center gap-1.5"
                 >
                   <Timer className="w-3 h-3 shrink-0" />
                   Start focus
@@ -525,7 +525,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
             ) : (
               <button
                 onClick={() => patchHabit(userId, habit.id, { status: 'active' })}
-                className="eb-press text-[10px] font-mono font-bold px-2.5 py-2 rounded-lg eb-done"
+                className="eb-press text-[11px] font-semibold px-2.5 py-2 rounded-lg eb-done"
               >
                 Restore
               </button>
@@ -631,7 +631,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
             <p className="text-[10px] font-mono text-[#98A2B3] mt-1">{progress.label}</p>
           </div>
           <span
-            className={`text-[11px] font-mono font-bold px-2 py-1 rounded-full border shrink-0 ${GOAL_HEALTH_STYLE[health.health]}`}
+            className={`text-[11px] font-semibold px-2 py-1 rounded-full border shrink-0 ${GOAL_HEALTH_STYLE[health.health]}`}
           >
             {health.label}
           </span>
@@ -816,7 +816,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
             onClick={() =>
               setEditingGoalSettings(editingGoalSettings === goal.id ? null : goal.id)
             }
-            className="eb-press text-[10px] font-mono font-bold px-2.5 py-2 rounded-lg border border-[#2A313C] text-[#98A2B3] hover:text-[#F4F6F8] flex items-center gap-1.5"
+            className="eb-press text-[11px] font-semibold px-2.5 py-2 rounded-lg border border-[#2A313C] text-[#98A2B3] hover:text-[#F4F6F8] flex items-center gap-1.5"
           >
             <SlidersHorizontal className="w-3 h-3 shrink-0" />
             Settings
@@ -826,14 +826,14 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
               setEditingGoalId(goal.id);
               setEditText(goal.title);
             }}
-            className="eb-press text-[10px] font-mono font-bold px-2.5 py-2 rounded-lg border border-[#2A313C] text-[#98A2B3] hover:text-[#F4F6F8] flex items-center gap-1.5"
+            className="eb-press text-[11px] font-semibold px-2.5 py-2 rounded-lg border border-[#2A313C] text-[#98A2B3] hover:text-[#F4F6F8] flex items-center gap-1.5"
           >
             <Pencil className="w-3 h-3 shrink-0" />
             Rename
           </button>
           <button
             onClick={() => patchGoal(userId, goal.id, { status: 'archived' })}
-            className="eb-press text-[10px] font-mono font-bold px-2.5 py-2 rounded-lg border border-[#2A313C] text-[#7E8899] hover:eb-warn flex items-center gap-1.5"
+            className="eb-press text-[11px] font-semibold px-2.5 py-2 rounded-lg border border-[#2A313C] text-[#7E8899] hover:eb-warn flex items-center gap-1.5"
           >
             <Archive className="w-3 h-3 shrink-0" />
             Archive
@@ -844,7 +844,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
               setGoals((prev) => prev.filter((g) => g.id !== goal.id));
               removeGoal(userId, goal.id).catch((e) => console.error(e));
             }}
-            className="eb-press text-[10px] font-mono font-bold px-2.5 py-2 rounded-lg border border-[#2A313C] text-[#7E8899] hover:eb-danger flex items-center gap-1.5"
+            className="eb-press text-[11px] font-semibold px-2.5 py-2 rounded-lg border border-[#2A313C] text-[#7E8899] hover:eb-danger flex items-center gap-1.5"
           >
             <Trash2 className="w-3 h-3 shrink-0" />
             Delete
@@ -868,7 +868,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
               soundFx.playClick();
               setPane(p);
             }}
-            className={`eb-press eb-shine text-[11px] font-mono font-bold px-3 py-2 rounded-xl border capitalize ${
+            className={`eb-press eb-shine text-[11px] font-semibold px-3 py-2 rounded-xl border capitalize ${
               pane === p
                 ? 'eb-chip-active'
                 : 'text-[#8A93A5] eb-card-sunk hover:border-[var(--signal)] hover:text-[#F2F4F7]'

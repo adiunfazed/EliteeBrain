@@ -277,6 +277,25 @@ export function resetAdminProfile(existing?: UserProfile): UserProfile {
  *
  * Safe to call repeatedly; it does nothing when the profile is already current.
  */
+/**
+ * One-time streak rebase, applied to the authoritative profile.
+ *
+ * Must run AFTER the cloud copy is loaded, never on local data — otherwise
+ * each device picks its own reset date and the same account shows a different
+ * streak on a phone and a laptop.
+ */
+export function applyStreakReset(profile: UserProfile): UserProfile {
+  if (!profile || profile.streakResetV3) return profile;
+
+  const today = new Date().toISOString().slice(0, 10);
+  return {
+    ...profile,
+    streakDays: 0,
+    streakResetAt: today,
+    streakResetV3: true,
+  };
+}
+
 export function applyDayRollover(profile: UserProfile): UserProfile {
   const today = new Date().toISOString().slice(0, 10);
   if (!profile) return profile;
@@ -401,22 +420,6 @@ export function loadProfile(): UserProfile {
     // Repair inflated streaks written by the old incrementing counter. Daily
     // logs are the source of truth; a stored number that disagrees with them
     // is wrong by definition.
-    // One-time clean start. Earlier versions inflated streaks via an
-    // incrementing counter, a rollover that never closed days, and a shared
-    // profile cache that leaked between accounts. Recomputing from the daily
-    // logs is the only trustworthy value, so every account is rebased once.
-    if (!parsed.streakResetV3) {
-      // Clean slate for every account, admin included. Both streaks reset:
-      // the module streak to zero, and the activity streak by recording today
-      // as the earliest date it may count from. No history is deleted — tasks,
-      // habits and logs all remain — only the streak restarts.
-      parsed.streakDays = 0;
-      parsed.streakResetAt = today;
-      parsed.streakResetV3 = true;
-      console.info('Streak reset — counting fresh from', today);
-      saveProfile(parsed);
-    }
-
     if (!parsed.streakRepairedV2) {
       const recomputed = countConsecutiveCompletedDays(parsed);
       if (parsed.streakDays !== recomputed) {

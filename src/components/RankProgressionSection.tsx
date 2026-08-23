@@ -2,9 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile } from '../types';
 import { calculateBrainScore, calculateTotalXp } from '../utils/storage';
-import { ChartRecorder } from './ChartRecorder';
-import { DayProgressCalendar } from './DayProgressCalendar';
-import { soundFx } from '../utils/audio';
 import {
   Flame,
   Trophy,
@@ -75,7 +72,8 @@ export const RankProgressionSection: React.FC<RankProgressionSectionProps> = ({
   onLaunchModule,
   onOpenBadgesGallery,
 }) => {
-  const [activeSubTab, setActiveSubTab] = useState<'rank' | 'chart' | 'calendar'>('rank');
+  // Only one view remains; the switcher and its other panels were removed.
+  const activeSubTab = 'rank' as const;
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -113,65 +111,6 @@ export const RankProgressionSection: React.FC<RankProgressionSectionProps> = ({
 
   return (
     <div className="space-y-6 select-none font-sans">
-      
-      {/* Sub Tab Switcher Pills */}
-      <div className="flex items-center justify-between gap-2 pb-2 border-b border-[#2A313C] min-w-0">
-        <div className="flex items-center gap-1.5 p-1 bg-[#12161F] border border-[#2A313C] rounded-2xl w-full sm:w-auto min-w-0 overflow-x-auto overscroll-x-contain no-scrollbar">
-          <button
-            onClick={() => {
-              soundFx.playClick();
-              setActiveSubTab('rank');
-            }}
-            className={`eb-press eb-shine shrink-0 px-3.5 sm:px-4 py-2.5 rounded-xl text-[10px] sm:text-xs font-mono font-bold cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap min-h-[40px] ${
-              activeSubTab === 'rank'
-                ? 'bg-[#8B5CF6] text-white shadow-lg shadow-[#8B5CF6]/35'
-                : 'text-[#98A2B3] hover:text-[#F4F6F8]'
-            }`}
-          >
-            <Trophy className="w-3.5 h-3.5 shrink-0" />
-            <span>Rank & Ladder</span>
-          </button>
-
-          <button
-            onClick={() => {
-              soundFx.playClick();
-              setActiveSubTab('chart');
-            }}
-            className={`eb-press eb-shine shrink-0 px-3.5 sm:px-4 py-2.5 rounded-xl text-[10px] sm:text-xs font-mono font-bold cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap min-h-[40px] ${
-              activeSubTab === 'chart'
-                ? 'bg-[#8B5CF6] text-white shadow-lg shadow-[#8B5CF6]/35'
-                : 'text-[#98A2B3] hover:text-[#F4F6F8]'
-            }`}
-          >
-            <Activity className="w-3.5 h-3.5 shrink-0" />
-            <span>Performance Graph</span>
-          </button>
-
-          <button
-            onClick={() => {
-              soundFx.playClick();
-              setActiveSubTab('calendar');
-            }}
-            className={`eb-press eb-shine shrink-0 px-3.5 sm:px-4 py-2.5 rounded-xl text-[10px] sm:text-xs font-mono font-bold cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap min-h-[40px] ${
-              activeSubTab === 'calendar'
-                ? 'bg-[#8B5CF6] text-white shadow-lg shadow-[#8B5CF6]/35'
-                : 'text-[#98A2B3] hover:text-[#F4F6F8]'
-            }`}
-          >
-            <Calendar className="w-3.5 h-3.5 shrink-0" />
-            <span>30-Day Matrix</span>
-          </button>
-        </div>
-
-        {/* Streak Quick Pill */}
-        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 border border-amber-500/30 rounded-xl">
-          <Flame className="w-4 h-4 shrink-0 eb-warn animate-pulse" />
-          <span className="text-xs font-mono font-bold eb-warn">
-            {derivedStreak ?? profile.streakDays} Day Streak
-          </span>
-        </div>
-      </div>
-
       <AnimatePresence mode="wait">
         {activeSubTab === 'rank' && (
           <motion.div
@@ -257,54 +196,7 @@ export const RankProgressionSection: React.FC<RankProgressionSectionProps> = ({
 
           </motion.div>
         )}
-
-        {/* PERFORMANCE GRAPH TAB */}
-        {activeSubTab === 'chart' && (
-          <motion.div
-            key="chart-tab"
-            initial={{ opacity: 0, y: 12, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -12, scale: 0.98 }}
-            transition={{ duration: 0.22 }}
-            className="space-y-6"
-          >
-            <div className="bg-[#12161F] border border-[#2A313C] rounded-3xl p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <span className="text-[10px] font-mono font-bold text-[#8B5CF6] uppercase tracking-wider">
-                    ECHO-RECORDING PEN PLOTTER
-                  </span>
-                  <h3 className="text-lg font-display font-bold text-white">
-                    Cognitive Trajectory & Index Graph
-                  </h3>
-                </div>
-                <div className="text-xs text-[#98A2B3]">
-                  Score: <strong className="text-[#A78BFA]">{brainScore} pts</strong>
-                </div>
-              </div>
-
-              <div className="flex justify-center py-2">
-                <ChartRecorder profile={profile} className="w-full max-w-lg" />
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* 30-DAY MATRIX CALENDAR TAB */}
-        {activeSubTab === 'calendar' && (
-          <motion.div
-            key="calendar-tab"
-            initial={{ opacity: 0, y: 12, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -12, scale: 0.98 }}
-            transition={{ duration: 0.22 }}
-            className="space-y-6"
-          >
-            <DayProgressCalendar profile={profile} onLaunchModule={onLaunchModule} />
-          </motion.div>
-        )}
       </AnimatePresence>
-
     </div>
   );
 };
