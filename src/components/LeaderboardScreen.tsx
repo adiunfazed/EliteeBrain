@@ -174,29 +174,6 @@ export const LeaderboardScreen: React.FC<Props> = ({ onBack }) => {
       <h1 className="t-display text-center mt-6">Leaderboard</h1>
       <p className="t-sub text-center mt-2">Ranked by XP earned from work you complete</p>
 
-      {/* Scope. Region and Guild are shown but disabled: the data does not
-          exist, and inventing it would make the ranking meaningless. */}
-      <div className="flex items-center gap-1.5 mt-6 p-1 rounded-2xl bg-[var(--surface-sunk)]">
-        {([
-          { id: 'global', label: 'Global', enabled: true },
-          { id: 'region', label: 'Region', enabled: false },
-          { id: 'guild', label: 'Guild', enabled: false },
-        ] as const).map((t) => (
-          <button
-            key={t.id}
-            disabled={!t.enabled}
-            title={t.enabled ? undefined : 'Coming soon'}
-            className={`flex-1 min-h-[44px] rounded-xl text-sm font-semibold transition-colors ${
-              t.id === 'global'
-                ? 'bg-[var(--signal)] text-white'
-                : 'text-[#7E8899] disabled:opacity-40'
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
       {/* All-time vs this week */}
       <div className="flex items-center gap-1.5 mt-2.5">
         {(['career', 'weekly'] as const).map((m) => (
@@ -233,7 +210,22 @@ export const LeaderboardScreen: React.FC<Props> = ({ onBack }) => {
       )}
 
       {status === 'loading' && (
-        <div className="mt-8 space-y-2.5">
+        <div className="mt-8">
+          <div className="h-1 rounded-full bg-[var(--surface-sunk)] overflow-hidden">
+            <motion.div
+              className="h-full rounded-full"
+              style={{ background: 'var(--signal)' }}
+              initial={{ width: '8%' }}
+              animate={{ width: ['8%', '65%', '90%'] }}
+              transition={{ duration: 2.2, ease: 'easeOut', times: [0, 0.5, 1] }}
+            />
+          </div>
+          <p className="t-sub text-center mt-3">Loading rankings…</p>
+        </div>
+      )}
+
+      {status === 'loading' && (
+        <div className="mt-5 space-y-2.5">
           <div className="grid grid-cols-3 gap-2.5">
             {[0, 1, 2].map((i) => (
               <div key={i} className="panel h-44 animate-pulse" />
@@ -293,6 +285,13 @@ export const LeaderboardScreen: React.FC<Props> = ({ onBack }) => {
                       : '0 1px 0 0 rgba(255,255,255,0.04) inset',
                   }}
                 >
+                  <p
+                    className="text-[12px] font-extrabold tracking-widest mb-2"
+                    style={{ color: MEDAL[place] }}
+                  >
+                    {POSITION_LABEL[place]}
+                  </p>
+
                   {isFirst && (
                     <Crown
                       className="w-5 h-5 shrink-0 mx-auto mb-2"
@@ -329,12 +328,7 @@ export const LeaderboardScreen: React.FC<Props> = ({ onBack }) => {
                     {value(e).toLocaleString()}
                   </p>
 
-                  <p
-                    className="text-[11px] font-bold mt-2.5 tracking-wider"
-                    style={{ color: MEDAL[place] }}
-                  >
-                    {POSITION_LABEL[place]}
-                  </p>
+
                 </motion.div>
               );
             })}

@@ -794,12 +794,42 @@ export const Dashboard: React.FC<Props> = ({
               blurb="Your rank, momentum, weekly review and full history."
               onOpenPro={onOpenProModal}
             >
+              {/* Leaderboard is a destination, not a drawer — given its own
+                  card so it does not read as one more collapsible row. */}
+              <button
+                onClick={() => {
+                  soundFx.playClick();
+                  setShowLeaderboard(true);
+                }}
+                className="w-full text-left rounded-2xl border p-4 mb-4 flex items-center gap-4 transition-transform active:scale-[0.99]"
+                style={{
+                  background:
+                    'linear-gradient(135deg, color-mix(in oklab, var(--signal) 16%, var(--surface)), var(--surface))',
+                  borderColor: 'color-mix(in oklab, var(--signal) 42%, var(--rule))',
+                  boxShadow:
+                    '0 1px 0 0 rgba(255,255,255,0.07) inset, 0 14px 34px -20px color-mix(in oklab, var(--signal) 90%, transparent)',
+                }}
+              >
+                <span
+                  className="w-12 h-12 rounded-2xl shrink-0 flex items-center justify-center"
+                  style={{ background: 'color-mix(in oklab, var(--signal) 24%, transparent)' }}
+                >
+                  <Medal className="w-6 h-6 shrink-0 text-[var(--signal-ink)]" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="t-section block">Leaderboard</span>
+                  <span className="t-sub block mt-0.5">
+                    See where you stand against everyone
+                  </span>
+                </span>
+                <ChevronRight className="w-5 h-5 shrink-0 text-[var(--signal-ink)]" />
+              </button>
+
               <div className="panel">
                 {/* Menu. Tapping a row opens that area; tapping again closes
                     it, so only one thing is ever on screen. */}
                 {([
                   { id: 'rank', label: 'Your rank', hint: 'Tier, XP, streak and badges', icon: Trophy },
-                  { id: 'leaderboard', label: 'Leaderboard', hint: 'How you compare with everyone else', icon: Medal },
                   { id: 'review', label: 'This week', hint: 'What went well and what slipped', icon: CalendarCheck },
                   { id: 'records', label: 'Personal records', hint: 'Best scores across training', icon: BarChart2 },
                   { id: 'badges', label: 'Achievements', hint: 'Milestones you have unlocked', icon: Award },
@@ -811,10 +841,6 @@ export const Dashboard: React.FC<Props> = ({
                       <button
                         onClick={() => {
                           soundFx.playClick();
-                          if (id === 'leaderboard') {
-                            setShowLeaderboard(true);
-                            return;
-                          }
                           setMoreDrawer(open ? null : id);
                         }}
                         className="w-full flex items-center gap-4 py-4 text-left"

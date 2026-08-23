@@ -139,12 +139,24 @@ export default function App() {
   useEffect(() => {
     let unsubscribeDoc: (() => void) | null = null;
 
+    // Wait for Firebase to finish restoring any persisted session before the
+    // UI is allowed to conclude that nobody is signed in.
+    (async () => {
+      try {
+        if (auth && typeof (auth as any).authStateReady === 'function') {
+          await (auth as any).authStateReady();
+        }
+      } catch {
+        /* older SDK — the listener below still resolves it */
+      }
+      setAuthResolved(true);
+    })();
+
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       // Must run BEFORE any profile is read. If the account changed, this
       // clears the previous user's cached data so their name, streak and
       // trial cannot appear on a different account.
       setActiveUser(user?.uid || null);
-      setAuthResolved(true);
 
       setCurrentUser(user);
 

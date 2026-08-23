@@ -98,11 +98,16 @@ const TEMPLATES: Template[] = [
   { category: 'focus', title: 'Work {n} minutes with your phone in another room', objective: 'Not face down. Another room.', base: 20, step: 15, cap: 75, xp: 40 },
 
   // --- Productivity
-  { category: 'productivity', title: 'Finish {n} tasks from your list', objective: 'Start with the one you like least.', base: 2, step: 2, cap: 10, xp: 35 },
-  { category: 'productivity', title: 'Clear {n} overdue items', objective: 'Do them or delete them. Both count.', base: 1, step: 1, cap: 6, xp: 40 },
-  { category: 'productivity', title: "Write tomorrow's {n} priorities", objective: 'Before you sleep, not in the morning.', base: 3, step: 1, cap: 6, xp: 25 },
-  { category: 'productivity', title: 'Break one big task into {n} steps', objective: 'Whatever you have been putting off.', base: 3, step: 2, cap: 10, xp: 30 },
+  { category: 'productivity', title: "Write down tomorrow's {n} priorities", objective: 'On paper or in a note. Before you sleep.', base: 3, step: 1, cap: 6, xp: 25 },
   { category: 'productivity', title: 'Reply to {n} messages you have been avoiding', objective: 'Short replies are still replies.', base: 2, step: 2, cap: 10, xp: 25 },
+  { category: 'fitness', title: '{n} shoulder taps in plank', objective: 'Keep your hips still.', base: 20, step: 10, cap: 60, xp: 25 },
+  { category: 'fitness', title: '{n} mountain climbers', objective: 'Count both legs.', base: 20, step: 20, cap: 100, xp: 25 },
+  { category: 'fitness', title: '{n} glute bridges', objective: 'Squeeze at the top.', base: 15, step: 10, cap: 60, xp: 20 },
+  { category: 'fitness', title: '{n} tricep dips', objective: 'Use a chair or a step.', base: 10, step: 8, cap: 50, xp: 25 },
+  { category: 'fitness', title: 'Skip rope for {n} minutes', objective: 'Real or imaginary rope, both work.', base: 3, step: 2, cap: 15, xp: 30 },
+  { category: 'fitness', title: '{n} high knees', objective: 'Fast pace, count both legs.', base: 30, step: 20, cap: 120, xp: 20 },
+  { category: 'fitness', title: 'Hold a dead hang for {n} seconds', objective: 'Any bar you can reach.', base: 15, step: 10, cap: 60, xp: 30 },
+  { category: 'fitness', title: '{n} leg raises', objective: 'Lower slowly, do not drop.', base: 12, step: 8, cap: 50, xp: 25 },
 
   // --- Learning
   { category: 'learning', title: 'Learn {n} new words', objective: 'Write a sentence with each one.', base: 5, step: 3, cap: 20, xp: 25 },
@@ -143,6 +148,9 @@ const TEMPLATES: Template[] = [
 /** No-amount quests, for variety — some things are not measured in numbers. */
 const FLAT_QUESTS: Omit<Quest, 'id'>[] = [
   { category: 'productivity', title: 'Do the thing you keep postponing', objective: 'You know the one. Ten minutes is enough to start.', xp: 45 },
+  { category: 'fitness', title: 'Do a full body warm-up', objective: 'Arms, legs, back. Five minutes is plenty.', xp: 20 },
+  { category: 'fitness', title: 'Take the stairs every time today', objective: 'No lifts, no escalators.', xp: 25 },
+  { category: 'health', title: 'Stretch before bed tonight', objective: 'Five minutes. Neck, shoulders, hamstrings.', xp: 20 },
   { category: 'organisation', title: 'Clean your workspace', objective: 'Clear surface, everything put away.', xp: 25 },
   { category: 'productivity', title: 'Plan tomorrow before you sleep', objective: 'Three things, written down.', xp: 25 },
   { category: 'mindfulness', title: 'Eat one meal without a screen', objective: 'No phone, no TV, no laptop.', xp: 20 },
@@ -153,6 +161,8 @@ const FLAT_QUESTS: Omit<Quest, 'id'>[] = [
   { category: 'mindfulness', title: 'Say no to one thing today', objective: 'Something that does not deserve your time.', xp: 30 },
   { category: 'productivity', title: 'Do the hardest task first', objective: 'Before email, before anything else.', xp: 45 },
   { category: 'organisation', title: 'Empty one inbox completely', objective: 'Email, messages or a physical tray.', xp: 30 },
+  { category: 'fitness', title: 'Do push-ups until you cannot do another', objective: 'One set. Stop when form goes.', xp: 40 },
+  { category: 'fitness', title: 'Hold a plank as long as you can', objective: 'One attempt. Note the time.', xp: 35 },
   { category: 'health', title: 'Cook something instead of ordering', objective: 'Simple counts.', xp: 30 },
   { category: 'discipline', title: 'Delete one app you waste time on', objective: 'You can reinstall it tomorrow if you really want.', xp: 40 },
   { category: 'study', title: "Review yesterday's notes before starting new work", objective: 'Ten minutes of revision beats an hour of rereading.', xp: 30 },
