@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Bell, BellOff, X, Smartphone, Check } from 'lucide-react';
 import {
+  subscribeToPush,
+  isPushSubscribed,
   DEFAULT_PREFS,
   NotificationPrefs,
   notificationSupport,
@@ -12,6 +14,7 @@ import {
   showNotification,
 } from '../lib/notifications';
 import { soundFx } from '../utils/audio';
+import { getIdToken } from '../lib/firebase';
 
 interface Props {
   isOpen: boolean;
@@ -29,11 +32,14 @@ export const NotificationSettings: React.FC<Props> = ({ isOpen, onClose }) => {
   const [prefs, setPrefs] = useState<NotificationPrefs>(DEFAULT_PREFS);
   const [support, setSupport] = useState(notificationSupport());
   const [busy, setBusy] = useState(false);
+  const [pushError, setPushError] = useState<string | null>(null);
+  const [pushOn, setPushOn] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
     setPrefs(loadPrefs());
     setSupport(notificationSupport());
+    isPushSubscribed().then(setPushOn);
   }, [isOpen]);
 
   const update = (patch: Partial<NotificationPrefs>) => {
@@ -51,6 +57,16 @@ export const NotificationSettings: React.FC<Props> = ({ isOpen, onClose }) => {
       if (granted) {
         await registerServiceWorker();
         update({ enabled: true });
+
+        // Register this device for server-sent push. Without this step the
+        // app can only notify while it is open.
+        const result = await subscribeToPush(getIdToken);
+        if (!result.ok) {
+          setPushError(result.reason || 'Could not enable push on this device.');
+        } else {
+          setPushError(null);
+        }
+
         await showNotification(
           'Notifications on',
           "You'll get a nudge before routine blocks and a check-in if things are still open.",
@@ -182,6 +198,42 @@ export const NotificationSettings: React.FC<Props> = ({ isOpen, onClose }) => {
                 checked={prefs.enabled}
                 onChange={(v) => update({ enabled: v })}
               />
+
+              {prefs.enabled && (
+                <>
+                  <div className="flex items-start gap-2.5 py-3 border-t border-[var(--rule)]">
+                    <span
+                      className="w-2 h-2 rounded-full shrink-0 mt-1.5"
+                      style={{ background: pushOn ? 'var(--done)' : 'var(--warn)' }}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[13px] font-semibold">
+                        {pushOn ? 'This device is registered' : 'This device is not registered'}
+                      </p>
+                      <p className="t-sub mt-0.5 leading-snug">
+                        {pushOn
+                          ? 'You will get reminders even when the app is closed.'
+                          : pushError || 'Reminders will only appear while the app is open.'}
+                      </p>
+                      {!pushOn && (
+                        <button
+                          onClick={async () => {
+                            setBusy(true);
+                            const r = await subscribeToPush(getIdToken);
+                            setPushError(r.ok ? null : r.reason || 'Could not register.');
+                            setPushOn(await isPushSubscribed());
+                            setBusy(false);
+                          }}
+                          disabled={busy}
+                          className="btn-quiet mt-3 text-[13px]"
+                        >
+                          Register this device
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
 
               {prefs.enabled && (
                 <div className="space-y-2">

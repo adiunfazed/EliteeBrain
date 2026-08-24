@@ -13,7 +13,8 @@ interface ShapeBlock {
 }
 
 export const VisuospatialModule: React.FC<Props> = ({ currentLevel, onFinishSession, onClose }) => {
-  const TOTAL_TRIALS = 5;
+  // Five trials was barely a warm-up.
+  const TOTAL_TRIALS = Math.min(12, 7 + Math.floor(currentLevel / 2));
 
   const [phase, setPhase] = useState<'intro' | 'active' | 'feedback' | 'finished'>('intro');
   const [trialIndex, setTrialIndex] = useState(0);

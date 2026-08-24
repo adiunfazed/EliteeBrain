@@ -17,7 +17,8 @@ interface Stimulus {
 }
 
 export const CognitiveShiftModule: React.FC<Props> = ({ currentLevel, onFinishSession, onClose }) => {
-  const TOTAL_TRIALS = 12;
+  // Task-switching costs compound over a longer set.
+  const TOTAL_TRIALS = Math.min(28, 16 + currentLevel);
 
   const [phase, setPhase] = useState<'intro' | 'active' | 'feedback' | 'finished'>('intro');
   const [trialIndex, setTrialIndex] = useState(0);

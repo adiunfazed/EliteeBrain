@@ -9,10 +9,12 @@ interface Props {
 }
 
 export const SpatialNBackModule: React.FC<Props> = ({ currentLevel, onFinishSession, onClose }) => {
-  const TOTAL_FLASHES = 16;
+  // More flashes and a faster n-ramp — 2-back arrives at level 3 rather
+  // than level 5, which is where this stops being trivial.
+  const TOTAL_FLASHES = Math.min(32, 20 + currentLevel);
 
   // N value scales with level: Lvl 1-2 -> 1-Back, Lvl 3-4 -> 2-Back, Lvl 5+ -> 3-Back
-  const nValue = Math.min(4, 1 + Math.floor((currentLevel - 1) / 2));
+  const nValue = Math.min(5, 1 + Math.floor(currentLevel / 2));
   const flashIntervalMs = Math.max(1100, 2200 - (currentLevel - 1) * 140);
 
   const [phase, setPhase] = useState<'intro' | 'playing' | 'finished'>('intro');

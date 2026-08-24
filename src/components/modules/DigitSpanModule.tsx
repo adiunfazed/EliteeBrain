@@ -23,7 +23,8 @@ export const DigitSpanModule: React.FC<Props> = ({ currentLevel, onFinishSession
   const [getReadyCount, setGetReadyCount] = useState<number | null>(null);
 
   // Difficulty scaling params with generous readable exposure
-  const sequenceLength = Math.min(12, 3 + Math.floor(currentLevel / 1.3));
+  // Starts at 5: three digits is below the point where anyone has to try.
+  const sequenceLength = Math.min(14, 5 + Math.floor(currentLevel / 1.1));
   const baseDuration = Math.max(1800, 2600 + sequenceLength * 350 - (currentLevel - 1) * 100);
   const exposureDurationMs = Math.round(baseDuration * pacingMultiplier);
 

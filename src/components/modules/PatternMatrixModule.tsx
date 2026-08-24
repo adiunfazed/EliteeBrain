@@ -27,7 +27,8 @@ const SHAPES: TileData['shape'][] = ['circle', 'square', 'triangle', 'diamond', 
 const PALETTE = ['#22d3ee', '#a855f7', '#10b981', '#f59e0b', '#ec4899', '#3b82f6'];
 
 export const PatternMatrixModule: React.FC<Props> = ({ currentLevel, onFinishSession, onClose }) => {
-  const TOTAL_TRIALS = 6;
+  // Six trials ended before the patterns got interesting.
+  const TOTAL_TRIALS = Math.min(14, 8 + Math.floor(currentLevel / 2));
 
   const [phase, setPhase] = useState<'intro' | 'active' | 'feedback' | 'finished'>('intro');
   const [trialIndex, setTrialIndex] = useState(0);

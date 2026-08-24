@@ -254,10 +254,10 @@ async function reminderFor(
     };
   }
 
-  // 3. End-of-day wrap-up, 21:45–22:45 local. This one fires even when the
-  //    day looks complete, because its purpose is catching things that were
-  //    done but never ticked off.
-  if (minutes >= 1305 && minutes < 1365 && !sentSlots.includes('wrapup')) {
+  // 3. Nightly summary at 21:00–22:00 local. Fires every day: either naming
+  //    what is still open, or acknowledging a day fully done. An app that only
+  //    ever nags gets muted.
+  if (minutes >= 1260 && minutes < 1320 && !sentSlots.includes('wrapup')) {
     if (remaining > 0) {
       const names = [
         ...ctx.openTasksToday.slice(0, 2),
@@ -275,17 +275,24 @@ async function reminderFor(
       };
     }
 
-    if (!ctx.sleptLastNight) {
-      return {
-        slot: 'wrapup',
-        payload: {
-          title: 'Day complete',
-          body: 'Everything logged. Set your bedtime before you turn in.',
-          tag: 'wrapup',
-        },
-      };
-    }
-    return null;
+    // Everything done — say so. This is the only positive notification the
+    // app sends, and it is the one that makes the others tolerable.
+    const done = ctx.routineToday.filter((b) => b.state === 'done').length;
+    const totalScheduled = ctx.routineToday.length + ctx.habitsToday.length;
+
+    return {
+      slot: 'wrapup',
+      payload: {
+        title: 'Day complete',
+        body:
+          totalScheduled > 0
+            ? `Everything you planned is done${
+                ctx.streakDays > 1 ? ` — ${ctx.streakDays} days running` : ''
+              }.${ctx.sleptLastNight ? '' : ' Log your sleep before bed.'}`
+            : 'Nothing was scheduled today. Plan tomorrow before you sleep.',
+        tag: 'wrapup',
+      },
+    };
   }
 
   if (remaining === 0) return null;
@@ -326,34 +333,6 @@ async function reminderFor(
           ? `${remaining} things planned. First up: ${first}.`
           : `${remaining} things planned for today.`,
         tag: 'morning',
-      },
-    };
-  }
-
-  // 3. Evening nudge, once, between 19:00 and 21:00 local — late enough to
-  //    be a real prompt, early enough to still act on.
-  if (minutes >= 1140 && minutes < 1260 && !sentSlots.includes('evening')) {
-    if (ctx.overdueTasks.length > 0) {
-      const t = ctx.overdueTasks[0];
-      return {
-        slot: 'evening',
-        payload: {
-          title: t.title,
-          body:
-            t.postponed > 0
-              ? `${t.daysLate} days late, moved ${t.postponed} times. Ten minutes?`
-              : `${t.daysLate} days overdue.`,
-          tag: 'evening',
-        },
-      };
-    }
-
-    return {
-      slot: 'evening',
-      payload: {
-        title: `${remaining} still open`,
-        body: openHabits.length > 0 ? `Including ${openHabits[0].title}.` : 'Still time today.',
-        tag: 'evening',
       },
     };
   }

@@ -24,7 +24,8 @@ const COLOR_PALETTE: ColorOption[] = [
 ];
 
 export const StroopModule: React.FC<Props> = ({ currentLevel, onFinishSession, onClose }) => {
-  const TOTAL_TRIALS = 12;
+  // Longer sets: the interference effect only bites once fatigue sets in.
+  const TOTAL_TRIALS = Math.min(30, 18 + currentLevel);
 
   const [phase, setPhase] = useState<'intro' | 'active' | 'feedback' | 'finished'>('intro');
   const [trialIndex, setTrialIndex] = useState(0);
@@ -40,8 +41,10 @@ export const StroopModule: React.FC<Props> = ({ currentLevel, onFinishSession, o
   const [results, setResults] = useState<{ correct: boolean; reactionTimeMs: number }[]>([]);
 
   // Difficulty scaling params
-  const activeColorCount = Math.min(6, 4 + (currentLevel >= 4 ? 1 : 0) + (currentLevel >= 7 ? 1 : 0));
-  const timeLimitMs = 3000; // Fixed 3 seconds per word as requested
+  const activeColorCount = Math.min(6, 4 + (currentLevel >= 3 ? 1 : 0) + (currentLevel >= 5 ? 1 : 0));
+  // Tightens with level: 2.4s down to 1.2s. A fixed limit meant the task
+  // stopped getting harder after the first session.
+  const timeLimitMs = Math.max(1200, 2400 - currentLevel * 120);
 
   const availableColors = useRef<ColorOption[]>(COLOR_PALETTE.slice(0, activeColorCount));
   availableColors.current = COLOR_PALETTE.slice(0, activeColorCount);

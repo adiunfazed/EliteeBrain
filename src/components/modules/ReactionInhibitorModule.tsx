@@ -14,7 +14,9 @@ export const ReactionInhibitorModule: React.FC<Props> = ({ currentLevel, onFinis
   const [selectedMode, setSelectedMode] = useState<ModuleMode>('SPEED_TESTER');
   const [phase, setPhase] = useState<'intro' | 'waiting' | 'ready' | 'too_early' | 'feedback' | 'finished'>('intro');
 
-  const TOTAL_TRIALS = 5;
+  // Inhibition needs enough repetitions to build the prepotent response
+  // that must then be stopped — five was not enough for that.
+  const TOTAL_TRIALS = Math.min(24, 12 + currentLevel);
   const [trialIndex, setTrialIndex] = useState(0);
 
   // Speed tester state
