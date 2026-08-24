@@ -2,15 +2,12 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Plus,
-  Target,
   Flame,
   Check,
   Timer,
   Archive,
-  X,
   TrendingUp,
   AlertTriangle,
-  ChevronRight,
   Pencil,
   Trash2,
   ChevronDown,
@@ -47,6 +44,8 @@ import { soundFx } from '../utils/audio';
 
 interface Props {
   userId: string | null;
+  /** Which view to render. Controlled by the Plan tab bar. */
+  pane?: Pane;
   tasks?: Task[];
   routineBlocks?: any[];
   routineLogs?: any[];
@@ -55,12 +54,12 @@ interface Props {
 
 type Pane = 'goals' | 'habits';
 
-export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlocks = [], routineLogs = [], onStartFocus }) => {
+export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, tasks = [], routineBlocks = [], routineLogs = [], onStartFocus }) => {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [habits, setHabits] = useState<Habit[]>([]);
   const [logs, setLogs] = useState<HabitLog[]>([]);
   const [snapshots, setSnapshots] = useState<any[]>([]);
-  const [pane, setPane] = useState<Pane>('goals');
+  const pane: Pane = controlledPane ?? 'goals';
   const [goalDraft, setGoalDraft] = useState('');
   const [habitDraft, setHabitDraft] = useState('');
   const [expandedHabit, setExpandedHabit] = useState<string | null>(null);
@@ -860,25 +859,6 @@ export const GoalsSection: React.FC<Props> = ({ userId, tasks = [], routineBlock
 
   return (
     <div className="space-y-4">
-      <div className="eb-tabs w-fit max-w-full overflow-x-auto no-scrollbar">
-        {(['goals', 'habits'] as Pane[]).map((p) => (
-          <button
-            key={p}
-            onClick={() => {
-              soundFx.playClick();
-              setPane(p);
-            }}
-            className={`eb-press eb-shine text-[11px] font-semibold px-3 py-2 rounded-xl border capitalize ${
-              pane === p
-                ? 'eb-chip-active'
-                : 'text-[#8A93A5] eb-card-sunk hover:border-[var(--signal)] hover:text-[#F2F4F7]'
-            }`}
-          >
-            {p}
-          </button>
-        ))}
-      </div>
-
       {warning && (
         <div className="rounded-2xl border border-amber-500/25 bg-amber-500/[0.06] p-3.5 flex items-start gap-2.5">
           <AlertTriangle className="w-3.5 h-3.5 eb-warn shrink-0 mt-0.5" />

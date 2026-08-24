@@ -7,7 +7,7 @@ import { lifeAreas, weeklyReview } from '../lib/review';
 interface Props {
   input: MomentumInput;
   /** Opens the screen where the named bottleneck can actually be addressed. */
-  onGo?: (pane: 'today' | 'tasks' | 'goals' | 'routine' | 'focus') => void;
+  onGo?: (pane: 'tasks' | 'habits' | 'goals' | 'routine') => void;
 }
 
 const AREA_TINT: Record<string, string> = {
@@ -151,7 +151,7 @@ export const WeeklyReviewSection: React.FC<Props> = ({ input, onGo }) => {
                         review.bottleneck === 'Habits'
                           ? 'goals'
                           : review.bottleneck === 'Focus'
-                            ? 'focus'
+                            ? 'habits'
                             : review.bottleneck === 'Routine'
                               ? 'routine'
                               : 'tasks'

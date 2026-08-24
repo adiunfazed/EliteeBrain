@@ -21,6 +21,8 @@ interface Props {
   level: number;
   questDoneToday: boolean;
   recentQuestIds?: string[];
+  /** Today's completed quest, read back rather than recomputed. */
+  completedQuest?: { id: string; title: string; xp: number } | null;
   onCompleteQuest: (quest: { id: string; title: string; xp: number }) => void;
   habits: Habit[];
   habitLogs: HabitLog[];
@@ -28,7 +30,7 @@ interface Props {
   routineLogs: RoutineLog[];
   sleepLogs: SleepLog[];
   goals: { id: string; title: string }[];
-  onGo: (pane: 'today' | 'tasks' | 'goals' | 'routine' | 'focus') => void;
+  onGo: (pane: 'tasks' | 'habits' | 'goals' | 'routine') => void;
   onStartFocus?: (task: Task) => void;
 }
 
@@ -50,6 +52,7 @@ export const TodayScreen: React.FC<Props> = ({
   level,
   questDoneToday,
   recentQuestIds,
+  completedQuest,
   onCompleteQuest,
   habits,
   habitLogs,
@@ -253,7 +256,7 @@ export const TodayScreen: React.FC<Props> = ({
   const startFocus = (id: string) => {
     const t = tasks.find((x) => x.id === id);
     if (t && onStartFocus) onStartFocus(t);
-    else onGo('focus');
+    else onGo('tasks');
   };
 
   const nothingPlanned = review.total === 0 && suggestions.length === 0;
@@ -316,6 +319,7 @@ export const TodayScreen: React.FC<Props> = ({
           level={level}
           completedToday={questDoneToday}
           recentQuestIds={recentQuestIds}
+          completedQuest={completedQuest}
           onComplete={onCompleteQuest}
         />
       </section>

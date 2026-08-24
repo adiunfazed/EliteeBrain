@@ -220,20 +220,47 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-1.5">
-        {(['routine', 'week', 'sleep'] as Pane[]).map((p) => (
-          <button
-            key={p}
-            onClick={() => {
-              soundFx.playClick();
-              setPane(p);
-            }}
-            data-active={pane === p}
-            className="eb-tab eb-shine text-[11px] font-mono px-3.5 py-2.5 capitalize shrink-0" 
-          >
-            {p}
-          </button>
-        ))}
+      {/* Day / Week is a timescale switch on the same data, not a separate
+          place to go. */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-1 p-1 rounded-xl bg-[var(--surface-sunk)] border border-[var(--rule)]">
+          {([
+            { id: 'routine' as Pane, label: 'Day' },
+            { id: 'week' as Pane, label: 'Week' },
+          ]).map(({ id, label }) => (
+            <button
+              key={id}
+              onClick={() => {
+                soundFx.playClick();
+                setPane(id);
+              }}
+              className="min-h-[38px] px-4 rounded-lg text-[13px] font-semibold transition-colors"
+              style={{
+                background: pane === id ? 'var(--surface)' : 'transparent',
+                color: pane === id ? 'var(--ink)' : '#7E8899',
+                boxShadow:
+                  pane === id ? '0 1px 0 0 rgba(255,255,255,0.06) inset' : undefined,
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        <button
+          onClick={() => {
+            soundFx.playClick();
+            setPane(pane === 'sleep' ? 'routine' : 'sleep');
+          }}
+          className="min-h-[38px] px-4 rounded-xl border text-[13px] font-semibold flex items-center gap-2 transition-colors"
+          style={{
+            borderColor: pane === 'sleep' ? '#7C9CFF' : 'var(--rule)',
+            color: pane === 'sleep' ? '#7C9CFF' : '#7E8899',
+          }}
+        >
+          <Moon className="w-4 h-4 shrink-0" />
+          Sleep
+        </button>
       </div>
 
       {pane === 'routine' && (

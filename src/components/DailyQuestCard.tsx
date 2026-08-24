@@ -8,9 +8,16 @@ import { soundFx } from '../utils/audio';
 interface Props {
   userId: string | null;
   level: number;
-  /** Quest ids already completed, keyed by date. */
   completedToday: boolean;
   recentQuestIds?: string[];
+  /**
+   * Today's completed quest, if there is one.
+   *
+   * Read rather than recomputed: completing a quest adds its id to the recent
+   * list, and the selector avoids recent ids — so recomputing after completion
+   * returned a DIFFERENT quest while still showing it as done.
+   */
+  completedQuest?: { id: string; title: string; xp: number } | null;
   onComplete: (quest: Quest) => void;
 }
 
@@ -26,14 +33,26 @@ export const DailyQuestCard: React.FC<Props> = ({
   level,
   completedToday,
   recentQuestIds = [],
+  completedQuest,
   onComplete,
 }) => {
   const today = todayISO();
 
-  const quest = useMemo(
-    () => questForDay(userId || 'guest', today, level, recentQuestIds),
-    [userId, today, level, recentQuestIds]
-  );
+  const quest = useMemo<Quest>(() => {
+    // Once today's quest is completed, show the one that was actually
+    // completed — never a freshly selected one.
+    if (completedQuest) {
+      return {
+        id: completedQuest.id,
+        title: completedQuest.title,
+        xp: completedQuest.xp,
+        objective: '',
+        category: 'productivity',
+      };
+    }
+
+    return questForDay(userId || 'guest', today, level, recentQuestIds);
+  }, [userId, today, level, recentQuestIds, completedQuest]);
 
   const accept = () => {
     if (completedToday) return;

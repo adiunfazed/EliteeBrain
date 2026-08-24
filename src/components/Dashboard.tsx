@@ -2,13 +2,8 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile, ModuleId, Task } from '../types';
 import { MODULE_METADATA, calculateBrainScore } from '../utils/storage';
-import { Eyebrow } from './ui/Eyebrow';
-import { StatNumber } from './ui/StatNumber';
-import { Button } from './ui/Button';
-import { ChartRecorder } from './ChartRecorder';
 import { ModuleRoster } from './ModuleRoster';
 import { ModuleCard } from './ModuleCard';
-import { DayProgressCalendar } from './DayProgressCalendar';
 import { AchievementsDashboardSection } from './AchievementsDashboardSection';
 import { LeaderboardScreen } from './LeaderboardScreen';
 import { RankProgressionSection } from './RankProgressionSection';
@@ -19,13 +14,10 @@ import { FocusSection } from './FocusSection';
 import { GoalsSection } from './GoalsSection';
 import { ProGate } from './ProGate';
 import { LifeSection } from './LifeSection';
-import { TodayPane } from './TodayPane';
 import { MomentumChart } from './MomentumChart';
 import { AttributesRadar } from './AttributesRadar';
 import { ConsistencyCalendar } from './ConsistencyCalendar';
 import { TodayScreen } from './TodayScreen';
-import { DailyReset } from './DailyReset';
-import { LevelBar } from './LevelBar';
 import { careerXp, levelFromXp } from '../lib/xp';
 import { computeStreak } from '../lib/streak';
 import { checkAchievements } from '../utils/achievements';
@@ -43,7 +35,6 @@ import {
   subscribeHabitLogs,
   subscribeGoals,
 } from '../lib/goalStore';
-import { DailyMission } from './DailyMission';
 import { ProgressSection } from './ProgressSection';
 import { DailyChallengeCard } from './DailyChallengeCard';
 import { SKILL_GROUPS, SKILL_GROUP_ORDER, skillGroupOf } from '../lib/skillGroups';
@@ -54,34 +45,24 @@ import { subscribeTasks, bucketTasks } from '../lib/tasks';
 import { soundFx } from '../utils/audio';
 import { User, signInWithGoogle } from '../lib/firebase';
 import {
-  LayoutGrid,
-  List,
   Cloud,
   LogIn,
   Bot,
+  Repeat,
   CalendarCheck,
   BarChart2,
   Award,
   ChevronDown,
   ChevronRight,
   Medal,
-  Crown,
-  Zap,
-  ShieldCheck,
-  ArrowRight,
   Trophy,
   Brain,
-  Send,
   Flame,
   Activity,
-  MessageCircle,
-  Gamepad2,
   CheckSquare,
   TrendingUp,
-  Sun,
   Target,
   Clock,
-  Timer,
 } from 'lucide-react';
 
 interface Props {
@@ -118,7 +99,7 @@ export const Dashboard: React.FC<Props> = ({
   const [viewMode, setViewMode] = useState<'grid' | 'roster'>('grid');
   const [googleAuthLoading, setGoogleAuthLoading] = useState(false);
   const [openTaskCount, setOpenTaskCount] = useState(0);
-  const [hubPane, setHubPane] = useState<'today' | 'tasks' | 'goals' | 'routine' | 'focus'>('today');
+  const [hubPane, setHubPane] = useState<'tasks' | 'habits' | 'goals' | 'routine'>('tasks');
   const [focusHandoff, setFocusHandoff] = useState<Task | null>(null);
   const [lifePane, setLifePane] = useState<'routine' | 'week' | 'sleep' | undefined>();
   const [showDeepStats, setShowDeepStats] = useState(false);
@@ -276,7 +257,7 @@ export const Dashboard: React.FC<Props> = ({
       paneRequestedRef.current = false;
       return;
     }
-    setHubPane('today');
+    setHubPane('tasks');
     setLifePane(undefined);
   }, [activeSection]);
 
@@ -472,11 +453,14 @@ export const Dashboard: React.FC<Props> = ({
               onGo={goToPane}
               onStartFocus={(task) => {
                 setFocusHandoff(task);
-                goToPane('focus');
+                goToPane('tasks');
               }}
               level={levelFromXp(careerXpTotal).level}
               questDoneToday={profile.questLog?.date === todayISO()}
               recentQuestIds={profile.recentQuestIds || []}
+              completedQuest={
+                profile.questLog?.date === todayISO() ? profile.questLog : null
+              }
               onCompleteQuest={(quest) => {
                 const today = todayISO();
                 // Guarded by date: a second completion on the same day is a
@@ -486,13 +470,33 @@ export const Dashboard: React.FC<Props> = ({
                 onProfileUpdate?.({
                   ...profile,
                   gamesXp: (profile.gamesXp || 0) + quest.xp,
-                  questLog: { date: today, questId: quest.id, xp: quest.xp },
-                  // Keep a short history so the same quest does not reappear
-                  // within a few days.
+                  // Store the full quest, not just its id. The card reads this
+                  // back rather than recomputing — recomputing after
+                  // completion picked a different quest, because the id had
+                  // just been added to the "recent" exclusion list.
+                  questLog: {
+                    date: today,
+                    id: quest.id,
+                    title: quest.title,
+                    xp: quest.xp,
+                  },
                   recentQuestIds: [quest.id, ...(profile.recentQuestIds || [])].slice(0, 12),
                 });
               }}
             />
+
+            {/* Focus lives with Today, not Plan: a session is always started
+                on something from today's list, so separating them meant
+                navigating away to begin work. */}
+            <section className="sec">
+              <FocusSection
+                userId={currentUser?.uid || null}
+                incomingTask={focusHandoff}
+                onConsumeIncoming={() => setFocusHandoff(null)}
+                incomingHabit={habitHandoff}
+                onConsumeHabit={() => setHabitHandoff(null)}
+              />
+            </section>
           </motion.div>
         )}
 
@@ -657,54 +661,62 @@ export const Dashboard: React.FC<Props> = ({
               </h2>
             </div>
 
-            {/* Each tab states what it is FOR, not just what it's called —
-                a label alone made it unclear why five tabs existed. */}
-            <div className="eb-tabs overflow-x-auto no-scrollbar">
+            <div className="grid grid-cols-4 gap-1.5 p-1.5 rounded-2xl bg-[var(--surface-sunk)] border border-[var(--rule)]">
               {([
-                { id: 'today' as const, label: 'Today', icon: Sun, hint: 'Tick off your day' },
-                { id: 'tasks' as const, label: 'Tasks', icon: CheckSquare, hint: 'What to do' },
-                { id: 'goals' as const, label: 'Goals', icon: Target, hint: 'Where you\'re going' },
-                { id: 'routine' as const, label: 'Routine', icon: Clock, hint: 'When you do it' },
-                { id: 'focus' as const, label: 'Focus', icon: Timer, hint: 'Deep work timer' },
-              ]).map(({ id, label, icon: Icon }) => (
-                <button
-                  key={id}
-                  onClick={() => setHubPane(id)}
-                  data-active={hubPane === id}
-                  className="eb-tab eb-shine shrink-0 text-[11px] font-mono px-3.5 py-2.5 min-h-[42px] flex items-center gap-1.5" 
-                >
-                  <Icon className="w-3.5 h-3.5 shrink-0" />
-                  {label}
-                </button>
-              ))}
+                { id: 'tasks' as const, label: 'Tasks', icon: CheckSquare },
+                { id: 'habits' as const, label: 'Habits', icon: Repeat },
+                { id: 'routine' as const, label: 'Routine', icon: Clock },
+                { id: 'goals' as const, label: 'Goals', icon: Target },
+              ]).map(({ id, label, icon: Icon }) => {
+                const active = hubPane === id;
+                return (
+                  <button
+                    key={id}
+                    onClick={() => {
+                      soundFx.playClick();
+                      setHubPane(id);
+                    }}
+                    className="relative min-h-[62px] rounded-xl flex flex-col items-center justify-center gap-1.5 transition-colors"
+                    style={{
+                      background: active ? 'var(--surface)' : 'transparent',
+                      boxShadow: active
+                        ? '0 1px 0 0 rgba(255,255,255,0.06) inset, 0 6px 16px -10px rgba(0,0,0,0.9)'
+                        : undefined,
+                    }}
+                  >
+                    <Icon
+                      className="w-[18px] h-[18px] shrink-0"
+                      style={{ color: active ? 'var(--signal-ink)' : '#7E8899' }}
+                    />
+                    <span
+                      className="text-[12px] font-semibold"
+                      style={{ color: active ? 'var(--ink)' : '#7E8899' }}
+                    >
+                      {label}
+                    </span>
+
+                    {active && (
+                      <motion.span
+                        layoutId="plan-tab-underline"
+                        className="absolute bottom-1.5 h-[3px] w-6 rounded-full"
+                        style={{ background: 'var(--signal)' }}
+                        transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+                      />
+                    )}
+                  </button>
+                );
+              })}
             </div>
 
-            <p className="text-[10px] font-mono text-[#7E8899]">
-              {hubPane === 'today'
-                ? 'Everything scheduled for today — tick it as you go.'
-                : hubPane === 'tasks'
-                  ? 'One-off work. Link a task to a goal and finishing it moves the goal.'
-                  : hubPane === 'goals'
-                    ? 'What you\'re working toward, with milestones and the habits feeding them.'
-                    : hubPane === 'routine'
-                      ? 'The schedule you repeat. Attach a block to a goal to make it count.'
-                      : 'Start a timer on a task or habit. Real minutes get recorded.'}
+            <p className="t-sub">
+              {hubPane === 'tasks'
+                ? 'One-off work. Link a task to a goal and finishing it moves the goal.'
+                : hubPane === 'habits'
+                  ? 'Things you repeat. Do them whenever suits — the day is what counts.'
+                  : hubPane === 'routine'
+                    ? 'Time-bound blocks. Your day, in the order it actually happens.'
+                    : 'What you are working toward, broken into milestones.'}
             </p>
-
-            {hubPane === 'today' && (
-              <TodayPane
-                userId={currentUser?.uid || null}
-                blocks={routineBlocks}
-                routineLogs={routineLogs}
-                habits={allHabits}
-                habitLogs={allHabitLogs}
-                tasks={allTasks}
-                goals={allGoals
-                  .filter((g: any) => g.status === 'active')
-                  .map((g: any) => ({ id: g.id, title: g.title }))}
-                onGo={(pane) => goToPane(pane)}
-              />
-            )}
 
             {hubPane === 'tasks' && (
               <TasksSection
@@ -714,34 +726,30 @@ export const Dashboard: React.FC<Props> = ({
                   .map((g: any) => ({ id: g.id, title: g.title }))}
                 onStartFocus={(task) => {
                   setFocusHandoff(task);
-                  setHubPane('focus');
+                  setActiveSection('engine');
                 }}
               />
             )}
-            {hubPane === 'focus' && (
-              <FocusSection
-                userId={currentUser?.uid || null}
-                incomingTask={focusHandoff}
-                onConsumeIncoming={() => setFocusHandoff(null)}
-                incomingHabit={habitHandoff}
-                onConsumeHabit={() => setHabitHandoff(null)}
-              />
-            )}
-            {hubPane === 'goals' && (
+            {(hubPane === 'goals' || hubPane === 'habits') && (
               <ProGate
                 profile={profile}
-                feature="Goals & Habits"
-                blurb="Set goals, build habits with streaks and history, and see what's actually moving."
+                feature={hubPane === 'habits' ? 'Habits' : 'Goals'}
+                blurb={
+                  hubPane === 'habits'
+                    ? 'Build habits with streaks, history and targets that actually stick.'
+                    : "Set goals, break them into milestones, and see what's actually moving."
+                }
                 onOpenPro={onOpenProModal}
               >
               <GoalsSection
                 userId={currentUser?.uid || null}
+                pane={hubPane === 'habits' ? 'habits' : 'goals'}
                 tasks={allTasks}
                 routineBlocks={routineBlocks}
                 routineLogs={routineLogs}
                 onStartFocus={(title, minutes, habitId) => {
                   setHabitHandoff({ title, minutes, habitId });
-                  setHubPane('focus');
+                  setActiveSection('engine');
                 }}
               />
               </ProGate>

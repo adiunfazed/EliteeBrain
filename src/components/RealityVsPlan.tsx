@@ -6,7 +6,7 @@ import { adaptiveSignals, realityVsPlan } from '../lib/adaptive';
 
 interface Props {
   input: MomentumInput;
-  onGo?: (pane: 'today' | 'tasks' | 'goals' | 'routine' | 'focus') => void;
+  onGo?: (pane: 'tasks' | 'habits' | 'goals' | 'routine') => void;
 }
 
 /**
@@ -92,7 +92,7 @@ export const RealityVsPlan: React.FC<Props> = ({ input, onGo }) => {
                       s.key === 'routine' || s.key === 'overload'
                         ? 'routine'
                         : s.key === 'estimates'
-                          ? 'focus'
+                          ? 'habits'
                           : 'tasks'
                     )
                   }
