@@ -10,14 +10,9 @@ import { Calculator,
   Shuffle,
   Box,
   Target,
-  ArrowRight,
   CheckCircle2,
-  TrendingUp,
-  Award,
-  Crown,
   Lock,
   Brain,
-  Sparkles,
 } from 'lucide-react';
 import { soundFx } from '../utils/audio';
 
@@ -87,7 +82,7 @@ export const ModuleCard: React.FC<Props> = ({ config, state, isProUser, index = 
       onTouchEnd={() => setIsPressed(false)}
       onTouchCancel={() => setIsPressed(false)}
       onClick={handleCardClick}
-      className={`group eb-lift eb-shine ${config.isPro ? 'eb-glow-amber' : 'eb-glow-brand'} relative flex flex-col justify-between bg-surface border rounded-2xl p-4 sm:p-5 cursor-pointer select-none touch-manipulation overflow-hidden ${
+      className={`group eb-lift eb-shine ${config.isPro ? 'eb-glow-amber' : 'eb-glow-brand'} relative flex flex-col justify-between bg-surface border rounded-2xl p-3.5 cursor-pointer select-none touch-manipulation overflow-hidden ${
         isPressed
           ? 'scale-[0.96] border-[#8B5CF6] shadow-[0_15px_30px_-5px_rgba(92,108,242,0.35)] bg-[#8B5CF6]/10'
           : isLocked
@@ -190,119 +185,62 @@ export const ModuleCard: React.FC<Props> = ({ config, state, isProUser, index = 
         }
       })()}
 
-      {/* Main Content Area */}
-      <div className="pl-2 relative z-10">
-        {/* Top Header Row */}
-        <div className="flex items-start justify-between gap-3 mb-3">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2.5 rounded-xl bg-surface-sunk border border-rule group-hover:border-[#8B5CF6]/60 transition-colors shadow-xs">
-              {getIcon()}
-            </div>
-            <div className="min-w-0">
-              <h4 className="eb-heading text-base group-hover:text-[var(--signal)] transition-colors break-words">
-                {config.name}
-              </h4>
-              {config.isPro && (
-                <span className="inline-flex items-center gap-0.5 mt-1 px-2 py-0.5 rounded-full text-[11px] font-mono font-bold bg-amber-500/10 eb-warn border border-amber-500/30">
-                  <Crown className="w-2.5 h-2.5 shrink-0" /> PRO
-                </span>
-              )}
-            </div>
-          </div>
+      {/* Content */}
+      <div className="relative z-10 flex flex-col h-full">
+        <div className="flex items-start justify-between gap-2">
+          <span
+            className="w-11 h-11 rounded-xl shrink-0 flex items-center justify-center"
+            style={{ background: `color-mix(in oklab, ${config.domainColor} 18%, transparent)` }}
+          >
+            {getIcon()}
+          </span>
 
-          {/* Level Display */}
-          <div className="text-right shrink-0">
-            <span className="block text-[11px] font-mono text-ink-muted uppercase">LEVEL</span>
-            <span className="text-base font-mono font-bold text-ink">
-              {isLocked ? 0 : state.level}
+          {/* Level ring: progress within the current level, at a glance. */}
+          <div className="relative w-10 h-10 shrink-0">
+            <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
+              <circle cx="18" cy="18" r="15" fill="none" stroke="var(--surface-sunk)" strokeWidth="3" />
+              <circle
+                cx="18"
+                cy="18"
+                r="15"
+                fill="none"
+                stroke={config.domainColor}
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeDasharray={2 * Math.PI * 15}
+                strokeDashoffset={2 * Math.PI * 15 * (1 - Math.min(1, (state.xp % 100) / 100))}
+              />
+            </svg>
+            <span className="absolute inset-0 flex items-center justify-center text-[12px] font-bold tabular-nums">
+              {isLocked ? '–' : state.level}
             </span>
           </div>
         </div>
 
-        {/* One plain line. Category and tagline said the same thing three
-            different ways. */}
-        <p className="text-xs text-ink-muted leading-relaxed mb-4 line-clamp-2">
-          {config.description}
-        </p>
+        <h4 className="text-[14px] font-semibold leading-tight mt-3 break-words">
+          {config.name}
+        </h4>
 
-        {/* Stats Row */}
-        <div className="grid grid-cols-2 gap-2 p-2.5 bg-surface-sunk/80 border border-rule rounded-xl mb-4 text-[11px] font-mono">
-          <div className="flex items-center gap-1.5">
-            <Award className="w-3.5 h-3.5 text-ink-muted shrink-0" />
-            <div>
-              <span className="block text-[11px] text-ink-muted">BEST SCORE</span>
-              <span className="font-bold text-ink">{state.bestScore > 0 ? `${state.bestScore}%` : '--'}</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <TrendingUp className="w-3.5 h-3.5 text-ink-muted shrink-0" />
-            <div>
-              <span className="block text-[11px] text-ink-muted">TOTAL XP</span>
-              <span className="font-bold text-ink">{state.xp} XP</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Footer Action Button Bar */}
-      <div className="pl-2 pt-2.5 border-t border-rule flex items-center justify-between gap-2 relative z-10">
-        {isLocked ? (
-          <span className="inline-flex items-center gap-1 text-xs font-mono text-amber-600 dark:eb-warn font-bold">
-            <Lock className="w-3.5 h-3.5 shrink-0" /> Locked Pro
-          </span>
-        ) : state.completedToday ? (
-          <span className="inline-flex items-center gap-1 text-xs font-mono text-emerald-600 dark:eb-done font-bold">
-            <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> Done Today
-          </span>
-        ) : (
-          <span className="text-xs font-mono text-[#8B5CF6] font-semibold">
-            Ready
-          </span>
-        )}
-
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleCardClick();
-          }}
-          className={`eb-press eb-shine px-3.5 py-1.5 font-mono text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer shadow-xs ${
-            isLocked
-              ? 'bg-amber-600 text-white hover:bg-amber-500'
-              : state.completedToday
-              ? 'bg-surface-sunk text-ink border border-rule hover:bg-surface'
-              : 'bg-ink text-ground hover:bg-[#8B5CF6] hover:text-white'
-          }`}
-        >
+        <div className="flex items-center gap-1.5 mt-auto pt-3 flex-wrap">
           {isLocked ? (
-            <>
-              <Crown className="w-3.5 h-3.5 shrink-0" />
-              <span>Unlock</span>
-            </>
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold eb-warn">
+              <Lock className="w-3 h-3 shrink-0" /> Pro
+            </span>
+          ) : state.completedToday ? (
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold eb-done">
+              <CheckCircle2 className="w-3 h-3 shrink-0" /> Done
+            </span>
           ) : (
-            <>
-              <span>{state.completedToday ? 'Replay' : 'Start'}</span>
-              <ArrowRight className="w-3.5 h-3.5 shrink-0 group-hover:translate-x-1 transition-transform" />
-            </>
+            <span
+              className="text-[11px] font-semibold"
+              style={{ color: config.domainColor }}
+            >
+              {state.bestScore > 0 ? `Best ${state.bestScore}%` : 'Not started'}
+            </span>
           )}
-        </button>
+        </div>
       </div>
 
-      {/* Visual Lock Overlay */}
-      {isLocked && (
-        <div className="absolute inset-0 z-20 bg-slate-950/40 backdrop-blur-[2px] flex flex-col items-center justify-center p-4 text-center opacity-90 group-hover:opacity-100 transition-opacity">
-          <div className="p-3 bg-slate-900/95 border border-amber-500/60 rounded-2xl shadow-xl flex flex-col items-center space-y-2 max-w-[200px]">
-            <div className="p-2 bg-amber-500/20 eb-warn rounded-full border border-amber-500/40">
-              <Lock className="w-5 h-5 shrink-0 animate-pulse" />
-            </div>
-            <span className="text-xs font-mono font-bold text-white uppercase tracking-wider">
-              PRO MODULE
-            </span>
-            <span className="text-[10px] font-mono eb-warn flex items-center gap-1">
-              <Sparkles className="w-3 h-3 shrink-0" /> Tap to unlock all 8
-            </span>
-          </div>
-        </div>
-      )}
     </motion.div>
   );
 };

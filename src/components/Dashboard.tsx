@@ -104,6 +104,7 @@ export const Dashboard: React.FC<Props> = ({
   const [lifePane, setLifePane] = useState<'routine' | 'week' | 'sleep' | undefined>();
   const [showDeepStats, setShowDeepStats] = useState(false);
   const [trainTab, setTrainTab] = useState<'modules' | 'games'>('modules');
+  const [trainFilter, setTrainFilter] = useState<string | null>(null);
   const [moreDrawer, setMoreDrawer] = useState<string | null>('rank');
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const lastUnlockSignatureRef = useRef<string>('');
@@ -541,13 +542,45 @@ export const Dashboard: React.FC<Props> = ({
 
             {/* Exercises Content Grid / Roster */}
             <div>
+              {/* Filter. Nine modules across four groups is a long scroll;
+                  choosing a category makes it two rows. */}
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 mb-4 -mx-1 px-1">
+                {([null, ...SKILL_GROUP_ORDER] as (string | null)[]).map((g) => {
+                  const active = trainFilter === g;
+                  const label = g ? SKILL_GROUPS[g as keyof typeof SKILL_GROUPS].label : 'All';
+                  const count = g
+                    ? MODULE_METADATA.filter((m) => skillGroupOf(m.id) === g).length
+                    : MODULE_METADATA.length;
+
+                  return (
+                    <button
+                      key={label}
+                      onClick={() => {
+                        soundFx.playClick();
+                        setTrainFilter(g);
+                      }}
+                      className="shrink-0 min-h-[40px] px-4 rounded-xl border text-[13px] font-semibold transition-colors"
+                      style={{
+                        background: active ? 'var(--surface)' : 'transparent',
+                        borderColor: active ? 'var(--signal)' : 'var(--rule)',
+                        color: active ? 'var(--ink)' : '#7E8899',
+                      }}
+                    >
+                      {label}
+                      <span className="ml-1.5 text-[11px] opacity-60">{count}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
               {viewMode === 'grid' ? (
                 <div className="space-y-6">
                   {(() => {
                     const focusFirst = emphasisedGroup(profile.focusGoal);
-                    return focusFirst
+                    const ordered = focusFirst
                       ? [focusFirst, ...SKILL_GROUP_ORDER.filter((g) => g !== focusFirst)]
                       : SKILL_GROUP_ORDER;
+                    return trainFilter ? ordered.filter((g) => g === trainFilter) : ordered;
                   })().map((group) => {
                     const groupModules = MODULE_METADATA.filter(
                       (m) => skillGroupOf(m.id) === group
@@ -573,7 +606,7 @@ export const Dashboard: React.FC<Props> = ({
                           )}
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
                           {groupModules.map((meta, idx) => {
                             const state = profile.modules[meta.id] || {
                               level: 1,
