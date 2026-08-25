@@ -19,6 +19,7 @@ import { AttributesRadar } from './AttributesRadar';
 import { ConsistencyCalendar } from './ConsistencyCalendar';
 import { TodayScreen } from './TodayScreen';
 import { careerXp, levelFromXp } from '../lib/xp';
+import { useCareerStats } from '../lib/careerStats';
 import { computeStreak } from '../lib/streak';
 import { checkAchievements } from '../utils/achievements';
 import { habitStats, valueOn } from '../lib/habits';
@@ -241,6 +242,11 @@ export const Dashboard: React.FC<Props> = ({
     [profile, allTasks, allHabits, allHabitLogs, allFocus, routineBlocks, routineLogs, sleepLogs]
   );
 
+  // Server-authoritative XP. The local calculation only sees data synced to
+  // this device, which is why the rank screen and the leaderboard disagreed.
+  const serverStats = useCareerStats(careerXpTotal);
+  const unifiedXp = serverStats.authoritative ? serverStats.careerXp : careerXpTotal;
+
   const derivedStreak = useMemo(
     () => computeStreak(momentumInput, todayISO(), profile.streakResetAt).current,
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -456,7 +462,7 @@ export const Dashboard: React.FC<Props> = ({
                 setFocusHandoff(task);
                 goToPane('tasks');
               }}
-              level={levelFromXp(careerXpTotal).level}
+              level={levelFromXp(unifiedXp).level}
               questDoneToday={profile.questLog?.date === todayISO()}
               recentQuestIds={profile.recentQuestIds || []}
               completedQuest={
@@ -906,7 +912,7 @@ export const Dashboard: React.FC<Props> = ({
                             <RankProgressionSection
                               profile={profile}
                               derivedStreak={derivedStreak}
-                              lifeXp={careerXpTotal}
+                              lifeXp={unifiedXp}
                               onLaunchModule={onLaunchModule}
                               onOpenBadgesGallery={onOpenBadgesGallery}
                             />

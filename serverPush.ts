@@ -222,7 +222,10 @@ async function reminderFor(
     if (start === null) continue;
 
     const until = start - minutes;
-    if (until < 0 || until > 15) continue;
+    // Only fire in the 12 minutes before a block. A wider window meant the
+    // message could be composed well before it was read, so "starts in 14
+    // minutes" arrived when the block was already underway.
+    if (until < 0 || until > 12) continue;
 
     const slot = `block:${block.title}`;
     if (sentSlots.includes(slot)) continue;
@@ -231,7 +234,9 @@ async function reminderFor(
       slot,
       payload: {
         title: block.title,
-        body: until <= 1 ? 'Starting now.' : `Starts in ${until} minutes.`,
+        // State the clock time, not a countdown. A countdown goes stale the
+        // moment delivery is delayed; a time never does.
+        body: until <= 2 ? 'Starting now.' : `Starts at ${block.time.split('–')[0]}.`,
         tag: 'routine',
       },
     };

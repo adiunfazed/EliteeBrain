@@ -26,6 +26,21 @@ const GROQ_MODELS = ['openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'qwen/qwen3.6-
 /** Reason the last provider attempt failed, for accurate error reporting. */
 let lastProviderError: string | null = null;
 
+/**
+ * Reject a hung request instead of holding the connection open.
+ *
+ * Without this a stalled provider call keeps the user staring at a typing
+ * indicator until the browser gives up.
+ */
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`Timed out after ${ms}ms`)), ms)
+    ),
+  ]);
+}
+
 async function generateCoachReply(
   userProfile: any,
   userMessage: string,
@@ -94,16 +109,31 @@ How to talk:
         parts: [{ text: prompt }],
       });
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents,
-        config: {
-          systemInstruction: systemPrompt,
-          temperature: 0.7,
-        },
-      });
+      // Retry transient failures. Rate limits and 503s are common on free
+      // tiers and clear within a second — previously the first one dropped
+      // straight through to the fallback provider or an error message.
+      let response: any = null;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          response = await withTimeout(
+            ai.models.generateContent({
+              model: 'gemini-2.5-flash',
+              contents,
+              config: { systemInstruction: systemPrompt, temperature: 0.7 },
+            }),
+            20_000
+          );
+          break;
+        } catch (attemptErr: any) {
+          const code = Number(attemptErr?.status || attemptErr?.code || 0);
+          const retryable = code === 429 || code === 503 || code === 500 || code === 0;
+          if (!retryable || attempt === 2) throw attemptErr;
+          // Back off: 400ms, then 1200ms.
+          await new Promise((r) => setTimeout(r, 400 * Math.pow(3, attempt)));
+        }
+      }
 
-      if (response.text) {
+      if (response?.text) {
         return response.text.trim();
       }
     } catch (err: any) {

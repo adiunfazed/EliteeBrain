@@ -37,6 +37,7 @@ import { ScrollProgress } from './components/ScrollProgress';
 import { XpProvider } from './components/XpToast';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { UpdateBanner } from './components/UpdateBanner';
+import { refreshPushTimezone } from './lib/notifications';
 
 export default function App() {
   const [profile, setProfile] = useState<UserProfile>(() => loadProfile());
@@ -177,6 +178,10 @@ export default function App() {
         // Re-read now that ownership is established — the initial load ran
         // before auth resolved and may have returned a stale profile.
         setProfile(loadProfile());
+
+        // Keep the server's copy of this device's timezone current. A stale
+        // offset sends every reminder hours late.
+        refreshPushTimezone(getIdToken).catch(() => {});
 
         const isAdminUser = user.email?.toLowerCase() === 'unfazed.adibiz@gmail.com';
 

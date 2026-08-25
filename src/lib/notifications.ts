@@ -401,3 +401,43 @@ export async function unsubscribeFromPush(
     console.warn('Could not unsubscribe:', err);
   }
 }
+
+
+/**
+ * Keep the stored timezone offset current.
+ *
+ * The offset was only written when a device first subscribed. Anyone who
+ * subscribed before that field existed has 0 stored — so the server treats
+ * their local time as UTC and every reminder lands hours out. Travel and
+ * daylight-saving changes cause the same drift.
+ *
+ * Cheap enough to run on every launch: one small write, and only when the
+ * value has actually changed.
+ */
+export async function refreshPushTimezone(
+  getToken: () => Promise<string | null>
+): Promise<void> {
+  try {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription();
+    if (!sub) return;
+
+    const token = await getToken();
+    if (!token) return;
+
+    const json = sub.toJSON();
+    await fetch('/api/push/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({
+        endpoint: json.endpoint,
+        keys: json.keys,
+        utcOffsetMinutes: -new Date().getTimezoneOffset(),
+      }),
+    });
+  } catch (err) {
+    console.warn('Could not refresh push timezone:', err);
+  }
+}
