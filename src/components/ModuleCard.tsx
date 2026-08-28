@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { ModuleConfig, ModuleState } from '../types';
-import { Calculator,
+import { BookOpen, Calculator,
   Binary,
   Zap,
   Layers,
@@ -46,6 +46,8 @@ export const ModuleCard: React.FC<Props> = ({ config, state, isProUser, index = 
         return <Box className="w-5 h-5 shrink-0 text-indigo-500 dark:text-indigo-400" />;
       case 'Target':
         return <Target className="w-5 h-5 shrink-0 text-teal-500 dark:text-teal-400" />;
+      case 'BookOpen':
+        return <BookOpen className="w-5 h-5 shrink-0 text-rose-500 dark:text-rose-400" />;
       case 'Calculator':
         return <Calculator className="w-5 h-5 shrink-0 text-violet-500 dark:text-[#A78BFA]" />;
       default:

@@ -7,7 +7,8 @@ export type ModuleId =
   | 'cognitive-shift'
   | 'visuospatial'
   | 'reaction-inhibitor'
-  | 'mental-math';
+  | 'mental-math'
+  | 'vocabulary';
 
 export interface ModuleConfig {
   id: ModuleId;
@@ -107,6 +108,8 @@ export interface UserProfile {
   questLog?: { date: string; id: string; title: string; xp: number };
   /** Recent quest ids, to avoid immediate repeats. */
   recentQuestIds?: string[];
+  /** Spaced-review state, keyed by word. Belongs to the signed-in user. */
+  vocabStore?: Record<string, any>;
   /** Goal chosen during onboarding — see lib/goals.ts. */
   focusGoal?: string;
   dailyMinutes?: number;

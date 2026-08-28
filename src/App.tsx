@@ -31,6 +31,7 @@ import { CognitiveShiftModule } from './components/modules/CognitiveShiftModule'
 import { VisuospatialModule } from './components/modules/VisuospatialModule';
 import { ReactionInhibitorModule } from './components/modules/ReactionInhibitorModule';
 import { MentalMathModule } from './components/modules/MentalMathModule';
+import { VocabularyModule } from './components/modules/VocabularyModule';
 import { resolveEntitlement, startTrialFields } from './lib/entitlement';
 import { goalById } from './lib/goals';
 import { ScrollProgress } from './components/ScrollProgress';
@@ -561,6 +562,23 @@ export default function App() {
       {activeModuleId === 'mental-math' && (
         <MentalMathModule
           currentLevel={profile.modules['mental-math']?.level || 1}
+          onFinishSession={handleFinishModule}
+          onClose={() => setActiveModuleId(null)}
+        />
+      )}
+
+      {activeModuleId === 'vocabulary' && (
+        <VocabularyModule
+          currentLevel={profile.modules['vocabulary']?.level || 1}
+          store={profile.vocabStore || {}}
+          onStoreChange={(vocabStore) => {
+            // Saved on every answer so a quit mid-session never loses the
+            // review schedule that was just earned.
+            const updated = { ...profile, vocabStore };
+            setProfile(updated);
+            saveProfile(updated);
+            if (currentUser) syncProfileToCloud(updated, currentUser).catch(() => {});
+          }}
           onFinishSession={handleFinishModule}
           onClose={() => setActiveModuleId(null)}
         />

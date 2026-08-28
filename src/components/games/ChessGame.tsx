@@ -208,6 +208,8 @@ export const ChessGame: React.FC<{
   const [lastMove, setLastMove] = useState<{ from: Square; to: Square } | null>(null);
   const [moveHistory, setMoveHistory] = useState<string[]>([]);
   const [pendingPromotion, setPendingPromotion] = useState<{ from: Square; to: Square } | null>(null);
+  /** A move queued during the engine's turn, played when yours begins. */
+  const [premove, setPremove] = useState<{ from: Square; to: Square } | null>(null);
 
   // Audio Mute
   const [isMuted, setIsMuted] = useState(false);
@@ -615,9 +617,49 @@ export const ChessGame: React.FC<{
   };
 
   // Drag and Drop Handler
+  // Play a queued premove as soon as it is the player's turn. Validity is
+  // checked here, not when queued — the position has changed since, and the
+  // move may no longer be legal.
+  useEffect(() => {
+    if (!premove || gameStatus !== 'playing') return;
+    if (game.turn() !== 'w' || isEngineThinking) return;
+
+    const queued = premove;
+    setPremove(null);
+
+    const legal = game
+      .moves({ square: queued.from, verbose: true })
+      .find((m: any) => m.to === queued.to);
+
+    if (!legal) {
+      // Silently discarded: the opponent's move made it illegal, which is
+      // normal and not worth an error message.
+      return;
+    }
+
+    if (legal.flags.includes('p')) {
+      setPendingPromotion({ from: queued.from, to: queued.to });
+      return;
+    }
+
+    makeAMove({ from: queued.from, to: queued.to, promotion: 'q' });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [premove, gameStatus, isEngineThinking, game]);
+
   const onDrop = ({ sourceSquare, targetSquare }: { piece: any; sourceSquare: string; targetSquare: string | null }) => {
     if (!targetSquare) return false;
-    if (gameStatus !== 'playing' || game.turn() === 'b' || isEngineThinking) return false;
+    if (gameStatus !== 'playing') return false;
+
+    // Not your turn: queue the move instead of rejecting it. Validity is
+    // checked when it plays, since the position will have changed by then.
+    if (game.turn() === 'b' || isEngineThinking) {
+      const own = game.get(sourceSquare as Square);
+      if (!own || own.color !== 'w') return false;
+      setPremove({ from: sourceSquare as Square, to: targetSquare as Square });
+      setOptionSquares({});
+      soundFx.playClick();
+      return true;
+    }
 
     // Check promotion
     const moves = game.moves({ square: sourceSquare as Square, verbose: true });
@@ -643,23 +685,55 @@ export const ChessGame: React.FC<{
     }
 
     const newSquares: Record<string, any> = {};
+
     moves.forEach((move) => {
-      newSquares[move.to] = {
-        background:
-          game.get(move.to as Square) && game.get(move.to as Square)?.color !== game.get(square)?.color
-            ? 'radial-gradient(circle, rgba(239, 68, 68, 0.7) 85%, transparent 85%)'
-            : 'radial-gradient(circle, rgba(16, 185, 129, 0.7) 28%, transparent 28%)',
-        borderRadius: '50%',
-      };
+      // move.captured is authoritative. Checking whether a piece sits on the
+      // target square misses en passant entirely, where the captured pawn is
+      // on a different square — so those showed as quiet moves.
+      const isCapture = !!move.captured;
+
+      newSquares[move.to] = isCapture
+        ? {
+            // A ring, not a filled disc: you can still see which piece you are
+            // about to take, which matters when choosing between captures.
+            background:
+              'radial-gradient(circle, transparent 62%, rgba(255, 107, 87, 0.85) 62%, rgba(255, 107, 87, 0.85) 78%, transparent 78%)',
+          }
+        : {
+            background:
+              'radial-gradient(circle, rgba(124, 92, 255, 0.75) 26%, transparent 26%)',
+          };
+
+      // Promotions and castling are worth distinguishing — they are easy to
+      // play by accident otherwise.
+      if (move.promotion) {
+        newSquares[move.to] = {
+          background:
+            'radial-gradient(circle, rgba(255, 176, 32, 0.85) 32%, transparent 32%)',
+        };
+      }
+      if (move.san === 'O-O' || move.san === 'O-O-O') {
+        newSquares[move.to] = {
+          background: 'rgba(0, 194, 168, 0.35)',
+        };
+      }
     });
-    newSquares[square] = {
-      background: 'rgba(245, 158, 11, 0.4)',
-    };
+
+    newSquares[square] = { background: 'rgba(124, 92, 255, 0.32)' };
     setOptionSquares(newSquares);
   };
 
   const handleSquareClick = ({ square }: { piece: any; square: string }) => {
     const sq = square as Square;
+
+    // Tapping anywhere cancels a queued premove. A queued move you cannot
+    // take back is worse than no premove at all.
+    if (premove) {
+      setPremove(null);
+      soundFx.playClick();
+      return;
+    }
+
     if (gameStatus !== 'playing' || game.turn() === 'b' || isEngineThinking) return;
 
     if (selectedSquare) {
@@ -706,6 +780,7 @@ export const ChessGame: React.FC<{
     setOptionSquares({});
     setLastMove(null);
     setMoveHistory([]);
+    setPremove(null);
     setPendingPromotion(null);
     setEloDelta(null);
     if (!isMuted) soundFx.playChessMove();
@@ -770,6 +845,13 @@ export const ChessGame: React.FC<{
   // Highlight Styles for Chessboard
   const customSquareStyles = {
     ...optionSquares,
+    // The queued premove, so it is obvious one is waiting.
+    ...(premove
+      ? {
+          [premove.from]: { backgroundColor: 'rgba(124, 92, 255, 0.30)' },
+          [premove.to]: { backgroundColor: 'rgba(124, 92, 255, 0.42)' },
+        }
+      : {}),
     ...(lastMove
       ? {
           [lastMove.from]: { backgroundColor: 'rgba(234, 179, 8, 0.4)' },
@@ -1269,6 +1351,25 @@ export const ChessGame: React.FC<{
 
         {/* Sidebar Log & Game Stats (4 cols) */}
         <div className="lg:col-span-1 space-y-3 min-w-0">
+          {premove && (
+            <button
+              onClick={() => {
+                setPremove(null);
+                soundFx.playClick();
+              }}
+              className="w-full rounded-xl border p-3 flex items-center justify-between gap-3"
+              style={{
+                background: 'color-mix(in oklab, var(--signal) 12%, transparent)',
+                borderColor: 'color-mix(in oklab, var(--signal) 45%, var(--rule))',
+              }}
+            >
+              <span className="text-[13px] font-semibold text-[var(--signal-ink)]">
+                Premove queued: {premove.from}–{premove.to}
+              </span>
+              <span className="text-[12px] text-[#7E8899]">Tap to cancel</span>
+            </button>
+          )}
+
           {/* One control, not a status panel. Whose turn it is and whether
               the king is in check are already visible on the board. */}
           {gameStatus === 'playing' && (

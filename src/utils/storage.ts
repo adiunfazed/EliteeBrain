@@ -176,6 +176,18 @@ export const MODULE_METADATA = [
     description: 'Answer ten arithmetic questions against the clock. Gets faster as you improve.',
     isPro: false,
   },
+  {
+    id: 'vocabulary' as ModuleId,
+    name: 'Word Power',
+    tagline: 'Vocabulary Builder',
+    category: 'Memory' as const,
+    domain: 'Memory',
+    domainColor: 'var(--dom-memory)',
+    icon: 'BookOpen',
+    color: 'rose',
+    description: 'Learn words and review them on a spaced schedule so they actually stick.',
+    isPro: false,
+  },
 ];
 
 export function getTodayDateString(): string {
@@ -215,6 +227,7 @@ export function createInitialProfile(): UserProfile {
       'visuospatial': { level: 1, xp: 0, bestScore: 0, totalSessions: 0, completedToday: false, history: [] },
       'reaction-inhibitor': { level: 1, xp: 0, bestScore: 0, totalSessions: 0, completedToday: false, history: [] },
       'mental-math': { level: 1, xp: 0, bestScore: 0, totalSessions: 0, completedToday: false, history: [] },
+      'vocabulary': { level: 1, xp: 0, bestScore: 0, totalSessions: 0, completedToday: false, history: [] },
     },
     dailyLogs,
   };

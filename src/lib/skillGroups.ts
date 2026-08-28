@@ -42,6 +42,7 @@ export const MODULE_SKILL_GROUP: Record<string, SkillGroup> = {
   'digit-span': 'memory',
   'n-back': 'memory',
   'visuospatial': 'memory',
+  'vocabulary': 'memory',
 
   'stroop': 'focus',
   'stillness': 'focus',
