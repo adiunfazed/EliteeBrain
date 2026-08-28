@@ -12,7 +12,7 @@ import type { ModuleId } from '../types';
  * claim about the exercise, not about the user's brain.
  */
 
-export type SkillGroup = 'memory' | 'focus' | 'reasoning';
+export type SkillGroup = 'memory' | 'focus' | 'reasoning' | 'language';
 
 export const SKILL_GROUPS: Record<
   SkillGroup,
@@ -36,13 +36,20 @@ export const SKILL_GROUPS: Record<
     tint: 'text-[#A78BFA]',
     accent: 'bg-[#8B5CF6]/15 border-[#8B5CF6]/30',
   },
+  language: {
+    label: 'Speaking & Language',
+    blurb: 'Build vocabulary and think on your feet when you have to speak.',
+    tint: 'text-[#7FD4E8]',
+    accent: 'bg-[#7FD4E8]/15 border-[#7FD4E8]/30',
+  },
 };
 
 export const MODULE_SKILL_GROUP: Record<string, SkillGroup> = {
   'digit-span': 'memory',
   'n-back': 'memory',
   'visuospatial': 'memory',
-  'vocabulary': 'memory',
+  'vocabulary': 'language',
+  'story-builder': 'language',
 
   'stroop': 'focus',
   'stillness': 'focus',
@@ -57,4 +64,4 @@ export function skillGroupOf(id: ModuleId): SkillGroup {
   return MODULE_SKILL_GROUP[id] ?? 'reasoning';
 }
 
-export const SKILL_GROUP_ORDER: SkillGroup[] = ['focus', 'memory', 'reasoning'];
+export const SKILL_GROUP_ORDER: SkillGroup[] = ['focus', 'memory', 'reasoning', 'language'];

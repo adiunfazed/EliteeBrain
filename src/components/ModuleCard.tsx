@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { ModuleConfig, ModuleState } from '../types';
-import { BookOpen, Calculator,
+import { Mic, BookOpen, Calculator,
   Binary,
   Zap,
   Layers,
@@ -46,6 +46,8 @@ export const ModuleCard: React.FC<Props> = ({ config, state, isProUser, index = 
         return <Box className="w-5 h-5 shrink-0 text-indigo-500 dark:text-indigo-400" />;
       case 'Target':
         return <Target className="w-5 h-5 shrink-0 text-teal-500 dark:text-teal-400" />;
+      case 'Mic':
+        return <Mic className="w-5 h-5 shrink-0 text-sky-400" />;
       case 'BookOpen':
         return <BookOpen className="w-5 h-5 shrink-0 text-rose-500 dark:text-rose-400" />;
       case 'Calculator':

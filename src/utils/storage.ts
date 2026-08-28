@@ -188,6 +188,18 @@ export const MODULE_METADATA = [
     description: 'Learn words and review them on a spaced schedule so they actually stick.',
     isPro: false,
   },
+  {
+    id: 'story-builder' as ModuleId,
+    name: 'Story Building',
+    tagline: 'Think On Your Feet',
+    category: 'Fluid IQ' as const,
+    domain: 'Language',
+    domainColor: '#7FD4E8',
+    icon: 'Mic',
+    color: 'sky',
+    description: 'A word appears every few seconds. Keep one story going and weave each one in.',
+    isPro: false,
+  },
 ];
 
 export function getTodayDateString(): string {
@@ -228,6 +240,7 @@ export function createInitialProfile(): UserProfile {
       'reaction-inhibitor': { level: 1, xp: 0, bestScore: 0, totalSessions: 0, completedToday: false, history: [] },
       'mental-math': { level: 1, xp: 0, bestScore: 0, totalSessions: 0, completedToday: false, history: [] },
       'vocabulary': { level: 1, xp: 0, bestScore: 0, totalSessions: 0, completedToday: false, history: [] },
+      'story-builder': { level: 1, xp: 0, bestScore: 0, totalSessions: 0, completedToday: false, history: [] },
     },
     dailyLogs,
   };

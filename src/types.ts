@@ -8,7 +8,8 @@ export type ModuleId =
   | 'visuospatial'
   | 'reaction-inhibitor'
   | 'mental-math'
-  | 'vocabulary';
+  | 'vocabulary'
+  | 'story-builder';
 
 export interface ModuleConfig {
   id: ModuleId;
@@ -110,6 +111,8 @@ export interface UserProfile {
   recentQuestIds?: string[];
   /** Spaced-review state, keyed by word. Belongs to the signed-in user. */
   vocabStore?: Record<string, any>;
+  /** Best word count reached in a story-building session. */
+  storyBest?: number;
   /** Goal chosen during onboarding — see lib/goals.ts. */
   focusGoal?: string;
   dailyMinutes?: number;

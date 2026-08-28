@@ -32,6 +32,7 @@ import { VisuospatialModule } from './components/modules/VisuospatialModule';
 import { ReactionInhibitorModule } from './components/modules/ReactionInhibitorModule';
 import { MentalMathModule } from './components/modules/MentalMathModule';
 import { VocabularyModule } from './components/modules/VocabularyModule';
+import { StoryBuilderModule } from './components/modules/StoryBuilderModule';
 import { resolveEntitlement, startTrialFields } from './lib/entitlement';
 import { goalById } from './lib/goals';
 import { ScrollProgress } from './components/ScrollProgress';
@@ -563,6 +564,26 @@ export default function App() {
         <MentalMathModule
           currentLevel={profile.modules['mental-math']?.level || 1}
           onFinishSession={handleFinishModule}
+          onClose={() => setActiveModuleId(null)}
+        />
+      )}
+
+      {activeModuleId === 'story-builder' && (
+        <StoryBuilderModule
+          currentLevel={profile.modules['story-builder']?.level || 1}
+          personalBest={profile.storyBest || 0}
+          onFinishSession={(result) => {
+            // Track the personal best separately from XP, since it is a count
+            // of words rather than a score.
+            const words = Number(String(result.details[0]?.value || '0').split('/')[0].trim());
+            if (words > (profile.storyBest || 0)) {
+              const updated = { ...profile, storyBest: words };
+              setProfile(updated);
+              saveProfile(updated);
+              if (currentUser) syncProfileToCloud(updated, currentUser).catch(() => {});
+            }
+            handleFinishModule(result);
+          }}
           onClose={() => setActiveModuleId(null)}
         />
       )}

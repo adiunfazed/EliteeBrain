@@ -3,7 +3,7 @@ import { Chess, Square, PieceSymbol, Color } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile } from '../../types';
-import { ChevronDown, Flag,
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ChevronDown, Flag,
   Trophy,
   RotateCcw,
   BrainCircuit,
@@ -218,7 +218,68 @@ export const ChessGame: React.FC<{
   const boardContainerRef = useRef<HTMLDivElement>(null);
   const [boardWidth, setBoardWidth] = useState<number>(560);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
+  const [showHistory, setShowHistory] = useState(true);
+  /** Ply being reviewed, or null when showing the live position. */
+  const [reviewPly, setReviewPly] = useState<number | null>(null);
+  const [reviewFen, setReviewFen] = useState<string | null>(null);
+
+  /**
+   * Replay to a given ply for review.
+   *
+   * Builds a fresh board from the move list rather than mutating the live
+   * game — reviewing must never be able to corrupt a match in progress.
+   */
+  /** Step to a ply, or back to the live position when past the end. */
+  const goToPly = (ply: number | null) => {
+    if (ply === null || ply >= moveHistory.length - 1) {
+      // Past the last move means the live board, not a frozen copy of it.
+      setReviewPly(null);
+      setReviewFen(null);
+      return;
+    }
+    if (ply < -1) return;
+
+    try {
+      const replay = new Chess();
+      for (let i = 0; i <= ply && i < moveHistory.length; i++) {
+        replay.move(moveHistory[i]);
+      }
+      setReviewPly(ply);
+      setReviewFen(replay.fen());
+    } catch {
+      setReviewPly(null);
+      setReviewFen(null);
+    }
+  };
+
+  const historyRef = useRef<HTMLDivElement>(null);
+
+  // Scroll the active move into view — in a long game the current position
+  // would otherwise be somewhere off-screen in the list.
+  useEffect(() => {
+    const el = historyRef.current?.querySelector('[data-active="true"]');
+    el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [reviewPly, moveHistory.length]);
+
+  const reviewAt = (ply: number) => {
+    if (reviewPly === ply) {
+      setReviewPly(null);
+      setReviewFen(null);
+      return;
+    }
+    try {
+      const replay = new Chess();
+      for (let i = 0; i <= ply && i < moveHistory.length; i++) {
+        replay.move(moveHistory[i]);
+      }
+      setReviewPly(ply);
+      setReviewFen(replay.fen());
+      soundFx.playClick();
+    } catch {
+      setReviewPly(null);
+      setReviewFen(null);
+    }
+  };
 
   const engineRef = useRef<any>(null);
   const onEngineMove = useRef<((moveUci: string) => void) | null>(null);
@@ -390,9 +451,14 @@ export const ChessGame: React.FC<{
     (currentGame: Chess) => {
       if (!currentGame.isGameOver()) return;
 
+      // Let the final move paint before the overlay covers the board.
+      // Previously the result appeared in the same frame as the mating move,
+      // so players never saw how the game actually ended.
+      const settle = (fn: () => void) => window.setTimeout(fn, 900);
+
       if (currentGame.isCheckmate()) {
         // The side to move is the one checkmated.
-        finishMatch(currentGame.turn() === 'w' ? 'lost' : 'won');
+        settle(() => finishMatch(currentGame.turn() === 'w' ? 'lost' : 'won'));
         return;
       }
 
@@ -402,7 +468,7 @@ export const ChessGame: React.FC<{
       else if (currentGame.isInsufficientMaterial()) setDrawReason('Insufficient material');
       else setDrawReason('Fifty-move rule');
 
-      finishMatch('drawn');
+      settle(() => finishMatch('drawn'));
     },
     [finishMatch]
   );
@@ -646,9 +712,41 @@ export const ChessGame: React.FC<{
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [premove, gameStatus, isEngineThinking, game]);
 
+  // Arrow keys step through the game, matching every chess site.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (moveHistory.length === 0) return;
+      const current = reviewPly ?? moveHistory.length - 1;
+
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        goToPly(current - 1);
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        goToPly(current + 1);
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        goToPly(-1);
+      } else if (e.key === 'End') {
+        e.preventDefault();
+        goToPly(null);
+      }
+    };
+
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reviewPly, moveHistory]);
+
   const onDrop = ({ sourceSquare, targetSquare }: { piece: any; sourceSquare: string; targetSquare: string | null }) => {
     if (!targetSquare) return false;
     if (gameStatus !== 'playing') return false;
+    // Cannot move from a reviewed position — leave review first.
+    if (reviewFen) {
+      setReviewPly(null);
+      setReviewFen(null);
+      return false;
+    }
 
     // Not your turn: queue the move instead of rejecting it. Validity is
     // checked when it plays, since the position will have changed by then.
@@ -781,6 +879,8 @@ export const ChessGame: React.FC<{
     setLastMove(null);
     setMoveHistory([]);
     setPremove(null);
+    setReviewPly(null);
+    setReviewFen(null);
     setPendingPromotion(null);
     setEloDelta(null);
     if (!isMuted) soundFx.playChessMove();
@@ -989,7 +1089,7 @@ export const ChessGame: React.FC<{
         <div className="my-2">
           <Chessboard
             options={{
-              position: game.fen(),
+              position: reviewFen || game.fen(),
               onPieceDrop: onDrop,
               onSquareClick: handleSquareClick,
               boardStyle: {
@@ -1287,7 +1387,7 @@ export const ChessGame: React.FC<{
             <div className="rounded-2xl overflow-hidden border-2 border-[#2A313C] shadow-2xl">
               <Chessboard
                 options={{
-                  position: game.fen(),
+                  position: reviewFen || game.fen(),
                   onPieceDrop: onDrop,
                   onSquareClick: handleSquareClick,
                   boardStyle: {
@@ -1351,6 +1451,49 @@ export const ChessGame: React.FC<{
 
         {/* Sidebar Log & Game Stats (4 cols) */}
         <div className="lg:col-span-1 space-y-3 min-w-0">
+
+          {moveHistory.length > 0 && (
+            <div className="flex items-center gap-1.5 mt-3">
+              {([
+                { label: 'First', icon: ChevronsLeft, to: -1 as number | null, disabled: reviewPly === -1 },
+                { label: 'Back', icon: ChevronLeft, to: (reviewPly ?? moveHistory.length - 1) - 1, disabled: reviewPly === -1 },
+                { label: 'Forward', icon: ChevronRight, to: (reviewPly ?? moveHistory.length - 1) + 1, disabled: reviewPly === null },
+                { label: 'Live', icon: ChevronsRight, to: null, disabled: reviewPly === null },
+              ]).map(({ label, icon: Icon, to, disabled }) => (
+                <button
+                  key={label}
+                  onClick={() => {
+                    soundFx.playClick();
+                    goToPly(to);
+                  }}
+                  disabled={disabled}
+                  aria-label={label}
+                  className="flex-1 min-h-[44px] rounded-xl border flex items-center justify-center transition-colors disabled:opacity-30"
+                  style={{ borderColor: 'var(--rule)' }}
+                >
+                  <Icon className="w-4 h-4 shrink-0 text-[var(--ink)]" />
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Reviewing state, so a frozen board is never mistaken for a bug. */}
+          {reviewPly !== null && (
+            <button
+              onClick={() => goToPly(null)}
+              className="w-full mt-2 rounded-xl border p-2.5 flex items-center justify-between gap-3"
+              style={{
+                background: 'color-mix(in oklab, var(--warn) 12%, transparent)',
+                borderColor: 'color-mix(in oklab, var(--warn) 45%, var(--rule))',
+              }}
+            >
+              <span className="text-[13px] font-semibold eb-warn">
+                Reviewing move {reviewPly + 1} of {moveHistory.length}
+              </span>
+              <span className="text-[12px] text-[#7E8899]">Back to live</span>
+            </button>
+          )}
+
           {premove && (
             <button
               onClick={() => {
@@ -1403,6 +1546,7 @@ export const ChessGame: React.FC<{
             </button>
 
             <div
+              ref={historyRef}
               className={`${
                 showHistory ? 'h-56' : 'h-0'
               } overflow-y-auto pr-1 space-y-1 font-mono text-xs custom-scrollbar transition-[height] duration-200`}
@@ -1418,11 +1562,42 @@ export const ChessGame: React.FC<{
                   return (
                     <div
                       key={idx}
+                      data-active={reviewPly === idx * 2 || reviewPly === idx * 2 + 1}
                       className="grid grid-cols-12 gap-1 px-3 py-1.5 rounded-xl bg-[#0E1116]/80 border border-white/5 hover:border-white/10"
                     >
-                      <span className="col-span-2 text-[#6C757D] font-bold">{idx + 1}.</span>
-                      <span className="col-span-5 text-white font-bold">{whiteMove}</span>
-                      <span className="col-span-5 text-[#98A2B3]">{blackMove || ''}</span>
+                      <span className="col-span-2 text-[#7E8899] font-bold">{idx + 1}.</span>
+
+                      <button
+                        onClick={() => reviewAt(idx * 2)}
+                        className="col-span-5 text-left font-bold rounded px-1"
+                        style={{
+                          color: reviewPly === idx * 2 ? 'var(--signal-ink)' : '#fff',
+                          background:
+                            reviewPly === idx * 2
+                              ? 'color-mix(in oklab, var(--signal) 18%, transparent)'
+                              : undefined,
+                        }}
+                      >
+                        {whiteMove}
+                      </button>
+
+                      {blackMove ? (
+                        <button
+                          onClick={() => reviewAt(idx * 2 + 1)}
+                          className="col-span-5 text-left rounded px-1"
+                          style={{
+                            color: reviewPly === idx * 2 + 1 ? 'var(--signal-ink)' : '#96A0B0',
+                            background:
+                              reviewPly === idx * 2 + 1
+                                ? 'color-mix(in oklab, var(--signal) 18%, transparent)'
+                                : undefined,
+                          }}
+                        >
+                          {blackMove}
+                        </button>
+                      ) : (
+                        <span className="col-span-5" />
+                      )}
                     </div>
                   );
                 })
