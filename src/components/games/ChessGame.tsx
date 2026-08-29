@@ -220,6 +220,30 @@ export const ChessGame: React.FC<{
    * current position, and the opponent's move may invalidate them. Showing
    * them at full strength would imply a certainty that does not exist.
    */
+  /** Unicode glyph for a piece, used to draw the premove ghost. */
+  const glyphFor = (type: string, color: 'w' | 'b'): string => {
+    const white: Record<string, string> = {
+      p: '\u2659', n: '\u2658', b: '\u2657', r: '\u2656', q: '\u2655', k: '\u2654',
+    };
+    const black: Record<string, string> = {
+      p: '\u265F', n: '\u265E', b: '\u265D', r: '\u265C', q: '\u265B', k: '\u265A',
+    };
+    return (color === 'w' ? white : black)[type] || '';
+  };
+
+  /**
+   * Pixel position of a square on the board, for overlaying the ghost piece.
+   *
+   * Board orientation is always white-at-bottom here, so file a is column 0
+   * and rank 8 is row 0.
+   */
+  const squareToPixels = (square: Square): { left: number; top: number; size: number } => {
+    const size = boardWidth / 8;
+    const file = square.charCodeAt(0) - 97;
+    const rank = Number(square[1]);
+    return { left: file * size, top: (8 - rank) * size, size };
+  };
+
   const showPremoveOptions = (square: Square) => {
     const moves = game.moves({ square, verbose: true });
     const next: Record<string, any> = {};
@@ -772,6 +796,20 @@ export const ChessGame: React.FC<{
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reviewPly, moveHistory]);
 
+  /** Show move hints when a piece is picked up, live or for a premove. */
+  const onPieceDrag = ({ square }: { square: string | null }) => {
+    if (!square || gameStatus !== 'playing' || reviewFen) return;
+    const sq = square as Square;
+    const piece = game.get(sq);
+    if (!piece || piece.color !== 'w') return;
+
+    if (game.turn() === 'b' || isEngineThinking) {
+      showPremoveOptions(sq);
+    } else {
+      getMoveOptions(sq);
+    }
+  };
+
   const onDrop = ({ sourceSquare, targetSquare }: { piece: any; sourceSquare: string; targetSquare: string | null }) => {
     if (!targetSquare) return false;
     if (gameStatus !== 'playing') return false;
@@ -1163,11 +1201,12 @@ export const ChessGame: React.FC<{
         </div>
 
         {/* Board */}
-        <div className="my-2">
+        <div className="my-2 relative">
           <Chessboard
             options={{
               position: reviewFen || game.fen(),
               onPieceDrop: onDrop,
+              onPieceDrag,
               onSquareClick: handleSquareClick,
               boardStyle: {
                 width: `${boardWidth}px`,
@@ -1180,6 +1219,33 @@ export const ChessGame: React.FC<{
               animationDurationInMs: 220,
             }}
           />
+
+          {/* Premove ghost: the piece shown faded on its destination, so the
+              queued move reads at a glance rather than having to be worked
+              out from two highlighted squares. */}
+          {premove && (() => {
+            const piece = game.get(premove.from);
+            if (!piece) return null;
+            const { left, top, size } = squareToPixels(premove.to);
+            return (
+              <div
+                className="absolute pointer-events-none flex items-center justify-center"
+                style={{
+                  left,
+                  top,
+                  width: size,
+                  height: size,
+                  fontSize: size * 0.78,
+                  lineHeight: 1,
+                  opacity: 0.45,
+                  color: piece.color === 'w' ? '#fff' : '#111',
+                  textShadow: '0 1px 3px rgba(0,0,0,0.55)',
+                }}
+              >
+                {glyphFor(piece.type, piece.color)}
+              </div>
+            );
+          })()}
         </div>
 
         {/* Player row */}
@@ -1466,6 +1532,7 @@ export const ChessGame: React.FC<{
                 options={{
                   position: reviewFen || game.fen(),
                   onPieceDrop: onDrop,
+                  onPieceDrag,
                   onSquareClick: handleSquareClick,
                   boardStyle: {
                     width: `${boardWidth}px`,
