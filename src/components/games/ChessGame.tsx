@@ -242,15 +242,31 @@ export const ChessGame: React.FC<{
    * Board orientation is always white-at-bottom here, so file a is column 0
    * and rank 8 is row 0.
    */
-  const squareToPixels = (square: Square): { left: number; top: number; size: number } => {
-    const size = boardWidth / 8;
+  const squareToPercent = (square: Square): { left: string; top: string } => {
     const file = square.charCodeAt(0) - 97;
     const rank = Number(square[1]);
-    return { left: file * size, top: (8 - rank) * size, size };
+    // Percentages, not pixels: the board is now fluid, so a measured size
+    // would be stale the moment the viewport changed.
+    return { left: `${file * 12.5}%`, top: `${(8 - rank) * 12.5}%` };
   };
 
   const showPremoveOptions = (square: Square) => {
-    const moves = game.moves({ square, verbose: true });
+    // chess.js only generates moves for the side to move, so asking for white's
+    // moves during black's turn returns an empty list — which is why no hints
+    // ever appeared. Flip the side to move on a copy and ask again.
+    let moves: any[] = [];
+    try {
+      const fen = game.fen().split(' ');
+      fen[1] = 'w';
+      // En-passant target belongs to the other side's move and can make the
+      // flipped position illegal, so clear it.
+      fen[3] = '-';
+      const probe = new Chess(fen.join(' '));
+      moves = probe.moves({ square, verbose: true });
+    } catch {
+      moves = [];
+    }
+
     const next: Record<string, any> = {};
 
     for (const move of moves) {
@@ -1222,8 +1238,8 @@ export const ChessGame: React.FC<{
               onPieceDrag,
               onSquareClick: handleSquareClick,
               boardStyle: {
-                width: `${boardWidth}px`,
-                height: `${boardWidth}px`,
+                width: '100%',
+                aspectRatio: '1 / 1',
                 borderRadius: '12px',
               },
               darkSquareStyle: { backgroundColor: '#779556' },
@@ -1239,23 +1255,32 @@ export const ChessGame: React.FC<{
           {premove && (() => {
             const piece = game.get(premove.from);
             if (!piece) return null;
-            const { left, top, size } = squareToPixels(premove.to);
+            // Square overlay matching the board's own box, so percentage
+            // positions map to the right squares.
+            const { left, top } = squareToPercent(premove.to);
             return (
               <div
-                className="absolute pointer-events-none flex items-center justify-center"
+                className="absolute inset-0 pointer-events-none"
+                style={{ aspectRatio: '1 / 1' }}
+              >
+              <div
+                className="absolute flex items-center justify-center"
                 style={{
                   left,
                   top,
-                  width: size,
-                  height: size,
-                  fontSize: size * 0.78,
+                  width: '12.5%',
+                  height: '12.5%',
+                  // Sized from the board itself via container query units would
+                  // be ideal; vw is close enough and scales with the viewport.
+                  fontSize: 'min(9vw, 46px)',
                   lineHeight: 1,
-                  opacity: 0.45,
+                  opacity: 0.5,
                   color: piece.color === 'w' ? '#fff' : '#111',
-                  textShadow: '0 1px 3px rgba(0,0,0,0.55)',
+                  textShadow: '0 1px 4px rgba(0,0,0,0.6)',
                 }}
               >
                 {glyphFor(piece.type, piece.color)}
+              </div>
               </div>
             );
           })()}
@@ -1548,8 +1573,10 @@ export const ChessGame: React.FC<{
                   onPieceDrag,
                   onSquareClick: handleSquareClick,
                   boardStyle: {
-                    width: `${boardWidth}px`,
-                    height: `${boardWidth}px`,
+                    // min() of both axes: fits portrait and landscape without
+                    // measuring anything, leaving room for clocks and controls.
+                    width: 'min(96vw, calc(100vh - 200px))',
+                    aspectRatio: '1 / 1',
                     borderRadius: '16px',
                     boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
                   },
