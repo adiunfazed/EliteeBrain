@@ -96,9 +96,17 @@ export function dueWords(
     .sort((a, b) => (store[a.word]?.dueDate || '').localeCompare(store[b.word]?.dueDate || ''));
 }
 
-/** Words never seen before. */
+/**
+ * Words never seen before, in varied order.
+ *
+ * Returning the pool in array order meant every session started with the same
+ * first eight words. Shuffling keeps sessions distinct even before any review
+ * history exists.
+ */
 export function newWords(store: VocabStore, maxTier: 1 | 2 | 3): VocabWord[] {
-  return wordsForTier(maxTier).filter((w) => !store[w.word]);
+  return wordsForTier(maxTier)
+    .filter((w) => !store[w.word])
+    .sort(() => Math.random() - 0.5);
 }
 
 /**

@@ -210,6 +210,34 @@ export const ChessGame: React.FC<{
   const [pendingPromotion, setPendingPromotion] = useState<{ from: Square; to: Square } | null>(null);
   /** A move queued during the engine's turn, played when yours begins. */
   const [premove, setPremove] = useState<{ from: Square; to: Square } | null>(null);
+  /** Origin square of a premove being composed. */
+  const [premoveFrom, setPremoveFrom] = useState<Square | null>(null);
+
+  /**
+   * Faded move hints for a premove.
+   *
+   * Dimmer than live options on purpose: these are possibilities from the
+   * current position, and the opponent's move may invalidate them. Showing
+   * them at full strength would imply a certainty that does not exist.
+   */
+  const showPremoveOptions = (square: Square) => {
+    const moves = game.moves({ square, verbose: true });
+    const next: Record<string, any> = {};
+
+    for (const move of moves) {
+      next[move.to] = move.captured
+        ? {
+            background:
+              'radial-gradient(circle, transparent 62%, rgba(255, 107, 87, 0.40) 62%, rgba(255, 107, 87, 0.40) 78%, transparent 78%)',
+          }
+        : {
+            background: 'radial-gradient(circle, rgba(124, 92, 255, 0.35) 26%, transparent 26%)',
+          };
+    }
+
+    next[square] = { background: 'rgba(124, 92, 255, 0.22)' };
+    setOptionSquares(next);
+  };
 
   // Audio Mute
   const [isMuted, setIsMuted] = useState(false);
@@ -257,8 +285,14 @@ export const ChessGame: React.FC<{
   // Scroll the active move into view — in a long game the current position
   // would otherwise be somewhere off-screen in the list.
   useEffect(() => {
-    const el = historyRef.current?.querySelector('[data-active="true"]');
-    el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    const container = historyRef.current;
+    const el = container?.querySelector('[data-active="true"]') as HTMLElement | null;
+    if (!container || !el) return;
+
+    // Scroll the LIST, not the page. scrollIntoView walks up every scrollable
+    // ancestor, so it dragged the whole page down to the move history.
+    const target = el.offsetTop - container.clientHeight / 2 + el.clientHeight / 2;
+    container.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
   }, [reviewPly, moveHistory.length]);
 
   const reviewAt = (ply: number) => {
@@ -754,6 +788,7 @@ export const ChessGame: React.FC<{
       const own = game.get(sourceSquare as Square);
       if (!own || own.color !== 'w') return false;
       setPremove({ from: sourceSquare as Square, to: targetSquare as Square });
+      setPremoveFrom(null);
       setOptionSquares({});
       soundFx.playClick();
       return true;
@@ -823,16 +858,57 @@ export const ChessGame: React.FC<{
 
   const handleSquareClick = ({ square }: { piece: any; square: string }) => {
     const sq = square as Square;
+    if (gameStatus !== 'playing') return;
 
-    // Tapping anywhere cancels a queued premove. A queued move you cannot
-    // take back is worse than no premove at all.
-    if (premove) {
-      setPremove(null);
-      soundFx.playClick();
+    // Reviewing a past position: return to live rather than acting on it.
+    if (reviewFen) {
+      goToPly(null);
       return;
     }
 
-    if (gameStatus !== 'playing' || game.turn() === 'b' || isEngineThinking) return;
+    // --- Opponent's turn: build a premove by clicking, same as a live move.
+    if (game.turn() === 'b' || isEngineThinking) {
+      // Tapping the queued move cancels it.
+      if (premove && (sq === premove.from || sq === premove.to)) {
+        setPremove(null);
+        setPremoveFrom(null);
+        setOptionSquares({});
+        soundFx.playClick();
+        return;
+      }
+
+      const piece = game.get(sq);
+
+      if (premoveFrom) {
+        // Second tap sets the destination. Legality is checked when it plays,
+        // since the position will have changed by then.
+        if (sq === premoveFrom) {
+          setPremoveFrom(null);
+          setOptionSquares({});
+          return;
+        }
+        setPremove({ from: premoveFrom, to: sq });
+        setPremoveFrom(null);
+        setOptionSquares({});
+        soundFx.playClick();
+        return;
+      }
+
+      if (piece && piece.color === 'w') {
+        setPremoveFrom(sq);
+        // Show where the piece could go from the CURRENT position. It is a
+        // guide, not a guarantee — the opponent may change what is legal.
+        showPremoveOptions(sq);
+        soundFx.playClick();
+      }
+      return;
+    }
+
+    // --- Your turn: a queued premove is no longer relevant.
+    if (premove) {
+      setPremove(null);
+      setPremoveFrom(null);
+    }
 
     if (selectedSquare) {
       const moves = game.moves({ square: selectedSquare, verbose: true });
@@ -879,6 +955,7 @@ export const ChessGame: React.FC<{
     setLastMove(null);
     setMoveHistory([]);
     setPremove(null);
+    setPremoveFrom(null);
     setReviewPly(null);
     setReviewFen(null);
     setPendingPromotion(null);

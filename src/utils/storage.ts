@@ -190,8 +190,8 @@ export const MODULE_METADATA = [
   },
   {
     id: 'story-builder' as ModuleId,
-    name: 'Story Building',
-    tagline: 'Think On Your Feet',
+    name: 'Articulation',
+    tagline: 'Think And Speak On Your Feet',
     category: 'Fluid IQ' as const,
     domain: 'Language',
     domainColor: '#7FD4E8',

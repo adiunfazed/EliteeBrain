@@ -94,13 +94,12 @@ export const VocabularyModule: React.FC<Props> = ({
     if (isCorrect) setCorrectCount((n) => n + 1);
     isCorrect ? soundFx.playSuccess() : soundFx.playError();
 
-    // Only the second question of a word updates the schedule — the first is
-    // recognition, the second is recall, and recall is what the interval
-    // should be based on.
-    if (stage === 'blank') {
-      working.current = recordAnswer(working.current, word.word, isCorrect);
-      onStoreChange(working.current);
-    }
+    // Record on BOTH questions. Saving only on the second meant a session
+    // abandoned partway stored nothing, so the same words came back the next
+    // day. The recall question still carries more weight because it decides
+    // the streak; the recognition question at least schedules the word.
+    working.current = recordAnswer(working.current, word.word, isCorrect);
+    onStoreChange(working.current);
 
     window.setTimeout(() => {
       setAnswered(null);

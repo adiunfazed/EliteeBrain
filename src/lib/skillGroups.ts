@@ -64,4 +64,4 @@ export function skillGroupOf(id: ModuleId): SkillGroup {
   return MODULE_SKILL_GROUP[id] ?? 'reasoning';
 }
 
-export const SKILL_GROUP_ORDER: SkillGroup[] = ['focus', 'memory', 'reasoning', 'language'];
+export const SKILL_GROUP_ORDER: SkillGroup[] = ['language', 'focus', 'memory', 'reasoning'];

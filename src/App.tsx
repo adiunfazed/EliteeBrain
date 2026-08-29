@@ -32,7 +32,7 @@ import { VisuospatialModule } from './components/modules/VisuospatialModule';
 import { ReactionInhibitorModule } from './components/modules/ReactionInhibitorModule';
 import { MentalMathModule } from './components/modules/MentalMathModule';
 import { VocabularyModule } from './components/modules/VocabularyModule';
-import { StoryBuilderModule } from './components/modules/StoryBuilderModule';
+import { ArticulationModule } from './components/modules/ArticulationModule';
 import { resolveEntitlement, startTrialFields } from './lib/entitlement';
 import { goalById } from './lib/goals';
 import { ScrollProgress } from './components/ScrollProgress';
@@ -569,7 +569,7 @@ export default function App() {
       )}
 
       {activeModuleId === 'story-builder' && (
-        <StoryBuilderModule
+        <ArticulationModule
           currentLevel={profile.modules['story-builder']?.level || 1}
           personalBest={profile.storyBest || 0}
           onFinishSession={(result) => {

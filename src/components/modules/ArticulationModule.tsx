@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Play, Pause, X, Mic, MicOff, Trophy } from 'lucide-react';
+import { Play, Pause, X, Trophy } from 'lucide-react';
 import { soundFx } from '../../utils/audio';
 import { StoryDifficulty, buildWordRun, wordCountFor } from '../../lib/storyWords';
 
@@ -23,7 +23,7 @@ const INTERVALS = [10, 15, 20, 30] as const;
 const DIFFICULTIES: StoryDifficulty[] = ['easy', 'medium', 'hard'];
 
 /**
- * Timed story building.
+ * Articulation — timed story building.
  *
  * A word appears; you continue one running story aloud, weaving it in. When
  * the interval expires a new word replaces it and the story must continue.
@@ -32,7 +32,7 @@ const DIFFICULTIES: StoryDifficulty[] = ['easy', 'medium', 'hard'];
  * AI that is unreliable and expensive, and the exercise works without it —
  * the constraint is the timer, not a grader.
  */
-export const StoryBuilderModule: React.FC<Props> = ({
+export const ArticulationModule: React.FC<Props> = ({
   currentLevel,
   personalBest = 0,
   onFinishSession,
@@ -50,22 +50,12 @@ export const StoryBuilderModule: React.FC<Props> = ({
   const [wordLeft, setWordLeft] = useState(0);
   const [sessionLeft, setSessionLeft] = useState(0);
 
-  const [micOn, setMicOn] = useState(false);
-  const [micAvailable, setMicAvailable] = useState(false);
 
   const reported = useRef(false);
   const totalWords = useMemo(
     () => wordCountFor(duration, interval),
     [duration, interval]
   );
-
-  // Speech recognition is a convenience only — it shows that the mic is
-  // hearing you, nothing more. Checked once so an unsupported browser never
-  // renders a button that cannot work.
-  useEffect(() => {
-    const w = window as any;
-    setMicAvailable(!!(w.SpeechRecognition || w.webkitSpeechRecognition));
-  }, []);
 
   const start = () => {
     const run = buildWordRun(difficulty, totalWords);
@@ -146,7 +136,7 @@ export const StoryBuilderModule: React.FC<Props> = ({
     return (
       <div className="fixed inset-0 z-50 bg-[var(--ground)] overflow-y-auto overscroll-contain">
         <div className="flex items-center justify-between gap-3 p-4">
-          <span className="t-meta">Story Building</span>
+          <span className="t-meta">Articulation</span>
           <button
             onClick={onClose}
             aria-label="Close"
@@ -157,7 +147,7 @@ export const StoryBuilderModule: React.FC<Props> = ({
         </div>
 
         <div className="max-w-lg mx-auto px-5 pb-12">
-          <h1 className="t-display mt-2">Story Building</h1>
+          <h1 className="t-display mt-2">Articulation</h1>
           <p className="t-sub mt-3 leading-relaxed">
             A word appears. Start a story out loud. When the word changes, keep the same story
             going and work the new word in. Nothing is recorded or scored — the timer is the
@@ -230,29 +220,6 @@ export const StoryBuilderModule: React.FC<Props> = ({
               ))}
             </div>
           </div>
-
-          {micAvailable && (
-            <button
-              onClick={() => setMicOn((v) => !v)}
-              className="w-full mt-7 rounded-xl border p-3.5 flex items-center gap-3 text-left"
-              style={{ borderColor: micOn ? 'var(--signal)' : 'var(--rule)' }}
-            >
-              {micOn ? (
-                <Mic className="w-4 h-4 shrink-0 text-[var(--signal-ink)]" />
-              ) : (
-                <MicOff className="w-4 h-4 shrink-0 text-[#7E8899]" />
-              )}
-              <span className="min-w-0 flex-1">
-                <span className="text-[14px] font-semibold block">
-                  Microphone {micOn ? 'on' : 'off'}
-                </span>
-                <span className="t-sub block mt-0.5">
-                  Optional. Shows a level meter so you can see it is hearing you. Nothing is
-                  recorded or judged.
-                </span>
-              </span>
-            </button>
-          )}
 
           <div className="mt-9 p-4 rounded-xl eb-card-sunk">
             <p className="t-sub">
