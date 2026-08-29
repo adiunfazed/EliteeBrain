@@ -1230,7 +1230,7 @@ export const ChessGame: React.FC<{
         </div>
 
         {/* Board */}
-        <div className="my-2 relative">
+        <div className="my-2 relative w-full mx-auto" style={{ maxWidth: 'min(100%, 640px)' }}>
           <Chessboard
             options={{
               position: reviewFen || game.fen(),
@@ -1238,8 +1238,6 @@ export const ChessGame: React.FC<{
               onPieceDrag,
               onSquareClick: handleSquareClick,
               boardStyle: {
-                width: '100%',
-                aspectRatio: '1 / 1',
                 borderRadius: '12px',
               },
               darkSquareStyle: { backgroundColor: '#779556' },
@@ -1260,27 +1258,28 @@ export const ChessGame: React.FC<{
             const { left, top } = squareToPercent(premove.to);
             return (
               <div
-                className="absolute inset-0 pointer-events-none"
+                className="absolute top-0 left-0 w-full pointer-events-none"
                 style={{ aspectRatio: '1 / 1' }}
               >
-              <div
-                className="absolute flex items-center justify-center"
-                style={{
-                  left,
-                  top,
-                  width: '12.5%',
-                  height: '12.5%',
-                  // Sized from the board itself via container query units would
-                  // be ideal; vw is close enough and scales with the viewport.
-                  fontSize: 'min(9vw, 46px)',
-                  lineHeight: 1,
-                  opacity: 0.5,
-                  color: piece.color === 'w' ? '#fff' : '#111',
-                  textShadow: '0 1px 4px rgba(0,0,0,0.6)',
-                }}
+              <svg
+                viewBox="0 0 100 100"
+                className="absolute"
+                style={{ left, top, width: '12.5%', height: '12.5%', opacity: 0.55 }}
               >
-                {glyphFor(piece.type, piece.color)}
-              </div>
+                <text
+                  x="50"
+                  y="54"
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                  fontSize="78"
+                  fill={piece.color === 'w' ? '#ffffff' : '#111111'}
+                  stroke={piece.color === 'w' ? '#00000055' : '#ffffff44'}
+                  strokeWidth="1.5"
+                  paintOrder="stroke"
+                >
+                  {glyphFor(piece.type, piece.color)}
+                </text>
+              </svg>
               </div>
             );
           })()}
@@ -1565,7 +1564,10 @@ export const ChessGame: React.FC<{
             </AnimatePresence>
 
             {/* High Quality Chessboard Component */}
-            <div className="rounded-2xl overflow-hidden border-2 border-[#2A313C] shadow-2xl">
+            <div
+              className="rounded-2xl overflow-hidden border-2 border-[#2A313C] shadow-2xl mx-auto w-full"
+              style={{ maxWidth: 'min(94vw, calc(100vh - 210px))' }}
+            >
               <Chessboard
                 options={{
                   position: reviewFen || game.fen(),
@@ -1573,10 +1575,6 @@ export const ChessGame: React.FC<{
                   onPieceDrag,
                   onSquareClick: handleSquareClick,
                   boardStyle: {
-                    // min() of both axes: fits portrait and landscape without
-                    // measuring anything, leaving room for clocks and controls.
-                    width: 'min(96vw, calc(100vh - 200px))',
-                    aspectRatio: '1 / 1',
                     borderRadius: '16px',
                     boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
                   },
