@@ -212,6 +212,11 @@ export const ChessGame: React.FC<{
   const [premove, setPremove] = useState<{ from: Square; to: Square } | null>(null);
   /** Origin square of a premove being composed. */
   const [premoveFrom, setPremoveFrom] = useState<Square | null>(null);
+  /** Mirror of premoveFrom for use inside memoised callbacks. */
+  const premoveFromRef = useRef<Square | null>(null);
+  useEffect(() => {
+    premoveFromRef.current = premoveFrom;
+  }, [premoveFrom]);
 
   /**
    * Faded move hints for a premove.
@@ -361,13 +366,18 @@ export const ChessGame: React.FC<{
         // controls; sizing by width alone overflows a portrait phone.
         const vw = window.innerWidth;
         const vh = window.innerHeight;
-        const usable = Math.min(vw - 16, vh - 190);
-        setBoardWidth(Math.max(240, usable));
+        const usable = Math.min(vw - 12, vh - 190);
+        setBoardWidth(Math.max(200, Math.floor(usable / 8) * 8));
         return;
       }
       if (boardContainerRef.current) {
-        const w = boardContainerRef.current.clientWidth - 16;
-        setBoardWidth(Math.max(280, Math.min(w, 640)));
+        // Measure the real available width and never exceed it. A hard
+        // minimum wider than the container clipped the edge files.
+        const available = boardContainerRef.current.clientWidth;
+        const w = Math.min(available - 4, 640);
+        // Round down to a multiple of 8 so every square is a whole number of
+        // pixels — fractional squares leave a sliver at one edge.
+        setBoardWidth(Math.max(200, Math.floor(w / 8) * 8));
       }
     };
     updateSize();
@@ -722,7 +732,9 @@ export const ChessGame: React.FC<{
         setLastMove({ from: move.from as Square, to: move.to as Square });
         setMoveHistory((prev) => [...prev, move.san]);
         setSelectedSquare(null);
-        setOptionSquares({});
+        // Keep premove hints alive. Clearing unconditionally wiped them the
+        // moment the engine replied, which is exactly when they are in use.
+        if (!premoveFromRef.current) setOptionSquares({});
         setPendingPromotion(null);
 
         triggerSoundForMove(gameCopy, move);
@@ -927,6 +939,7 @@ export const ChessGame: React.FC<{
         }
         setPremove({ from: premoveFrom, to: sq });
         setPremoveFrom(null);
+        premoveFromRef.current = null;
         setOptionSquares({});
         soundFx.playClick();
         return;
