@@ -149,7 +149,7 @@ export const LeaderboardScreen: React.FC<Props> = ({ onBack }) => {
         <button
           onClick={onBack}
           aria-label="Back"
-          className="w-11 h-11 rounded-xl border border-[var(--rule)] flex items-center justify-center text-[#8A93A5] shrink-0"
+          className="w-11 h-11 rounded-xl border border-[var(--rule)] flex items-center justify-center text-[var(--ink-muted)] shrink-0"
         >
           <ArrowLeft className="w-4 h-4 shrink-0" />
         </button>
@@ -165,7 +165,7 @@ export const LeaderboardScreen: React.FC<Props> = ({ onBack }) => {
             setRefreshing(false);
           }}
           aria-label="Refresh"
-          className="w-11 h-11 rounded-xl border border-[var(--rule)] flex items-center justify-center text-[#8A93A5] shrink-0"
+          className="w-11 h-11 rounded-xl border border-[var(--rule)] flex items-center justify-center text-[var(--ink-muted)] shrink-0"
         >
           <RefreshCw className={`w-4 h-4 shrink-0 ${refreshing ? 'animate-spin' : ''}`} />
         </button>
@@ -183,7 +183,7 @@ export const LeaderboardScreen: React.FC<Props> = ({ onBack }) => {
             className={`flex-1 min-h-[42px] rounded-xl text-[13px] font-semibold border transition-colors ${
               mode === m
                 ? 'border-[var(--signal)] text-[var(--signal-ink)] bg-[var(--signal)]/10'
-                : 'border-[var(--rule)] text-[#7E8899]'
+                : 'border-[var(--rule)] text-[var(--ink-dim)]'
             }`}
           >
             {m === 'career' ? 'All time' : 'This week'}
@@ -239,7 +239,7 @@ export const LeaderboardScreen: React.FC<Props> = ({ onBack }) => {
 
       {status === 'ready' && entries.length === 0 && (
         <div className="panel text-center mt-6 py-12">
-          <Trophy className="w-7 h-7 shrink-0 text-[#7E8899] mx-auto" />
+          <Trophy className="w-7 h-7 shrink-0 text-[var(--ink-dim)] mx-auto" />
           <p className="t-section mt-3">Nobody ranked yet</p>
           <p className="t-sub mt-2 max-w-xs mx-auto">
             Finish a task, meet a habit or run a focus session to appear here.
@@ -358,7 +358,7 @@ export const LeaderboardScreen: React.FC<Props> = ({ onBack }) => {
                         : '0 1px 0 0 rgba(255,255,255,0.03) inset',
                     }}
                   >
-                    <span className="w-7 shrink-0 text-center text-[13px] font-bold tabular-nums text-[#7E8899]">
+                    <span className="w-7 shrink-0 text-center text-[13px] font-bold tabular-nums text-[var(--ink-dim)]">
                       {e.rank}
                     </span>
 
@@ -390,7 +390,7 @@ export const LeaderboardScreen: React.FC<Props> = ({ onBack }) => {
                       <span className="block font-display font-extrabold text-[15px] tabular-nums leading-none">
                         {value(e).toLocaleString()}
                       </span>
-                      <span className="block text-[11px] text-[#7E8899] mt-1">XP</span>
+                      <span className="block text-[11px] text-[var(--ink-dim)] mt-1">XP</span>
                     </span>
                   </motion.div>
                 );
@@ -409,7 +409,7 @@ export const LeaderboardScreen: React.FC<Props> = ({ onBack }) => {
                   borderColor: 'var(--signal)',
                 }}
               >
-                <span className="w-7 shrink-0 text-center text-[13px] font-bold tabular-nums text-[#7E8899]">
+                <span className="w-7 shrink-0 text-center text-[13px] font-bold tabular-nums text-[var(--ink-dim)]">
                   {you.rank}
                 </span>
                 <Avatar entry={you} size={38} />

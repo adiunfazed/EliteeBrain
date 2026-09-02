@@ -105,7 +105,7 @@ export const DailyQuestCard: React.FC<Props> = ({
           <span className="block font-display font-extrabold text-lg tabular-nums leading-none">
             +{quest.xp}
           </span>
-          <span className="block text-[11px] text-[#7E8899] mt-1">XP</span>
+          <span className="block text-[11px] text-[var(--ink-dim)] mt-1">XP</span>
         </span>
       </div>
 

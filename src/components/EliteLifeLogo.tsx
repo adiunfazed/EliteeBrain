@@ -47,7 +47,7 @@ export const EliteLifeLogo: React.FC<Props> = ({
       {showSubtext && (
         <div className="flex flex-col items-center leading-none">
           <span
-            className={`${current.text} font-mono font-black tracking-[0.2em] text-[#F4F6F8] uppercase`}
+            className={`${current.text} font-mono font-black tracking-[0.2em] text-[var(--ink)] uppercase`}
           >
             Elite<span className="text-[#A855F7]">Life</span>
           </span>

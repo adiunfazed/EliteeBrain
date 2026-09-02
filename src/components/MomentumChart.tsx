@@ -68,7 +68,7 @@ export const MomentumChart: React.FC<Props> = ({ input }) => {
                       ? 'eb-done'
                       : summary.trend < 0
                         ? 'eb-warn'
-                        : 'text-[#7E8899]'
+                        : 'text-[var(--ink-dim)]'
                   }`}
                 >
                   {summary.trend > 0 ? '+' : ''}
@@ -77,7 +77,7 @@ export const MomentumChart: React.FC<Props> = ({ input }) => {
               )}
             </p>
           ) : (
-            <p className="text-sm font-bold text-[#98A2B3] mt-1">No activity logged yet</p>
+            <p className="text-sm font-bold text-[var(--ink-muted)] mt-1">No activity logged yet</p>
           )}
         </div>
 
@@ -89,7 +89,7 @@ export const MomentumChart: React.FC<Props> = ({ input }) => {
               className={`eb-press text-[11px] font-semibold px-2.5 py-1.5 rounded-lg border ${
                 range === r.id
                   ? 'eb-chip-active'
-                  : 'text-[#7E8899] border-[#2A313C] hover:border-[#3A424F]'
+                  : 'text-[var(--ink-dim)] border-[var(--rule)] hover:border-[var(--rule-strong)]'
               }`}
             >
               {r.label}
@@ -105,14 +105,14 @@ export const MomentumChart: React.FC<Props> = ({ input }) => {
           ) : summary.trend <= -5 ? (
             <span className="text-[#FFB020]">Slipping</span>
           ) : (
-            <span className="text-[#8A93A5]">Holding steady</span>
+            <span className="text-[var(--ink-muted)]">Holding steady</span>
           )}
         </p>
       )}
 
       <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="w-full h-24 mt-3">
         {[0.25, 0.5, 0.75].map((f) => (
-          <line key={f} x1="0" y1={H * f} x2={W} y2={H * f} stroke="#171B22" strokeWidth="1" />
+          <line key={f} x1="0" y1={H * f} x2={W} y2={H * f} stroke="var(--surface-sunk)" strokeWidth="1" />
         ))}
         {path && (
           <motion.path
@@ -136,8 +136,8 @@ export const MomentumChart: React.FC<Props> = ({ input }) => {
               key={c.key}
               className="eb-card-sunk rounded-lg px-2 py-1.5 min-w-0"
             >
-              <p className="text-[11px] font-mono text-[#7E8899] truncate">{c.label}</p>
-              <p className="text-[11px] font-mono font-bold text-[#F4F6F8] tabular-nums">
+              <p className="text-[11px] font-mono text-[var(--ink-dim)] truncate">{c.label}</p>
+              <p className="text-[11px] font-mono font-bold text-[var(--ink)] tabular-nums">
                 {c.value === null ? '—' : `${Math.round(c.value * 100)}%`}
               </p>
             </div>
@@ -148,14 +148,14 @@ export const MomentumChart: React.FC<Props> = ({ input }) => {
       {insights.length > 0 && (
         <ul className="mt-3 space-y-1">
           {insights.map((t) => (
-            <li key={t} className="text-[11px] text-[#98A2B3] leading-relaxed">
+            <li key={t} className="text-[11px] text-[var(--ink-muted)] leading-relaxed">
               {t}
             </li>
           ))}
         </ul>
       )}
 
-      <p className="text-[13px] text-[#8A93A5] mt-3 leading-relaxed">
+      <p className="text-[13px] text-[var(--ink-muted)] mt-3 leading-relaxed">
         How much of what you planned you actually did. Days with nothing recorded are left
         blank rather than counted as zero.
       </p>

@@ -81,7 +81,7 @@ export const UpdateBanner: React.FC<Props> = ({ ready = true }) => {
             <button
               onClick={() => setDismissed(true)}
               aria-label="Dismiss"
-              className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-[#7E8899]"
+              className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-[var(--ink-dim)]"
             >
               <X className="w-3.5 h-3.5 shrink-0" />
             </button>

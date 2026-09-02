@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import {
+import { Upload,
   Plus,
   Check,
   Trash2,
@@ -45,6 +45,7 @@ import {
 } from '../lib/routine';
 import { todayISO } from '../lib/tasks';
 import { soundFx } from '../utils/audio';
+import { parseIcs } from '../lib/icsImport';
 
 interface Props {
   userId: string | null;
@@ -66,6 +67,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
   const [logs, setLogs] = useState<RoutineLog[]>([]);
   const [sleep, setSleep] = useState<SleepLog[]>([]);
   const [pane, setPane] = useState<Pane>(initialPane || 'routine');
+  const [importNote, setImportNote] = useState<string | null>(null);
 
   // useState only reads its initial value on first mount, so a later request
   // to open Sleep was ignored whenever this component was already mounted —
@@ -212,7 +214,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
   };
 
   const stateStyle: Record<BlockState, string> = {
-    pending: 'border-[#2A313C] bg-[#0E1116]',
+    pending: 'border-[var(--rule)] bg-[var(--ground)]',
     done: 'border-emerald-500/30 bg-emerald-500/[0.07]',
     partial: 'border-amber-500/30 bg-amber-500/[0.07]',
     skipped: 'border-[#20252E] bg-[#0B0E13] opacity-60',
@@ -220,6 +222,11 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
 
   return (
     <div className="space-y-4">
+      {importNote && (
+        <p className="t-sub p-3 rounded-xl eb-card-sunk" role="status">
+          {importNote}
+        </p>
+      )}
       {/* Day / Week is a timescale switch on the same data, not a separate
           place to go. */}
       <div className="flex items-center justify-between gap-3">
@@ -237,7 +244,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
               className="min-h-[38px] px-4 rounded-lg text-[13px] font-semibold transition-colors"
               style={{
                 background: pane === id ? 'var(--surface)' : 'transparent',
-                color: pane === id ? 'var(--ink)' : '#7E8899',
+                color: pane === id ? 'var(--ink)' : 'var(--ink-dim)',
                 boxShadow:
                   pane === id ? '0 1px 0 0 rgba(255,255,255,0.06) inset' : undefined,
               }}
@@ -247,6 +254,43 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
           ))}
         </div>
 
+        {/* Import from a calendar export. File-based rather than OAuth: it
+            works with every calendar app and asks for no ongoing access. */}
+        <label className="min-h-[38px] px-3 rounded-xl border border-[var(--rule)] text-[13px] font-semibold text-[var(--ink-dim)] flex items-center gap-2 cursor-pointer shrink-0">
+          <Upload className="w-4 h-4 shrink-0" />
+          Import
+          <input
+            type="file"
+            accept=".ics,text/calendar"
+            className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              e.target.value = '';
+              if (!file) return;
+
+              try {
+                const parsed = parseIcs(await file.text());
+                if (parsed.length === 0) {
+                  setImportNote('No repeating timed events found in that file.');
+                  return;
+                }
+
+                let added = 0;
+                for (const b of parsed) {
+                  const block = newRoutineBlock(b.title, 'work', b.startTime, b.endTime);
+                  if (b.weekdays.length > 0) block.weekdays = b.weekdays;
+                  await saveRoutineBlock(userId, block);
+                  added++;
+                }
+                setImportNote(`Added ${added} ${added === 1 ? 'block' : 'blocks'}. Edit or delete any you do not want.`);
+              } catch (err) {
+                console.error('Calendar import failed:', err);
+                setImportNote('Could not read that file. It needs to be an .ics export.');
+              }
+            }}
+          />
+        </label>
+
         <button
           onClick={() => {
             soundFx.playClick();
@@ -255,7 +299,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
           className="min-h-[38px] px-4 rounded-xl border text-[13px] font-semibold flex items-center gap-2 transition-colors"
           style={{
             borderColor: pane === 'sleep' ? '#7C9CFF' : 'var(--rule)',
-            color: pane === 'sleep' ? '#7C9CFF' : '#7E8899',
+            color: pane === 'sleep' ? '#7C9CFF' : 'var(--ink-dim)',
           }}
         >
           <Moon className="w-4 h-4 shrink-0" />
@@ -276,7 +320,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                   {adherence.done} / {adherence.total}
                 </span>
               </div>
-              <div className="mt-2.5 h-1.5 w-full bg-[#171B22] rounded-full overflow-hidden">
+              <div className="mt-2.5 h-1.5 w-full bg-[var(--surface-sunk)] rounded-full overflow-hidden">
                 <motion.div
                   className="h-full bg-[#8B5CF6] rounded-full"
                   initial={false}
@@ -290,7 +334,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
           {overload && (
             <div className="rounded-2xl border border-amber-500/25 bg-amber-500/[0.06] p-3.5 flex items-start gap-2.5">
               <AlertTriangle className="w-3.5 h-3.5 eb-warn shrink-0 mt-0.5" />
-              <p className="text-[11px] text-[#98A2B3] leading-relaxed">{overload}</p>
+              <p className="text-[11px] text-[var(--ink-muted)] leading-relaxed">{overload}</p>
             </div>
           )}
 
@@ -303,7 +347,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                 onKeyDown={(e) => e.key === 'Enter' && addBlock()}
                 placeholder="Add a time block — e.g. Morning study"
                 maxLength={80}
-                className="flex-1 min-w-0 eb-card-sunk focus:border-[#8B5CF6]/60 rounded-xl px-3 py-2.5 text-sm text-[#F4F6F8] placeholder:text-[#7E8899] outline-none"
+                className="flex-1 min-w-0 eb-card-sunk focus:border-[#8B5CF6]/60 rounded-xl px-3 py-2.5 text-sm text-[var(--ink)] placeholder:text-[var(--ink-dim)] outline-none"
               />
               <button
                 onClick={addBlock}
@@ -316,27 +360,27 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
             </div>
 
             <div className="flex items-center gap-2 flex-wrap">
-              <label className="flex items-center gap-1.5 text-[10px] font-mono text-[#98A2B3]">
+              <label className="flex items-center gap-1.5 text-[10px] font-mono text-[var(--ink-muted)]">
                 <Clock className="w-3 h-3 shrink-0" />
                 <input
                   type="time"
                   value={start}
                   onChange={(e) => setStart(e.target.value)}
-                  className="eb-card-sunk rounded-lg px-2 py-1.5 text-[11px] text-[#F4F6F8] outline-none"
+                  className="eb-card-sunk rounded-lg px-2 py-1.5 text-[11px] text-[var(--ink)] outline-none"
                 />
-                <span className="text-[#7E8899]">→</span>
+                <span className="text-[var(--ink-dim)]">→</span>
                 <input
                   type="time"
                   value={end}
                   onChange={(e) => setEnd(e.target.value)}
-                  className="eb-card-sunk rounded-lg px-2 py-1.5 text-[11px] text-[#F4F6F8] outline-none"
+                  className="eb-card-sunk rounded-lg px-2 py-1.5 text-[11px] text-[var(--ink)] outline-none"
                 />
               </label>
             </div>
 
             <button
               onClick={() => setShowAdvanced((v) => !v)}
-              className="eb-press text-[10px] font-mono font-bold text-[#8A93A5] hover:text-[#F2F4F7] flex items-center gap-1.5"
+              className="eb-press text-[10px] font-mono font-bold text-[var(--ink-muted)] hover:text-[var(--ink)] flex items-center gap-1.5"
             >
               {showAdvanced ? '− Fewer options' : '+ Days, type and goal'}
             </button>
@@ -344,7 +388,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
             <div className={showAdvanced ? '' : 'hidden'}>
               <p className="eb-label mb-1.5">
                 Repeats on
-                <span className="ml-1.5 normal-case tracking-normal text-[#7E8899]">
+                <span className="ml-1.5 normal-case tracking-normal text-[var(--ink-dim)]">
                   {blockDays.length === 0 ? 'every day' : `${blockDays.length} day${blockDays.length === 1 ? '' : 's'}`}
                 </span>
               </p>
@@ -367,7 +411,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                       }
                       aria-label={`Toggle day ${i}`}
                       className={`eb-press flex-1 h-10 rounded-xl text-[11px] font-mono font-bold border ${
-                        on ? 'eb-chip-active' : 'text-[#7E8899] border-[#262C38]'
+                        on ? 'eb-chip-active' : 'text-[var(--ink-dim)] border-[#262C38]'
                       }`}
                     >
                       {label}
@@ -388,7 +432,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                     className={`eb-press text-[11px] font-semibold px-2.5 py-1.5 rounded-full border ${
                       !blockGoalId
                         ? 'eb-chip-active'
-                        : 'text-[#7E8899] border-[#2A313C]'
+                        : 'text-[var(--ink-dim)] border-[var(--rule)]'
                     }`}
                   >
                     Nothing
@@ -400,7 +444,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                       className={`eb-press text-[11px] font-semibold px-2.5 py-1.5 rounded-full border max-w-full truncate ${
                         blockGoalId === g.id
                           ? 'eb-chip-active'
-                          : 'text-[#7E8899] border-[#2A313C] hover:border-[#3A424F]'
+                          : 'text-[var(--ink-dim)] border-[var(--rule)] hover:border-[var(--rule-strong)]'
                       }`}
                     >
                       {g.title}
@@ -418,7 +462,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                   className={`eb-press text-[11px] font-semibold px-2.5 py-1.5 rounded-full border ${
                     kind === k
                       ? BLOCK_META[k].tint
-                      : 'text-[#7E8899] border-[#2A313C] hover:border-[#3A424F]'
+                      : 'text-[var(--ink-dim)] border-[var(--rule)] hover:border-[var(--rule-strong)]'
                   }`}
                 >
                   {BLOCK_META[k].label}
@@ -429,9 +473,9 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
 
           {/* Timeline */}
           {day.length === 0 ? (
-            <div className="text-center py-12 px-6 border border-dashed border-[#2A313C] rounded-2xl">
+            <div className="text-center py-12 px-6 border border-dashed border-[var(--rule)] rounded-2xl">
               <p className="eb-heading text-base">Build your day</p>
-              <p className="text-[13px] text-[#8A93A5] mt-1.5 max-w-xs mx-auto leading-relaxed">
+              <p className="text-[13px] text-[var(--ink-muted)] mt-1.5 max-w-xs mx-auto leading-relaxed">
                 Add the blocks you actually repeat — study, gym, sleep. Tick them off as you go,
                 and link one to a goal so the goal moves when you do the work.
               </p>
@@ -459,7 +503,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                           ? 'bg-emerald-500 border-emerald-500 text-slate-950'
                           : state === 'partial'
                             ? 'bg-amber-500 border-amber-500 text-slate-950'
-                            : 'border-[#3A424F]'
+                            : 'border-[var(--rule-strong)]'
                       }`}
                     >
                       {state === 'done' && <Check className="w-3.5 h-3.5 shrink-0 stroke-[3]" />}
@@ -478,12 +522,12 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                           if (e.key === 'Enter') commitRename(block);
                           if (e.key === 'Escape') setEditingId(null);
                         }}
-                        className="w-full bg-[#171B22] border border-[#8B5CF6]/60 rounded-lg px-2 py-1 text-sm text-[#F4F6F8] outline-none"
+                        className="w-full bg-[var(--surface-sunk)] border border-[#8B5CF6]/60 rounded-lg px-2 py-1 text-sm text-[var(--ink)] outline-none"
                       />
                     ) : (
                       <p
                         className={`text-sm font-bold break-words ${
-                          state === 'skipped' ? 'text-[#7E8899] line-through' : 'text-[#F4F6F8]'
+                          state === 'skipped' ? 'text-[var(--ink-dim)] line-through' : 'text-[var(--ink)]'
                         }`}
                       >
                         {block.title}
@@ -508,9 +552,9 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                                 );
                               }
                             }}
-                            className="bg-[#0E1116] border border-[#262C38] rounded-lg px-1.5 py-1 text-[10px] text-[#F2F4F7] outline-none"
+                            className="bg-[var(--ground)] border border-[#262C38] rounded-lg px-1.5 py-1 text-[10px] text-[var(--ink)] outline-none"
                           />
-                          <span className="text-[#7E8899] text-[10px]">→</span>
+                          <span className="text-[var(--ink-dim)] text-[10px]">→</span>
                           <input
                             type="time"
                             defaultValue={block.endTime}
@@ -524,7 +568,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                                 );
                               }
                             }}
-                            className="bg-[#0E1116] border border-[#262C38] rounded-lg px-1.5 py-1 text-[10px] text-[#F2F4F7] outline-none"
+                            className="bg-[var(--ground)] border border-[#262C38] rounded-lg px-1.5 py-1 text-[10px] text-[var(--ink)] outline-none"
                           />
                           <button
                             onClick={() => setEditingTimeFor(null)}
@@ -536,12 +580,12 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                       ) : (
                         <button
                           onClick={() => setEditingTimeFor(block.id)}
-                          className="eb-press text-[10px] font-mono text-[#98A2B3] hover:text-[#F2F4F7]"
+                          className="eb-press text-[10px] font-mono text-[var(--ink-muted)] hover:text-[var(--ink)]"
                         >
                           {block.startTime} – {block.endTime}
                         </button>
                       )}
-                      <span className="text-[10px] font-mono text-[#7E8899]">
+                      <span className="text-[10px] font-mono text-[var(--ink-dim)]">
                         {blockDuration(block)} min
                       </span>
                       <span
@@ -553,7 +597,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                         onClick={() =>
                           setEditingTimeFor(editingTimeFor === block.id ? null : block.id)
                         }
-                        className="eb-press text-[11px] font-mono text-[#8A93A5] hover:text-[#F2F4F7] flex items-center gap-1 relative"
+                        className="eb-press text-[11px] font-mono text-[var(--ink-muted)] hover:text-[var(--ink)] flex items-center gap-1 relative"
                       >
                         <Clock className="w-2.5 h-2.5 shrink-0" />
                         {block.startTime}–{block.endTime}
@@ -562,7 +606,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                         onClick={() =>
                           setEditingDaysFor(editingDaysFor === block.id ? null : block.id)
                         }
-                        className="eb-press text-[11px] font-mono text-[#8A93A5] hover:text-[#F2F4F7] flex items-center gap-1 relative"
+                        className="eb-press text-[11px] font-mono text-[var(--ink-muted)] hover:text-[var(--ink)] flex items-center gap-1 relative"
                       >
                         <CalendarDays className="w-2.5 h-2.5 shrink-0" />
                         {!block.weekdays || block.weekdays.length === 0
@@ -576,7 +620,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                         </span>
                       )}
                       {state === 'skipped' && (
-                        <span className="text-[11px] font-mono text-[#7E8899]">Skipped</span>
+                        <span className="text-[11px] font-mono text-[var(--ink-dim)]">Skipped</span>
                       )}
                     </div>
                   </div>
@@ -597,9 +641,9 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                             );
                           }
                         }}
-                        className="bg-[#0B0D12] border border-[#262C38] rounded-lg px-2 py-1.5 text-[11px] text-[#F2F4F7] outline-none"
+                        className="bg-[#0B0D12] border border-[#262C38] rounded-lg px-2 py-1.5 text-[11px] text-[var(--ink)] outline-none"
                       />
-                      <span className="text-[#7E8899] text-[11px]">→</span>
+                      <span className="text-[var(--ink-dim)] text-[11px]">→</span>
                       <input
                         type="time"
                         defaultValue={block.endTime}
@@ -614,7 +658,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                             );
                           }
                         }}
-                        className="bg-[#0B0D12] border border-[#262C38] rounded-lg px-2 py-1.5 text-[11px] text-[#F2F4F7] outline-none"
+                        className="bg-[#0B0D12] border border-[#262C38] rounded-lg px-2 py-1.5 text-[11px] text-[var(--ink)] outline-none"
                       />
 
                       <select
@@ -627,7 +671,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                             prev.map((b) => (b.id === block.id ? { ...b, kind } : b))
                           );
                         }}
-                        className="bg-[#0B0D12] border border-[#262C38] rounded-lg px-2 py-1.5 text-[11px] text-[#F2F4F7] outline-none"
+                        className="bg-[#0B0D12] border border-[#262C38] rounded-lg px-2 py-1.5 text-[11px] text-[var(--ink)] outline-none"
                       >
                         {KINDS.map((k) => (
                           <option key={k} value={k}>
@@ -650,9 +694,9 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                           e.target.value !== block.startTime &&
                           updateBlockTime(block, { startTime: e.target.value })
                         }
-                        className="flex-1 min-w-0 bg-[#0B0D12] border border-[#262C38] rounded-lg px-2 py-1.5 text-[11px] text-[#F2F4F7] outline-none"
+                        className="flex-1 min-w-0 bg-[#0B0D12] border border-[#262C38] rounded-lg px-2 py-1.5 text-[11px] text-[var(--ink)] outline-none"
                       />
-                      <span className="text-[#7E8899] text-xs">→</span>
+                      <span className="text-[var(--ink-dim)] text-xs">→</span>
                       <input
                         type="time"
                         defaultValue={block.endTime}
@@ -660,7 +704,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                           e.target.value !== block.endTime &&
                           updateBlockTime(block, { endTime: e.target.value })
                         }
-                        className="flex-1 min-w-0 bg-[#0B0D12] border border-[#262C38] rounded-lg px-2 py-1.5 text-[11px] text-[#F2F4F7] outline-none"
+                        className="flex-1 min-w-0 bg-[#0B0D12] border border-[#262C38] rounded-lg px-2 py-1.5 text-[11px] text-[var(--ink)] outline-none"
                       />
                     </div>
                   )}
@@ -680,7 +724,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                               toggleBlockDay(block, i);
                             }}
                             className={`eb-press flex-1 h-8 rounded-lg text-[10px] font-mono font-bold border ${
-                              active ? 'eb-chip-active' : 'text-[#7E8899] border-[#262C38] bg-[#0B0D12]'
+                              active ? 'eb-chip-active' : 'text-[var(--ink-dim)] border-[#262C38] bg-[#0B0D12]'
                             }`}
                           >
                             {label}
@@ -697,21 +741,21 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                         setEditText(block.title);
                       }}
                       aria-label="Rename block"
-                      className="w-10 h-10 shrink-0 rounded-lg hover:bg-[#171B22] text-[#98A2B3] hover:text-[#F4F6F8] flex items-center justify-center"
+                      className="w-10 h-10 shrink-0 rounded-lg hover:bg-[var(--surface-sunk)] text-[var(--ink-muted)] hover:text-[var(--ink)] flex items-center justify-center"
                     >
                       <Pencil className="w-3.5 h-3.5 shrink-0" />
                     </button>
                     <button
                       onClick={() => deleteBlock(block)}
                       aria-label="Delete block"
-                      className="w-10 h-10 shrink-0 rounded-lg hover:bg-rose-500/15 text-[#98A2B3] hover:eb-danger flex items-center justify-center"
+                      className="w-10 h-10 shrink-0 rounded-lg hover:bg-rose-500/15 text-[var(--ink-muted)] hover:eb-danger flex items-center justify-center"
                     >
                       <Trash2 className="w-3.5 h-3.5 shrink-0" />
                     </button>
                   </div>
                 </motion.div>
               ))}
-              <p className="text-[10px] font-mono text-[#7E8899] text-center pt-1">
+              <p className="text-[10px] font-mono text-[var(--ink-dim)] text-center pt-1">
                 Tap the box to cycle: pending → done → partial → skipped.
               </p>
             </div>
@@ -721,7 +765,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
 
       {pane === 'week' && (
         <div className="space-y-3">
-          <p className="text-[10px] font-mono text-[#98A2B3]">
+          <p className="text-[10px] font-mono text-[var(--ink-muted)]">
             The week at a glance. Green means done, amber partial.
           </p>
 
@@ -735,15 +779,15 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                   <div
                     key={iso}
                     className={`rounded-xl border p-2 min-w-0 ${
-                      isToday ? 'border-[#8B5CF6]/45 bg-[#8B5CF6]/[0.07]' : 'border-[#2A313C] bg-[#0E1116]'
+                      isToday ? 'border-[#8B5CF6]/45 bg-[#8B5CF6]/[0.07]' : 'border-[var(--rule)] bg-[var(--ground)]'
                     }`}
                   >
-                    <p className="text-[11px] font-mono font-bold text-[#98A2B3] uppercase text-center">
+                    <p className="text-[11px] font-mono font-bold text-[var(--ink-muted)] uppercase text-center">
                       {d.toLocaleDateString(undefined, { weekday: 'short' })}
                     </p>
                     <p
                       className={`text-[11px] font-mono font-black text-center tabular-nums ${
-                        isToday ? 'text-[#A78BFA]' : 'text-[#F4F6F8]'
+                        isToday ? 'text-[#A78BFA]' : 'text-[var(--ink)]'
                       }`}
                     >
                       {d.getDate()}
@@ -751,7 +795,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
 
                     <div className="mt-2 space-y-1">
                       {dayBlocks.length === 0 ? (
-                        <p className="text-[11px] font-mono text-[#3A424F] text-center py-1">—</p>
+                        <p className="text-[11px] font-mono text-[var(--rule-strong)] text-center py-1">—</p>
                       ) : (
                         dayBlocks.slice(0, 5).map(({ block, state }) => (
                           <div
@@ -764,20 +808,20 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                                   ? 'bg-amber-500/15 border-amber-500/30'
                                   : state === 'skipped'
                                     ? 'bg-[#0B0E13] border-[#20252E] opacity-50'
-                                    : 'bg-[#171B22] border-[#2A313C]'
+                                    : 'bg-[var(--surface-sunk)] border-[var(--rule)]'
                             }`}
                           >
-                            <p className="text-[8px] font-mono text-[#98A2B3] leading-tight truncate">
+                            <p className="text-[8px] font-mono text-[var(--ink-muted)] leading-tight truncate">
                               {block.startTime}
                             </p>
-                            <p className="text-[11px] font-bold text-[#F4F6F8] leading-tight truncate">
+                            <p className="text-[11px] font-bold text-[var(--ink)] leading-tight truncate">
                               {block.title}
                             </p>
                           </div>
                         ))
                       )}
                       {dayBlocks.length > 5 && (
-                        <p className="text-[8px] font-mono text-[#7E8899] text-center">
+                        <p className="text-[8px] font-mono text-[var(--ink-dim)] text-center">
                           +{dayBlocks.length - 5}
                         </p>
                       )}
@@ -788,7 +832,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
             </div>
           </div>
 
-          <p className="text-[10px] font-mono text-[#7E8899] text-center">
+          <p className="text-[10px] font-mono text-[var(--ink-dim)] text-center">
             Mark blocks done from the Routine tab.
           </p>
         </div>
@@ -805,22 +849,22 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
             </div>
 
             <div className="flex items-center gap-2 mt-3 flex-wrap">
-              <label className="flex items-center gap-1.5 text-[10px] font-mono text-[#98A2B3]">
+              <label className="flex items-center gap-1.5 text-[10px] font-mono text-[var(--ink-muted)]">
                 Bed
                 <input
                   type="time"
                   value={bedtime}
                   onChange={(e) => setBedtime(e.target.value)}
-                  className="eb-card-sunk rounded-lg px-2 py-1.5 text-[11px] text-[#F4F6F8] outline-none"
+                  className="eb-card-sunk rounded-lg px-2 py-1.5 text-[11px] text-[var(--ink)] outline-none"
                 />
               </label>
-              <label className="flex items-center gap-1.5 text-[10px] font-mono text-[#98A2B3]">
+              <label className="flex items-center gap-1.5 text-[10px] font-mono text-[var(--ink-muted)]">
                 Wake
                 <input
                   type="time"
                   value={wakeTime}
                   onChange={(e) => setWakeTime(e.target.value)}
-                  className="eb-card-sunk rounded-lg px-2 py-1.5 text-[11px] text-[#F4F6F8] outline-none"
+                  className="eb-card-sunk rounded-lg px-2 py-1.5 text-[11px] text-[var(--ink)] outline-none"
                 />
               </label>
               <button
@@ -839,7 +883,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                     setSleep((prev) => prev.filter((s) => s.id !== today));
                     removeSleepLog(userId, today).catch((e) => console.error(e));
                   }}
-                  className="ml-2 text-[#7E8899] hover:eb-danger"
+                  className="ml-2 text-[var(--ink-dim)] hover:eb-danger"
                 >
                   remove
                 </button>
@@ -859,10 +903,10 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                     key={s.label}
                     className="eb-card p-3 text-center min-w-0"
                   >
-                    <p className="text-lg font-black font-mono text-[#F4F6F8] tabular-nums leading-none">
+                    <p className="text-lg font-black font-mono text-[var(--ink)] tabular-nums leading-none">
                       {s.value}
                     </p>
-                    <p className="text-[11px] font-mono text-[#7E8899] mt-1 truncate">{s.label}</p>
+                    <p className="text-[11px] font-mono text-[var(--ink-dim)] mt-1 truncate">{s.label}</p>
                   </div>
                 ))}
               </div>
@@ -889,7 +933,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                 </div>
               </div>
 
-              <p className="text-[10px] text-[#7E8899] leading-relaxed text-center max-w-md mx-auto">
+              <p className="text-[10px] text-[var(--ink-dim)] leading-relaxed text-center max-w-md mx-auto">
                 Consistency measures how steady your bedtime is across recorded nights. It
                 describes your own logged times — it is not a health or medical measure.
               </p>

@@ -42,7 +42,7 @@ export const AchievementsDashboardSection: React.FC<Props> = ({ profile, onOpenG
   const featuredBadges = ACHIEVEMENTS_LIST.slice(0, 6);
 
   return (
-    <div className="bg-[#12161F] border border-[#2A313C] rounded-3xl p-5 sm:p-6 mb-8 shadow-xl">
+    <div className="bg-[var(--surface)] border border-[var(--rule)] rounded-3xl p-5 sm:p-6 mb-8 shadow-xl">
       {/* Top Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-3">
@@ -56,7 +56,7 @@ export const AchievementsDashboardSection: React.FC<Props> = ({ profile, onOpenG
                 {unlockedCount}/{totalCount}
               </span>
             </h3>
-            <p className="text-xs text-[#98A2B3]">
+            <p className="text-xs text-[var(--ink-muted)]">
               {totalPoints} Total Badge PTS • Complete training targets to unlock new rewards
             </p>
           </div>
@@ -92,15 +92,15 @@ export const AchievementsDashboardSection: React.FC<Props> = ({ profile, onOpenG
               }}
               className={`p-3.5 rounded-2xl border text-center flex flex-col items-center justify-between cursor-pointer transition-all ${
                 isUnlocked
-                  ? 'bg-[#171B22] border-amber-500/40 hover:border-amber-500/80 shadow-md'
-                  : 'bg-[#0E1116] border-[#2A313C] hover:border-slate-500'
+                  ? 'bg-[var(--surface-sunk)] border-amber-500/40 hover:border-amber-500/80 shadow-md'
+                  : 'bg-[var(--ground)] border-[var(--rule)] hover:border-slate-500'
               }`}
             >
               <div
                 className={`w-10 h-10 rounded-xl border flex items-center justify-center mb-2 shadow-sm ${
                   isUnlocked
                     ? 'bg-amber-500/20 border-amber-500/40 eb-warn'
-                    : 'bg-[#12161F] border-[#2A313C] text-slate-500'
+                    : 'bg-[var(--surface)] border-[var(--rule)] text-slate-500'
                 }`}
               >
                 {isUnlocked ? renderIcon(badge.icon, 'w-5 h-5') : <Lock className="w-4 h-4 shrink-0 text-slate-500" />}

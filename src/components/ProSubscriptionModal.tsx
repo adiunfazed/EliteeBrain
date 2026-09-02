@@ -522,7 +522,7 @@ export const ProSubscriptionModal: React.FC<Props> = ({
                         <span className="font-display font-extrabold text-lg tabular-nums block leading-none">
                           ₹{plan.price.toLocaleString('en-IN')}
                         </span>
-                        <span className="text-[11px] text-[#7E8899] block mt-1">
+                        <span className="text-[11px] text-[var(--ink-dim)] block mt-1">
                           {plan.cadence}
                         </span>
                       </span>

@@ -79,7 +79,7 @@ export const DailyMission: React.FC<MissionProps> = ({
           <h3 className="text-sm sm:eb-heading text-base tracking-tight">
             Today's mission
           </h3>
-          <p className="text-[11px] text-[#98A2B3] mt-0.5">
+          <p className="text-[11px] text-[var(--ink-muted)] mt-0.5">
             {allDone
               ? 'All three done. Anything else today is a bonus.'
               : 'Three things. Finish them and today counts.'}
@@ -89,14 +89,14 @@ export const DailyMission: React.FC<MissionProps> = ({
           className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border shrink-0 ${
             allDone
               ? 'eb-chip-active'
-              : 'text-[#98A2B3] bg-[#171B22] border-[#2A313C]'
+              : 'text-[var(--ink-muted)] bg-[var(--surface-sunk)] border-[var(--rule)]'
           }`}
         >
           {complete} / {goals.length}
         </span>
       </div>
 
-      <div className="mt-3 h-1.5 w-full bg-[#171B22] rounded-full overflow-hidden">
+      <div className="mt-3 h-1.5 w-full bg-[var(--surface-sunk)] rounded-full overflow-hidden">
         <motion.div
           className={`h-full rounded-full ${allDone ? 'bg-emerald-500' : 'bg-[#8B5CF6]'}`}
           initial={false}
@@ -117,12 +117,12 @@ export const DailyMission: React.FC<MissionProps> = ({
               } w-full text-left px-3 py-2.5 rounded-xl border flex items-center gap-3 ${
                 g.done
                   ? 'bg-emerald-500/10 border-emerald-500/25'
-                  : 'bg-[#171B22] border-[#2A313C] hover:border-[#3A424F]'
+                  : 'bg-[var(--surface-sunk)] border-[var(--rule)] hover:border-[var(--rule-strong)]'
               }`}
             >
               <span
                 className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
-                  g.done ? 'bg-emerald-500 text-slate-950' : 'bg-[#0E1116]'
+                  g.done ? 'bg-emerald-500 text-slate-950' : 'bg-[var(--ground)]'
                 }`}
               >
                 {g.done ? (
@@ -135,12 +135,12 @@ export const DailyMission: React.FC<MissionProps> = ({
               <span className="min-w-0 flex-1">
                 <span
                   className={`block text-xs font-bold truncate ${
-                    g.done ? 'eb-done' : 'text-[#F4F6F8]'
+                    g.done ? 'eb-done' : 'text-[var(--ink)]'
                   }`}
                 >
                   {g.label}
                 </span>
-                <span className="block text-[10px] font-mono text-[#98A2B3] mt-0.5">
+                <span className="block text-[10px] font-mono text-[var(--ink-muted)] mt-0.5">
                   {g.detail}
                 </span>
               </span>

@@ -140,7 +140,7 @@ export const RankProgressionSection: React.FC<RankProgressionSectionProps> = ({
                   label: 'Total XP',
                   value: careerXp.toLocaleString(),
                   sub: 'earned so far',
-                  color: '#F2F4F7',
+                  color: 'var(--ink)',
                 },
                 {
                   label: 'Streak',
@@ -175,7 +175,7 @@ export const RankProgressionSection: React.FC<RankProgressionSectionProps> = ({
                     </span>
                   )}
 
-                  <span className="text-[12px] text-[#8A93A5] mt-1.5 leading-snug break-words">
+                  <span className="text-[12px] text-[var(--ink-muted)] mt-1.5 leading-snug break-words">
                     {stat.sub}
                   </span>
                 </div>

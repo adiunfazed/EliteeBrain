@@ -37,10 +37,10 @@ export const WeeklyReviewSection: React.FC<Props> = ({ input, onGo }) => {
         <div className="mt-3 space-y-2.5">
           {areas.map((a) => (
             <div key={a.key} className="flex items-center gap-3">
-              <span className="text-[11px] text-[#98A2B3] w-16 shrink-0 truncate">
+              <span className="text-[11px] text-[var(--ink-muted)] w-16 shrink-0 truncate">
                 {a.label}
               </span>
-              <div className="flex-1 min-w-0 h-2 bg-[#171B22] rounded-full overflow-hidden">
+              <div className="flex-1 min-w-0 h-2 bg-[var(--surface-sunk)] rounded-full overflow-hidden">
                 {a.value !== null && (
                   <motion.div
                     className={`h-full rounded-full ${AREA_TINT[a.key] || 'bg-slate-500'}`}
@@ -52,7 +52,7 @@ export const WeeklyReviewSection: React.FC<Props> = ({ input, onGo }) => {
               </div>
               <span
                 className={`text-[10px] font-mono tabular-nums w-10 text-right shrink-0 ${
-                  a.value === null ? 'text-[#7E8899]' : 'text-[#F4F6F8]'
+                  a.value === null ? 'text-[var(--ink-dim)]' : 'text-[var(--ink)]'
                 }`}
               >
                 {a.value === null ? '—' : `${Math.round(a.value * 100)}%`}
@@ -61,7 +61,7 @@ export const WeeklyReviewSection: React.FC<Props> = ({ input, onGo }) => {
           ))}
         </div>
 
-        <p className="text-[10px] font-mono text-[#7E8899] mt-3 leading-relaxed">
+        <p className="text-[10px] font-mono text-[var(--ink-dim)] mt-3 leading-relaxed">
           Areas you don't track show a dash rather than zero — no data isn't the same as no
           effort.
         </p>
@@ -75,7 +75,7 @@ export const WeeklyReviewSection: React.FC<Props> = ({ input, onGo }) => {
         </span>
 
         {!review.hasData ? (
-          <p className="text-[11px] text-[#98A2B3] mt-2.5 leading-relaxed">
+          <p className="text-[11px] text-[var(--ink-muted)] mt-2.5 leading-relaxed">
             Nothing logged in the last seven days yet. Complete a task, run a focus session or
             tick a habit and this fills in.
           </p>
@@ -95,7 +95,7 @@ export const WeeklyReviewSection: React.FC<Props> = ({ input, onGo }) => {
                   key={s.label}
                   className="eb-card-sunk p-2.5 min-w-0"
                 >
-                  <p className="text-[11px] font-mono text-[#7E8899] truncate">{s.label}</p>
+                  <p className="text-[11px] font-mono text-[var(--ink-dim)] truncate">{s.label}</p>
                   <p className="eb-heading text-sm tabular-nums mt-0.5">
                     {s.value}
                   </p>
@@ -110,7 +110,7 @@ export const WeeklyReviewSection: React.FC<Props> = ({ input, onGo }) => {
                 </p>
                 <ul className="mt-1.5 space-y-1">
                   {review.wentWell.map((t) => (
-                    <li key={t} className="text-[11px] text-[#98A2B3] flex items-start gap-2">
+                    <li key={t} className="text-[11px] text-[var(--ink-muted)] flex items-start gap-2">
                       <Check className="w-3 h-3 eb-done shrink-0 mt-0.5 stroke-[3]" />
                       {t}
                     </li>
@@ -126,7 +126,7 @@ export const WeeklyReviewSection: React.FC<Props> = ({ input, onGo }) => {
                 </p>
                 <ul className="mt-1.5 space-y-1">
                   {review.missed.map((t) => (
-                    <li key={t} className="text-[11px] text-[#98A2B3] flex items-start gap-2">
+                    <li key={t} className="text-[11px] text-[var(--ink-muted)] flex items-start gap-2">
                       <AlertCircle className="w-3 h-3 eb-warn shrink-0 mt-0.5" />
                       {t}
                     </li>
@@ -140,7 +140,7 @@ export const WeeklyReviewSection: React.FC<Props> = ({ input, onGo }) => {
                 <p className="text-[10px] font-mono font-bold text-[#A78BFA] tracking-widest uppercase">
                   One thing next week
                 </p>
-                <p className="text-[11px] text-[#F4F6F8] mt-1 leading-relaxed">
+                <p className="text-[11px] text-[var(--ink)] mt-1 leading-relaxed">
                   {review.oneThing}
                 </p>
 

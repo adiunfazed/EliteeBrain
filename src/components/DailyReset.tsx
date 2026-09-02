@@ -91,12 +91,12 @@ export const DailyReset: React.FC<Props> = ({ userId, tasks, fromHour = 19 }) =>
       </h2>
 
       {allDone ? (
-        <p className="text-sm text-[#8A93A5] mt-2 leading-relaxed">
+        <p className="text-sm text-[var(--ink-muted)] mt-2 leading-relaxed">
           You did what you set out to do today.
         </p>
       ) : (
         <>
-          <p className="text-sm text-[#8A93A5] mt-2 leading-relaxed">
+          <p className="text-sm text-[var(--ink-muted)] mt-2 leading-relaxed">
             {missed.length === 1
               ? "One thing didn't get done."
               : `${missed.length} things didn't get done.`}{' '}
@@ -110,7 +110,7 @@ export const DailyReset: React.FC<Props> = ({ userId, tasks, fromHour = 19 }) =>
                 className="flex items-center gap-3 rounded-xl eb-card-sunk px-3.5 py-3"
               >
                 <span className="min-w-0 flex-1">
-                  <span className="block text-sm text-[#F2F4F7] break-words">{task.title}</span>
+                  <span className="block text-sm text-[var(--ink)] break-words">{task.title}</span>
                   {(task.postponeCount || 0) > 0 && (
                     <span className="block text-[11px] eb-warn mt-0.5">
                       Moved {task.postponeCount} time{task.postponeCount === 1 ? '' : 's'} already
@@ -133,7 +133,7 @@ export const DailyReset: React.FC<Props> = ({ userId, tasks, fromHour = 19 }) =>
       )}
 
       {done.length > 0 && (
-        <p className="text-[13px] text-[#8A93A5] mt-4 flex items-center gap-1.5">
+        <p className="text-[13px] text-[var(--ink-muted)] mt-4 flex items-center gap-1.5">
           <Check className="w-3.5 h-3.5 shrink-0 eb-done" />
           {done.length} finished today
         </p>

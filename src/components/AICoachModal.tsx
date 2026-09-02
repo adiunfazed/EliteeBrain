@@ -199,7 +199,7 @@ export const AICoachModal: React.FC<Props> = ({
           <div className="flex items-center gap-1.5">
             <button
               onClick={handleClearChat}
-              title="Reset Conversation"
+              title="Reset Conversation" aria-label="Reset Conversation"
               className="p-2 text-slate-400 hover:text-slate-100 hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
             >
               <RefreshCw className="w-4 h-4 shrink-0" />

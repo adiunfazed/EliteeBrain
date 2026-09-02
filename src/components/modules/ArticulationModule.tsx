@@ -140,7 +140,7 @@ export const ArticulationModule: React.FC<Props> = ({
           <button
             onClick={onClose}
             aria-label="Close"
-            className="w-10 h-10 rounded-xl border border-[var(--rule)] flex items-center justify-center text-[#7E8899]"
+            className="w-10 h-10 rounded-xl border border-[var(--rule)] flex items-center justify-center text-[var(--ink-dim)]"
           >
             <X className="w-4 h-4 shrink-0" />
           </button>
@@ -165,7 +165,7 @@ export const ArticulationModule: React.FC<Props> = ({
                   style={{
                     background: duration === d ? 'var(--surface)' : 'transparent',
                     borderColor: duration === d ? 'var(--signal)' : 'var(--rule)',
-                    color: duration === d ? 'var(--ink)' : '#7E8899',
+                    color: duration === d ? 'var(--ink)' : 'var(--ink-dim)',
                   }}
                 >
                   {d} min
@@ -185,7 +185,7 @@ export const ArticulationModule: React.FC<Props> = ({
                   style={{
                     background: difficulty === d ? 'var(--surface)' : 'transparent',
                     borderColor: difficulty === d ? 'var(--signal)' : 'var(--rule)',
-                    color: difficulty === d ? 'var(--ink)' : '#7E8899',
+                    color: difficulty === d ? 'var(--ink)' : 'var(--ink-dim)',
                   }}
                 >
                   {d}
@@ -212,7 +212,7 @@ export const ArticulationModule: React.FC<Props> = ({
                   style={{
                     background: interval === i ? 'var(--surface)' : 'transparent',
                     borderColor: interval === i ? 'var(--signal)' : 'var(--rule)',
-                    color: interval === i ? 'var(--ink)' : '#7E8899',
+                    color: interval === i ? 'var(--ink)' : 'var(--ink-dim)',
                   }}
                 >
                   {i}s
@@ -262,7 +262,7 @@ export const ArticulationModule: React.FC<Props> = ({
           style={{ fontSize: 'clamp(46px, 14vw, 68px)', lineHeight: 1 }}
         >
           {completed}
-          <span className="text-[#7E8899]">/{totalWords}</span>
+          <span className="text-[var(--ink-dim)]">/{totalWords}</span>
         </p>
         <p className="t-sub mt-2">words woven in</p>
 
@@ -306,7 +306,7 @@ export const ArticulationModule: React.FC<Props> = ({
             soundFx.playClick();
             setPhase('done');
           }}
-          className="text-[13px] font-semibold text-[#7E8899] px-3 py-2"
+          className="text-[13px] font-semibold text-[var(--ink-dim)] px-3 py-2"
         >
           End
         </button>

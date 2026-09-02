@@ -62,7 +62,7 @@ export const ShareCard: React.FC<Props> = ({
 
     ctx.textAlign = 'left';
 
-    ctx.fillStyle = '#8A93A5';
+    ctx.fillStyle = 'var(--ink-muted)';
     ctx.font = 'bold 30px Inter, system-ui, sans-serif';
     ctx.fillText('ELITELIFE · THIS WEEK', 90, 140);
 
@@ -92,7 +92,7 @@ export const ShareCard: React.FC<Props> = ({
       ctx.font = '800 60px Manrope, Inter, system-ui, sans-serif';
       ctx.fillText(value, 130, y + 80);
 
-      ctx.fillStyle = '#8A93A5';
+      ctx.fillStyle = 'var(--ink-muted)';
       ctx.font = '500 32px Inter, system-ui, sans-serif';
       ctx.textAlign = 'right';
       ctx.fillText(label, W - 130, y + 78);
@@ -172,7 +172,7 @@ export const ShareCard: React.FC<Props> = ({
           <button
             onClick={onClose}
             aria-label="Close"
-            className="w-9 h-9 rounded-lg flex items-center justify-center text-[#7E8899] shrink-0"
+            className="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--ink-dim)] shrink-0"
           >
             <X className="w-4 h-4 shrink-0" />
           </button>
@@ -187,7 +187,7 @@ export const ShareCard: React.FC<Props> = ({
             borderColor: 'color-mix(in oklab, var(--signal) 35%, var(--rule))',
           }}
         >
-          <p className="text-[11px] font-bold tracking-widest text-[#8A93A5]">
+          <p className="text-[11px] font-bold tracking-widest text-[var(--ink-muted)]">
             ELITELIFE · THIS WEEK
           </p>
           <p className="t-title mt-2 break-words">{displayName}</p>
@@ -204,7 +204,7 @@ export const ShareCard: React.FC<Props> = ({
             ].map(({ v, l }) => (
               <div key={l} className="rounded-xl bg-white/5 p-3">
                 <p className="font-display font-extrabold text-xl tabular-nums leading-none">{v}</p>
-                <p className="text-[11px] text-[#8A93A5] mt-1.5">{l}</p>
+                <p className="text-[11px] text-[var(--ink-muted)] mt-1.5">{l}</p>
               </div>
             ))}
           </div>

@@ -36,12 +36,12 @@ export const GoalHistoryChart: React.FC<Props> = ({ snapshots }) => {
   return (
     <div className="pt-1">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-[11px] font-mono font-bold text-[#7E8899] tracking-widest uppercase">
+        <span className="text-[11px] font-mono font-bold text-[var(--ink-dim)] tracking-widest uppercase">
           Progress · {snapshots.length} days
         </span>
         <span
           className={`text-[10px] font-mono font-bold tabular-nums ${
-            delta > 0 ? 'eb-done' : delta < 0 ? 'eb-warn' : 'text-[#7E8899]'
+            delta > 0 ? 'eb-done' : delta < 0 ? 'eb-warn' : 'text-[var(--ink-dim)]'
           }`}
         >
           {delta > 0 ? '+' : ''}
@@ -49,7 +49,7 @@ export const GoalHistoryChart: React.FC<Props> = ({ snapshots }) => {
         </span>
       </div>
       <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="w-full h-11 mt-1.5">
-        <line x1="0" y1={H / 2} x2={W} y2={H / 2} stroke="#171B22" strokeWidth="1" />
+        <line x1="0" y1={H / 2} x2={W} y2={H / 2} stroke="var(--surface-sunk)" strokeWidth="1" />
         <motion.path
           d={path}
           fill="none"

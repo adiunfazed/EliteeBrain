@@ -240,11 +240,11 @@ export const Game2048: React.FC<{ profile: UserProfile, onProfileUpdate?: (p: Us
           <p className="text-slate-400 text-sm mt-1">Join the numbers.</p>
         </div>
         <div className="flex gap-2">
-          <div className="bg-[#12161F] border border-[#2A313C] rounded-xl px-4 py-2 flex flex-col items-center">
+          <div className="bg-[var(--surface)] border border-[var(--rule)] rounded-xl px-4 py-2 flex flex-col items-center">
             <span className="text-[10px] uppercase font-bold text-slate-400">Score</span>
             <span className="font-mono font-bold text-white text-lg">{score}</span>
           </div>
-          <div className="bg-[#12161F] border border-[#2A313C] rounded-xl px-4 py-2 flex flex-col items-center">
+          <div className="bg-[var(--surface)] border border-[var(--rule)] rounded-xl px-4 py-2 flex flex-col items-center">
             <span className="text-[10px] uppercase font-bold text-slate-400">Best</span>
             <span className="font-mono font-bold text-white text-lg">{bestScore}</span>
           </div>
@@ -254,21 +254,21 @@ export const Game2048: React.FC<{ profile: UserProfile, onProfileUpdate?: (p: Us
       <div className="w-full flex justify-between items-center mb-6">
         <button
           onClick={initGame}
-          className="flex items-center gap-2 px-4 py-2 bg-[#12161F] border border-[#2A313C] text-white rounded-xl hover:bg-[#1C212B] transition-colors text-sm font-bold"
+          className="flex items-center gap-2 px-4 py-2 bg-[var(--surface)] border border-[var(--rule)] text-white rounded-xl hover:bg-[#1C212B] transition-colors text-sm font-bold"
         >
           <RotateCcw className="w-4 h-4 shrink-0" /> New Game
         </button>
       </div>
 
       <div 
-        className="w-full aspect-square bg-[#0D1117] border border-[#2A313C] rounded-2xl p-2 relative overflow-hidden shadow-2xl touch-none"
+        className="w-full aspect-square bg-[#0D1117] border border-[var(--rule)] rounded-2xl p-2 relative overflow-hidden shadow-2xl touch-none"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
         {/* Background Grid */}
         <div className="grid grid-cols-4 grid-rows-4 gap-2 w-full h-full absolute inset-2 pr-4 pb-4">
           {Array.from({ length: 16 }).map((_, i) => (
-            <div key={i} className="bg-[#171B22] rounded-xl w-full h-full" />
+            <div key={i} className="bg-[var(--surface-sunk)] rounded-xl w-full h-full" />
           ))}
         </div>
 

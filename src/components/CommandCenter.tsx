@@ -121,7 +121,7 @@ export const CommandCenter: React.FC<Props> = ({ input, displayName, onOpenHub, 
           <div className="mt-3">
             <div className="flex items-center justify-between gap-2">
               <span className="eb-label">Today</span>
-              <span className="text-[10px] font-mono text-[#8A93A5]">
+              <span className="text-[10px] font-mono text-[var(--ink-muted)]">
                 {dayScore.parts
                   .map((p) => `${Math.round(p.done)}/${p.total} ${p.label}`)
                   .join('  ·  ')}
@@ -145,11 +145,11 @@ export const CommandCenter: React.FC<Props> = ({ input, displayName, onOpenHub, 
                   Everything you planned today is done.
                 </span>
               ) : dayScore.done === 0 ? (
-                <span className="text-[#8A93A5]">
+                <span className="text-[var(--ink-muted)]">
                   Nothing ticked off yet. One item is enough to start.
                 </span>
               ) : (
-                <span className="text-[#8A93A5]">
+                <span className="text-[var(--ink-muted)]">
                   {Math.round(dayScore.ratio * 100)}% of today done ·{' '}
                   {dayScore.total - Math.round(dayScore.done)} still open
                 </span>
@@ -157,7 +157,7 @@ export const CommandCenter: React.FC<Props> = ({ input, displayName, onOpenHub, 
             </p>
           </div>
         ) : (
-          <p className="text-[12px] text-[#8A93A5] mt-2">
+          <p className="text-[12px] text-[var(--ink-muted)] mt-2">
             Nothing scheduled today. Add a task or routine block to get started.
           </p>
         )}
@@ -172,9 +172,9 @@ export const CommandCenter: React.FC<Props> = ({ input, displayName, onOpenHub, 
           <span className="text-[10px] font-mono font-bold text-[#A78BFA] tracking-widest uppercase">
             Do this next
           </span>
-          <p className="text-sm font-bold text-[#F4F6F8] mt-1.5 break-words">{next.title}</p>
+          <p className="text-sm font-bold text-[var(--ink)] mt-1.5 break-words">{next.title}</p>
           {next.estimatedMinutes ? (
-            <p className="text-[10px] font-mono text-[#98A2B3] mt-1">
+            <p className="text-[10px] font-mono text-[var(--ink-muted)] mt-1">
               ~{next.estimatedMinutes} min
             </p>
           ) : null}
@@ -197,10 +197,10 @@ export const CommandCenter: React.FC<Props> = ({ input, displayName, onOpenHub, 
       ) : (
         <button
           onClick={() => onOpenHub('tasks')}
-          className="eb-press w-full text-left rounded-2xl border border-dashed border-[#2A313C] p-4"
+          className="eb-press w-full text-left rounded-2xl border border-dashed border-[var(--rule)] p-4"
         >
-          <p className="text-sm font-bold text-[#F4F6F8] font-mono">Nothing planned.</p>
-          <p className="text-[11px] text-[#98A2B3] mt-1">
+          <p className="text-sm font-bold text-[var(--ink)] font-mono">Nothing planned.</p>
+          <p className="text-[11px] text-[var(--ink-muted)] mt-1">
             Add what matters today and it'll show up here.
           </p>
         </button>
@@ -233,16 +233,16 @@ export const CommandCenter: React.FC<Props> = ({ input, displayName, onOpenHub, 
           </span>
           {currentBlock ? (
             <>
-              <p className="text-xs font-bold text-[#F4F6F8] mt-1 truncate">
+              <p className="text-xs font-bold text-[var(--ink)] mt-1 truncate">
                 {currentBlock.block.title}
               </p>
-              <p className="text-[10px] font-mono text-[#98A2B3] mt-0.5">
+              <p className="text-[10px] font-mono text-[var(--ink-muted)] mt-0.5">
                 {currentBlock.block.startTime} – {currentBlock.block.endTime} ·{' '}
                 {BLOCK_META[currentBlock.block.kind].label}
               </p>
             </>
           ) : (
-            <p className="text-[11px] text-[#98A2B3] mt-1">No routine set for today</p>
+            <p className="text-[11px] text-[var(--ink-muted)] mt-1">No routine set for today</p>
           )}
         </button>
 
@@ -263,15 +263,15 @@ export const CommandCenter: React.FC<Props> = ({ input, displayName, onOpenHub, 
           </span>
           {lastNight ? (
             <>
-              <p className="text-xs font-bold text-[#F4F6F8] mt-1">
+              <p className="text-xs font-bold text-[var(--ink)] mt-1">
                 {formatSleepDuration(lastNight.minutes)}
               </p>
-              <p className="text-[10px] font-mono text-[#98A2B3] mt-0.5">
+              <p className="text-[10px] font-mono text-[var(--ink-muted)] mt-0.5">
                 {sleep.consistency}% consistency · {sleep.nights} nights
               </p>
             </>
           ) : (
-            <p className="text-[11px] text-[#98A2B3] mt-1">Not logged yet</p>
+            <p className="text-[11px] text-[var(--ink-muted)] mt-1">Not logged yet</p>
           )}
         </button>
       </div>

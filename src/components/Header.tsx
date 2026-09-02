@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { UserProfile } from '../types';
 import { soundFx } from '../utils/audio';
+import { LANGUAGES, getLang, setLang } from '../lib/i18n';
 import { updateUserProfileName, User } from '../lib/firebase';
 import { saveProfile } from '../utils/storage';
 import { Volume2, VolumeX, Sun, Moon, Shield, LogIn, Eye, HelpCircle, Sparkles, Crown, Sliders, X, User as UserIcon, Trophy, Check, Edit2, Bell } from 'lucide-react';
@@ -83,7 +84,7 @@ export const Header: React.FC<Props> = ({
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-[#0E1116]/95 backdrop-blur-xl border-b border-[#2A313C] px-2.5 sm:px-4 md:px-6 py-2 transition-all select-none shadow-md overflow-x-clip">
+    <header className="sticky top-0 z-40 bg-[var(--ground)]/95 backdrop-blur-xl border-b border-[var(--rule)] px-2.5 sm:px-4 md:px-6 py-2 transition-all select-none shadow-md overflow-x-clip">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-1.5 sm:gap-3">
         
         {/* BRAND LOGO & TITLE */}
@@ -92,7 +93,7 @@ export const Header: React.FC<Props> = ({
 
           <div className="flex items-center gap-1.5 sm:gap-2">
             <h1 className="text-xs xs:text-sm sm:text-base md:text-lg lg:text-xl font-mono font-black tracking-wider flex items-center gap-0.5 sm:gap-1 whitespace-nowrap">
-              <span className="text-[#F4F6F8]">ELITE</span>
+              <span className="text-[var(--ink)]">ELITE</span>
               <span className="text-[#A855F7]">LIFE</span>
             </h1>
 
@@ -138,7 +139,7 @@ export const Header: React.FC<Props> = ({
               onOpenMethodsModal();
             }}
             title="Scientific Methodology Citations"
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#171B22] hover:bg-[#212631] border border-[#2A313C] text-[#98A2B3] hover:text-[#F4F6F8] text-xs font-mono rounded-xl transition-all cursor-pointer active:scale-95"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--surface-sunk)] hover:bg-[#212631] border border-[var(--rule)] text-[var(--ink-muted)] hover:text-[var(--ink)] text-xs font-mono rounded-xl transition-all cursor-pointer active:scale-95"
           >
             <HelpCircle className="w-3.5 h-3.5 shrink-0 text-[#8B5CF6]" />
             <span>Science Methods</span>
@@ -164,7 +165,7 @@ export const Header: React.FC<Props> = ({
             </motion.button>
           )}
 
-          <div className="h-4 w-[1px] bg-[#2A313C] mx-1" />
+          <div className="h-4 w-[1px] bg-[var(--rule)] mx-1" />
 
           {/* Colorblind Toggle */}
           <button
@@ -176,7 +177,7 @@ export const Header: React.FC<Props> = ({
             className={`p-2 border rounded-xl transition-all cursor-pointer active:scale-95 ${
               isColorblind
                 ? 'bg-[#8B5CF6] text-white border-[#8B5CF6] shadow-sm'
-                : 'bg-[#171B22] hover:bg-[#212631] border-[#2A313C] text-[#98A2B3]'
+                : 'bg-[var(--surface-sunk)] hover:bg-[#212631] border-[var(--rule)] text-[var(--ink-muted)]'
             }`}
           >
             <Eye className="w-4 h-4 shrink-0" />
@@ -189,10 +190,49 @@ export const Header: React.FC<Props> = ({
               onToggleDarkMode();
             }}
             title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            className="p-2 bg-[#171B22] hover:bg-[#212631] border border-[#2A313C] text-[#F4F6F8] rounded-xl transition-all cursor-pointer active:scale-95"
+            className="p-2 bg-[var(--surface-sunk)] hover:bg-[#212631] border border-[var(--rule)] text-[var(--ink)] rounded-xl transition-all cursor-pointer active:scale-95"
           >
             {isDarkMode ? <Sun className="w-4 h-4 shrink-0 eb-warn" /> : <Moon className="w-4 h-4 shrink-0 text-slate-300" />}
           </button>
+
+          {/* Language. Only shown when more than one exists, so it does not
+              occupy space it has not earned. */}
+          {LANGUAGES.length > 1 && (
+            <button
+              onClick={() => {
+                soundFx.playClick();
+                const next = getLang() === 'en' ? 'hi' : 'en';
+                setLang(next);
+                // A reload is the honest way to re-render every string,
+                // including ones held in memo caches.
+                window.location.reload();
+              }}
+              title="Change language"
+              aria-label="Change language"
+              className="px-2.5 py-2 bg-[var(--surface-sunk)] border border-[var(--rule)] text-[var(--ink)] rounded-xl text-[12px] font-bold transition-all cursor-pointer active:scale-95"
+            >
+              {getLang() === 'en' ? 'अ' : 'A'}
+            </button>
+          )}
+
+          {/* Theme toggle */}
+          {onToggleDarkMode && (
+            <button
+              onClick={() => {
+                soundFx.playClick();
+                onToggleDarkMode();
+              }}
+              title={isDarkMode ? 'Switch to light' : 'Switch to dark'}
+              aria-label={isDarkMode ? 'Switch to light theme' : 'Switch to dark theme'}
+              className="p-2 bg-[var(--surface-sunk)] border border-[var(--rule)] text-[var(--ink)] rounded-xl transition-all cursor-pointer active:scale-95"
+            >
+              {isDarkMode ? (
+                <Sun className="w-4 h-4 shrink-0 text-[#A78BFA]" />
+              ) : (
+                <Moon className="w-4 h-4 shrink-0 text-[#A78BFA]" />
+              )}
+            </button>
+          )}
 
           {/* Audio Synth Mute Toggle */}
           <button
@@ -201,12 +241,12 @@ export const Header: React.FC<Props> = ({
               onToggleSound();
             }}
             title={profile.soundEnabled ? 'Mute Audio Synth' : 'Enable Audio Synth'}
-            className="p-2 bg-[#171B22] hover:bg-[#212631] border border-[#2A313C] text-[#F4F6F8] rounded-xl transition-all cursor-pointer active:scale-95"
+            className="p-2 bg-[var(--surface-sunk)] hover:bg-[#212631] border border-[var(--rule)] text-[var(--ink)] rounded-xl transition-all cursor-pointer active:scale-95"
           >
             {profile.soundEnabled ? (
               <Volume2 className="w-4 h-4 shrink-0 text-[#A78BFA]" />
             ) : (
-              <VolumeX className="w-4 h-4 shrink-0 text-[#98A2B3]" />
+              <VolumeX className="w-4 h-4 shrink-0 text-[var(--ink-muted)]" />
             )}
           </button>
 
@@ -232,7 +272,7 @@ export const Header: React.FC<Props> = ({
                 soundFx.playClick();
                 onOpenSignOutModal();
               }}
-              className="flex items-center gap-2 bg-[#171B22] hover:bg-[#212631] border border-[#2A313C] px-3.5 py-1.5 rounded-xl font-mono text-xs text-[#F4F6F8] cursor-pointer transition-all active:scale-95 max-w-[140px]"
+              className="flex items-center gap-2 bg-[var(--surface-sunk)] hover:bg-[#212631] border border-[var(--rule)] px-3.5 py-1.5 rounded-xl font-mono text-xs text-[var(--ink)] cursor-pointer transition-all active:scale-95 max-w-[140px]"
             >
               <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
               <span className="font-bold truncate">
@@ -329,7 +369,7 @@ export const Header: React.FC<Props> = ({
             className={`p-1 sm:p-1.5 border rounded-lg sm:rounded-xl transition-all cursor-pointer active:scale-95 flex items-center justify-center shrink-0 ${
               isMobileMenuOpen
                 ? 'bg-[#8B5CF6] text-white border-[#8B5CF6]'
-                : 'bg-[#171B22] border-[#2A313C] text-[#F4F6F8]'
+                : 'bg-[var(--surface-sunk)] border-[var(--rule)] text-[var(--ink)]'
             }`}
           >
             {isMobileMenuOpen ? <X className="w-3.5 h-3.5 shrink-0 sm:w-4 sm:h-4" /> : <Sliders className="w-3.5 h-3.5 shrink-0 sm:w-4 sm:h-4 text-[#A78BFA]" />}
@@ -346,7 +386,7 @@ export const Header: React.FC<Props> = ({
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2, ease: 'easeInOut' }}
-            className="md:hidden overflow-hidden border-t border-[#2A313C]/80 mt-2.5 pt-3 pb-1"
+            className="md:hidden overflow-hidden border-t border-[var(--rule)]/80 mt-2.5 pt-3 pb-1"
           >
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {/* Science Methods */}
@@ -356,7 +396,7 @@ export const Header: React.FC<Props> = ({
                   onOpenMethodsModal();
                   setIsMobileMenuOpen(false);
                 }}
-                className="flex items-center justify-center gap-2 px-3 py-2 bg-[#171B22] border border-[#2A313C] text-[#F4F6F8] text-xs font-mono rounded-xl active:bg-[#212631]"
+                className="flex items-center justify-center gap-2 px-3 py-2 bg-[var(--surface-sunk)] border border-[var(--rule)] text-[var(--ink)] text-xs font-mono rounded-xl active:bg-[#212631]"
               >
                 <HelpCircle className="w-4 h-4 shrink-0 text-[#8B5CF6]" />
                 <span>Methods</span>
@@ -369,7 +409,7 @@ export const Header: React.FC<Props> = ({
                   onOpenNotifications?.();
                   setIsMobileMenuOpen(false);
                 }}
-                className="flex items-center justify-center gap-2 px-3 py-2 bg-[#171B22] border border-[#2A313C] text-[#F4F6F8] text-xs font-mono rounded-xl active:bg-[#212631]"
+                className="flex items-center justify-center gap-2 px-3 py-2 bg-[var(--surface-sunk)] border border-[var(--rule)] text-[var(--ink)] text-xs font-mono rounded-xl active:bg-[#212631]"
               >
                 <Bell className="w-4 h-4 shrink-0 text-[#A78BFA]" />
                 <span>Alerts</span>
@@ -381,7 +421,7 @@ export const Header: React.FC<Props> = ({
                   soundFx.playClick();
                   onToggleSound();
                 }}
-                className="flex items-center justify-center gap-2 px-3 py-2 bg-[#171B22] border border-[#2A313C] text-[#F4F6F8] text-xs font-mono rounded-xl active:bg-[#212631]"
+                className="flex items-center justify-center gap-2 px-3 py-2 bg-[var(--surface-sunk)] border border-[var(--rule)] text-[var(--ink)] text-xs font-mono rounded-xl active:bg-[#212631]"
               >
                 {profile.soundEnabled ? (
                   <>
@@ -390,7 +430,7 @@ export const Header: React.FC<Props> = ({
                   </>
                 ) : (
                   <>
-                    <VolumeX className="w-4 h-4 shrink-0 text-[#98A2B3]" />
+                    <VolumeX className="w-4 h-4 shrink-0 text-[var(--ink-muted)]" />
                     <span>Audio: MUTED</span>
                   </>
                 )}
@@ -402,7 +442,7 @@ export const Header: React.FC<Props> = ({
                   soundFx.playClick();
                   onToggleDarkMode();
                 }}
-                className="flex items-center justify-center gap-2 px-3 py-2 bg-[#171B22] border border-[#2A313C] text-[#F4F6F8] text-xs font-mono rounded-xl active:bg-[#212631]"
+                className="flex items-center justify-center gap-2 px-3 py-2 bg-[var(--surface-sunk)] border border-[var(--rule)] text-[var(--ink)] text-xs font-mono rounded-xl active:bg-[#212631]"
               >
                 {isDarkMode ? (
                   <>
@@ -426,7 +466,7 @@ export const Header: React.FC<Props> = ({
                 className={`flex items-center justify-center gap-2 px-3 py-2 border text-xs font-mono rounded-xl ${
                   isColorblind
                     ? 'bg-[#8B5CF6] text-white border-[#8B5CF6]'
-                    : 'bg-[#171B22] border-[#2A313C] text-[#F4F6F8]'
+                    : 'bg-[var(--surface-sunk)] border-[var(--rule)] text-[var(--ink)]'
                 }`}
               >
                 <Eye className="w-4 h-4 shrink-0" />
@@ -450,10 +490,10 @@ export const Header: React.FC<Props> = ({
             </div>
 
             {/* Account & Display Name Section (below Dark Theme & Colorblind) */}
-            <div className="mt-3 pt-3 border-t border-[#2A313C]/60 space-y-2.5">
+            <div className="mt-3 pt-3 border-t border-[var(--rule)]/60 space-y-2.5">
               {/* Account Display Name Card */}
-              <div className="bg-[#171B22] border border-[#2A313C] p-2.5 rounded-2xl space-y-2">
-                <div className="flex items-center justify-between text-xs text-[#98A2B3]">
+              <div className="bg-[var(--surface-sunk)] border border-[var(--rule)] p-2.5 rounded-2xl space-y-2">
+                <div className="flex items-center justify-between text-xs text-[var(--ink-muted)]">
                   <span className="flex items-center gap-1.5 font-bold text-slate-200">
                     <UserIcon className="w-3.5 h-3.5 shrink-0 text-[#8B5CF6]" />
                     <span>User Profile Name</span>
@@ -472,7 +512,7 @@ export const Header: React.FC<Props> = ({
                         soundFx.playClick();
                         setIsEditingName(!isEditingName);
                       }}
-                      className="px-2 py-0.5 rounded-lg bg-[#2A313C]/60 hover:bg-[#2A313C] text-slate-200 text-[10px] font-mono font-bold cursor-pointer transition-all flex items-center gap-1"
+                      className="px-2 py-0.5 rounded-lg bg-[var(--rule)]/60 hover:bg-[var(--rule)] text-slate-200 text-[10px] font-mono font-bold cursor-pointer transition-all flex items-center gap-1"
                     >
                       <Edit2 className="w-2.5 h-2.5 shrink-0 text-[#A78BFA]" />
                       <span>{isEditingName ? 'Cancel' : 'Edit Name'}</span>
@@ -488,7 +528,7 @@ export const Header: React.FC<Props> = ({
                       onChange={(e) => setNameInput(e.target.value)}
                       placeholder="Enter display name..."
                       maxLength={30}
-                      className="flex-1 min-w-0 bg-[#0E1116] border border-[#2A313C] rounded-xl px-3 py-1.5 text-xs font-mono text-slate-100 focus:outline-none focus:border-[#8B5CF6]"
+                      className="flex-1 min-w-0 bg-[var(--ground)] border border-[var(--rule)] rounded-xl px-3 py-1.5 text-xs font-mono text-slate-100 focus:outline-none focus:border-[#8B5CF6]"
                     />
                     <button
                       type="submit"
@@ -513,7 +553,7 @@ export const Header: React.FC<Props> = ({
                     onOpenSignOutModal();
                     setIsMobileMenuOpen(false);
                   }}
-                  className="w-full flex items-center justify-center gap-2 bg-[#171B22] border border-[#2A313C] hover:bg-[#212631] px-3.5 py-2 rounded-xl font-mono text-xs text-[#F4F6F8] cursor-pointer transition-all active:scale-98"
+                  className="w-full flex items-center justify-center gap-2 bg-[var(--surface-sunk)] border border-[var(--rule)] hover:bg-[#212631] px-3.5 py-2 rounded-xl font-mono text-xs text-[var(--ink)] cursor-pointer transition-all active:scale-98"
                 >
                   <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
                   <span className="font-bold truncate">

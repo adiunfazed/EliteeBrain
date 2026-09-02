@@ -48,11 +48,11 @@ export const SummaryModal: React.FC<Props> = ({ result, onClose }) => {
       );
     }
     return (
-      <div className="flex items-center gap-2 bg-[#0E1116] border border-[#2A313C] text-[#98A2B3] px-4 py-2 rounded-xl">
-        <Minus className="w-5 h-5 shrink-0 text-[#98A2B3]" />
+      <div className="flex items-center gap-2 bg-[var(--ground)] border border-[var(--rule)] text-[var(--ink-muted)] px-4 py-2 rounded-xl">
+        <Minus className="w-5 h-5 shrink-0 text-[var(--ink-muted)]" />
         <div>
           <span className="block text-xs font-bold uppercase tracking-wider">Baseline Maintained</span>
-          <span className="text-sm font-extrabold text-[#F4F6F8]">Remains Level {result.levelAfter}</span>
+          <span className="text-sm font-extrabold text-[var(--ink)]">Remains Level {result.levelAfter}</span>
         </div>
       </div>
     );
@@ -60,16 +60,16 @@ export const SummaryModal: React.FC<Props> = ({ result, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg bg-[#171B22] border border-[#2A313C] rounded-3xl p-6 md:p-8 shadow-2xl overflow-hidden text-[#F4F6F8]">
+      <div className="relative w-full max-w-lg bg-[var(--surface-sunk)] border border-[var(--rule)] rounded-3xl p-6 md:p-8 shadow-2xl overflow-hidden text-[var(--ink)]">
         
         <div className="text-center mb-6">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#8B5CF6]/15 border border-[#8B5CF6]/30 mb-3 shadow-inner">
             <Trophy className="w-8 h-8 shrink-0 text-[#8B5CF6]" />
           </div>
-          <h2 className="text-2xl font-black text-[#F4F6F8] tracking-tight">
+          <h2 className="text-2xl font-black text-[var(--ink)] tracking-tight">
             Session Completed
           </h2>
-          <p className="text-xs text-[#98A2B3] mt-1">
+          <p className="text-xs text-[var(--ink-muted)] mt-1">
             Performance recorded & adaptive difficulty adjusted
           </p>
         </div>
@@ -81,31 +81,31 @@ export const SummaryModal: React.FC<Props> = ({ result, onClose }) => {
 
         {/* Core Scores */}
         <div className="grid grid-cols-3 gap-3 mb-6 text-center">
-          <div className="bg-[#0E1116] border border-[#2A313C] p-3 rounded-2xl">
-            <span className="text-[10px] uppercase font-bold text-[#98A2B3]">Accuracy</span>
+          <div className="bg-[var(--ground)] border border-[var(--rule)] p-3 rounded-2xl">
+            <span className="text-[10px] uppercase font-bold text-[var(--ink-muted)]">Accuracy</span>
             <div className="text-xl font-black text-[#8B5CF6] mt-0.5">{result.accuracy}%</div>
           </div>
-          <div className="bg-[#0E1116] border border-[#2A313C] p-3 rounded-2xl">
-            <span className="text-[10px] uppercase font-bold text-[#98A2B3]">Score</span>
+          <div className="bg-[var(--ground)] border border-[var(--rule)] p-3 rounded-2xl">
+            <span className="text-[10px] uppercase font-bold text-[var(--ink-muted)]">Score</span>
             <div className="text-xl font-black text-indigo-300 mt-0.5">{result.score}</div>
           </div>
-          <div className="bg-[#0E1116] border border-[#2A313C] p-3 rounded-2xl">
-            <span className="text-[10px] uppercase font-bold text-[#98A2B3]">XP Gained</span>
+          <div className="bg-[var(--ground)] border border-[var(--rule)] p-3 rounded-2xl">
+            <span className="text-[10px] uppercase font-bold text-[var(--ink-muted)]">XP Gained</span>
             <div className="text-xl font-black eb-warn mt-0.5">+{result.xpGained}</div>
           </div>
         </div>
 
         {/* Custom Metrics */}
         {result.details && result.details.length > 0 && (
-          <div className="bg-[#0E1116] border border-[#2A313C] rounded-2xl p-4 mb-6">
-            <h4 className="text-xs font-bold text-[#98A2B3] uppercase tracking-wider mb-3">
+          <div className="bg-[var(--ground)] border border-[var(--rule)] rounded-2xl p-4 mb-6">
+            <h4 className="text-xs font-bold text-[var(--ink-muted)] uppercase tracking-wider mb-3">
               Performance Analytics
             </h4>
             <div className="grid grid-cols-2 gap-3">
               {result.details.map((detail, idx) => (
                 <div key={idx} className="flex justify-between items-center text-xs">
-                  <span className="text-[#98A2B3] font-medium">{detail.label}:</span>
-                  <span className="font-bold text-[#F4F6F8]">{detail.value}</span>
+                  <span className="text-[var(--ink-muted)] font-medium">{detail.label}:</span>
+                  <span className="font-bold text-[var(--ink)]">{detail.value}</span>
                 </div>
               ))}
             </div>
@@ -113,7 +113,7 @@ export const SummaryModal: React.FC<Props> = ({ result, onClose }) => {
         )}
 
         {/* Adaptive Explanation */}
-        <div className="flex items-start gap-2.5 p-3 rounded-xl bg-[#0E1116] border border-[#2A313C] text-xs text-[#98A2B3] mb-6">
+        <div className="flex items-start gap-2.5 p-3 rounded-xl bg-[var(--ground)] border border-[var(--rule)] text-xs text-[var(--ink-muted)] mb-6">
           <Sparkles className="w-4 h-4 text-[#8B5CF6] shrink-0 mt-0.5" />
           <p className="leading-relaxed">
             {result.levelChange === 'up'

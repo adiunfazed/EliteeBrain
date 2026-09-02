@@ -131,7 +131,7 @@ export const ArenaSection: React.FC<ArenaProps> = ({ variant = 'full', onExpand 
       <div className="eb-card p-6 text-center">
         <AlertCircle className="w-6 h-6 shrink-0 eb-warn mx-auto" />
         <p className="eb-heading text-base mt-3">Arena unavailable</p>
-        <p className="text-xs text-[#8A93A5] mt-1.5 max-w-sm mx-auto leading-relaxed">{error}</p>
+        <p className="text-xs text-[var(--ink-muted)] mt-1.5 max-w-sm mx-auto leading-relaxed">{error}</p>
         <button
           onClick={() => {
             setStatus('loading');
@@ -212,14 +212,14 @@ export const ArenaSection: React.FC<ArenaProps> = ({ variant = 'full', onExpand 
                   {you!.rank}
                 </span>
                 <span className="eb-heading text-xs truncate flex-1 min-w-0">You</span>
-                <span className="text-xs font-mono font-bold tabular-nums text-[#F2F4F7]">
+                <span className="text-xs font-mono font-bold tabular-nums text-[var(--ink)]">
                   {value(you!).toLocaleString()}
                 </span>
               </div>
             )}
 
             {rows.length === 0 && (
-              <p className="text-[13px] text-[#8A93A5] py-2">
+              <p className="text-[13px] text-[var(--ink-muted)] py-2">
                 Complete something today to join the rankings.
               </p>
             )}
@@ -238,7 +238,7 @@ export const ArenaSection: React.FC<ArenaProps> = ({ variant = 'full', onExpand 
             key={m}
             onClick={() => setMode(m)}
             className={`eb-press flex-1 py-2.5 rounded-xl text-[11px] font-mono font-bold border ${
-              mode === m ? 'eb-chip-active' : 'text-[#8A93A5] eb-card-sunk'
+              mode === m ? 'eb-chip-active' : 'text-[var(--ink-muted)] eb-card-sunk'
             }`}
           >
             {m === 'career' ? 'ALL TIME' : 'THIS WEEK'}
@@ -251,7 +251,7 @@ export const ArenaSection: React.FC<ArenaProps> = ({ variant = 'full', onExpand 
             setRefreshing(false);
           }}
           aria-label="Refresh"
-          className="eb-press shrink-0 w-11 h-11 rounded-xl eb-card-sunk flex items-center justify-center text-[#8A93A5]"
+          className="eb-press shrink-0 w-11 h-11 rounded-xl eb-card-sunk flex items-center justify-center text-[var(--ink-muted)]"
         >
           <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
         </button>
@@ -267,7 +267,7 @@ export const ArenaSection: React.FC<ArenaProps> = ({ variant = 'full', onExpand 
             You're #{you.rank} of {members} {members === 1 ? 'member' : 'members'}
           </p>
         ) : (
-          <p className="text-xs text-[#8A93A5] mt-1.5 leading-relaxed">
+          <p className="text-xs text-[var(--ink-muted)] mt-1.5 leading-relaxed">
             Complete something today to join the rankings.
           </p>
         )}
@@ -286,18 +286,18 @@ export const ArenaSection: React.FC<ArenaProps> = ({ variant = 'full', onExpand 
                 </div>
                 <div className="text-center shrink-0">
                   <p className="eb-label">Gap</p>
-                  <p className="text-sm font-mono font-bold text-[#F2F4F7] mt-0.5">
+                  <p className="text-sm font-mono font-bold text-[var(--ink)] mt-0.5">
                     {(value(nextTarget) - value(you)).toLocaleString()}
                   </p>
                 </div>
                 <div className="min-w-0 text-right">
-                  <p className="text-[10px] font-mono font-bold text-[#8A93A5] truncate">
+                  <p className="text-[10px] font-mono font-bold text-[var(--ink-muted)] truncate">
                     {nextTarget.displayName}
                   </p>
                   <p className="eb-stat text-2xl mt-0.5">{value(nextTarget).toLocaleString()}</p>
                 </div>
               </div>
-              <p className="text-[12px] text-[#8A93A5] mt-2.5">
+              <p className="text-[12px] text-[var(--ink-muted)] mt-2.5">
                 {(value(nextTarget) - value(you)).toLocaleString()} XP to pass them.
               </p>
             </>
@@ -318,7 +318,7 @@ export const ArenaSection: React.FC<ArenaProps> = ({ variant = 'full', onExpand 
           <span className="eb-label">
             {mode === 'weekly' ? 'This week' : 'All-time rankings'}
           </span>
-          <span className="text-[11px] font-mono text-[#8A93A5]">
+          <span className="text-[11px] font-mono text-[var(--ink-muted)]">
             {loading ? 'Loading…' : `${members} ${members === 1 ? 'member' : 'members'}`}
           </span>
         </div>
@@ -344,9 +344,9 @@ export const ArenaSection: React.FC<ArenaProps> = ({ variant = 'full', onExpand 
           </div>
         ) : page && page.entries.length === 0 ? (
           <div className="eb-card p-8 text-center">
-            <Trophy className="w-6 h-6 shrink-0 text-[#7E8899] mx-auto" />
+            <Trophy className="w-6 h-6 shrink-0 text-[var(--ink-dim)] mx-auto" />
             <p className="eb-heading text-base mt-3">Nobody ranked yet</p>
-            <p className="text-xs text-[#8A93A5] mt-1.5 max-w-xs mx-auto leading-relaxed">
+            <p className="text-xs text-[var(--ink-muted)] mt-1.5 max-w-xs mx-auto leading-relaxed">
               Finish a task, meet a habit or run a focus session and you'll appear here. XP comes
               from work you complete, not time spent in the app.
             </p>
@@ -393,7 +393,7 @@ export const ArenaSection: React.FC<ArenaProps> = ({ variant = 'full', onExpand 
                               ? '#C7D0DE'
                               : e.rank === 3
                                 ? '#C97B3C'
-                                : '#8A93A5',
+                                : 'var(--ink-muted)',
                       }}
                     >
                       {String(e.rank).padStart(2, '0')}
@@ -436,7 +436,7 @@ export const ArenaSection: React.FC<ArenaProps> = ({ variant = 'full', onExpand 
                       <span className="eb-stat block text-base leading-none">
                         {value(e).toLocaleString()}
                       </span>
-                      <span className="block text-[8px] font-mono text-[#7E8899] tracking-wide mt-1">
+                      <span className="block text-[8px] font-mono text-[var(--ink-dim)] tracking-wide mt-1">
                         {mode === 'weekly' ? 'WEEK' : 'XP'}
                       </span>
                     </span>
@@ -448,11 +448,11 @@ export const ArenaSection: React.FC<ArenaProps> = ({ variant = 'full', onExpand 
             {/* Outside the top 20: show the real position rather than pretending */}
             {you && you.rank > (page?.entries.length ?? 0) && (
               <>
-                <p className="text-center text-[10px] font-mono text-[#7E8899] py-1">
+                <p className="text-center text-[10px] font-mono text-[var(--ink-dim)] py-1">
                   <ChevronUp className="w-3 h-3 shrink-0 inline" /> your position
                 </p>
                 <div className="eb-card-tap rounded-2xl border border-[var(--signal)] bg-[var(--signal)]/[0.09] p-3 flex items-center gap-3">
-                  <span className="w-7 shrink-0 text-center text-xs font-mono font-bold text-[#8A93A5] tabular-nums">
+                  <span className="w-7 shrink-0 text-center text-xs font-mono font-bold text-[var(--ink-muted)] tabular-nums">
                     {you.rank}
                   </span>
                   <TierBadge xp={you.careerXp} />
@@ -475,7 +475,7 @@ export const ArenaSection: React.FC<ArenaProps> = ({ variant = 'full', onExpand 
         )}
       </div>
 
-      <p className="text-[10px] text-[#7E8899] text-center leading-relaxed">
+      <p className="text-[10px] text-[var(--ink-dim)] text-center leading-relaxed">
         Rankings are calculated on the server from recorded activity. XP cannot be set from the
         app.
       </p>

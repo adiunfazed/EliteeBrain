@@ -6,6 +6,8 @@ import { UserProfile } from '../types';
 import { saveProfile } from '../utils/storage';
 
 interface Props {
+  /** Opens the deletion flow. Separate from sign-out on purpose. */
+  onDeleteAccount?: () => void;
   isOpen: boolean;
   user: User | null;
   profile?: UserProfile;
@@ -21,6 +23,7 @@ export const SignOutConfirmModal: React.FC<Props> = ({
   onUpdateProfile,
   onClose,
   onConfirmSignOut,
+  onDeleteAccount,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [nameInput, setNameInput] = useState(
@@ -179,6 +182,18 @@ export const SignOutConfirmModal: React.FC<Props> = ({
             <LogOut className="w-3.5 h-3.5 shrink-0" />
             <span>Sign Out of Google Account</span>
           </button>
+
+          {/* Kept visually quiet and separated: deleting an account is a
+              different intention from signing out, and must not be reachable
+              by a mis-tap next to it. */}
+          {onDeleteAccount && (
+            <button
+              onClick={onDeleteAccount}
+              className="w-full text-center text-[12px] text-[var(--ink-dim)] hover:eb-danger py-3 mt-1 transition-colors"
+            >
+              Delete my account and data
+            </button>
+          )}
         </div>
       </div>
     </div>

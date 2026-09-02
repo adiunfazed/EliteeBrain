@@ -245,7 +245,7 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
     <div className="space-y-6 font-sans select-none">
       
       {/* Top Banner */}
-      <div className="bg-gradient-to-r from-[#12161F] via-[#1A1F2C] to-[#12161F] border border-[#2A313C] rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-xl">
+      <div className="bg-gradient-to-r from-[var(--surface)] via-[#1A1F2C] to-[var(--surface)] border border-[var(--rule)] rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-xl">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 rounded-2xl bg-[#8B5CF6]/20 border-2 border-[#8B5CF6]/50 text-[#A78BFA] flex items-center justify-center shadow-lg shrink-0">
@@ -269,7 +269,7 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
               <h2 className="text-xl sm:text-2xl font-display font-bold text-white mt-1">
                 AI Coach
               </h2>
-              <p className="text-xs text-[#98A2B3] mt-0.5">
+              <p className="text-xs text-[var(--ink-muted)] mt-0.5">
                 Ask about your plan, your habits, or what to do next.
               </p>
             </div>
@@ -291,7 +291,7 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
       </div>
 
       {/* Main Chat Box Container */}
-      <div className="bg-[#12161F] border border-[#2A313C] rounded-3xl p-3.5 sm:p-6 space-y-3 flex flex-col h-[min(72vh,620px)] shadow-2xl relative overflow-hidden">
+      <div className="bg-[var(--surface)] border border-[var(--rule)] rounded-3xl p-3.5 sm:p-6 space-y-3 flex flex-col h-[min(72vh,620px)] shadow-2xl relative overflow-hidden">
         
         {/* Messages Scroll Area */}
         <div className="flex-1 min-w-0 overflow-y-auto space-y-3 pr-2 scrollbar-thin">
@@ -315,13 +315,13 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
                 className={`max-w-[82%] sm:max-w-[72%] px-4 py-3 text-sm leading-relaxed break-words ${
                   msg.sender === 'user'
                     ? 'bg-[#8B5CF6] text-white rounded-2xl rounded-br-md shadow-[0_4px_14px_-6px_rgba(139,92,246,0.8)]'
-                    : 'bg-[#171B22] border border-[#2A313C] text-[#E7EAEE] rounded-2xl rounded-bl-md whitespace-pre-line'
+                    : 'bg-[var(--surface-sunk)] border border-[var(--rule)] text-[#E7EAEE] rounded-2xl rounded-bl-md whitespace-pre-line'
                 }`}
               >
                 {msg.text}
                 <span
                   className={`block text-[11px] font-mono mt-1.5 ${
-                    msg.sender === 'user' ? 'text-white/60 text-right' : 'text-[#7E8899]'
+                    msg.sender === 'user' ? 'text-white/60 text-right' : 'text-[var(--ink-dim)]'
                   }`}
                 >
                   {msg.timestamp}
@@ -345,7 +345,7 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
               <div className="w-8 h-8 rounded-xl bg-[#8B5CF6]/20 border border-[#8B5CF6]/40 text-[#A78BFA] flex items-center justify-center shrink-0">
                 <Bot className="w-4 h-4 shrink-0" />
               </div>
-              <div className="px-4 py-3.5 bg-[#171B22] border border-[#2A313C] rounded-2xl rounded-bl-md flex items-center gap-1.5">
+              <div className="px-4 py-3.5 bg-[var(--surface-sunk)] border border-[var(--rule)] rounded-2xl rounded-bl-md flex items-center gap-1.5">
                 {[0, 1, 2].map((i) => (
                   <motion.span
                     key={i}
@@ -368,7 +368,7 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
               exit={{ opacity: 0, height: 0 }}
               className="overflow-hidden"
             >
-              <div className="grid grid-cols-2 gap-2 pt-3 mt-1 border-t border-[#2A313C]">
+              <div className="grid grid-cols-2 gap-2 pt-3 mt-1 border-t border-[var(--rule)]">
                 {COACH_ACTIONS.map((action, i) => {
                   const Icon = iconFor(action.icon);
                   const hues = ['#7C5CFF', '#FF6B57', '#00C2A8', '#FFB020', '#4C9AFF', '#A78BFA', '#FF8FA3', '#5BE9B9'];
@@ -384,10 +384,10 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
                       className="eb-press eb-shine eb-tint text-left p-3 rounded-xl bg-[#14171F] border border-[#262C38] hover:border-current transition-colors min-w-0 relative"
                     >
                       <Icon className="w-4 h-4 shrink-0 mb-2 relative" />
-                      <p className="eb-heading text-xs text-[#F2F4F7] leading-snug break-words relative">
+                      <p className="eb-heading text-xs text-[var(--ink)] leading-snug break-words relative">
                         {action.title}
                       </p>
-                      <p className="text-[12px] text-[#8A93A5] mt-1 leading-snug break-words relative">
+                      <p className="text-[12px] text-[var(--ink-muted)] mt-1 leading-snug break-words relative">
                         {action.hint}
                       </p>
                     </button>
@@ -407,14 +407,14 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
           <div className="flex justify-end gap-2 pt-2">
             <button
               onClick={() => setActionsOpen((v) => !v)}
-              className="eb-press text-[11px] font-semibold px-3 py-2 rounded-xl border border-[#2A313C] text-[#98A2B3] hover:text-[#F4F6F8] hover:border-[#3A424F] flex items-center gap-1.5"
+              className="eb-press text-[11px] font-semibold px-3 py-2 rounded-xl border border-[var(--rule)] text-[var(--ink-muted)] hover:text-[var(--ink)] hover:border-[var(--rule-strong)] flex items-center gap-1.5"
             >
               <Sparkles className="w-3 h-3 shrink-0" />
               {actionsOpen ? 'Hide ideas' : 'Ideas'}
             </button>
             <button
               onClick={startNewChat}
-              className="eb-press text-[11px] font-semibold px-3 py-2 rounded-xl border border-[#2A313C] text-[#98A2B3] hover:text-[#F4F6F8] hover:border-[#3A424F] flex items-center gap-1.5"
+              className="eb-press text-[11px] font-semibold px-3 py-2 rounded-xl border border-[var(--rule)] text-[var(--ink-muted)] hover:text-[var(--ink)] hover:border-[var(--rule-strong)] flex items-center gap-1.5"
             >
               <Plus className="w-3 h-3 shrink-0" />
               New chat
@@ -435,7 +435,7 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
                 : 'Pro subscription required for AI Coach chat...'
             }
             disabled={!profile.isProUser || isTyping}
-            className="flex-1 min-w-0 px-4 py-3 bg-[#0D1117] border border-[#2A313C] text-white font-mono text-xs rounded-2xl focus:border-[#8B5CF6] focus:outline-none disabled:opacity-50"
+            className="flex-1 min-w-0 px-4 py-3 bg-[#0D1117] border border-[var(--rule)] text-white font-mono text-xs rounded-2xl focus:border-[#8B5CF6] focus:outline-none disabled:opacity-50"
           />
 
           <button
@@ -456,7 +456,7 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
             <h3 className="text-lg font-display font-bold text-white">
               Unlock AI Coach
             </h3>
-            <p className="text-xs text-[#98A2B3] max-w-md">
+            <p className="text-xs text-[var(--ink-muted)] max-w-md">
               Upgrade to Elite Life Pro to get personalized trial analyses, custom training schedules, and real-time AI guidance.
             </p>
             <button

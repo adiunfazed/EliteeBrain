@@ -123,12 +123,12 @@ export const SignInScreen: React.FC<Props> = ({ onSignInSuccess, onContinueAsGue
   };
 
   return (
-    <div className="fixed inset-0 z-[95] flex items-center justify-center p-4 bg-[#0E1116] overflow-y-auto overscroll-contain font-sans select-none animate-fadeIn">
+    <div className="fixed inset-0 z-[95] flex items-center justify-center p-4 bg-[var(--ground)] overflow-y-auto overscroll-contain font-sans select-none animate-fadeIn">
       {/* Background Grid */}
       <div className="absolute inset-0 bg-[radial-gradient(#2A313C_1px,transparent_1px)] [background-size:32px_32px] opacity-20 pointer-events-none" />
 
       {/* Main Container */}
-      <div className="relative w-full max-w-lg bg-[#171B22] border border-[#2A313C] rounded-3xl p-6 sm:p-10 shadow-2xl my-auto text-center">
+      <div className="relative w-full max-w-lg bg-[var(--surface-sunk)] border border-[var(--rule)] rounded-3xl p-6 sm:p-10 shadow-2xl my-auto text-center">
         
         {/* Brand Logo Header */}
         <div className="flex flex-col items-center mb-6">
@@ -139,13 +139,13 @@ export const SignInScreen: React.FC<Props> = ({ onSignInSuccess, onContinueAsGue
               ELITE<span className="text-[#A855F7]">LIFE</span>
             </h1>
           </div>
-          <p className="text-xs text-[#98A2B3] mt-1 max-w-sm">
+          <p className="text-xs text-[var(--ink-muted)] mt-1 max-w-sm">
             Plan your day, execute it, and see what actually moved. Sign in to sync across devices.
           </p>
         </div>
 
         {/* Method Switch Tabs */}
-        <div className="flex rounded-2xl bg-[#0E1116] p-1 border border-[#2A313C] mb-6 shadow-inner">
+        <div className="flex rounded-2xl bg-[var(--ground)] p-1 border border-[var(--rule)] mb-6 shadow-inner">
           <button
             type="button"
             onClick={() => {
@@ -157,7 +157,7 @@ export const SignInScreen: React.FC<Props> = ({ onSignInSuccess, onContinueAsGue
             className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
               authMethod === 'google'
                 ? 'bg-[#8B5CF6] text-white shadow-sm'
-                : 'text-[#98A2B3] hover:text-[#F4F6F8]'
+                : 'text-[var(--ink-muted)] hover:text-[var(--ink)]'
             }`}
           >
             Google Sign-In
@@ -173,7 +173,7 @@ export const SignInScreen: React.FC<Props> = ({ onSignInSuccess, onContinueAsGue
             className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
               authMethod === 'email'
                 ? 'bg-[#8B5CF6] text-white shadow-sm'
-                : 'text-[#98A2B3] hover:text-[#F4F6F8]'
+                : 'text-[var(--ink-muted)] hover:text-[var(--ink)]'
             }`}
           >
             Email Login
@@ -198,16 +198,16 @@ export const SignInScreen: React.FC<Props> = ({ onSignInSuccess, onContinueAsGue
         {authMethod === 'google' ? (
           <div>
             {/* Features List */}
-            <div className="bg-[#0E1116] rounded-2xl border border-[#2A313C] p-4 mb-6 text-left space-y-2.5">
-              <div className="flex items-center gap-2.5 text-xs text-[#F4F6F8] font-medium">
+            <div className="bg-[var(--ground)] rounded-2xl border border-[var(--rule)] p-4 mb-6 text-left space-y-2.5">
+              <div className="flex items-center gap-2.5 text-xs text-[var(--ink)] font-medium">
                 <CheckCircle2 className="w-4 h-4 eb-done shrink-0" />
                 <span>Instant 1-click Google authentication</span>
               </div>
-              <div className="flex items-center gap-2.5 text-xs text-[#F4F6F8] font-medium">
+              <div className="flex items-center gap-2.5 text-xs text-[var(--ink)] font-medium">
                 <ShieldCheck className="w-4 h-4 text-[#8B5CF6] shrink-0" />
                 <span>Encrypted cloud profile storage & score matrix</span>
               </div>
-              <div className="flex items-center gap-2.5 text-xs text-[#F4F6F8] font-medium">
+              <div className="flex items-center gap-2.5 text-xs text-[var(--ink)] font-medium">
                 <Award className="w-4 h-4 eb-warn shrink-0" />
                 <span>30-Day Protocol & streak continuity</span>
               </div>
@@ -217,7 +217,7 @@ export const SignInScreen: React.FC<Props> = ({ onSignInSuccess, onContinueAsGue
             <button
               disabled={loading}
               onClick={handleGoogleClick}
-              className="w-full flex items-center justify-center gap-3 py-3.5 px-4 rounded-2xl bg-[#F4F6F8] hover:bg-white text-slate-900 font-bold text-sm shadow-xl cursor-pointer transition-all active:scale-95 disabled:opacity-50"
+              className="w-full flex items-center justify-center gap-3 py-3.5 px-4 rounded-2xl bg-[var(--ink)] hover:bg-white text-slate-900 font-bold text-sm shadow-xl cursor-pointer transition-all active:scale-95 disabled:opacity-50"
             >
               {loading ? (
                 <>
@@ -264,7 +264,7 @@ export const SignInScreen: React.FC<Props> = ({ onSignInSuccess, onContinueAsGue
           /* Email Form */
           <form onSubmit={handleEmailSubmit} className="space-y-4 text-left mb-4">
             {/* Mode Switcher */}
-            <div className="flex gap-2 mb-2 pb-2 border-b border-[#2A313C]">
+            <div className="flex gap-2 mb-2 pb-2 border-b border-[var(--rule)]">
               <button
                 type="button"
                 onClick={() => {
@@ -276,7 +276,7 @@ export const SignInScreen: React.FC<Props> = ({ onSignInSuccess, onContinueAsGue
                 className={`text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer ${
                   emailMode === 'signup'
                     ? 'bg-[#8B5CF6]/20 text-[#8B5CF6] border border-[#8B5CF6]/40'
-                    : 'text-[#98A2B3] hover:text-[#F4F6F8]'
+                    : 'text-[var(--ink-muted)] hover:text-[var(--ink)]'
                 }`}
               >
                 Create Account
@@ -292,7 +292,7 @@ export const SignInScreen: React.FC<Props> = ({ onSignInSuccess, onContinueAsGue
                 className={`text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer ${
                   emailMode === 'signin'
                     ? 'bg-[#8B5CF6]/20 text-[#8B5CF6] border border-[#8B5CF6]/40'
-                    : 'text-[#98A2B3] hover:text-[#F4F6F8]'
+                    : 'text-[var(--ink-muted)] hover:text-[var(--ink)]'
                 }`}
               >
                 Sign In
@@ -308,7 +308,7 @@ export const SignInScreen: React.FC<Props> = ({ onSignInSuccess, onContinueAsGue
                 className={`text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer ${
                   emailMode === 'reset'
                     ? 'bg-amber-500/20 eb-warn border border-amber-500/40'
-                    : 'text-[#98A2B3] hover:text-[#F4F6F8]'
+                    : 'text-[var(--ink-muted)] hover:text-[var(--ink)]'
                 }`}
               >
                 Forgot Password?
@@ -317,54 +317,54 @@ export const SignInScreen: React.FC<Props> = ({ onSignInSuccess, onContinueAsGue
 
             {emailMode === 'signup' && (
               <div>
-                <label className="block text-[11px] font-bold text-[#98A2B3] uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-bold text-[var(--ink-muted)] uppercase tracking-wider mb-1">
                   Full Name
                 </label>
                 <div className="relative">
-                  <UserIcon className="w-4 h-4 shrink-0 text-[#98A2B3] absolute left-3.5 top-3.5" />
+                  <UserIcon className="w-4 h-4 shrink-0 text-[var(--ink-muted)] absolute left-3.5 top-3.5" />
                   <input
                     type="text"
                     required
                     placeholder="Your name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-[#0E1116] border border-[#2A313C] focus:border-[#8B5CF6] rounded-xl pl-10 pr-4 py-3 text-xs text-[#F4F6F8] placeholder-[#98A2B3]/50 focus:outline-none transition-colors"
+                    className="w-full bg-[var(--ground)] border border-[var(--rule)] focus:border-[#8B5CF6] rounded-xl pl-10 pr-4 py-3 text-xs text-[var(--ink)] placeholder-[var(--ink-muted)]/50 focus:outline-none transition-colors"
                   />
                 </div>
               </div>
             )}
 
             <div>
-              <label className="block text-[11px] font-bold text-[#98A2B3] uppercase tracking-wider mb-1">
+              <label className="block text-[11px] font-bold text-[var(--ink-muted)] uppercase tracking-wider mb-1">
                 Email Address
               </label>
               <div className="relative">
-                <Mail className="w-4 h-4 shrink-0 text-[#98A2B3] absolute left-3.5 top-3.5" />
+                <Mail className="w-4 h-4 shrink-0 text-[var(--ink-muted)] absolute left-3.5 top-3.5" />
                 <input
                   type="email"
                   required
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-[#0E1116] border border-[#2A313C] focus:border-[#8B5CF6] rounded-xl pl-10 pr-4 py-3 text-xs text-[#F4F6F8] placeholder-[#98A2B3]/50 focus:outline-none transition-colors"
+                  className="w-full bg-[var(--ground)] border border-[var(--rule)] focus:border-[#8B5CF6] rounded-xl pl-10 pr-4 py-3 text-xs text-[var(--ink)] placeholder-[var(--ink-muted)]/50 focus:outline-none transition-colors"
                 />
               </div>
             </div>
 
             {emailMode !== 'reset' && (
               <div>
-                <label className="block text-[11px] font-bold text-[#98A2B3] uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-bold text-[var(--ink-muted)] uppercase tracking-wider mb-1">
                   Password
                 </label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 shrink-0 text-[#98A2B3] absolute left-3.5 top-3.5" />
+                  <Lock className="w-4 h-4 shrink-0 text-[var(--ink-muted)] absolute left-3.5 top-3.5" />
                   <input
                     type="password"
                     required
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-[#0E1116] border border-[#2A313C] focus:border-[#8B5CF6] rounded-xl pl-10 pr-4 py-3 text-xs text-[#F4F6F8] placeholder-[#98A2B3]/50 focus:outline-none transition-colors"
+                    className="w-full bg-[var(--ground)] border border-[var(--rule)] focus:border-[#8B5CF6] rounded-xl pl-10 pr-4 py-3 text-xs text-[var(--ink)] placeholder-[var(--ink-muted)]/50 focus:outline-none transition-colors"
                   />
                 </div>
               </div>
@@ -398,10 +398,10 @@ export const SignInScreen: React.FC<Props> = ({ onSignInSuccess, onContinueAsGue
         {/* Divider */}
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-[#2A313C]" />
+            <div className="w-full border-t border-[var(--rule)]" />
           </div>
           <div className="relative flex justify-center text-[10px] font-mono uppercase">
-            <span className="bg-[#171B22] px-3 text-[#98A2B3]">OR</span>
+            <span className="bg-[var(--surface-sunk)] px-3 text-[var(--ink-muted)]">OR</span>
           </div>
         </div>
 
@@ -411,7 +411,7 @@ export const SignInScreen: React.FC<Props> = ({ onSignInSuccess, onContinueAsGue
             soundFx.playClick();
             onContinueAsGuest();
           }}
-          className="w-full py-3 px-4 rounded-xl text-xs font-bold text-[#F4F6F8] bg-[#0E1116] hover:bg-[#0E1116]/80 border border-[#2A313C] cursor-pointer transition-all active:scale-95 flex items-center justify-center gap-2"
+          className="w-full py-3 px-4 rounded-xl text-xs font-bold text-[var(--ink)] bg-[var(--ground)] hover:bg-[var(--ground)]/80 border border-[var(--rule)] cursor-pointer transition-all active:scale-95 flex items-center justify-center gap-2"
         >
           <span>Continue as Guest (Offline Mode)</span>
           <ArrowRight className="w-4 h-4 shrink-0 text-[#8B5CF6]" />

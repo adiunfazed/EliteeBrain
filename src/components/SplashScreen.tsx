@@ -25,7 +25,7 @@ export const SplashScreen: React.FC<Props> = ({ onFinish }) => {
       onClick={() => {
         if (onFinish) onFinish();
       }}
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0B0E14] text-[#F4F6F8] select-none cursor-pointer overflow-hidden font-sans"
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0B0E14] text-[var(--ink)] select-none cursor-pointer overflow-hidden font-sans"
     >
       {/* Background Radial Gradient & Grid Accent */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(92,108,242,0.12)_0%,transparent_70%)] pointer-events-none" />
@@ -58,7 +58,7 @@ export const SplashScreen: React.FC<Props> = ({ onFinish }) => {
           transition={{ delay: 0.4, duration: 0.4 }}
           className="w-full space-y-2 pt-2"
         >
-          <div className="h-1.5 w-full bg-[#171B22] rounded-full overflow-hidden border border-[#2A313C]">
+          <div className="h-1.5 w-full bg-[var(--surface-sunk)] rounded-full overflow-hidden border border-[var(--rule)]">
             <motion.div
               initial={{ width: '0%' }}
               animate={{ width: '100%' }}
@@ -66,7 +66,7 @@ export const SplashScreen: React.FC<Props> = ({ onFinish }) => {
               className="h-full bg-gradient-to-r from-[#8B5CF6] to-[#A78BFA]"
             />
           </div>
-          <div className="flex items-center justify-between text-[11px] text-[#98A2B3]">
+          <div className="flex items-center justify-between text-[11px] text-[var(--ink-muted)]">
             <span className="flex items-center gap-1.5">
               <Activity className="w-3.5 h-3.5 shrink-0 text-[#8B5CF6] animate-pulse" />
               <span>Initializing Protocol...</span>
@@ -81,7 +81,7 @@ export const SplashScreen: React.FC<Props> = ({ onFinish }) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 0.4 }}
         transition={{ delay: 0.8 }}
-        className="absolute bottom-6 font-mono text-[10px] text-[#98A2B3] uppercase tracking-widest flex items-center gap-1.5"
+        className="absolute bottom-6 font-mono text-[10px] text-[var(--ink-muted)] uppercase tracking-widest flex items-center gap-1.5"
       >
         <Sparkles className="w-3 h-3 shrink-0 text-[#8B5CF6]" />
         <span>Tap anywhere to skip</span>

@@ -458,12 +458,12 @@ export const AdminPortalModal: React.FC<Props> = ({
   if (!isAdmin) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-        <div className="relative w-full max-w-md bg-[#171B22] border border-rose-500/40 rounded-3xl p-6 text-center shadow-2xl text-[#F4F6F8]">
+        <div className="relative w-full max-w-md bg-[var(--surface-sunk)] border border-rose-500/40 rounded-3xl p-6 text-center shadow-2xl text-[var(--ink)]">
           <div className="w-12 h-12 shrink-0 rounded-2xl bg-rose-500/20 eb-danger flex items-center justify-center mx-auto mb-3">
             <AlertTriangle className="w-6 h-6 shrink-0" />
           </div>
-          <h3 className="text-lg font-black text-[#F4F6F8] mb-1">Access Restricted</h3>
-          <p className="text-xs text-[#98A2B3] leading-relaxed mb-6">
+          <h3 className="text-lg font-black text-[var(--ink)] mb-1">Access Restricted</h3>
+          <p className="text-xs text-[var(--ink-muted)] leading-relaxed mb-6">
             The Admin Portal is protected and restricted to authorized administrator accounts.
           </p>
 
@@ -472,7 +472,7 @@ export const AdminPortalModal: React.FC<Props> = ({
               soundFx.playClick();
               onClose();
             }}
-            className="w-full py-3 rounded-xl bg-[#0E1116] border border-[#2A313C] hover:bg-[#0E1116]/80 text-[#F4F6F8] text-xs font-bold cursor-pointer transition-all active:scale-95"
+            className="w-full py-3 rounded-xl bg-[var(--ground)] border border-[var(--rule)] hover:bg-[var(--ground)]/80 text-[var(--ink)] text-xs font-bold cursor-pointer transition-all active:scale-95"
           >
             Close
           </button>
@@ -499,21 +499,21 @@ export const AdminPortalModal: React.FC<Props> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-black/80 backdrop-blur-md animate-fadeIn">
-      <div className="relative w-full max-w-4xl bg-[#171B22] border border-[#2A313C] rounded-3xl p-4 sm:p-5 md:p-7 shadow-2xl text-left overflow-hidden h-[92dvh] sm:h-auto sm:max-h-[90vh] flex flex-col text-[#F4F6F8]">
+      <div className="relative w-full max-w-4xl bg-[var(--surface-sunk)] border border-[var(--rule)] rounded-3xl p-4 sm:p-5 md:p-7 shadow-2xl text-left overflow-hidden h-[92dvh] sm:h-auto sm:max-h-[90vh] flex flex-col text-[var(--ink)]">
         {/* Top Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-[#2A313C] shrink-0">
+        <div className="flex items-center justify-between pb-4 border-b border-[var(--rule)] shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-10 h-10 shrink-0 rounded-xl bg-[#8B5CF6]/20 border border-[#8B5CF6]/40 flex items-center justify-center text-[#8B5CF6]">
               <Shield className="w-5 h-5 shrink-0" />
             </div>
             <div>
-              <h2 className="text-lg font-black text-[#F4F6F8] flex items-center gap-2">
+              <h2 className="text-lg font-black text-[var(--ink)] flex items-center gap-2">
                 <span>Cloud Admin & User Management Portal</span>
                 <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#8B5CF6]/20 text-[#8B5CF6] border border-[#8B5CF6]/40">
                   ADMIN ONLY
                 </span>
               </h2>
-              <p className="text-xs text-[#98A2B3]">
+              <p className="text-xs text-[var(--ink-muted)]">
                 Review payment UTRs and view all registered users & email lists in real time.
               </p>
             </div>
@@ -524,7 +524,7 @@ export const AdminPortalModal: React.FC<Props> = ({
               soundFx.playClick();
               onClose();
             }}
-            className="p-2 rounded-xl bg-[#0E1116] border border-[#2A313C] text-[#98A2B3] hover:text-[#F4F6F8] transition-all cursor-pointer"
+            className="p-2 rounded-xl bg-[var(--ground)] border border-[var(--rule)] text-[var(--ink-muted)] hover:text-[var(--ink)] transition-all cursor-pointer"
           >
             <X className="w-4 h-4 shrink-0" />
           </button>
@@ -540,7 +540,7 @@ export const AdminPortalModal: React.FC<Props> = ({
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTab === 'PAYMENTS'
                 ? 'bg-[#8B5CF6] text-white shadow-md'
-                : 'bg-[#0E1116] text-[#98A2B3] border border-[#2A313C] hover:text-[#F4F6F8]'
+                : 'bg-[var(--ground)] text-[var(--ink-muted)] border border-[var(--rule)] hover:text-[var(--ink)]'
             }`}
           >
             <Crown className="w-4 h-4 shrink-0" />
@@ -555,7 +555,7 @@ export const AdminPortalModal: React.FC<Props> = ({
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTab === 'USERS'
                 ? 'bg-[#8B5CF6] text-white shadow-md'
-                : 'bg-[#0E1116] text-[#98A2B3] border border-[#2A313C] hover:text-[#F4F6F8]'
+                : 'bg-[var(--ground)] text-[var(--ink-muted)] border border-[var(--rule)] hover:text-[var(--ink)]'
             }`}
           >
             <Users className="w-4 h-4 shrink-0" />
@@ -573,7 +573,7 @@ export const AdminPortalModal: React.FC<Props> = ({
         {/* Admin Config Cards (UPI, Telegram, YouTube) */}
         <button
           onClick={() => setShowConfig((v) => !v)}
-          className="eb-press md:hidden mt-4 w-full py-2.5 rounded-xl bg-[#0E1116] border border-[#2A313C] text-[11px] font-mono font-bold text-[#98A2B3] shrink-0"
+          className="eb-press md:hidden mt-4 w-full py-2.5 rounded-xl bg-[var(--ground)] border border-[var(--rule)] text-[11px] font-mono font-bold text-[var(--ink-muted)] shrink-0"
         >
           {showConfig ? '− Hide settings' : '+ Settings (UPI, Telegram, YouTube)'}
         </button>
@@ -584,10 +584,10 @@ export const AdminPortalModal: React.FC<Props> = ({
           }`}
         >
           {/* Admin Merchant UPI Config Card */}
-          <div className="bg-[#0E1116] border border-[#2A313C] rounded-2xl p-4">
+          <div className="bg-[var(--ground)] border border-[var(--rule)] rounded-2xl p-4">
             <div className="flex items-center justify-between gap-2">
               <div>
-                <span className="text-[10px] text-[#98A2B3] font-mono uppercase tracking-wider block">
+                <span className="text-[10px] text-[var(--ink-muted)] font-mono uppercase tracking-wider block">
                   Admin Receiver UPI ID
                 </span>
                 <div className="flex items-center gap-2 mt-0.5">
@@ -600,7 +600,7 @@ export const AdminPortalModal: React.FC<Props> = ({
 
               <button
                 onClick={() => setIsEditingUpi(!isEditingUpi)}
-                className="px-2.5 py-1 rounded-xl bg-[#171B22] hover:bg-[#2A313C] text-[#F4F6F8] text-xs font-bold cursor-pointer transition-all flex items-center gap-1 border border-[#2A313C] shrink-0"
+                className="px-2.5 py-1 rounded-xl bg-[var(--surface-sunk)] hover:bg-[var(--rule)] text-[var(--ink)] text-xs font-bold cursor-pointer transition-all flex items-center gap-1 border border-[var(--rule)] shrink-0"
               >
                 <Edit2 className="w-3 h-3 shrink-0" />
                 <span>{isEditingUpi ? 'Cancel' : 'Edit'}</span>
@@ -608,13 +608,13 @@ export const AdminPortalModal: React.FC<Props> = ({
             </div>
 
             {isEditingUpi && (
-              <form onSubmit={handleSaveUpi} className="mt-3 pt-3 border-t border-[#2A313C] flex gap-2">
+              <form onSubmit={handleSaveUpi} className="mt-3 pt-3 border-t border-[var(--rule)] flex gap-2">
                 <input
                   type="text"
                   value={merchantUpi}
                   onChange={(e) => setMerchantUpi(e.target.value)}
                   placeholder="e.g. name@upi"
-                  className="flex-1 min-w-0 bg-[#171B22] border border-[#2A313C] rounded-xl px-3 py-1.5 text-xs font-mono text-[#F4F6F8] focus:border-[#8B5CF6] focus:outline-none"
+                  className="flex-1 min-w-0 bg-[var(--surface-sunk)] border border-[var(--rule)] rounded-xl px-3 py-1.5 text-xs font-mono text-[var(--ink)] focus:border-[#8B5CF6] focus:outline-none"
                 />
                 <button
                   type="submit"
@@ -629,10 +629,10 @@ export const AdminPortalModal: React.FC<Props> = ({
           </div>
 
           {/* Admin Telegram Channel Link Config Card */}
-          <div className="bg-[#0E1116] border border-[#2A313C] rounded-2xl p-4">
+          <div className="bg-[var(--ground)] border border-[var(--rule)] rounded-2xl p-4">
             <div className="flex items-center justify-between gap-2">
               <div>
-                <span className="text-[10px] text-[#98A2B3] font-mono uppercase tracking-wider block">
+                <span className="text-[10px] text-[var(--ink-muted)] font-mono uppercase tracking-wider block">
                   Telegram Channel Link
                 </span>
                 <div className="flex items-center gap-2 mt-0.5">
@@ -645,7 +645,7 @@ export const AdminPortalModal: React.FC<Props> = ({
 
               <button
                 onClick={() => setIsEditingTelegram(!isEditingTelegram)}
-                className="px-2.5 py-1 rounded-xl bg-[#171B22] hover:bg-[#2A313C] text-[#F4F6F8] text-xs font-bold cursor-pointer transition-all flex items-center gap-1 border border-[#2A313C] shrink-0"
+                className="px-2.5 py-1 rounded-xl bg-[var(--surface-sunk)] hover:bg-[var(--rule)] text-[var(--ink)] text-xs font-bold cursor-pointer transition-all flex items-center gap-1 border border-[var(--rule)] shrink-0"
               >
                 <Edit2 className="w-3 h-3 shrink-0" />
                 <span>{isEditingTelegram ? 'Cancel' : 'Edit'}</span>
@@ -653,13 +653,13 @@ export const AdminPortalModal: React.FC<Props> = ({
             </div>
 
             {isEditingTelegram && (
-              <form onSubmit={handleSaveTelegramLink} className="mt-3 pt-3 border-t border-[#2A313C] flex gap-2">
+              <form onSubmit={handleSaveTelegramLink} className="mt-3 pt-3 border-t border-[var(--rule)] flex gap-2">
                 <input
                   type="url"
                   value={telegramLink}
                   onChange={(e) => setTelegramLink(e.target.value)}
                   placeholder="https://t.me/yourchannel"
-                  className="flex-1 min-w-0 bg-[#171B22] border border-[#2A313C] rounded-xl px-3 py-1.5 text-xs font-mono text-[#F4F6F8] focus:border-sky-400 focus:outline-none"
+                  className="flex-1 min-w-0 bg-[var(--surface-sunk)] border border-[var(--rule)] rounded-xl px-3 py-1.5 text-xs font-mono text-[var(--ink)] focus:border-sky-400 focus:outline-none"
                 />
                 <button
                   type="submit"
@@ -674,10 +674,10 @@ export const AdminPortalModal: React.FC<Props> = ({
           </div>
 
           {/* Admin YouTube Channel Link Config Card */}
-          <div className="bg-[#0E1116] border border-[#2A313C] rounded-2xl p-4">
+          <div className="bg-[var(--ground)] border border-[var(--rule)] rounded-2xl p-4">
             <div className="flex items-center justify-between gap-2">
               <div>
-                <span className="text-[10px] text-[#98A2B3] font-mono uppercase tracking-wider block">
+                <span className="text-[10px] text-[var(--ink-muted)] font-mono uppercase tracking-wider block">
                   YouTube Channel Link
                 </span>
                 <div className="flex items-center gap-2 mt-0.5">
@@ -690,7 +690,7 @@ export const AdminPortalModal: React.FC<Props> = ({
 
               <button
                 onClick={() => setIsEditingYoutube(!isEditingYoutube)}
-                className="px-2.5 py-1 rounded-xl bg-[#171B22] hover:bg-[#2A313C] text-[#F4F6F8] text-xs font-bold cursor-pointer transition-all flex items-center gap-1 border border-[#2A313C] shrink-0"
+                className="px-2.5 py-1 rounded-xl bg-[var(--surface-sunk)] hover:bg-[var(--rule)] text-[var(--ink)] text-xs font-bold cursor-pointer transition-all flex items-center gap-1 border border-[var(--rule)] shrink-0"
               >
                 <Edit2 className="w-3 h-3 shrink-0" />
                 <span>{isEditingYoutube ? 'Cancel' : 'Edit'}</span>
@@ -698,13 +698,13 @@ export const AdminPortalModal: React.FC<Props> = ({
             </div>
 
             {isEditingYoutube && (
-              <form onSubmit={handleSaveYoutubeLink} className="mt-3 pt-3 border-t border-[#2A313C] flex gap-2">
+              <form onSubmit={handleSaveYoutubeLink} className="mt-3 pt-3 border-t border-[var(--rule)] flex gap-2">
                 <input
                   type="url"
                   value={youtubeLink}
                   onChange={(e) => setYoutubeLink(e.target.value)}
                   placeholder="https://www.youtube.com/@channel"
-                  className="flex-1 min-w-0 bg-[#171B22] border border-[#2A313C] rounded-xl px-3 py-1.5 text-xs font-mono text-[#F4F6F8] focus:border-red-400 focus:outline-none"
+                  className="flex-1 min-w-0 bg-[var(--surface-sunk)] border border-[var(--rule)] rounded-xl px-3 py-1.5 text-xs font-mono text-[var(--ink)] focus:border-red-400 focus:outline-none"
                 />
                 <button
                   type="submit"
@@ -722,7 +722,7 @@ export const AdminPortalModal: React.FC<Props> = ({
         {/* Toolbar: Filters & Search */}
         <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shrink-0">
           {activeTab === 'PAYMENTS' ? (
-            <div className="flex items-center gap-1 bg-[#0E1116] p-1 rounded-xl border border-[#2A313C]">
+            <div className="flex items-center gap-1 bg-[var(--ground)] p-1 rounded-xl border border-[var(--rule)]">
               {(['PENDING', 'APPROVED', 'REJECTED', 'ALL'] as const).map((st) => (
                 <button
                   key={st}
@@ -733,7 +733,7 @@ export const AdminPortalModal: React.FC<Props> = ({
                   className={`px-3 py-1 rounded-lg text-xs font-bold cursor-pointer transition-all ${
                     filterStatus === st
                       ? 'bg-[#8B5CF6] text-white shadow-md'
-                      : 'text-[#98A2B3] hover:text-[#F4F6F8]'
+                      : 'text-[var(--ink-muted)] hover:text-[var(--ink)]'
                   }`}
                 >
                   {st}
@@ -749,13 +749,13 @@ export const AdminPortalModal: React.FC<Props> = ({
 
           <div className="flex items-center gap-2">
             <div className="relative flex-1 min-w-0 sm:w-64">
-              <Search className="w-3.5 h-3.5 shrink-0 text-[#98A2B3] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <Search className="w-3.5 h-3.5 shrink-0 text-[var(--ink-muted)] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder={activeTab === 'PAYMENTS' ? 'Search UTR, name, email...' : 'Search name or email address...'}
-                className="w-full bg-[#0E1116] border border-[#2A313C] rounded-xl pl-9 pr-3 py-2.5 text-xs text-[#F4F6F8] placeholder:text-[#98A2B3] focus:border-[#8B5CF6] focus:outline-none"
+                className="w-full bg-[var(--ground)] border border-[var(--rule)] rounded-xl pl-9 pr-3 py-2.5 text-xs text-[var(--ink)] placeholder:text-[var(--ink-muted)] focus:border-[#8B5CF6] focus:outline-none"
               />
             </div>
 
@@ -763,7 +763,7 @@ export const AdminPortalModal: React.FC<Props> = ({
               onClick={loadData}
               title="Refresh data"
               aria-label="Refresh data"
-              className="eb-press shrink-0 w-11 h-11 rounded-xl bg-[#0E1116] border border-[#2A313C] hover:bg-[#171B22] text-[#98A2B3] hover:text-[#F4F6F8] flex items-center justify-center cursor-pointer"
+              className="eb-press shrink-0 w-11 h-11 rounded-xl bg-[var(--ground)] border border-[var(--rule)] hover:bg-[var(--surface-sunk)] text-[var(--ink-muted)] hover:text-[var(--ink)] flex items-center justify-center cursor-pointer"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             </button>
@@ -774,9 +774,9 @@ export const AdminPortalModal: React.FC<Props> = ({
         <div className="mt-4 flex-1 min-h-[38vh] overflow-y-auto overscroll-contain custom-scrollbar space-y-3 pr-1 pb-2">
           {activeTab === 'PAYMENTS' ? (
             filteredRequests.length === 0 ? (
-              <div className="text-center py-12 border border-dashed border-[#2A313C] rounded-2xl">
-                <Clock className="w-8 h-8 shrink-0 text-[#98A2B3] mx-auto mb-2" />
-                <p className="text-xs text-[#98A2B3] font-mono">
+              <div className="text-center py-12 border border-dashed border-[var(--rule)] rounded-2xl">
+                <Clock className="w-8 h-8 shrink-0 text-[var(--ink-muted)] mx-auto mb-2" />
+                <p className="text-xs text-[var(--ink-muted)] font-mono">
                   No payment requests found for status "{filterStatus}".
                 </p>
               </div>
@@ -786,17 +786,17 @@ export const AdminPortalModal: React.FC<Props> = ({
                   key={req.id}
                   className={`p-4 rounded-2xl border transition-all ${
                     req.status === 'PENDING'
-                      ? 'bg-[#0E1116] border-amber-500/40 shadow-lg'
+                      ? 'bg-[var(--ground)] border-amber-500/40 shadow-lg'
                       : req.status === 'APPROVED'
-                      ? 'bg-[#0E1116] border-emerald-500/30'
-                      : 'bg-[#0E1116] border-[#2A313C] opacity-60'
+                      ? 'bg-[var(--ground)] border-emerald-500/30'
+                      : 'bg-[var(--ground)] border-[var(--rule)] opacity-60'
                   }`}
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-black text-[#F4F6F8]">{req.userName}</span>
-                        <span className="text-[11px] text-[#98A2B3]">({req.userEmail})</span>
+                        <span className="text-xs font-black text-[var(--ink)]">{req.userName}</span>
+                        <span className="text-[11px] text-[var(--ink-muted)]">({req.userEmail})</span>
                         <span
                           className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${
                             req.status === 'PENDING'
@@ -810,17 +810,17 @@ export const AdminPortalModal: React.FC<Props> = ({
                         </span>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-3 text-xs text-[#98A2B3] font-mono">
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--ink-muted)] font-mono">
                         <span>
                           Plan: <strong className="text-[#8B5CF6]">{req.plan.toUpperCase()}</strong> (₹{req.amountINR})
                         </span>
                         <span>•</span>
-                        <span className="bg-[#171B22] px-2 py-0.5 rounded-md border border-[#2A313C] eb-warn font-bold">
+                        <span className="bg-[var(--surface-sunk)] px-2 py-0.5 rounded-md border border-[var(--rule)] eb-warn font-bold">
                           UTR / Ref: {req.utrNumber}
                         </span>
                       </div>
 
-                      <div className="text-[10px] text-[#98A2B3] font-mono">
+                      <div className="text-[10px] text-[var(--ink-muted)] font-mono">
                         Submitted: {new Date(req.createdAt).toLocaleString()}
                       </div>
                     </div>
@@ -848,10 +848,10 @@ export const AdminPortalModal: React.FC<Props> = ({
                       </div>
                     ) : (
                       <div className="text-right shrink-0">
-                        <span className="text-[10px] font-mono text-[#98A2B3] block">
+                        <span className="text-[10px] font-mono text-[var(--ink-muted)] block">
                           Reviewed: {req.reviewedAt ? new Date(req.reviewedAt).toLocaleDateString() : 'N/A'}
                         </span>
-                        <span className="text-[10px] font-mono text-[#98A2B3] block">
+                        <span className="text-[10px] font-mono text-[var(--ink-muted)] block">
                           By: {req.reviewedBy}
                         </span>
                       </div>
@@ -863,9 +863,9 @@ export const AdminPortalModal: React.FC<Props> = ({
           ) : (
             /* Registered Users / Email List */
             filteredUsers.length === 0 ? (
-              <div className="text-center py-12 border border-dashed border-[#2A313C] rounded-2xl">
-                <Users className="w-8 h-8 shrink-0 text-[#98A2B3] mx-auto mb-2" />
-                <p className="text-xs text-[#98A2B3] font-mono">
+              <div className="text-center py-12 border border-dashed border-[var(--rule)] rounded-2xl">
+                <Users className="w-8 h-8 shrink-0 text-[var(--ink-muted)] mx-auto mb-2" />
+                <p className="text-xs text-[var(--ink-muted)] font-mono">
                   No registered users match your search.
                 </p>
               </div>
@@ -874,7 +874,7 @@ export const AdminPortalModal: React.FC<Props> = ({
                 {filteredUsers.map((u) => (
                   <div
                     key={u.uid}
-                    className="eb-shine eb-lift eb-glow-brand p-3.5 rounded-2xl bg-[#0E1116] border border-[#2A313C] hover:border-[#8B5CF6]/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                    className="eb-shine eb-lift eb-glow-brand p-3.5 rounded-2xl bg-[var(--ground)] border border-[var(--rule)] hover:border-[#8B5CF6]/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                   >
                     <div className="flex items-start gap-3 min-w-0">
                       {u.photoURL ? (
@@ -887,8 +887,8 @@ export const AdminPortalModal: React.FC<Props> = ({
 
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-xs font-black text-[#F4F6F8] truncate max-w-full">{u.displayName}</span>
-                          <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-[#171B22] border border-[#2A313C] text-[#98A2B3] uppercase">
+                          <span className="text-xs font-black text-[var(--ink)] truncate max-w-full">{u.displayName}</span>
+                          <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-[var(--surface-sunk)] border border-[var(--rule)] text-[var(--ink-muted)] uppercase">
                             {u.authProvider}
                           </span>
                           {(() => {
@@ -903,7 +903,7 @@ export const AdminPortalModal: React.FC<Props> = ({
                               e.status === 'lifetime' ? 'bg-amber-500/20 eb-warn border-amber-500/40'
                               : e.status === 'trial' ? 'bg-emerald-500/20 eb-done border-emerald-500/40'
                               : e.status === 'expired' ? 'bg-rose-500/20 eb-danger border-rose-500/40'
-                              : 'bg-[#171B22] text-[#98A2B3] border-[#2A313C]';
+                              : 'bg-[var(--surface-sunk)] text-[var(--ink-muted)] border-[var(--rule)]';
                             return (
                               <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border flex items-center gap-1 ${tone}`}>
                                 {e.status === 'lifetime' && <Crown className="w-3 h-3 shrink-0 eb-warn" />}
@@ -913,11 +913,11 @@ export const AdminPortalModal: React.FC<Props> = ({
                           })()}
                         </div>
                         <div className="text-[11px] font-mono text-[#8B5CF6] mt-0.5 break-all">{u.email}</div>
-                        <div className="text-[10px] text-[#98A2B3] font-mono mt-0.5">
+                        <div className="text-[10px] text-[var(--ink-muted)] font-mono mt-0.5">
                           Registered: {new Date(u.createdAt).toLocaleDateString()} • Last Active: {new Date(u.lastLoginAt).toLocaleTimeString()}
                         </div>
                         {(u as any).trialStartedAt && (
-                          <div className="text-[10px] text-[#98A2B3] font-mono mt-0.5">
+                          <div className="text-[10px] text-[var(--ink-muted)] font-mono mt-0.5">
                             Trial: {new Date((u as any).trialStartedAt).toLocaleDateString()} → {(() => {
                               const end = trialEndMs((u as any).trialStartedAt);
                               return end ? new Date(end).toLocaleDateString() : '—';

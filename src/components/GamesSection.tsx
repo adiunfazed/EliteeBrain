@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile } from '../types';
-import { ChessGame } from './games/ChessGame';
-import { Game2048 } from './games/Game2048';
-import { SlidingPuzzle } from './games/SlidingPuzzle';
-import { FlowFree } from './games/FlowFree';
+const ChessGame = lazy(() => import('./games/ChessGame').then((m) => ({ default: m.ChessGame })));
+const Game2048 = lazy(() => import('./games/Game2048').then((m) => ({ default: m.Game2048 })));
+const SlidingPuzzle = lazy(() => import('./games/SlidingPuzzle').then((m) => ({ default: m.SlidingPuzzle })));
+const FlowFree = lazy(() => import('./games/FlowFree').then((m) => ({ default: m.FlowFree })));
 import { Swords, LayoutGrid, Image as ImageIcon, GitMerge, ArrowLeft, ChevronRight } from 'lucide-react';
 import { soundFx } from '../utils/audio';
 import { GameShell } from './games/GameShell';
@@ -124,7 +124,7 @@ export const GamesSection: React.FC<{ profile: UserProfile; onProfileUpdate?: (p
 
                         <div className="min-w-0 flex-1">
                           <h3 className="eb-heading text-xl sm:text-2xl">{g.title}</h3>
-                          <p className="text-xs text-[#8A93A5] mt-1">{g.subtitle}</p>
+                          <p className="text-xs text-[var(--ink-muted)] mt-1">{g.subtitle}</p>
                         </div>
 
                         <span
@@ -135,7 +135,7 @@ export const GamesSection: React.FC<{ profile: UserProfile; onProfileUpdate?: (p
                         </span>
                       </div>
 
-                      <p className="text-[13px] text-[#8A93A5] leading-relaxed mt-3.5 max-w-lg">
+                      <p className="text-[13px] text-[var(--ink-muted)] leading-relaxed mt-3.5 max-w-lg">
                         {g.blurb}
                       </p>
 
@@ -151,7 +151,7 @@ export const GamesSection: React.FC<{ profile: UserProfile; onProfileUpdate?: (p
                         )}
                         <span className="eb-card-sunk px-3 py-2 rounded-xl min-w-0">
                           <span className="eb-label block">Trains</span>
-                          <span className="block text-xs font-bold text-[#F2F4F7] mt-1">
+                          <span className="block text-xs font-bold text-[var(--ink)] mt-1">
                             {g.trains}
                           </span>
                         </span>
@@ -179,7 +179,7 @@ export const GamesSection: React.FC<{ profile: UserProfile; onProfileUpdate?: (p
             transition={{ duration: 0.3 }}
             className="w-full"
           >
-            <div className="mb-6 flex justify-between items-center bg-[#12161F] p-2 rounded-2xl border border-[#2A313C]">
+            <div className="mb-6 flex justify-between items-center bg-[var(--surface)] p-2 rounded-2xl border border-[var(--rule)]">
             </div>
 
             <GameShell
@@ -189,10 +189,22 @@ export const GamesSection: React.FC<{ profile: UserProfile; onProfileUpdate?: (p
                 setActiveGame(null);
               }}
             >
-              {activeGame === 'chess' && <ChessGame profile={profile} onProfileUpdate={onProfileUpdate} />}
-              {activeGame === 'flow' && <FlowFree profile={profile} onProfileUpdate={onProfileUpdate} />}
-              {activeGame === '2048' && <Game2048 profile={profile} onProfileUpdate={onProfileUpdate} />}
-              {activeGame === 'sliding' && <SlidingPuzzle profile={profile} onProfileUpdate={onProfileUpdate} />}
+              <Suspense
+                fallback={
+                  <div className="flex flex-col items-center justify-center gap-4 py-24">
+                    <span
+                      className="w-9 h-9 rounded-full border-2 border-[var(--rule)] animate-spin"
+                      style={{ borderTopColor: 'var(--signal)' }}
+                    />
+                    <p className="t-sub">Loading game…</p>
+                  </div>
+                }
+              >
+                {activeGame === 'chess' && <ChessGame profile={profile} onProfileUpdate={onProfileUpdate} />}
+                {activeGame === 'flow' && <FlowFree profile={profile} onProfileUpdate={onProfileUpdate} />}
+                {activeGame === '2048' && <Game2048 profile={profile} onProfileUpdate={onProfileUpdate} />}
+                {activeGame === 'sliding' && <SlidingPuzzle profile={profile} onProfileUpdate={onProfileUpdate} />}
+              </Suspense>
             </GameShell>
           </motion.div>
         )}

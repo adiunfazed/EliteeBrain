@@ -341,14 +341,14 @@ export const FlowFree: React.FC<{ profile: UserProfile, onProfileUpdate?: (p: Us
           <h2 className="text-3xl sm:text-4xl font-display font-black text-white leading-none">Flow Free</h2>
           <p className="text-slate-400 text-sm mt-1">Connect the dots.</p>
         </div>
-        <div className="bg-[#12161F] border border-[#2A313C] rounded-xl px-4 py-2 flex flex-col items-center">
+        <div className="bg-[var(--surface)] border border-[var(--rule)] rounded-xl px-4 py-2 flex flex-col items-center">
           <span className="text-[10px] uppercase font-bold text-slate-400">Moves</span>
           <span className="font-mono font-bold text-white text-lg">{moves}</span>
         </div>
       </div>
 
       <div className="w-full flex justify-between items-center mb-6 gap-2 flex-wrap">
-        <div className="flex bg-[#12161F] border border-[#2A313C] rounded-xl p-1">
+        <div className="flex bg-[var(--surface)] border border-[var(--rule)] rounded-xl p-1">
           {[5, 6, 7, 8].map((size) => (
             <button
               key={size}
@@ -357,7 +357,7 @@ export const FlowFree: React.FC<{ profile: UserProfile, onProfileUpdate?: (p: Us
                 setSeed(Math.random());
               }}
               className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-colors ${
-                gridSize === size ? 'bg-[#2A313C] text-white' : 'text-slate-400 hover:text-white'
+                gridSize === size ? 'bg-[var(--rule)] text-white' : 'text-slate-400 hover:text-white'
               }`}
             >
               {size}x{size}
@@ -367,13 +367,13 @@ export const FlowFree: React.FC<{ profile: UserProfile, onProfileUpdate?: (p: Us
         
         <button
           onClick={() => setSeed(Math.random())}
-          className="flex items-center gap-2 px-4 py-2 bg-[#12161F] border border-[#2A313C] text-white rounded-xl hover:bg-[#1C212B] transition-colors text-xs font-bold"
+          className="flex items-center gap-2 px-4 py-2 bg-[var(--surface)] border border-[var(--rule)] text-white rounded-xl hover:bg-[#1C212B] transition-colors text-xs font-bold"
         >
           <RotateCcw className="w-4 h-4 shrink-0" /> Reset
         </button>
       </div>
 
-      <div className="w-full max-w-[500px] aspect-square bg-[#0D1117] border-2 border-[#2A313C] rounded-3xl p-3 sm:p-4 shadow-2xl relative">
+      <div className="w-full max-w-[500px] aspect-square bg-[#0D1117] border-2 border-[var(--rule)] rounded-3xl p-3 sm:p-4 shadow-2xl relative">
         <div 
           ref={boardRef}
           className="w-full h-full relative"

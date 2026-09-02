@@ -22,16 +22,16 @@ export const StreakCard: React.FC<Props> = ({ input, resetFrom }) => {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <span className="eb-label flex items-center gap-1.5">
-            <Flame className={`w-3 h-3 ${streak.current > 0 ? 'text-orange-400' : 'text-[#7E8899]'}`} />
+            <Flame className={`w-3 h-3 ${streak.current > 0 ? 'text-orange-400' : 'text-[var(--ink-dim)]'}`} />
             Streak
           </span>
           <p className="eb-stat text-3xl mt-1.5">
             {streak.current}
-            <span className="text-xs font-bold text-[#7E8899] ml-2">
+            <span className="text-xs font-bold text-[var(--ink-dim)] ml-2">
               {streak.current === 1 ? 'day' : 'days'}
             </span>
           </p>
-          <p className="text-[10px] font-mono text-[#7E8899] mt-0.5">
+          <p className="text-[10px] font-mono text-[var(--ink-dim)] mt-0.5">
             {streak.freezeInUse
               ? 'A missed day was covered by a protection'
               : streak.current === 0
@@ -73,7 +73,7 @@ export const StreakCard: React.FC<Props> = ({ input, resetFrom }) => {
                   : d.isToday
                     ? 'eb-day-today'
                     : d.isFuture
-                      ? 'bg-transparent text-[#3A424F]'
+                      ? 'bg-transparent text-[var(--rule-strong)]'
                       : 'eb-day-off'
               }`}
             >
@@ -87,7 +87,7 @@ export const StreakCard: React.FC<Props> = ({ input, resetFrom }) => {
             </motion.div>
             <span
               className={`text-[11px] font-mono font-bold ${
-                d.isToday ? 'text-[#A78BFA]' : 'text-[#7E8899]'
+                d.isToday ? 'text-[#A78BFA]' : 'text-[var(--ink-dim)]'
               }`}
             >
               {d.isToday ? 'NOW' : WEEKDAY_INITIALS[i]}

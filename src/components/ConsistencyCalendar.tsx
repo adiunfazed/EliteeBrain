@@ -62,7 +62,7 @@ export const ConsistencyCalendar: React.FC<Props> = ({ input }) => {
           <button
             onClick={() => setOffset((o) => o - 1)}
             aria-label="Previous month"
-            className="w-9 h-9 shrink-0 rounded-lg flex items-center justify-center text-[#8A93A5] hover:text-[#F2F4F7]"
+            className="w-9 h-9 shrink-0 rounded-lg flex items-center justify-center text-[var(--ink-muted)] hover:text-[var(--ink)]"
           >
             <ChevronLeft className="w-4 h-4 shrink-0" />
           </button>
@@ -70,7 +70,7 @@ export const ConsistencyCalendar: React.FC<Props> = ({ input }) => {
             onClick={() => setOffset((o) => Math.min(0, o + 1))}
             disabled={offset >= 0}
             aria-label="Next month"
-            className="w-9 h-9 shrink-0 rounded-lg flex items-center justify-center text-[#8A93A5] hover:text-[#F2F4F7] disabled:opacity-30"
+            className="w-9 h-9 shrink-0 rounded-lg flex items-center justify-center text-[var(--ink-muted)] hover:text-[var(--ink)] disabled:opacity-30"
           >
             <ChevronRight className="w-4 h-4 shrink-0" />
           </button>

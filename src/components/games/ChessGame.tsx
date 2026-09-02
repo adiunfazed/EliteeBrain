@@ -1127,7 +1127,7 @@ export const ChessGame: React.FC<{
               ? t <= 10
                 ? 'bg-rose-500/20 border-rose-500 eb-danger animate-pulse'
                 : 'bg-emerald-500/20 border-emerald-500/50 eb-done'
-              : 'bg-[#0E1116] border-[#2A313C] text-[#98A2B3]'
+              : 'bg-[var(--ground)] border-[var(--rule)] text-[var(--ink-muted)]'
           }`}
         >
           <Clock className="w-3.5 h-3.5 shrink-0" />
@@ -1180,7 +1180,7 @@ export const ChessGame: React.FC<{
               </h3>
 
               {eloDelta !== null && (
-                <p className="text-sm font-mono text-[#98A2B3] mt-2">
+                <p className="text-sm font-mono text-[var(--ink-muted)] mt-2">
                   {isUnrated ? 'Unrated' : `ELO ${userElo}`}{' '}
                   <span className={eloDelta >= 0 ? 'eb-done' : 'eb-danger'}>
                     {eloDelta >= 0 ? `+${eloDelta}` : eloDelta}
@@ -1188,7 +1188,7 @@ export const ChessGame: React.FC<{
                 </p>
               )}
 
-              <p className="text-[11px] font-mono text-[#7E8899] mt-1">
+              <p className="text-[11px] font-mono text-[var(--ink-dim)] mt-1">
                 {moveHistory.length} moves
               </p>
 
@@ -1215,9 +1215,9 @@ export const ChessGame: React.FC<{
         <div className="w-full max-w-[640px] flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             <BrainCircuit
-              className={`w-4 h-4 shrink-0 ${isEngineThinking ? 'eb-danger animate-pulse' : 'text-[#98A2B3]'}`}
+              className={`w-4 h-4 shrink-0 ${isEngineThinking ? 'eb-danger animate-pulse' : 'text-[var(--ink-muted)]'}`}
             />
-            <span className="text-xs font-mono font-bold text-[#F4F6F8] truncate">
+            <span className="text-xs font-mono font-bold text-[var(--ink)] truncate">
               Bot · {engineLevel}
             </span>
             {game.inCheck() && gameStatus === 'playing' && (
@@ -1287,7 +1287,7 @@ export const ChessGame: React.FC<{
 
         {/* Player row */}
         <div className="w-full max-w-[640px] flex items-center justify-between gap-2">
-          <span className="text-xs font-mono font-bold text-[#F4F6F8] truncate min-w-0">
+          <span className="text-xs font-mono font-bold text-[var(--ink)] truncate min-w-0">
             You · {isUnrated ? 'Unrated' : userElo}
           </span>
           {clock('w')}
@@ -1304,14 +1304,14 @@ export const ChessGame: React.FC<{
           </button>
           <button
             onClick={startGame}
-            className="eb-press px-4 py-3 rounded-xl bg-[#171B22] border border-[#2A313C] text-[#F4F6F8] text-xs font-mono font-bold min-h-[44px]"
+            className="eb-press px-4 py-3 rounded-xl bg-[var(--surface-sunk)] border border-[var(--rule)] text-[var(--ink)] text-xs font-mono font-bold min-h-[44px]"
           >
             New
           </button>
         </div>
 
         {moveHistory.length > 0 && (
-          <p className="text-[10px] font-mono text-[#7E8899] mt-1.5">
+          <p className="text-[10px] font-mono text-[var(--ink-dim)] mt-1.5">
             Move {moveHistory.length} · {moveHistory[moveHistory.length - 1]}
           </p>
         )}
@@ -1344,7 +1344,7 @@ export const ChessGame: React.FC<{
             <button
               onClick={() => setIsMuted(!isMuted)}
               aria-label={isMuted ? 'Unmute' : 'Mute'}
-              className="shrink-0 w-10 h-10 rounded-xl border border-[var(--rule)] flex items-center justify-center text-[#8A93A5]"
+              className="shrink-0 w-10 h-10 rounded-xl border border-[var(--rule)] flex items-center justify-center text-[var(--ink-muted)]"
             >
               {isMuted ? <VolumeX className="w-4 h-4 shrink-0" /> : <Volume2 className="w-4 h-4 shrink-0" />}
             </button>
@@ -1362,7 +1362,7 @@ export const ChessGame: React.FC<{
                   className={`min-h-[44px] rounded-xl text-xs font-semibold border transition-colors ${
                     selectedTimeOption === opt.seconds
                       ? 'eb-chip-active'
-                      : 'text-[#8A93A5] border-[var(--rule)]'
+                      : 'text-[var(--ink-muted)] border-[var(--rule)]'
                   }`}
                 >
                   {opt.label}
@@ -1441,7 +1441,7 @@ export const ChessGame: React.FC<{
                   ? blackTime <= 10
                     ? 'bg-rose-500/20 border-rose-500 eb-danger animate-pulse'
                     : 'bg-emerald-500/20 border-emerald-500/50 eb-done shadow-[0_0_15px_rgba(16,185,129,0.2)]'
-                  : 'bg-[#0E1116] border-[#2A313C] text-[#98A2B3]'
+                  : 'bg-[var(--ground)] border-[var(--rule)] text-[var(--ink-muted)]'
               }`}
             >
               <Clock className="w-4 h-4 shrink-0" />
@@ -1450,7 +1450,7 @@ export const ChessGame: React.FC<{
           </div>
 
           {/* Large High-Res Chessboard Stage */}
-          <div className="relative w-full bg-[#171B22] rounded-3xl p-3 sm:p-4 border-2 border-[#2A313C] shadow-2xl flex items-center justify-center overflow-hidden">
+          <div className="relative w-full bg-[var(--surface-sunk)] rounded-3xl p-3 sm:p-4 border-2 border-[var(--rule)] shadow-2xl flex items-center justify-center overflow-hidden">
             {/* GameOver Overlay Screen */}
             <AnimatePresence>
               {(gameStatus === 'won' ||
@@ -1495,8 +1495,8 @@ export const ChessGame: React.FC<{
                   </h3>
 
                   {eloDelta !== null && (
-                    <div className="flex items-center gap-2 mb-6 bg-[#12161F] border border-[#2A313C] px-5 py-2.5 rounded-2xl">
-                      <span className="text-xs text-[#98A2B3]">ELO RATING:</span>
+                    <div className="flex items-center gap-2 mb-6 bg-[var(--surface)] border border-[var(--rule)] px-5 py-2.5 rounded-2xl">
+                      <span className="text-xs text-[var(--ink-muted)]">ELO RATING:</span>
                       <div className="flex items-center gap-1 text-sm font-mono font-black text-white">
                         <span>{userElo}</span>
                         <span
@@ -1553,7 +1553,7 @@ export const ChessGame: React.FC<{
                             promotion: p.code,
                           })
                         }
-                        className="px-4 py-3 bg-[#12161F] border-2 border-rose-500/60 rounded-2xl hover:bg-rose-500/20 text-white font-mono font-bold text-sm hover:scale-110 transition-all cursor-pointer shadow-xl"
+                        className="px-4 py-3 bg-[var(--surface)] border-2 border-rose-500/60 rounded-2xl hover:bg-rose-500/20 text-white font-mono font-bold text-sm hover:scale-110 transition-all cursor-pointer shadow-xl"
                       >
                         {p.label}
                       </button>
@@ -1565,7 +1565,7 @@ export const ChessGame: React.FC<{
 
             {/* High Quality Chessboard Component */}
             <div
-              className="rounded-2xl overflow-hidden border-2 border-[#2A313C] shadow-2xl mx-auto w-full"
+              className="rounded-2xl overflow-hidden border-2 border-[var(--rule)] shadow-2xl mx-auto w-full"
               style={{ maxWidth: 'min(94vw, calc(100vh - 210px))' }}
             >
               <Chessboard
@@ -1622,7 +1622,7 @@ export const ChessGame: React.FC<{
                   ? whiteTime <= 10
                     ? 'bg-rose-500/20 border-rose-500 eb-danger animate-pulse'
                     : 'bg-emerald-500/20 border-emerald-500/50 eb-done shadow-[0_0_15px_rgba(16,185,129,0.2)]'
-                  : 'bg-[#0E1116] border-[#2A313C] text-[#98A2B3]'
+                  : 'bg-[var(--ground)] border-[var(--rule)] text-[var(--ink-muted)]'
               }`}
             >
               <Clock className="w-4 h-4 shrink-0" />
@@ -1672,7 +1672,7 @@ export const ChessGame: React.FC<{
               <span className="text-[13px] font-semibold eb-warn">
                 Reviewing move {reviewPly + 1} of {moveHistory.length}
               </span>
-              <span className="text-[12px] text-[#7E8899]">Back to live</span>
+              <span className="text-[12px] text-[var(--ink-dim)]">Back to live</span>
             </button>
           )}
 
@@ -1691,7 +1691,7 @@ export const ChessGame: React.FC<{
               <span className="text-[13px] font-semibold text-[var(--signal-ink)]">
                 Premove queued: {premove.from}–{premove.to}
               </span>
-              <span className="text-[12px] text-[#7E8899]">Tap to cancel</span>
+              <span className="text-[12px] text-[var(--ink-dim)]">Tap to cancel</span>
             </button>
           )}
 
@@ -1721,7 +1721,7 @@ export const ChessGame: React.FC<{
                 <span className="t-sub ml-2">{moveHistory.length}</span>
               </h3>
               <ChevronDown
-                className={`w-4 h-4 shrink-0 text-[#8A93A5] transition-transform ${
+                className={`w-4 h-4 shrink-0 text-[var(--ink-muted)] transition-transform ${
                   showHistory ? 'rotate-180' : ''
                 }`}
               />
@@ -1745,9 +1745,9 @@ export const ChessGame: React.FC<{
                     <div
                       key={idx}
                       data-active={reviewPly === idx * 2 || reviewPly === idx * 2 + 1}
-                      className="grid grid-cols-12 gap-1 px-3 py-1.5 rounded-xl bg-[#0E1116]/80 border border-white/5 hover:border-white/10"
+                      className="grid grid-cols-12 gap-1 px-3 py-1.5 rounded-xl bg-[var(--ground)]/80 border border-white/5 hover:border-white/10"
                     >
-                      <span className="col-span-2 text-[#7E8899] font-bold">{idx + 1}.</span>
+                      <span className="col-span-2 text-[var(--ink-dim)] font-bold">{idx + 1}.</span>
 
                       <button
                         onClick={() => reviewAt(idx * 2)}

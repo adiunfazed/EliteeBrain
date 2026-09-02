@@ -39,14 +39,14 @@ export const StuckTaskCard: React.FC<Props> = ({ task, onStartFocus, onSplit, on
         <button
           onClick={onDismiss}
           aria-label="Dismiss"
-          className="shrink-0 w-8 h-8 -m-1 rounded-lg hover:bg-[#171B22] text-[#7E8899] flex items-center justify-center"
+          className="shrink-0 w-8 h-8 -m-1 rounded-lg hover:bg-[var(--surface-sunk)] text-[var(--ink-dim)] flex items-center justify-center"
         >
           <X className="w-3.5 h-3.5 shrink-0" />
         </button>
       </div>
 
-      <p className="text-sm font-bold text-[#F4F6F8] mt-2 break-words">{task.title}</p>
-      <p className="text-[10px] font-mono text-[#98A2B3] mt-1">
+      <p className="text-sm font-bold text-[var(--ink)] mt-2 break-words">{task.title}</p>
+      <p className="text-[10px] font-mono text-[var(--ink-muted)] mt-1">
         {(task.postponeCount || 0) > 0 && `Moved ${task.postponeCount} times`}
         {(task.postponeCount || 0) > 0 && overdue > 0 && ' · '}
         {overdue > 0 && `${overdue} day${overdue === 1 ? '' : 's'} past its date`}
@@ -54,7 +54,7 @@ export const StuckTaskCard: React.FC<Props> = ({ task, onStartFocus, onSplit, on
 
       {!suggestion ? (
         <>
-          <p className="text-[11px] text-[#98A2B3] mt-3">What's actually in the way?</p>
+          <p className="text-[11px] text-[var(--ink-muted)] mt-3">What's actually in the way?</p>
           <div className="flex items-center gap-1.5 mt-2 flex-wrap">
             {STUCK_OPTIONS.map((o) => (
               <button
@@ -63,7 +63,7 @@ export const StuckTaskCard: React.FC<Props> = ({ task, onStartFocus, onSplit, on
                   soundFx.playClick();
                   setReason(o.id);
                 }}
-                className="eb-press text-[11px] font-semibold px-2.5 py-2 rounded-full border border-[#2A313C] text-[#98A2B3] hover:text-[#F4F6F8] hover:border-[#3A424F]"
+                className="eb-press text-[11px] font-semibold px-2.5 py-2 rounded-full border border-[var(--rule)] text-[var(--ink-muted)] hover:text-[var(--ink)] hover:border-[var(--rule-strong)]"
               >
                 {o.label}
               </button>
@@ -74,7 +74,7 @@ export const StuckTaskCard: React.FC<Props> = ({ task, onStartFocus, onSplit, on
         <AnimatePresence>
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-3">
             <p className="text-xs font-black font-mono text-[#A78BFA]">{suggestion.headline}</p>
-            <p className="text-[11px] text-[#F4F6F8] mt-1 leading-relaxed">
+            <p className="text-[11px] text-[var(--ink)] mt-1 leading-relaxed">
               {suggestion.firstStep}
             </p>
 
@@ -91,7 +91,7 @@ export const StuckTaskCard: React.FC<Props> = ({ task, onStartFocus, onSplit, on
               {suggestion.offerSplit && onSplit && (
                 <button
                   onClick={() => onSplit(task)}
-                  className="eb-press px-4 py-2.5 rounded-xl bg-[#171B22] border border-[#2A313C] text-[#F4F6F8] text-xs font-mono font-bold flex items-center gap-1.5"
+                  className="eb-press px-4 py-2.5 rounded-xl bg-[var(--surface-sunk)] border border-[var(--rule)] text-[var(--ink)] text-xs font-mono font-bold flex items-center gap-1.5"
                 >
                   Break it up
                   <ArrowRight className="w-3.5 h-3.5 shrink-0" />
@@ -99,7 +99,7 @@ export const StuckTaskCard: React.FC<Props> = ({ task, onStartFocus, onSplit, on
               )}
               <button
                 onClick={() => setReason(null)}
-                className="eb-press px-3 py-2.5 text-[10px] font-mono font-bold text-[#7E8899] hover:text-[#98A2B3]"
+                className="eb-press px-3 py-2.5 text-[10px] font-mono font-bold text-[var(--ink-dim)] hover:text-[var(--ink-muted)]"
               >
                 Back
               </button>

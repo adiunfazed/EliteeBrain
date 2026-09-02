@@ -7,6 +7,8 @@ import { ModuleCard } from './ModuleCard';
 import { AchievementsDashboardSection } from './AchievementsDashboardSection';
 import { LeaderboardScreen } from './LeaderboardScreen';
 import { ShareCard } from './ShareCard';
+import { InsightsSection } from './InsightsSection';
+import { t } from '../lib/i18n';
 import { RankProgressionSection } from './RankProgressionSection';
 import { AICoachSection } from './AICoachSection';
 import { GamesSection } from './GamesSection';
@@ -58,6 +60,7 @@ import {
   ChevronRight,
   Medal,
   Share2,
+  Lightbulb,
   Trophy,
   Brain,
   Flame,
@@ -328,7 +331,7 @@ export const Dashboard: React.FC<Props> = ({
     {
       id: 'engine' as DashboardSection,
       label: 'Engine',
-      shortLabel: 'TODAY',
+      shortLabel: t('nav.today'),
       icon: Flame,
       activeColor: 'eb-warn bg-amber-500/15 border-amber-500/40',
       badge: `${profile.streakDays}d`,
@@ -336,7 +339,7 @@ export const Dashboard: React.FC<Props> = ({
     {
       id: 'exercises' as DashboardSection,
       label: 'Train',
-      shortLabel: 'TRAIN',
+      shortLabel: t('nav.train'),
       icon: Brain,
       activeColor: 'eb-chip-active',
       badge: `${completedTodayCount}/8`,
@@ -344,14 +347,14 @@ export const Dashboard: React.FC<Props> = ({
     {
       id: 'coach' as DashboardSection,
       label: 'Coach',
-      shortLabel: 'COACH',
+      shortLabel: t('nav.coach'),
       icon: Bot,
       activeColor: 'eb-chip-active',
     },
     {
       id: 'hub' as DashboardSection,
       label: 'Plan',
-      shortLabel: 'PLAN',
+      shortLabel: t('nav.plan'),
       icon: CheckSquare,
       activeColor: 'eb-done bg-emerald-500/15 border-emerald-500/40',
       badge: openTaskCount > 0 ? `${openTaskCount}` : '',
@@ -359,7 +362,7 @@ export const Dashboard: React.FC<Props> = ({
     {
       id: 'progress' as DashboardSection,
       label: 'More',
-      shortLabel: 'MORE',
+      shortLabel: t('nav.more'),
       icon: TrendingUp,
       activeColor: 'text-sky-400 bg-sky-500/15 border-sky-500/40',
       badge: '',
@@ -533,7 +536,7 @@ export const Dashboard: React.FC<Props> = ({
                   className={`flex-1 min-h-[46px] rounded-xl text-sm font-semibold border transition-colors ${
                     trainTab === id
                       ? 'eb-chip-active'
-                      : 'text-[#8A93A5] border-[var(--rule)] hover:text-[#F2F4F7]'
+                      : 'text-[var(--ink-muted)] border-[var(--rule)] hover:text-[var(--ink)]'
                   }`}
                 >
                   {label}
@@ -572,7 +575,7 @@ export const Dashboard: React.FC<Props> = ({
                       style={{
                         background: active ? 'var(--surface)' : 'transparent',
                         borderColor: active ? 'var(--signal)' : 'var(--rule)',
-                        color: active ? 'var(--ink)' : '#7E8899',
+                        color: active ? 'var(--ink)' : 'var(--ink-dim)',
                       }}
                     >
                       {label}
@@ -605,11 +608,11 @@ export const Dashboard: React.FC<Props> = ({
                           >
                             {info.label.toUpperCase()}
                           </span>
-                          <span className="text-[11px] text-[#98A2B3] leading-snug">
+                          <span className="text-[11px] text-[var(--ink-muted)] leading-snug">
                             {info.blurb}
                           </span>
                           {emphasisedGroup(profile.focusGoal) === group && (
-                            <span className="text-[11px] font-mono font-bold text-[#7E8899] shrink-0">
+                            <span className="text-[11px] font-mono font-bold text-[var(--ink-dim)] shrink-0">
                               YOUR GOAL
                             </span>
                           )}
@@ -698,17 +701,17 @@ export const Dashboard: React.FC<Props> = ({
             className="space-y-4"
           >
             <div>
-              <h2 className="text-lg sm:text-xl font-black text-[#F4F6F8] font-mono tracking-tight">
+              <h2 className="text-lg sm:text-xl font-black text-[var(--ink)] font-mono tracking-tight">
                 Plan and execute
               </h2>
             </div>
 
             <div className="grid grid-cols-4 gap-1.5 p-1.5 rounded-2xl bg-[var(--surface-sunk)] border border-[var(--rule)]">
               {([
-                { id: 'tasks' as const, label: 'Tasks', icon: CheckSquare },
-                { id: 'habits' as const, label: 'Habits', icon: Repeat },
-                { id: 'routine' as const, label: 'Routine', icon: Clock },
-                { id: 'goals' as const, label: 'Goals', icon: Target },
+                { id: 'tasks' as const, label: t('plan.tasks'), icon: CheckSquare },
+                { id: 'habits' as const, label: t('plan.habits'), icon: Repeat },
+                { id: 'routine' as const, label: t('plan.routine'), icon: Clock },
+                { id: 'goals' as const, label: t('plan.goals'), icon: Target },
               ]).map(({ id, label, icon: Icon }) => {
                 const active = hubPane === id;
                 return (
@@ -728,11 +731,11 @@ export const Dashboard: React.FC<Props> = ({
                   >
                     <Icon
                       className="w-[18px] h-[18px] shrink-0"
-                      style={{ color: active ? 'var(--signal-ink)' : '#7E8899' }}
+                      style={{ color: active ? 'var(--signal-ink)' : 'var(--ink-dim)' }}
                     />
                     <span
                       className="text-[12px] font-semibold"
-                      style={{ color: active ? 'var(--ink)' : '#7E8899' }}
+                      style={{ color: active ? 'var(--ink)' : 'var(--ink-dim)' }}
                     >
                       {label}
                     </span>
@@ -858,7 +861,7 @@ export const Dashboard: React.FC<Props> = ({
                   <span className="t-section block">Share your week</span>
                   <span className="t-sub block mt-0.5">Streak, tasks and XP as an image</span>
                 </span>
-                <ChevronRight className="w-5 h-5 shrink-0 text-[#7E8899]" />
+                <ChevronRight className="w-5 h-5 shrink-0 text-[var(--ink-dim)]" />
               </button>
 
               {/* Leaderboard is a destination, not a drawer — given its own
@@ -897,6 +900,7 @@ export const Dashboard: React.FC<Props> = ({
                     it, so only one thing is ever on screen. */}
                 {([
                   { id: 'rank', label: 'Your rank', hint: 'Tier, XP, streak and badges', icon: Trophy },
+                  { id: 'insights', label: 'Patterns', hint: 'What your own data shows', icon: Lightbulb },
                   { id: 'review', label: 'This week', hint: 'What went well and what slipped', icon: CalendarCheck },
                   { id: 'records', label: 'Personal records', hint: 'Best scores across training', icon: BarChart2 },
                   { id: 'badges', label: 'Achievements', hint: 'Milestones you have unlocked', icon: Award },
@@ -920,7 +924,7 @@ export const Dashboard: React.FC<Props> = ({
                           <span className="t-sub block truncate">{hint}</span>
                         </span>
                         <ChevronDown
-                          className={`w-4 h-4 text-[#8A93A5] shrink-0 transition-transform ${
+                          className={`w-4 h-4 text-[var(--ink-muted)] shrink-0 transition-transform ${
                             open ? 'rotate-180' : ''
                           }`}
                         />
@@ -928,6 +932,8 @@ export const Dashboard: React.FC<Props> = ({
 
                       {open && (
                         <div className="pb-6 anim-in">
+                          {id === 'insights' && <InsightsSection input={momentumInput} />}
+
                           {id === 'rank' && (
                             <RankProgressionSection
                               profile={profile}
@@ -991,7 +997,7 @@ export const Dashboard: React.FC<Props> = ({
       )}
 
       {/* PERSISTENT BOTTOM NAVIGATION BAR (Fixed at bottom of screen, sleek & compact) */}
-      <div className="fixed bottom-0 inset-x-0 z-40 bg-[#0D1117]/95 backdrop-blur-2xl border-t border-[#2A313C] px-1.5 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] shadow-2xl">
+      <div className="fixed bottom-0 inset-x-0 z-40 bg-[#0D1117]/95 backdrop-blur-2xl border-t border-[var(--rule)] px-1.5 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] shadow-2xl">
         <div
           className="max-w-md mx-auto grid gap-0.5"
           style={{ gridTemplateColumns: `repeat(${navItems.length}, minmax(0, 1fr))` }}
@@ -1011,7 +1017,7 @@ export const Dashboard: React.FC<Props> = ({
                 className={`eb-press eb-nav-item relative py-1.5 px-0.5 rounded-xl flex flex-col items-center justify-center gap-0.5 cursor-pointer min-h-[46px] ${
                   isActive
                     ? 'text-white font-bold'
-                    : 'text-[#98A2B3] hover:text-white'
+                    : 'text-[var(--ink-muted)] hover:text-white'
                 }`}
               >
                 {/* Active Glow Pill */}

@@ -166,7 +166,7 @@ export const VocabularyModule: React.FC<Props> = ({
           style={{ fontSize: 'clamp(42px, 13vw, 60px)', lineHeight: 1 }}
         >
           {correctCount}
-          <span className="text-[#7E8899]">/{askedCount}</span>
+          <span className="text-[var(--ink-dim)]">/{askedCount}</span>
         </p>
         <p className="t-sub mt-4">
           {stats.learned} words learned · {stats.accuracy}% lifetime accuracy
@@ -187,7 +187,7 @@ export const VocabularyModule: React.FC<Props> = ({
         <button
           onClick={onClose}
           aria-label="Quit"
-          className="w-10 h-10 rounded-xl border border-[var(--rule)] flex items-center justify-center text-[#7E8899]"
+          className="w-10 h-10 rounded-xl border border-[var(--rule)] flex items-center justify-center text-[var(--ink-dim)]"
         >
           <X className="w-4 h-4 shrink-0" />
         </button>

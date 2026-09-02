@@ -175,27 +175,27 @@ export const FocusSection: React.FC<Props> = ({ userId, incomingTask, onConsumeI
         animate={{ opacity: 1, scale: 1 }}
         className={`relative overflow-hidden rounded-2xl p-6 sm:p-10 text-center border transition-colors ${
           paused
-            ? 'bg-[#12141A] border-[#2A313C]'
+            ? 'bg-[#12141A] border-[var(--rule)]'
             : 'bg-[#0C1714] border-emerald-500/25 shadow-[0_0_50px_-20px_rgba(16,185,129,0.5)]'
         }`}
       >
         <p className="eb-label">
           {paused ? 'Paused' : 'Focusing on'}
         </p>
-        <p className="text-sm sm:text-base font-bold text-[#F4F6F8] mt-2 break-words max-w-md mx-auto">
+        <p className="text-sm sm:text-base font-bold text-[var(--ink)] mt-2 break-words max-w-md mx-auto">
           {active.taskTitle}
         </p>
 
         {/* Progress ring — the clock reads as a dial rather than a number. */}
         <div className="relative mx-auto mt-6 w-56 h-56 sm:w-64 sm:h-64">
           <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90">
-            <circle cx="60" cy="60" r="54" fill="none" stroke="#171B22" strokeWidth="6" />
+            <circle cx="60" cy="60" r="54" fill="none" stroke="var(--surface-sunk)" strokeWidth="6" />
             <motion.circle
               cx="60"
               cy="60"
               r="54"
               fill="none"
-              stroke={paused ? '#7E8899' : '#10B981'}
+              stroke={paused ? 'var(--ink-dim)' : '#10B981'}
               strokeWidth="6"
               strokeLinecap="round"
               strokeDasharray={2 * Math.PI * 54}
@@ -218,12 +218,12 @@ export const FocusSection: React.FC<Props> = ({ userId, incomingTask, onConsumeI
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <span
               className={`font-mono font-black tabular-nums tracking-tight transition-colors text-4xl sm:text-5xl ${
-                paused ? 'text-[#7E8899]' : 'text-[#F4F6F8]'
+                paused ? 'text-[var(--ink-dim)]' : 'text-[var(--ink)]'
               }`}
             >
               {formatClock(remaining)}
             </span>
-            <span className="text-[10px] font-mono text-[#7E8899] mt-1">
+            <span className="text-[10px] font-mono text-[var(--ink-dim)] mt-1">
               of {active.plannedMinutes} min
             </span>
           </div>
@@ -236,7 +236,7 @@ export const FocusSection: React.FC<Props> = ({ userId, incomingTask, onConsumeI
               soundFx.playClick();
               persist(paused ? resumeFocus(active) : pauseFocus(active));
             }}
-            className="px-5 py-3 rounded-xl bg-[#171B22] hover:bg-[#20252E] border border-[#2A313C] text-[#F4F6F8] text-xs font-mono font-bold flex items-center gap-2 transition-colors"
+            className="px-5 py-3 rounded-xl bg-[var(--surface-sunk)] hover:bg-[#20252E] border border-[var(--rule)] text-[var(--ink)] text-xs font-mono font-bold flex items-center gap-2 transition-colors"
           >
             {paused ? <Play className="w-4 h-4 shrink-0" /> : <Pause className="w-4 h-4 shrink-0" />}
             {paused ? 'Resume' : 'Pause'}
@@ -257,14 +257,14 @@ export const FocusSection: React.FC<Props> = ({ userId, incomingTask, onConsumeI
               soundFx.playClick();
               persist(null);
             }}
-            className="px-4 py-3 rounded-xl bg-transparent hover:bg-rose-500/10 border border-[#2A313C] hover:border-rose-500/40 text-[#98A2B3] hover:eb-danger text-xs font-mono font-bold flex items-center gap-2 transition-colors"
+            className="px-4 py-3 rounded-xl bg-transparent hover:bg-rose-500/10 border border-[var(--rule)] hover:border-rose-500/40 text-[var(--ink-muted)] hover:eb-danger text-xs font-mono font-bold flex items-center gap-2 transition-colors"
           >
             <Square className="w-3.5 h-3.5 shrink-0" />
             Cancel
           </motion.button>
         </div>
 
-        <p className="text-[10px] text-[#7E8899] font-mono mt-5">
+        <p className="text-[10px] text-[var(--ink-dim)] font-mono mt-5">
           Cancelling discards this session. Finishing keeps the time you did.
         </p>
       </motion.div>
@@ -285,7 +285,7 @@ export const FocusSection: React.FC<Props> = ({ userId, incomingTask, onConsumeI
             <Check className="w-4 h-4 eb-done shrink-0 mt-0.5 stroke-[3]" />
             <div className="min-w-0 flex-1">
               <p className="text-sm font-bold eb-done font-mono">Session complete</p>
-              <p className="text-[11px] text-[#98A2B3] mt-0.5 break-words">
+              <p className="text-[11px] text-[var(--ink-muted)] mt-0.5 break-words">
                 {formatDuration(justFinished.focusedSeconds)} on {justFinished.taskTitle}
               </p>
 
@@ -293,7 +293,7 @@ export const FocusSection: React.FC<Props> = ({ userId, incomingTask, onConsumeI
                   no reflection leaves the user no better informed. */}
               {justFinished.taskId && !reflected && (
                 <div className="flex items-center gap-2 mt-3 flex-wrap">
-                  <span className="text-[12px] text-[#8A93A5]">Did you finish it?</span>
+                  <span className="text-[12px] text-[var(--ink-muted)]">Did you finish it?</span>
                   <button
                     onClick={async () => {
                       setReflected(true);
@@ -313,7 +313,7 @@ export const FocusSection: React.FC<Props> = ({ userId, incomingTask, onConsumeI
                   </button>
                   <button
                     onClick={() => setReflected(true)}
-                    className="eb-press text-[11px] font-semibold px-2.5 py-1.5 rounded-lg border border-[#262C38] text-[#8A93A5]"
+                    className="eb-press text-[11px] font-semibold px-2.5 py-1.5 rounded-lg border border-[#262C38] text-[var(--ink-muted)]"
                   >
                     Not yet
                   </button>
@@ -323,7 +323,7 @@ export const FocusSection: React.FC<Props> = ({ userId, incomingTask, onConsumeI
             <button
               onClick={() => setJustFinished(null)}
               aria-label="Dismiss"
-              className="shrink-0 w-10 h-10 rounded-lg hover:bg-emerald-500/15 text-[#98A2B3] flex items-center justify-center"
+              className="shrink-0 w-10 h-10 rounded-lg hover:bg-emerald-500/15 text-[var(--ink-muted)] flex items-center justify-center"
             >
               <X className="w-3.5 h-3.5 shrink-0" />
             </button>
@@ -331,7 +331,7 @@ export const FocusSection: React.FC<Props> = ({ userId, incomingTask, onConsumeI
         )}
       </AnimatePresence>
 
-      <div className="eb-shine relative overflow-hidden bg-[#121722] border border-[#2A313C] rounded-2xl p-4 space-y-4">
+      <div className="eb-shine relative overflow-hidden bg-[#121722] border border-[var(--rule)] rounded-2xl p-4 space-y-4">
         <div>
           <p className="eb-label mb-2">
             What are you working on?
@@ -348,13 +348,13 @@ export const FocusSection: React.FC<Props> = ({ userId, incomingTask, onConsumeI
                   }}
                   className={`eb-press eb-shine w-full text-left px-3 py-2.5 rounded-xl border text-sm flex items-center gap-2.5 ${
                     selectedTaskId === t.id
-                      ? 'bg-[#8B5CF6]/15 border-[#8B5CF6]/50 text-[#F4F6F8] shadow-[0_0_18px_-6px_rgba(92,108,242,0.7)]'
-                      : 'bg-[#171B22] border-[#2A313C] text-[#98A2B3] hover:border-[#3A424F]'
+                      ? 'bg-[#8B5CF6]/15 border-[#8B5CF6]/50 text-[var(--ink)] shadow-[0_0_18px_-6px_rgba(92,108,242,0.7)]'
+                      : 'bg-[var(--surface-sunk)] border-[var(--rule)] text-[var(--ink-muted)] hover:border-[var(--rule-strong)]'
                   }`}
                 >
                   <span
                     className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                      selectedTaskId === t.id ? 'bg-[#8B5CF6]' : 'bg-[#3A424F]'
+                      selectedTaskId === t.id ? 'bg-[#8B5CF6]' : 'bg-[var(--rule-strong)]'
                     }`}
                   />
                   <span className="truncate">{t.title}</span>
@@ -367,7 +367,7 @@ export const FocusSection: React.FC<Props> = ({ userId, incomingTask, onConsumeI
               onChange={(e) => setFreeLabel(e.target.value)}
               placeholder="Name this session"
               maxLength={100}
-              className="w-full eb-card-sunk focus:border-[#8B5CF6]/60 rounded-xl px-3 py-2.5 text-sm text-[#F4F6F8] placeholder:text-[#7E8899] outline-none transition-colors"
+              className="w-full eb-card-sunk focus:border-[#8B5CF6]/60 rounded-xl px-3 py-2.5 text-sm text-[var(--ink)] placeholder:text-[var(--ink-dim)] outline-none transition-colors"
             />
           )}
         </div>
@@ -387,7 +387,7 @@ export const FocusSection: React.FC<Props> = ({ userId, incomingTask, onConsumeI
                 className={`eb-press eb-shine px-4 py-2 rounded-xl border text-xs font-mono font-bold ${
                   minutes === m
                     ? 'eb-chip-active shadow-[0_0_18px_-6px_rgba(92,108,242,0.7)]'
-                    : 'text-[#98A2B3] bg-[#171B22] border-[#2A313C] hover:border-[#3A424F]'
+                    : 'text-[var(--ink-muted)] bg-[var(--surface-sunk)] border-[var(--rule)] hover:border-[var(--rule-strong)]'
                 }`}
               >
                 {m} min
@@ -412,7 +412,7 @@ export const FocusSection: React.FC<Props> = ({ userId, incomingTask, onConsumeI
                 }}
                 className="w-16 bg-transparent text-sm font-semibold text-[var(--ink)] outline-none tabular-nums"
               />
-              <span className="text-xs text-[#7E8899]">min</span>
+              <span className="text-xs text-[var(--ink-dim)]">min</span>
             </label>
           </div>
         </div>
@@ -429,7 +429,7 @@ export const FocusSection: React.FC<Props> = ({ userId, incomingTask, onConsumeI
       </div>
 
       {secondsToday > 0 && (
-        <p className="text-[11px] text-[#98A2B3] font-mono text-center">
+        <p className="text-[11px] text-[var(--ink-muted)] font-mono text-center">
           {formatDuration(secondsToday)} focused today
         </p>
       )}

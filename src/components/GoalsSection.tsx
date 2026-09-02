@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState , useRef} from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import {
+import { Target, Repeat,
   Plus,
   Flame,
   Check,
@@ -41,6 +41,8 @@ import { todayISO, newTaskId } from '../lib/tasks';
 import { GoalHistoryChart } from './GoalHistoryChart';
 import { snapshotGoal, snapshotsFor, subscribeGoalSnapshots } from '../lib/goalStore';
 import { soundFx } from '../utils/audio';
+import { offerUndo } from '../lib/undo';
+import { EmptyState } from './EmptyState';
 
 interface Props {
   userId: string | null;
@@ -61,6 +63,8 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
   const [snapshots, setSnapshots] = useState<any[]>([]);
   const pane: Pane = controlledPane ?? 'goals';
   const [goalDraft, setGoalDraft] = useState('');
+  const goalInputRef = useRef<HTMLInputElement>(null);
+  const habitInputRef = useRef<HTMLInputElement>(null);
   const [habitDraft, setHabitDraft] = useState('');
   const [expandedHabit, setExpandedHabit] = useState<string | null>(null);
   const [showArchived, setShowArchived] = useState(false);
@@ -203,12 +207,17 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
    * tracking one — so it asks first. Archiving stays the gentle default.
    */
   const deleteHabitForever = async (habit: Habit) => {
-    if (!window.confirm(`Delete "${habit.title}" and its entire history? Archiving keeps the record instead.`)) return;
     setHabits((prev) => prev.filter((h) => h.id !== habit.id));
     try {
       await removeHabit(userId, habit.id);
+      offerUndo('Habit deleted', async () => {
+        setHabits((prev) => [habit, ...prev]);
+        await saveHabit(userId, habit);
+      });
     } catch (e) {
       console.error('Could not delete habit:', e);
+      // Restore: the delete failed, so the list must not claim otherwise.
+      setHabits((prev) => [habit, ...prev]);
     }
   };
 
@@ -252,7 +261,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
         className={`rounded-2xl border transition-colors ${
           stats.completedToday
             ? 'bg-emerald-500/[0.07] border-emerald-500/25'
-            : 'bg-[#0E1116] border-[#2A313C]'
+            : 'bg-[var(--ground)] border-[var(--rule)]'
         }`}
       >
         <div className="p-3.5">
@@ -269,12 +278,12 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
                       if (e.key === 'Enter') commitHabitRename(habit);
                       if (e.key === 'Escape') setEditingHabitId(null);
                     }}
-                    className="bg-[#171B22] border border-[#8B5CF6]/60 rounded-lg px-2 py-1 text-sm text-[#F4F6F8] outline-none min-w-0 flex-1"
+                    className="bg-[var(--surface-sunk)] border border-[#8B5CF6]/60 rounded-lg px-2 py-1 text-sm text-[var(--ink)] outline-none min-w-0 flex-1"
                   />
                 ) : (
                   <span
                     className={`text-sm font-bold break-words ${
-                      stats.completedToday ? 'eb-done' : 'text-[#F4F6F8]'
+                      stats.completedToday ? 'eb-done' : 'text-[var(--ink)]'
                     }`}
                   >
                     {habit.title}
@@ -287,11 +296,11 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
                   </span>
                 )}
                 {habit.status === 'archived' && (
-                  <span className="text-[11px] font-mono text-[#7E8899]">Archived</span>
+                  <span className="text-[11px] font-mono text-[var(--ink-dim)]">Archived</span>
                 )}
               </div>
 
-              <p className="text-[10px] font-mono text-[#98A2B3] mt-1">
+              <p className="text-[10px] font-mono text-[var(--ink-muted)] mt-1">
                 {habit.metric === 'yes_no'
                   ? describeCadence(habit)
                   : `${stats.todayValue} / ${describeTarget(habit)} · ${describeCadence(habit)}`}
@@ -309,7 +318,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
                   className={`w-7 h-7 rounded-xl border flex items-center justify-center transition-all ${
                     stats.completedToday
                       ? 'bg-emerald-500 border-emerald-500 text-slate-950'
-                      : 'border-[#3A424F] hover:border-emerald-500/60'
+                      : 'border-[var(--rule-strong)] hover:border-emerald-500/60'
                   }`}
                 >
                   <AnimatePresence>
@@ -329,7 +338,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
             ) : (
               <div className="relative w-12 h-12 shrink-0">
                 <svg viewBox="0 0 40 40" className="w-full h-full -rotate-90">
-                  <circle cx="20" cy="20" r="17" fill="none" stroke="#171B22" strokeWidth="4" />
+                  <circle cx="20" cy="20" r="17" fill="none" stroke="var(--surface-sunk)" strokeWidth="4" />
                   <motion.circle
                     cx="20"
                     cy="20"
@@ -344,7 +353,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
                     transition={{ duration: 0.45, ease: 'easeOut' }}
                   />
                 </svg>
-                <span className="absolute inset-0 flex items-center justify-center text-[11px] font-mono font-black text-[#F4F6F8] tabular-nums">
+                <span className="absolute inset-0 flex items-center justify-center text-[11px] font-mono font-black text-[var(--ink)] tabular-nums">
                   {Math.round(pct * 100)}%
                 </span>
               </div>
@@ -365,7 +374,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
                       key={c}
                       onClick={() => patchHabit(userId, habit.id, { cadence: c })}
                       className={`eb-press text-[11px] font-semibold px-2.5 py-1.5 rounded-full border ${
-                        habit.cadence === c ? 'eb-chip-active' : 'text-[#7E8899] border-[#262C38]'
+                        habit.cadence === c ? 'eb-chip-active' : 'text-[var(--ink-dim)] border-[#262C38]'
                       }`}
                     >
                       {label}
@@ -389,7 +398,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
                             patchHabit(userId, habit.id, { weekdays: next });
                           }}
                           className={`eb-press flex-1 h-9 rounded-lg text-[10px] font-mono font-bold border ${
-                            on ? 'eb-chip-active' : 'text-[#7E8899] border-[#262C38]'
+                            on ? 'eb-chip-active' : 'text-[var(--ink-dim)] border-[#262C38]'
                           }`}
                         >
                           {d}
@@ -411,7 +420,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
                       const v = Math.max(1, Number(e.target.value) || 1);
                       if (v !== habit.targetValue) patchHabit(userId, habit.id, { targetValue: v });
                     }}
-                    className="w-24 bg-[#0E1116] border border-[#262C38] rounded-lg px-2.5 py-2 text-xs text-[#F2F4F7] outline-none"
+                    className="w-24 bg-[var(--ground)] border border-[#262C38] rounded-lg px-2.5 py-2 text-xs text-[var(--ink)] outline-none"
                   />
                 </div>
               )}
@@ -423,7 +432,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
                     <button
                       onClick={() => patchHabit(userId, habit.id, { goalId: undefined })}
                       className={`eb-press text-[11px] font-semibold px-2.5 py-1.5 rounded-full border ${
-                        !habit.goalId ? 'eb-chip-active' : 'text-[#7E8899] border-[#262C38]'
+                        !habit.goalId ? 'eb-chip-active' : 'text-[var(--ink-dim)] border-[#262C38]'
                       }`}
                     >
                       Nothing
@@ -439,7 +448,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
                             })
                           }
                           className={`eb-press text-[11px] font-semibold px-2.5 py-1.5 rounded-full border max-w-full truncate ${
-                            habit.goalId === g.id ? 'eb-chip-active' : 'text-[#7E8899] border-[#262C38]'
+                            habit.goalId === g.id ? 'eb-chip-active' : 'text-[var(--ink-dim)] border-[#262C38]'
                           }`}
                         >
                           {g.title}
@@ -454,7 +463,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
           <div className="flex items-center gap-1.5 mt-2.5 flex-wrap">
               <button
                 onClick={() => record(habit, stats.todayValue + step)}
-                className="text-[11px] font-semibold px-3 py-2 rounded-xl bg-[#171B22] hover:bg-[#20252E] border border-[#2A313C] text-[#F4F6F8]"
+                className="text-[11px] font-semibold px-3 py-2 rounded-xl bg-[var(--surface-sunk)] hover:bg-[#20252E] border border-[var(--rule)] text-[var(--ink)]"
               >
                 +{step}
                 {habit.metric === 'duration' ? ' min' : ''}
@@ -462,7 +471,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
               {stats.todayValue > 0 && (
                 <button
                   onClick={() => record(habit, Math.max(0, stats.todayValue - step))}
-                  className="text-[11px] font-semibold px-3 py-2 rounded-xl bg-transparent border border-[#2A313C] text-[#7E8899] hover:text-[#98A2B3]"
+                  className="text-[11px] font-semibold px-3 py-2 rounded-xl bg-transparent border border-[var(--rule)] text-[var(--ink-dim)] hover:text-[var(--ink-muted)]"
                 >
                   −{step}
                 </button>
@@ -488,7 +497,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
           <div className="flex items-center gap-1.5 mt-2.5 flex-wrap">
             <button
               onClick={() => setExpandedHabit(expandedHabit === habit.id ? null : habit.id)}
-              className="eb-press text-[10px] font-mono font-bold text-[#7E8899] hover:text-[#98A2B3] px-2 py-1.5"
+              className="eb-press text-[10px] font-mono font-bold text-[var(--ink-dim)] hover:text-[var(--ink-muted)] px-2 py-1.5"
             >
               {expandedHabit === habit.id ? '− Hide history' : '+ History'}
             </button>
@@ -497,7 +506,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
               onClick={() => setEditingSchedule(editingSchedule === habit.id ? null : habit.id)}
               aria-label="Change schedule"
               title="Schedule and target"
-              className="eb-press w-9 h-9 rounded-lg text-[#7E8899] hover:text-[#F2F4F7] hover:bg-[#171B22] flex items-center justify-center"
+              className="eb-press w-9 h-9 rounded-lg text-[var(--ink-dim)] hover:text-[var(--ink)] hover:bg-[var(--surface-sunk)] flex items-center justify-center"
             >
               <SlidersHorizontal className="w-3.5 h-3.5 shrink-0" />
             </button>
@@ -508,7 +517,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
               }}
               aria-label="Rename habit"
               title="Rename"
-              className="eb-press ml-auto w-9 h-9 rounded-lg text-[#7E8899] hover:text-[#F4F6F8] hover:bg-[#171B22] flex items-center justify-center"
+              className="eb-press ml-auto w-9 h-9 rounded-lg text-[var(--ink-dim)] hover:text-[var(--ink)] hover:bg-[var(--surface-sunk)] flex items-center justify-center"
             >
               <Pencil className="w-3.5 h-3.5 shrink-0" />
             </button>
@@ -517,7 +526,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
                 onClick={() => archiveHabit(userId, habit.id)}
                 aria-label="Archive habit"
                 title="Archive (keeps history)"
-                className="eb-press w-9 h-9 rounded-lg text-[#7E8899] hover:eb-warn hover:bg-[#171B22] flex items-center justify-center"
+                className="eb-press w-9 h-9 rounded-lg text-[var(--ink-dim)] hover:eb-warn hover:bg-[var(--surface-sunk)] flex items-center justify-center"
               >
                 <Archive className="w-3.5 h-3.5 shrink-0" />
               </button>
@@ -533,7 +542,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
               onClick={() => deleteHabitForever(habit)}
               aria-label="Delete habit"
               title="Delete permanently"
-              className="eb-press w-9 h-9 rounded-lg text-[#7E8899] hover:eb-danger hover:bg-rose-500/10 flex items-center justify-center"
+              className="eb-press w-9 h-9 rounded-lg text-[var(--ink-dim)] hover:eb-danger hover:bg-rose-500/10 flex items-center justify-center"
             >
               <Trash2 className="w-3.5 h-3.5 shrink-0" />
             </button>
@@ -559,10 +568,10 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
                       key={s.label}
                       className="eb-card-sunk p-2 text-center"
                     >
-                      <p className="text-base font-black font-mono text-[#F4F6F8] tabular-nums leading-none">
+                      <p className="text-base font-black font-mono text-[var(--ink)] tabular-nums leading-none">
                         {s.value}
                       </p>
-                      <p className="text-[11px] font-mono text-[#7E8899] mt-1">{s.label}</p>
+                      <p className="text-[11px] font-mono text-[var(--ink-dim)] mt-1">{s.label}</p>
                     </div>
                   ))}
                 </div>
@@ -587,7 +596,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
                 </div>
 
                 {habitInsight(habit, stats) && (
-                  <p className="text-[10px] font-mono text-[#98A2B3]">
+                  <p className="text-[10px] font-mono text-[var(--ink-muted)]">
                     {habitInsight(habit, stats)}
                   </p>
                 )}
@@ -622,12 +631,12 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
                   if (e.key === 'Enter') commitGoalRename(goal);
                   if (e.key === 'Escape') setEditingGoalId(null);
                 }}
-                className="w-full bg-[#171B22] border border-[#8B5CF6]/60 rounded-lg px-2 py-1 text-sm text-[#F4F6F8] outline-none"
+                className="w-full bg-[var(--surface-sunk)] border border-[#8B5CF6]/60 rounded-lg px-2 py-1 text-sm text-[var(--ink)] outline-none"
               />
             ) : (
-              <h4 className="text-sm font-bold text-[#F4F6F8] break-words">{goal.title}</h4>
+              <h4 className="text-sm font-bold text-[var(--ink)] break-words">{goal.title}</h4>
             )}
-            <p className="text-[10px] font-mono text-[#98A2B3] mt-1">{progress.label}</p>
+            <p className="text-[10px] font-mono text-[var(--ink-muted)] mt-1">{progress.label}</p>
           </div>
           <span
             className={`text-[11px] font-semibold px-2 py-1 rounded-full border shrink-0 ${GOAL_HEALTH_STYLE[health.health]}`}
@@ -636,7 +645,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
           </span>
         </div>
 
-        <div className="h-1.5 w-full bg-[#171B22] rounded-full overflow-hidden">
+        <div className="h-1.5 w-full bg-[var(--surface-sunk)] rounded-full overflow-hidden">
           <motion.div
             className={`h-full rounded-full ${
               health.health === 'at_risk'
@@ -651,10 +660,10 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
           />
         </div>
 
-        <p className="text-[10px] text-[#7E8899] leading-relaxed">{health.reason}</p>
+        <p className="text-[10px] text-[var(--ink-dim)] leading-relaxed">{health.reason}</p>
 
         {left !== null && left >= 0 && (
-          <p className="text-[10px] font-mono text-[#98A2B3]">
+          <p className="text-[10px] font-mono text-[var(--ink-muted)]">
             {left} day{left === 1 ? '' : 's'} remaining
           </p>
         )}
@@ -671,13 +680,13 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
             >
               <span className="eb-label">
                 Milestones{' '}
-                <span className="normal-case tracking-normal text-[#8A93A5]">
+                <span className="normal-case tracking-normal text-[var(--ink-muted)]">
                   {(goal.milestones || []).filter((m) => m.done).length} of{' '}
                   {(goal.milestones || []).length} done
                 </span>
               </span>
               <ChevronDown
-                className={`w-3.5 h-3.5 text-[#8A93A5] shrink-0 transition-transform ${
+                className={`w-3.5 h-3.5 text-[var(--ink-muted)] shrink-0 transition-transform ${
                   openMilestones[goal.id] ? 'rotate-180' : ''
                 }`}
               />
@@ -694,14 +703,14 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
                   className={`shrink-0 w-[18px] h-[18px] rounded-md border flex items-center justify-center ${
                     m.done
                       ? 'bg-emerald-500 border-emerald-500 text-slate-950'
-                      : 'border-[#3A424F]'
+                      : 'border-[var(--rule-strong)]'
                   }`}
                 >
                   {m.done && <Check className="w-3 h-3 shrink-0 stroke-[3]" />}
                 </span>
                 <span
                   className={`text-xs min-w-0 break-words ${
-                    m.done ? 'text-[#7E8899] line-through' : 'text-[#F4F6F8]'
+                    m.done ? 'text-[var(--ink-dim)] line-through' : 'text-[var(--ink)]'
                   }`}
                 >
                   {m.title}
@@ -722,7 +731,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
               }
             }}
             placeholder="Add a milestone"
-            className="flex-1 min-w-0 eb-card-sunk focus:border-[#8B5CF6]/60 rounded-lg px-2.5 py-2 text-[11px] text-[#F4F6F8] placeholder:text-[#7E8899] outline-none"
+            className="flex-1 min-w-0 eb-card-sunk focus:border-[#8B5CF6]/60 rounded-lg px-2.5 py-2 text-[11px] text-[var(--ink)] placeholder:text-[var(--ink-dim)] outline-none"
           />
           <button
             onClick={() => {
@@ -731,7 +740,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
             }}
             disabled={!msDraft.trim()}
             aria-label="Add milestone"
-            className="shrink-0 w-10 h-10 rounded-lg eb-card-sunk disabled:opacity-40 text-[#F4F6F8] flex items-center justify-center"
+            className="shrink-0 w-10 h-10 rounded-lg eb-card-sunk disabled:opacity-40 text-[var(--ink)] flex items-center justify-center"
           >
             <Plus className="w-4 h-4 shrink-0" />
           </button>
@@ -747,12 +756,12 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
           if (blocks.length) bits.push(`${blocks.length} routine block${blocks.length === 1 ? '' : 's'}`);
           if (goalTasks.length) bits.push(`${goalTasks.length} task${goalTasks.length === 1 ? '' : 's'}`);
           return bits.length > 0 ? (
-            <p className="text-[10px] font-mono text-[#98A2B3] flex items-center gap-1.5">
+            <p className="text-[10px] font-mono text-[var(--ink-muted)] flex items-center gap-1.5">
               <TrendingUp className="w-3 h-3 shrink-0" />
               {bits.join(' · ')} feeding this goal
             </p>
           ) : (
-            <p className="text-[10px] text-[#7E8899] leading-relaxed">
+            <p className="text-[10px] text-[var(--ink-dim)] leading-relaxed">
               Nothing linked yet. Attach a routine block, habit or task and this goal moves when
               you do the work.
             </p>
@@ -770,12 +779,12 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
                   onBlur={(e) =>
                     patchGoal(userId, goal.id, { deadline: e.target.value || undefined })
                   }
-                  className="bg-[#0E1116] border border-[#262C38] rounded-lg px-2.5 py-2 text-xs text-[#F2F4F7] outline-none"
+                  className="bg-[var(--ground)] border border-[#262C38] rounded-lg px-2.5 py-2 text-xs text-[var(--ink)] outline-none"
                 />
                 {goal.deadline && (
                   <button
                     onClick={() => patchGoal(userId, goal.id, { deadline: undefined })}
-                    className="eb-press text-[10px] font-mono text-[#7E8899] hover:eb-danger"
+                    className="eb-press text-[10px] font-mono text-[var(--ink-dim)] hover:eb-danger"
                   >
                     clear
                   </button>
@@ -798,12 +807,12 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
                     const v = Math.max(1, Number(e.target.value) || 1);
                     if (v !== goal.targetValue) patchGoal(userId, goal.id, { targetValue: v });
                   }}
-                  className="w-28 bg-[#0E1116] border border-[#262C38] rounded-lg px-2.5 py-2 text-xs text-[#F2F4F7] outline-none"
+                  className="w-28 bg-[var(--ground)] border border-[#262C38] rounded-lg px-2.5 py-2 text-xs text-[var(--ink)] outline-none"
                 />
               </div>
             )}
 
-            <p className="text-[12px] text-[#8A93A5] leading-relaxed">
+            <p className="text-[12px] text-[var(--ink-muted)] leading-relaxed">
               Changing the target recalculates progress from your linked work — it never
               discards milestones or history.
             </p>
@@ -815,7 +824,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
             onClick={() =>
               setEditingGoalSettings(editingGoalSettings === goal.id ? null : goal.id)
             }
-            className="eb-press text-[11px] font-semibold px-2.5 py-2 rounded-lg border border-[#2A313C] text-[#98A2B3] hover:text-[#F4F6F8] flex items-center gap-1.5"
+            className="eb-press text-[11px] font-semibold px-2.5 py-2 rounded-lg border border-[var(--rule)] text-[var(--ink-muted)] hover:text-[var(--ink)] flex items-center gap-1.5"
           >
             <SlidersHorizontal className="w-3 h-3 shrink-0" />
             Settings
@@ -825,25 +834,35 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
               setEditingGoalId(goal.id);
               setEditText(goal.title);
             }}
-            className="eb-press text-[11px] font-semibold px-2.5 py-2 rounded-lg border border-[#2A313C] text-[#98A2B3] hover:text-[#F4F6F8] flex items-center gap-1.5"
+            className="eb-press text-[11px] font-semibold px-2.5 py-2 rounded-lg border border-[var(--rule)] text-[var(--ink-muted)] hover:text-[var(--ink)] flex items-center gap-1.5"
           >
             <Pencil className="w-3 h-3 shrink-0" />
             Rename
           </button>
           <button
             onClick={() => patchGoal(userId, goal.id, { status: 'archived' })}
-            className="eb-press text-[11px] font-semibold px-2.5 py-2 rounded-lg border border-[#2A313C] text-[#7E8899] hover:eb-warn flex items-center gap-1.5"
+            className="eb-press text-[11px] font-semibold px-2.5 py-2 rounded-lg border border-[var(--rule)] text-[var(--ink-dim)] hover:eb-warn flex items-center gap-1.5"
           >
             <Archive className="w-3 h-3 shrink-0" />
             Archive
           </button>
           <button
             onClick={() => {
-              if (!window.confirm(`Delete "${goal.title}" and its milestones? This cannot be undone.`)) return;
               setGoals((prev) => prev.filter((g) => g.id !== goal.id));
-              removeGoal(userId, goal.id).catch((e) => console.error(e));
+              removeGoal(userId, goal.id)
+                .then(() =>
+                  offerUndo('Goal deleted', async () => {
+                    setGoals((prev) => [goal, ...prev]);
+                    await saveGoal(userId, goal);
+                  })
+                )
+                .catch((e) => {
+                  console.error(e);
+                  // Restore on failure so the list reflects reality.
+                  setGoals((prev) => [goal, ...prev]);
+                });
             }}
-            className="eb-press text-[11px] font-semibold px-2.5 py-2 rounded-lg border border-[#2A313C] text-[#7E8899] hover:eb-danger flex items-center gap-1.5"
+            className="eb-press text-[11px] font-semibold px-2.5 py-2 rounded-lg border border-[var(--rule)] text-[var(--ink-dim)] hover:eb-danger flex items-center gap-1.5"
           >
             <Trash2 className="w-3 h-3 shrink-0" />
             Delete
@@ -862,7 +881,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
       {warning && (
         <div className="rounded-2xl border border-amber-500/25 bg-amber-500/[0.06] p-3.5 flex items-start gap-2.5">
           <AlertTriangle className="w-3.5 h-3.5 eb-warn shrink-0 mt-0.5" />
-          <p className="text-[11px] text-[#98A2B3] leading-relaxed">{warning}</p>
+          <p className="text-[11px] text-[var(--ink-muted)] leading-relaxed">{warning}</p>
         </div>
       )}
 
@@ -871,12 +890,13 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <input
+              ref={goalInputRef}
               value={goalDraft}
               onChange={(e) => setGoalDraft(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && addGoal()}
               placeholder="What are you working toward?"
               maxLength={120}
-              className="flex-1 min-w-0 eb-card focus:border-[#8B5CF6]/60 rounded-xl px-3 py-2.5 text-sm text-[#F4F6F8] placeholder:text-[#7E8899] outline-none"
+              className="flex-1 min-w-0 eb-card focus:border-[#8B5CF6]/60 rounded-xl px-3 py-2.5 text-sm text-[var(--ink)] placeholder:text-[var(--ink-dim)] outline-none"
             />
             <button
               onClick={addGoal}
@@ -889,12 +909,14 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
           </div>
 
           {activeGoals.length === 0 ? (
-            <div className="text-center py-10 px-6 border border-dashed border-[#2A313C] rounded-2xl">
-              <p className="text-sm font-black text-[#F4F6F8] font-mono">Nothing set yet.</p>
-              <p className="text-[11px] text-[#98A2B3] mt-1.5">
-                Add a goal, then break it into milestones.
-              </p>
-            </div>
+            <EmptyState
+              icon={Target}
+              title="No goals yet"
+              body="A goal is something you are working toward over weeks. Break it into milestones and link habits to it."
+              actionLabel="Add a goal"
+              onAction={() => goalInputRef.current?.focus()}
+              hint="For example: Clear my exam · Get properly fit · Ship my project"
+            />
           ) : (
             activeGoals.map((g) => <GoalCard key={g.id} goal={g} />)
           )}
@@ -906,12 +928,13 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <input
+              ref={habitInputRef}
               value={habitDraft}
               onChange={(e) => setHabitDraft(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && addHabit()}
               placeholder="What will you repeat?"
               maxLength={120}
-              className="flex-1 min-w-0 eb-card focus:border-[#8B5CF6]/60 rounded-xl px-3 py-2.5 text-sm text-[#F4F6F8] placeholder:text-[#7E8899] outline-none"
+              className="flex-1 min-w-0 eb-card focus:border-[#8B5CF6]/60 rounded-xl px-3 py-2.5 text-sm text-[var(--ink)] placeholder:text-[var(--ink-dim)] outline-none"
             />
             <button
               onClick={addHabit}
@@ -926,7 +949,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
           {/* Same controls the habit offers after creation, available up front. */}
           <button
             onClick={() => setShowHabitOptions((v) => !v)}
-            className="eb-press text-[11px] font-semibold text-[#8A93A5] hover:text-[#F2F4F7]"
+            className="eb-press text-[11px] font-semibold text-[var(--ink-muted)] hover:text-[var(--ink)]"
           >
             {showHabitOptions ? '− Fewer options' : '+ How often, target and goal'}
           </button>
@@ -947,7 +970,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
                       className={`text-[11px] font-semibold px-3 py-2 rounded-lg border ${
                         draftCadence === id
                           ? 'eb-chip-active'
-                          : 'text-[#8A93A5] border-[var(--rule)]'
+                          : 'text-[var(--ink-muted)] border-[var(--rule)]'
                       }`}
                     >
                       {label}
@@ -971,7 +994,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
                             )
                           }
                           className={`flex-1 h-10 rounded-lg text-[11px] font-semibold border ${
-                            on ? 'eb-chip-active' : 'text-[#7E8899] border-[var(--rule)]'
+                            on ? 'eb-chip-active' : 'text-[var(--ink-dim)] border-[var(--rule)]'
                           }`}
                         >
                           {d}
@@ -987,16 +1010,16 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setDraftTarget((v) => Math.max(1, v - 1))}
-                    className="w-10 h-10 rounded-lg border border-[var(--rule)] text-[#F2F4F7]"
+                    className="w-10 h-10 rounded-lg border border-[var(--rule)] text-[var(--ink)]"
                   >
                     −
                   </button>
-                  <span className="w-12 text-center text-sm font-mono font-bold text-[#F2F4F7] tabular-nums">
+                  <span className="w-12 text-center text-sm font-mono font-bold text-[var(--ink)] tabular-nums">
                     {draftTarget}
                   </span>
                   <button
                     onClick={() => setDraftTarget((v) => Math.min(99, v + 1))}
-                    className="w-10 h-10 rounded-lg border border-[var(--rule)] text-[#F2F4F7]"
+                    className="w-10 h-10 rounded-lg border border-[var(--rule)] text-[var(--ink)]"
                   >
                     +
                   </button>
@@ -1013,7 +1036,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
                     <button
                       onClick={() => setDraftGoalId(undefined)}
                       className={`text-[11px] font-semibold px-3 py-2 rounded-lg border ${
-                        !draftGoalId ? 'eb-chip-active' : 'text-[#8A93A5] border-[var(--rule)]'
+                        !draftGoalId ? 'eb-chip-active' : 'text-[var(--ink-muted)] border-[var(--rule)]'
                       }`}
                     >
                       Nothing
@@ -1027,7 +1050,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
                           className={`text-[11px] font-semibold px-3 py-2 rounded-lg border max-w-full truncate ${
                             draftGoalId === g.id
                               ? 'eb-chip-active'
-                              : 'text-[#8A93A5] border-[var(--rule)]'
+                              : 'text-[var(--ink-muted)] border-[var(--rule)]'
                           }`}
                         >
                           {g.title}
@@ -1040,12 +1063,14 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
           )}
 
           {activeHabits.length === 0 ? (
-            <div className="text-center py-10 px-6 border border-dashed border-[#2A313C] rounded-2xl">
-              <p className="text-sm font-black text-[#F4F6F8] font-mono">No habits yet.</p>
-              <p className="text-[11px] text-[#98A2B3] mt-1.5">
-                Start with one. Consistency beats volume.
-              </p>
-            </div>
+            <EmptyState
+              icon={Repeat}
+              title="No habits yet"
+              body="Habits repeat on a schedule and build streaks. Start with one — consistency beats volume."
+              actionLabel="Add a habit"
+              onAction={() => habitInputRef.current?.focus()}
+              hint="For example: Read 10 pages · Train · In bed by 11"
+            />
           ) : (
             activeHabits.map((h) => <HabitRow key={h.id} habit={h} />)
           )}
@@ -1053,7 +1078,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
           {habits.some((h) => h.status === 'archived') && (
             <button
               onClick={() => setShowArchived((v) => !v)}
-              className="text-[10px] font-mono font-bold text-[#7E8899] hover:text-[#98A2B3]"
+              className="text-[10px] font-mono font-bold text-[var(--ink-dim)] hover:text-[var(--ink-muted)]"
             >
               {showArchived ? 'Hide archived' : 'Show archived'}
             </button>
@@ -1062,7 +1087,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
       )}
 
       {!userId && (
-        <p className="text-[10px] text-[#98A2B3] font-mono text-center">
+        <p className="text-[10px] text-[var(--ink-muted)] font-mono text-center">
           Signed out — goals and habits stay on this device until you sign in.
         </p>
       )}

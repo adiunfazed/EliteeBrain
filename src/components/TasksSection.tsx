@@ -347,14 +347,14 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
             : highlight
               ? 'bg-[#141A28] border-[#8B5CF6]/40 eb-glow-brand'
               : task.priority === 'critical' || task.priority === 'high'
-                ? 'bg-[#17121A] border-[#2A313C] hover:border-rose-500/40 eb-glow-rose'
+                ? 'bg-[#17121A] border-[var(--rule)] hover:border-rose-500/40 eb-glow-rose'
                 : task.category === 'fitness'
-                  ? 'bg-[#181408] border-[#2A313C] hover:border-amber-500/40 eb-glow-amber'
+                  ? 'bg-[#181408] border-[var(--rule)] hover:border-amber-500/40 eb-glow-amber'
                   : task.category === 'personal'
-                    ? 'bg-[#0C1714] border-[#2A313C] hover:border-emerald-500/40 eb-glow-emerald'
+                    ? 'bg-[#0C1714] border-[var(--rule)] hover:border-emerald-500/40 eb-glow-emerald'
                     : task.category === 'work'
-                      ? 'bg-[#0B1620] border-[#2A313C] hover:border-sky-500/40 eb-glow-sky'
-                      : 'bg-[#121722] border-[#2A313C] hover:border-[#8B5CF6]/40 eb-glow-brand'
+                      ? 'bg-[#0B1620] border-[var(--rule)] hover:border-sky-500/40 eb-glow-sky'
+                      : 'bg-[#121722] border-[var(--rule)] hover:border-[#8B5CF6]/40 eb-glow-brand'
         }`}
       >
         {!task.completed && (
@@ -374,7 +374,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
               className={`w-[22px] h-[22px] rounded-lg border flex items-center justify-center transition-all ${
                 task.completed
                   ? 'bg-emerald-500 border-emerald-500 text-slate-950'
-                  : 'border-[#3A424F] hover:border-emerald-500/60'
+                  : 'border-[var(--rule-strong)] hover:border-emerald-500/60'
               }`}
             >
               <AnimatePresence>
@@ -403,13 +403,13 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                   if (e.key === 'Enter') commitEdit(task);
                   if (e.key === 'Escape') setEditingId(null);
                 }}
-                className="w-full bg-[#171B22] border border-[#8B5CF6]/60 rounded-lg px-2 py-1 text-sm text-[#F4F6F8] outline-none"
+                className="w-full bg-[var(--surface-sunk)] border border-[#8B5CF6]/60 rounded-lg px-2 py-1 text-sm text-[var(--ink)] outline-none"
               />
             ) : (
               <button
                 onClick={() => setDetailId(task.id)}
                 className={`text-left text-sm leading-snug break-words w-full ${
-                  task.completed ? 'text-[#7E8899] line-through' : 'text-[#F4F6F8]'
+                  task.completed ? 'text-[var(--ink-dim)] line-through' : 'text-[var(--ink)]'
                 }`}
               >
                 {task.pinned && !task.completed && (
@@ -438,24 +438,24 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                 </span>
               )}
               {task.estimatedMinutes ? (
-                <span className="text-[11px] font-mono text-[#98A2B3] flex items-center gap-1">
+                <span className="text-[11px] font-mono text-[var(--ink-muted)] flex items-center gap-1">
                   <Clock className="w-2.5 h-2.5 shrink-0" />~{task.estimatedMinutes}m
                 </span>
               ) : null}
               {task.energy && (
-                <span className="text-[11px] font-mono text-[#98A2B3] hidden sm:flex items-center gap-1">
+                <span className="text-[11px] font-mono text-[var(--ink-muted)] hidden sm:flex items-center gap-1">
                   <Battery className="w-2.5 h-2.5 shrink-0" />
                   {ENERGY_META[task.energy].label}
                 </span>
               )}
               {(task.subtasks?.length || 0) > 0 && (
-                <span className="text-[11px] font-mono text-[#98A2B3] flex items-center gap-1">
+                <span className="text-[11px] font-mono text-[var(--ink-muted)] flex items-center gap-1">
                   <ListChecks className="w-2.5 h-2.5 shrink-0" />
                   {subtaskProgress(task).done}/{subtaskProgress(task).total}
                 </span>
               )}
               {task.recurrence && (
-                <span className="text-[11px] font-mono text-[#98A2B3] flex items-center gap-1">
+                <span className="text-[11px] font-mono text-[var(--ink-muted)] flex items-center gap-1">
                   <Repeat className="w-2.5 h-2.5 shrink-0" />
                   {describeRecurrence(task.recurrence)}
                 </span>
@@ -463,7 +463,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
               {task.dueDate && (
                 <span
                   className={`text-[11px] font-mono flex items-center gap-1 ${
-                    isOverdue ? 'eb-warn' : 'text-[#98A2B3]'
+                    isOverdue ? 'eb-warn' : 'text-[var(--ink-muted)]'
                   }`}
                 >
                   <Calendar className="w-2.5 h-2.5 shrink-0" />
@@ -499,7 +499,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                         `Moved to ${o.label.toLowerCase()}.`
                       );
                     }}
-                    className="text-[11px] font-mono px-2 py-1 rounded-full border border-[#2A313C] text-[#7E8899] hover:text-[#98A2B3] hover:border-[#3A424F] transition-colors"
+                    className="text-[11px] font-mono px-2 py-1 rounded-full border border-[var(--rule)] text-[var(--ink-dim)] hover:text-[var(--ink-muted)] hover:border-[var(--rule-strong)] transition-colors"
                   >
                     {o.label}
                   </button>
@@ -526,7 +526,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                 <button
                   onClick={() => togglePin(task)}
                   aria-label={task.pinned ? 'Unpin' : 'Pin as priority'}
-                  className="w-10 h-10 shrink-0 rounded-lg hover:bg-[#171B22] text-[#98A2B3] hover:eb-warn flex items-center justify-center transition-colors"
+                  className="w-10 h-10 shrink-0 rounded-lg hover:bg-[var(--surface-sunk)] text-[var(--ink-muted)] hover:eb-warn flex items-center justify-center transition-colors"
                 >
                   <Star
                     className={`w-3.5 h-3.5 ${task.pinned ? 'fill-amber-400 eb-warn' : ''}`}
@@ -538,7 +538,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                     setEditingText(task.title);
                   }}
                   aria-label="Edit task"
-                  className="w-10 h-10 shrink-0 rounded-lg hover:bg-[#171B22] text-[#98A2B3] hover:text-[#F4F6F8] flex items-center justify-center transition-colors"
+                  className="w-10 h-10 shrink-0 rounded-lg hover:bg-[var(--surface-sunk)] text-[var(--ink-muted)] hover:text-[var(--ink)] flex items-center justify-center transition-colors"
                 >
                   <Pencil className="w-3.5 h-3.5 shrink-0" />
                 </button>
@@ -547,7 +547,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
             <button
               onClick={() => handleDelete(task)}
               aria-label="Delete task"
-              className="w-10 h-10 shrink-0 rounded-lg hover:bg-rose-500/15 text-[#98A2B3] hover:eb-danger flex items-center justify-center transition-colors"
+              className="w-10 h-10 shrink-0 rounded-lg hover:bg-rose-500/15 text-[var(--ink-muted)] hover:eb-danger flex items-center justify-center transition-colors"
             >
               <Trash2 className="w-3.5 h-3.5 shrink-0" />
             </button>
@@ -563,7 +563,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
       <div className="eb-card p-4 sm:p-5 flex items-center gap-4">
         <div className="relative w-16 h-16 shrink-0">
           <svg viewBox="0 0 44 44" className="w-full h-full -rotate-90">
-            <circle cx="22" cy="22" r="19" fill="none" stroke="#171B22" strokeWidth="4" />
+            <circle cx="22" cy="22" r="19" fill="none" stroke="var(--surface-sunk)" strokeWidth="4" />
             <motion.circle
               cx="22"
               cy="22"
@@ -578,7 +578,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
               transition={{ duration: 0.5, ease: 'easeOut' }}
             />
           </svg>
-          <span className="absolute inset-0 flex items-center justify-center text-[11px] font-mono font-black text-[#F4F6F8] tabular-nums">
+          <span className="absolute inset-0 flex items-center justify-center text-[11px] font-mono font-black text-[var(--ink)] tabular-nums">
             {Math.round(pct * 100)}%
           </span>
         </div>
@@ -593,10 +593,10 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
           </p>
           <p className="text-xl sm:eb-heading text-2xl tabular-nums mt-0.5">
             {progress.done} / {progress.total}
-            <span className="text-xs font-bold text-[#7E8899] ml-2">complete</span>
+            <span className="text-xs font-bold text-[var(--ink-dim)] ml-2">complete</span>
           </p>
           {priorities.total > 0 && (
-            <p className="text-[10px] font-mono text-[#98A2B3] mt-1">
+            <p className="text-[10px] font-mono text-[var(--ink-muted)] mt-1">
               Priorities {priorities.done}/{priorities.total}
               {priorities.allDone && <span className="eb-done"> · all done</span>}
             </p>
@@ -625,7 +625,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
               Needs attention
             </span>
           </div>
-          <p className="text-[11px] text-[#98A2B3] mt-1">
+          <p className="text-[11px] text-[var(--ink-muted)] mt-1">
             {overdue.length} task{overdue.length === 1 ? '' : 's'} passed their date. Move or
             finish.
           </p>
@@ -645,7 +645,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
             }}
             placeholder="What will you do?"
             maxLength={180}
-            className="flex-1 min-w-0 eb-card-sunk focus:border-[#8B5CF6]/60 rounded-xl px-3 py-2.5 text-sm text-[#F4F6F8] placeholder:text-[#7E8899] outline-none transition-colors"
+            className="flex-1 min-w-0 eb-card-sunk focus:border-[#8B5CF6]/60 rounded-xl px-3 py-2.5 text-sm text-[var(--ink)] placeholder:text-[var(--ink-dim)] outline-none transition-colors"
           />
           <motion.button
             whileTap={{ scale: 0.94 }}
@@ -672,7 +672,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
               className={`text-[11px] font-semibold px-3 py-2 rounded-lg border transition-colors ${
                 draftDue === date
                   ? 'eb-chip-active'
-                  : 'text-[#8A93A5] border-[var(--rule)] hover:text-[#F2F4F7]'
+                  : 'text-[var(--ink-muted)] border-[var(--rule)] hover:text-[var(--ink)]'
               }`}
             >
               {label}
@@ -685,14 +685,14 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
               value={draftDue || ''}
               min={todayISO()}
               onChange={(e) => setDraftDue(e.target.value || undefined)}
-              className="text-[11px] font-semibold px-3 py-2 rounded-lg border border-[var(--rule)] bg-transparent text-[#8A93A5] outline-none focus:border-[var(--signal)]"
+              className="text-[11px] font-semibold px-3 py-2 rounded-lg border border-[var(--rule)] bg-transparent text-[var(--ink-muted)] outline-none focus:border-[var(--signal)]"
             />
           </label>
 
           {draftDue && (
             <button
               onClick={() => setDraftDue(undefined)}
-              className="text-[11px] text-[#7E8899] hover:eb-danger px-2 py-2"
+              className="text-[11px] text-[var(--ink-dim)] hover:eb-danger px-2 py-2"
             >
               Clear date
             </button>
@@ -707,7 +707,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
               exit={{ opacity: 0, height: 0 }}
               className="overflow-hidden"
             >
-              <p className="text-[10px] font-mono text-[#7E8899] mt-2">
+              <p className="text-[10px] font-mono text-[var(--ink-dim)] mt-2">
                 Understood:{' '}
                 <span className="eb-done">{parsed.detected.join(' · ')}</span>
               </p>
@@ -717,7 +717,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
 
         <button
           onClick={() => setExpanded((v) => !v)}
-          className="text-[10px] font-mono font-bold text-[#7E8899] hover:text-[#98A2B3] mt-2.5 transition-colors"
+          className="text-[10px] font-mono font-bold text-[var(--ink-dim)] hover:text-[var(--ink-muted)] mt-2.5 transition-colors"
         >
           {expanded ? '− Fewer options' : '+ More options'}
         </button>
@@ -739,7 +739,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                       className={`text-[11px] font-semibold px-2.5 py-1.5 rounded-full border transition-all ${
                         draftCategory === c
                           ? CATEGORY_META[c].tint
-                          : 'text-[#7E8899] border-[#2A313C] hover:border-[#3A424F]'
+                          : 'text-[var(--ink-dim)] border-[var(--rule)] hover:border-[var(--rule-strong)]'
                       }`}
                     >
                       {CATEGORY_META[c].label}
@@ -755,7 +755,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                       className={`text-[11px] font-semibold px-2.5 py-1.5 rounded-full border transition-all ${
                         draftMinutes === m
                           ? 'text-[#A78BFA] bg-[#8B5CF6]/15 border-[#8B5CF6]/30'
-                          : 'text-[#7E8899] border-[#2A313C] hover:border-[#3A424F]'
+                          : 'text-[var(--ink-dim)] border-[var(--rule)] hover:border-[var(--rule-strong)]'
                       }`}
                     >
                       {m < 60 ? `${m}m` : `${m / 60}h`}
@@ -772,7 +772,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                       className={`text-[11px] font-semibold px-2.5 py-1.5 rounded-full border transition-all flex items-center gap-1 ${
                         draftEnergy === e
                           ? 'eb-done bg-emerald-500/12 border-emerald-500/30'
-                          : 'text-[#7E8899] border-[#2A313C] hover:border-[#3A424F]'
+                          : 'text-[var(--ink-dim)] border-[var(--rule)] hover:border-[var(--rule-strong)]'
                       }`}
                     >
                       <Battery className="w-2.5 h-2.5 shrink-0" />
@@ -788,7 +788,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#7E8899] pointer-events-none" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--ink-dim)] pointer-events-none" />
         <input
           ref={searchRef}
           value={search}
@@ -800,13 +800,13 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
             }
           }}
           placeholder="Search tasks"
-          className="w-full eb-card focus:border-[#8B5CF6]/60 rounded-xl pl-9 pr-9 py-2.5 text-xs text-[#F4F6F8] placeholder:text-[#7E8899] outline-none transition-colors"
+          className="w-full eb-card focus:border-[#8B5CF6]/60 rounded-xl pl-9 pr-9 py-2.5 text-xs text-[var(--ink)] placeholder:text-[var(--ink-dim)] outline-none transition-colors"
         />
         {search && (
           <button
             onClick={() => setSearch('')}
             aria-label="Clear search"
-            className="absolute right-1.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-lg text-[#7E8899] hover:text-[#F4F6F8] flex items-center justify-center"
+            className="absolute right-1.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-lg text-[var(--ink-dim)] hover:text-[var(--ink)] flex items-center justify-center"
           >
             <X className="w-3.5 h-3.5 shrink-0" />
           </button>
@@ -844,7 +844,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                 className={`text-[11px] font-semibold px-2.5 py-1.5 rounded-lg border transition-all ${
                   timeFilter === m
                     ? 'eb-done bg-emerald-500/12 border-emerald-500/30'
-                    : 'text-[#7E8899] border-[#2A313C] hover:border-[#3A424F]'
+                    : 'text-[var(--ink-dim)] border-[var(--rule)] hover:border-[var(--rule-strong)]'
                 }`}
               >
                 {m}m
@@ -856,7 +856,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
 
       {/* List */}
       {visible.length === 0 ? (
-        <div className="text-center py-12 px-6 border border-dashed border-[#2A313C] rounded-2xl">
+        <div className="text-center py-12 px-6 border border-dashed border-[var(--rule)] rounded-2xl">
           <p className="eb-heading text-base tracking-tight">
             {tab === 'today'
               ? 'Clear day.'
@@ -864,7 +864,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                 ? 'Nothing scheduled.'
                 : 'Nothing finished yet.'}
           </p>
-          <p className="text-[11px] text-[#98A2B3] mt-1.5 max-w-xs mx-auto leading-relaxed">
+          <p className="text-[11px] text-[var(--ink-muted)] mt-1.5 max-w-xs mx-auto leading-relaxed">
             {tab === 'today'
               ? 'Nothing is waiting on you. Add what matters and start.'
               : tab === 'upcoming'
@@ -906,7 +906,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
       )}
 
       {!userId && (
-        <p className="text-[10px] text-[#98A2B3] font-mono text-center">
+        <p className="text-[10px] text-[var(--ink-muted)] font-mono text-center">
           Signed out — tasks stay on this device until you sign in.
         </p>
       )}
@@ -931,7 +931,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
               exit={{ opacity: 0, y: 8, scale: 0.98 }}
               className="pointer-events-auto eb-card-sunk px-3.5 py-2.5 shadow-xl flex items-center gap-3"
             >
-              <span className="text-[11px] text-[#F4F6F8] flex-1 min-w-0">{t.message}</span>
+              <span className="text-[11px] text-[var(--ink)] flex-1 min-w-0">{t.message}</span>
               {t.undo && (
                 <button
                   onClick={() => {
@@ -946,7 +946,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
               <button
                 onClick={() => setToasts((list) => list.filter((x) => x.id !== t.id))}
                 aria-label="Dismiss"
-                className="w-9 h-9 rounded-lg hover:bg-[#20252E] text-[#7E8899] flex items-center justify-center shrink-0"
+                className="w-9 h-9 rounded-lg hover:bg-[#20252E] text-[var(--ink-dim)] flex items-center justify-center shrink-0"
               >
                 <X className="w-3 h-3 shrink-0" />
               </button>

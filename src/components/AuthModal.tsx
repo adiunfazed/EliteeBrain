@@ -116,14 +116,14 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn overflow-y-auto">
-      <div className="relative w-full max-w-md bg-[#171B22] border border-[#2A313C] rounded-3xl p-6 md:p-8 shadow-2xl my-auto text-center">
+      <div className="relative w-full max-w-md bg-[var(--surface-sunk)] border border-[var(--rule)] rounded-3xl p-6 md:p-8 shadow-2xl my-auto text-center">
         {/* Close Button */}
         <button
           onClick={() => {
             soundFx.playClick();
             onClose();
           }}
-          className="absolute top-4 right-4 text-[#98A2B3] hover:text-[#F4F6F8] p-2 rounded-xl bg-[#0E1116] border border-[#2A313C] transition-all cursor-pointer"
+          className="absolute top-4 right-4 text-[var(--ink-muted)] hover:text-[var(--ink)] p-2 rounded-xl bg-[var(--ground)] border border-[var(--rule)] transition-all cursor-pointer"
         >
           <X className="w-4 h-4 shrink-0" />
         </button>
@@ -133,17 +133,17 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
           <Cloud className="w-7 h-7 shrink-0" />
         </div>
 
-        <h2 className="text-xl md:text-2xl font-black text-[#F4F6F8] mb-1">
+        <h2 className="text-xl md:text-2xl font-black text-[var(--ink)] mb-1">
           {emailMode === 'reset' ? 'Reset Account Password' : 'Sign In to EliteLife'}
         </h2>
-        <p className="text-xs text-[#98A2B3] leading-relaxed mb-5">
+        <p className="text-xs text-[var(--ink-muted)] leading-relaxed mb-5">
           {emailMode === 'reset'
             ? 'Enter your registered email address to receive a secure password reset link.'
             : 'Sync your 30-day cognitive protocol, daily streak, and performance stats securely across all your devices.'}
         </p>
 
         {/* Method Switch Tabs */}
-        <div className="flex rounded-xl bg-[#0E1116] p-1 border border-[#2A313C] mb-5">
+        <div className="flex rounded-xl bg-[var(--ground)] p-1 border border-[var(--rule)] mb-5">
           <button
             onClick={() => {
               soundFx.playClick();
@@ -154,7 +154,7 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
             className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
               authMethod === 'google'
                 ? 'bg-[#8B5CF6] text-white shadow-sm'
-                : 'text-[#98A2B3] hover:text-[#F4F6F8]'
+                : 'text-[var(--ink-muted)] hover:text-[var(--ink)]'
             }`}
           >
             Google Sign-In
@@ -169,7 +169,7 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
             className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
               authMethod === 'email'
                 ? 'bg-[#8B5CF6] text-white shadow-sm'
-                : 'text-[#98A2B3] hover:text-[#F4F6F8]'
+                : 'text-[var(--ink-muted)] hover:text-[var(--ink)]'
             }`}
           >
             Email Login
@@ -194,16 +194,16 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
         {authMethod === 'google' ? (
           <div>
             {/* Features List */}
-            <div className="bg-[#0E1116] rounded-2xl border border-[#2A313C] p-3.5 mb-5 text-left space-y-2">
-              <div className="flex items-center gap-2 text-xs text-[#F4F6F8]">
+            <div className="bg-[var(--ground)] rounded-2xl border border-[var(--rule)] p-3.5 mb-5 text-left space-y-2">
+              <div className="flex items-center gap-2 text-xs text-[var(--ink)]">
                 <CheckCircle2 className="w-4 h-4 eb-done shrink-0" />
                 <span>Instant 1-click Google authentication</span>
               </div>
-              <div className="flex items-center gap-2 text-xs text-[#F4F6F8]">
+              <div className="flex items-center gap-2 text-xs text-[var(--ink)]">
                 <ShieldCheck className="w-4 h-4 text-[#8B5CF6] shrink-0" />
                 <span>Encrypted cloud profile storage via Firebase</span>
               </div>
-              <div className="flex items-center gap-2 text-xs text-[#F4F6F8]">
+              <div className="flex items-center gap-2 text-xs text-[var(--ink)]">
                 <Award className="w-4 h-4 eb-warn shrink-0" />
                 <span>Seamless cross-device protocol sync</span>
               </div>
@@ -213,7 +213,7 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
             <button
               disabled={loading}
               onClick={handleGoogleClick}
-              className="w-full flex items-center justify-center gap-3 py-3.5 px-4 rounded-2xl bg-[#F4F6F8] hover:bg-white text-slate-900 font-bold text-sm shadow-xl cursor-pointer transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed mb-3"
+              className="w-full flex items-center justify-center gap-3 py-3.5 px-4 rounded-2xl bg-[var(--ink)] hover:bg-white text-slate-900 font-bold text-sm shadow-xl cursor-pointer transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed mb-3"
             >
               {loading ? (
                 <>
@@ -260,7 +260,7 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
           /* Email Form */
           <form onSubmit={handleEmailSubmit} className="space-y-3.5 text-left mb-4">
             {/* Email Mode Selector */}
-            <div className="flex gap-2 mb-2 pb-2 border-b border-[#2A313C]">
+            <div className="flex gap-2 mb-2 pb-2 border-b border-[var(--rule)]">
               <button
                 type="button"
                 onClick={() => {
@@ -272,7 +272,7 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
                 className={`text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer ${
                   emailMode === 'signup'
                     ? 'bg-[#8B5CF6]/20 text-[#8B5CF6] border border-[#8B5CF6]/40'
-                    : 'text-[#98A2B3] hover:text-[#F4F6F8]'
+                    : 'text-[var(--ink-muted)] hover:text-[var(--ink)]'
                 }`}
               >
                 Create Account
@@ -288,7 +288,7 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
                 className={`text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer ${
                   emailMode === 'signin'
                     ? 'bg-[#8B5CF6]/20 text-[#8B5CF6] border border-[#8B5CF6]/40'
-                    : 'text-[#98A2B3] hover:text-[#F4F6F8]'
+                    : 'text-[var(--ink-muted)] hover:text-[var(--ink)]'
                 }`}
               >
                 Sign In
@@ -304,7 +304,7 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
                 className={`text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer ${
                   emailMode === 'reset'
                     ? 'bg-amber-500/20 eb-warn border border-amber-500/40'
-                    : 'text-[#98A2B3] hover:text-[#F4F6F8]'
+                    : 'text-[var(--ink-muted)] hover:text-[var(--ink)]'
                 }`}
               >
                 Forgot Password?
@@ -313,54 +313,54 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
 
             {emailMode === 'signup' && (
               <div>
-                <label className="block text-[11px] font-bold text-[#98A2B3] uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-bold text-[var(--ink-muted)] uppercase tracking-wider mb-1">
                   Full Name
                 </label>
                 <div className="relative">
-                  <UserIcon className="w-4 h-4 shrink-0 text-[#98A2B3] absolute left-3.5 top-3" />
+                  <UserIcon className="w-4 h-4 shrink-0 text-[var(--ink-muted)] absolute left-3.5 top-3" />
                   <input
                     type="text"
                     required
                     placeholder="John Doe"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-[#0E1116] border border-[#2A313C] focus:border-[#8B5CF6] rounded-xl pl-10 pr-4 py-2.5 text-xs text-[#F4F6F8] placeholder-[#98A2B3]/50 focus:outline-none transition-colors"
+                    className="w-full bg-[var(--ground)] border border-[var(--rule)] focus:border-[#8B5CF6] rounded-xl pl-10 pr-4 py-2.5 text-xs text-[var(--ink)] placeholder-[var(--ink-muted)]/50 focus:outline-none transition-colors"
                   />
                 </div>
               </div>
             )}
 
             <div>
-              <label className="block text-[11px] font-bold text-[#98A2B3] uppercase tracking-wider mb-1">
+              <label className="block text-[11px] font-bold text-[var(--ink-muted)] uppercase tracking-wider mb-1">
                 Email Address
               </label>
               <div className="relative">
-                <Mail className="w-4 h-4 shrink-0 text-[#98A2B3] absolute left-3.5 top-3" />
+                <Mail className="w-4 h-4 shrink-0 text-[var(--ink-muted)] absolute left-3.5 top-3" />
                 <input
                   type="email"
                   required
                   placeholder="name@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-[#0E1116] border border-[#2A313C] focus:border-[#8B5CF6] rounded-xl pl-10 pr-4 py-2.5 text-xs text-[#F4F6F8] placeholder-[#98A2B3]/50 focus:outline-none transition-colors"
+                  className="w-full bg-[var(--ground)] border border-[var(--rule)] focus:border-[#8B5CF6] rounded-xl pl-10 pr-4 py-2.5 text-xs text-[var(--ink)] placeholder-[var(--ink-muted)]/50 focus:outline-none transition-colors"
                 />
               </div>
             </div>
 
             {emailMode !== 'reset' && (
               <div>
-                <label className="block text-[11px] font-bold text-[#98A2B3] uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-bold text-[var(--ink-muted)] uppercase tracking-wider mb-1">
                   Password
                 </label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 shrink-0 text-[#98A2B3] absolute left-3.5 top-3" />
+                  <Lock className="w-4 h-4 shrink-0 text-[var(--ink-muted)] absolute left-3.5 top-3" />
                   <input
                     type="password"
                     required
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-[#0E1116] border border-[#2A313C] focus:border-[#8B5CF6] rounded-xl pl-10 pr-4 py-2.5 text-xs text-[#F4F6F8] placeholder-[#98A2B3]/50 focus:outline-none transition-colors"
+                    className="w-full bg-[var(--ground)] border border-[var(--rule)] focus:border-[#8B5CF6] rounded-xl pl-10 pr-4 py-2.5 text-xs text-[var(--ink)] placeholder-[var(--ink-muted)]/50 focus:outline-none transition-colors"
                   />
                 </div>
               </div>
@@ -397,7 +397,7 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
             soundFx.playClick();
             onClose();
           }}
-          className="w-full py-2 px-4 rounded-xl text-xs font-semibold text-[#98A2B3] hover:text-[#F4F6F8] cursor-pointer transition-colors"
+          className="w-full py-2 px-4 rounded-xl text-xs font-semibold text-[var(--ink-muted)] hover:text-[var(--ink)] cursor-pointer transition-colors"
         >
           Continue as Guest (Offline Mode)
         </button>

@@ -122,10 +122,10 @@ export const TaskDetailSheet: React.FC<Props> = ({
           exit={{ y: '100%', opacity: 0 }}
           transition={{ type: 'spring', damping: 30, stiffness: 300 }}
           onClick={(e: React.MouseEvent) => e.stopPropagation()}
-          className="w-full sm:max-w-lg max-h-[88vh] overflow-y-auto bg-[#0E1116] border border-[#2A313C] rounded-t-3xl sm:rounded-3xl p-4 sm:p-5 space-y-4"
+          className="w-full sm:max-w-lg max-h-[88vh] overflow-y-auto bg-[var(--ground)] border border-[var(--rule)] rounded-t-3xl sm:rounded-3xl p-4 sm:p-5 space-y-4"
         >
           {/* Grab handle, mobile only */}
-          <div className="sm:hidden w-10 h-1 rounded-full bg-[#2A313C] mx-auto" />
+          <div className="sm:hidden w-10 h-1 rounded-full bg-[var(--rule)] mx-auto" />
 
           <div className="flex items-start justify-between gap-3">
             <h3 className="eb-heading text-base tracking-tight break-words min-w-0">
@@ -134,7 +134,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
             <button
               onClick={onClose}
               aria-label="Close"
-              className="shrink-0 w-10 h-10 rounded-xl hover:bg-[#171B22] text-[#98A2B3] flex items-center justify-center"
+              className="shrink-0 w-10 h-10 rounded-xl hover:bg-[var(--surface-sunk)] text-[var(--ink-muted)] flex items-center justify-center"
             >
               <X className="w-4 h-4 shrink-0" />
             </button>
@@ -170,13 +170,13 @@ export const TaskDetailSheet: React.FC<Props> = ({
               return (
                 <div
                   key={f.label}
-                  className="bg-[#171B22] border border-[#2A313C] rounded-xl p-2.5 min-w-0"
+                  className="bg-[var(--surface-sunk)] border border-[var(--rule)] rounded-xl p-2.5 min-w-0"
                 >
-                  <span className="text-[11px] font-mono font-bold text-[#7E8899] tracking-widest uppercase flex items-center gap-1">
+                  <span className="text-[11px] font-mono font-bold text-[var(--ink-dim)] tracking-widest uppercase flex items-center gap-1">
                     <Icon className="w-2.5 h-2.5 shrink-0" />
                     {f.label}
                   </span>
-                  <p className="text-[11px] font-mono text-[#F4F6F8] mt-1 truncate">{f.value}</p>
+                  <p className="text-[11px] font-mono text-[var(--ink)] mt-1 truncate">{f.value}</p>
                 </div>
               );
             })}
@@ -184,7 +184,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
 
           {/* Estimate vs actual — only when both exist */}
           {task.estimatedMinutes && (task.focusSeconds || 0) > 60 && (
-            <p className="text-[11px] text-[#98A2B3] bg-[#171B22] border border-[#2A313C] rounded-xl p-2.5">
+            <p className="text-[11px] text-[var(--ink-muted)] bg-[var(--surface-sunk)] border border-[var(--rule)] rounded-xl p-2.5">
               {(() => {
                 const actual = Math.round((task.focusSeconds || 0) / 60);
                 const diff = actual - task.estimatedMinutes;
@@ -199,11 +199,11 @@ export const TaskDetailSheet: React.FC<Props> = ({
           {/* Subtasks */}
           <div>
             <div className="flex items-center justify-between gap-2">
-              <span className="text-[10px] font-mono font-bold text-[#98A2B3] tracking-widest uppercase">
+              <span className="text-[10px] font-mono font-bold text-[var(--ink-muted)] tracking-widest uppercase">
                 Subtasks
               </span>
               {progress.total > 0 && (
-                <span className="text-[10px] font-mono text-[#7E8899]">
+                <span className="text-[10px] font-mono text-[var(--ink-dim)]">
                   {progress.done} / {progress.total}
                 </span>
               )}
@@ -221,7 +221,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
                       className={`w-[18px] h-[18px] rounded-md border flex items-center justify-center ${
                         s.done
                           ? 'bg-emerald-500 border-emerald-500 text-slate-950'
-                          : 'border-[#3A424F]'
+                          : 'border-[var(--rule-strong)]'
                       }`}
                     >
                       {s.done && <Check className="w-3 h-3 shrink-0 stroke-[3]" />}
@@ -229,7 +229,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
                   </button>
                   <span
                     className={`text-xs flex-1 min-w-0 break-words ${
-                      s.done ? 'text-[#7E8899] line-through' : 'text-[#F4F6F8]'
+                      s.done ? 'text-[var(--ink-dim)] line-through' : 'text-[var(--ink)]'
                     }`}
                   >
                     {s.title}
@@ -237,7 +237,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
                   <button
                     onClick={() => removeSub(s.id)}
                     aria-label="Remove subtask"
-                    className="shrink-0 w-9 h-9 rounded-lg text-[#7E8899] hover:eb-danger hover:bg-rose-500/10 flex items-center justify-center opacity-70 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                    className="shrink-0 w-9 h-9 rounded-lg text-[var(--ink-dim)] hover:eb-danger hover:bg-rose-500/10 flex items-center justify-center opacity-70 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                   >
                     <Trash2 className="w-3 h-3 shrink-0" />
                   </button>
@@ -254,13 +254,13 @@ export const TaskDetailSheet: React.FC<Props> = ({
                 }}
                 placeholder="Add a step"
                 maxLength={120}
-                className="flex-1 min-w-0 bg-[#171B22] border border-[#2A313C] focus:border-[#8B5CF6]/60 rounded-lg px-2.5 py-2 text-xs text-[#F4F6F8] placeholder:text-[#7E8899] outline-none"
+                className="flex-1 min-w-0 bg-[var(--surface-sunk)] border border-[var(--rule)] focus:border-[#8B5CF6]/60 rounded-lg px-2.5 py-2 text-xs text-[var(--ink)] placeholder:text-[var(--ink-dim)] outline-none"
               />
               <button
                 onClick={addSubtask}
                 disabled={!subtaskDraft.trim()}
                 aria-label="Add subtask"
-                className="shrink-0 w-10 h-10 rounded-lg bg-[#171B22] hover:bg-[#20252E] border border-[#2A313C] disabled:opacity-40 text-[#F4F6F8] flex items-center justify-center"
+                className="shrink-0 w-10 h-10 rounded-lg bg-[var(--surface-sunk)] hover:bg-[#20252E] border border-[var(--rule)] disabled:opacity-40 text-[var(--ink)] flex items-center justify-center"
               >
                 <Plus className="w-4 h-4 shrink-0" />
               </button>
@@ -269,7 +269,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
 
           {/* Repeat */}
           <div>
-            <span className="text-[10px] font-mono font-bold text-[#98A2B3] tracking-widest uppercase flex items-center gap-1.5">
+            <span className="text-[10px] font-mono font-bold text-[var(--ink-muted)] tracking-widest uppercase flex items-center gap-1.5">
               <Repeat className="w-3 h-3 shrink-0" />
               Repeat
             </span>
@@ -280,7 +280,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
                 className={`text-[11px] font-semibold px-2.5 py-1.5 rounded-full border ${
                   !task.recurrence
                     ? 'text-[#A78BFA] bg-[#8B5CF6]/15 border-[#8B5CF6]/30'
-                    : 'text-[#7E8899] border-[#2A313C]'
+                    : 'text-[var(--ink-dim)] border-[var(--rule)]'
                 }`}
               >
                 Never
@@ -292,7 +292,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
                   className={`text-[11px] font-semibold px-2.5 py-1.5 rounded-full border capitalize ${
                     task.recurrence?.freq === f
                       ? 'text-[#A78BFA] bg-[#8B5CF6]/15 border-[#8B5CF6]/30'
-                      : 'text-[#7E8899] border-[#2A313C]'
+                      : 'text-[var(--ink-dim)] border-[var(--rule)]'
                   }`}
                 >
                   {f}
@@ -310,7 +310,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
                     className={`w-9 h-9 rounded-lg text-[10px] font-mono font-bold border ${
                       task.recurrence?.weekdays?.includes(i)
                         ? 'eb-done bg-emerald-500/15 border-emerald-500/30'
-                        : 'text-[#7E8899] border-[#2A313C]'
+                        : 'text-[var(--ink-dim)] border-[var(--rule)]'
                     }`}
                   >
                     {label}
@@ -320,7 +320,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
             )}
 
             {task.recurrence && (
-              <p className="text-[10px] font-mono text-[#7E8899] mt-2">
+              <p className="text-[10px] font-mono text-[var(--ink-dim)] mt-2">
                 {describeRecurrence(task.recurrence)} · the next one is created when you
                 complete this.
               </p>
@@ -336,7 +336,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
             </span>
             <div className="flex items-center gap-1.5 mt-2 flex-wrap">
               {([
-                { id: 'low' as const, label: 'Low', color: '#8A93A5' },
+                { id: 'low' as const, label: 'Low', color: 'var(--ink-muted)' },
                 { id: 'normal' as const, label: 'Normal', color: '#7C5CFF' },
                 { id: 'high' as const, label: 'High', color: '#FFB020' },
                 { id: 'critical' as const, label: 'Critical', color: '#FF6B57' },
@@ -346,7 +346,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
                   onClick={() => onPatch({ priority: id })}
                   style={task.priority === id ? { borderColor: color, color } : undefined}
                   className={`eb-press text-[11px] font-semibold px-2.5 py-1.5 rounded-full border ${
-                    task.priority === id ? 'bg-white/[0.06]' : 'text-[#7E8899] border-[#262C38]'
+                    task.priority === id ? 'bg-white/[0.06]' : 'text-[var(--ink-dim)] border-[#262C38]'
                   }`}
                 >
                   {label}
@@ -365,12 +365,12 @@ export const TaskDetailSheet: React.FC<Props> = ({
                 type="date"
                 value={task.dueDate || ''}
                 onChange={(e) => onPatch({ dueDate: e.target.value || undefined })}
-                className="bg-[#0E1116] border border-[#262C38] rounded-lg px-2.5 py-2 text-xs text-[#F2F4F7] outline-none"
+                className="bg-[var(--ground)] border border-[#262C38] rounded-lg px-2.5 py-2 text-xs text-[var(--ink)] outline-none"
               />
               {task.dueDate && (
                 <button
                   onClick={() => onPatch({ dueDate: undefined })}
-                  className="eb-press text-[10px] font-mono text-[#7E8899] hover:eb-danger"
+                  className="eb-press text-[10px] font-mono text-[var(--ink-dim)] hover:eb-danger"
                 >
                   clear
                 </button>
@@ -381,7 +381,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
           {/* Goal link */}
           {goals.length > 0 && (
             <div>
-              <span className="text-[10px] font-mono font-bold text-[#98A2B3] tracking-widest uppercase flex items-center gap-1.5">
+              <span className="text-[10px] font-mono font-bold text-[var(--ink-muted)] tracking-widest uppercase flex items-center gap-1.5">
                 <Target className="w-3 h-3 shrink-0" />
                 Counts toward
               </span>
@@ -391,7 +391,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
                   className={`eb-press text-[11px] font-semibold px-2.5 py-1.5 rounded-full border ${
                     !task.goalId
                       ? 'text-[#A78BFA] bg-[#8B5CF6]/15 border-[#8B5CF6]/30'
-                      : 'text-[#7E8899] border-[#2A313C]'
+                      : 'text-[var(--ink-dim)] border-[var(--rule)]'
                   }`}
                 >
                   Nothing
@@ -403,14 +403,14 @@ export const TaskDetailSheet: React.FC<Props> = ({
                     className={`eb-press text-[11px] font-semibold px-2.5 py-1.5 rounded-full border max-w-full truncate ${
                       task.goalId === g.id
                         ? 'eb-chip-active'
-                        : 'text-[#7E8899] border-[#2A313C] hover:border-[#3A424F]'
+                        : 'text-[var(--ink-dim)] border-[var(--rule)] hover:border-[var(--rule-strong)]'
                     }`}
                   >
                     {g.title}
                   </button>
                 ))}
               </div>
-              <p className="text-[10px] font-mono text-[#7E8899] mt-1.5">
+              <p className="text-[10px] font-mono text-[var(--ink-dim)] mt-1.5">
                 Completing this moves the goal forward.
               </p>
             </div>
@@ -418,7 +418,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
 
           {/* Notes */}
           <div>
-            <span className="text-[10px] font-mono font-bold text-[#98A2B3] tracking-widest uppercase">
+            <span className="text-[10px] font-mono font-bold text-[var(--ink-muted)] tracking-widest uppercase">
               Notes
             </span>
             <textarea
@@ -429,14 +429,14 @@ export const TaskDetailSheet: React.FC<Props> = ({
               }}
               rows={3}
               placeholder="Anything worth remembering"
-              className="w-full mt-2 bg-[#171B22] border border-[#2A313C] focus:border-[#8B5CF6]/60 rounded-xl px-3 py-2 text-xs text-[#F4F6F8] placeholder:text-[#7E8899] outline-none resize-none"
+              className="w-full mt-2 bg-[var(--surface-sunk)] border border-[var(--rule)] focus:border-[#8B5CF6]/60 rounded-xl px-3 py-2 text-xs text-[var(--ink)] placeholder:text-[var(--ink-dim)] outline-none resize-none"
             />
           </div>
 
           {/* Reflection — only after completion, never mandatory */}
           {task.completed && (
             <div>
-              <span className="text-[10px] font-mono font-bold text-[#98A2B3] tracking-widest uppercase">
+              <span className="text-[10px] font-mono font-bold text-[var(--ink-muted)] tracking-widest uppercase">
                 How did that go?
               </span>
               <div className="flex items-center gap-1.5 mt-2 flex-wrap">
@@ -450,7 +450,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
                     className={`text-[11px] font-semibold px-2.5 py-1.5 rounded-full border flex items-center gap-1.5 ${
                       task.reflection === r.id
                         ? 'eb-done bg-emerald-500/12 border-emerald-500/30'
-                        : 'text-[#7E8899] border-[#2A313C] hover:border-[#3A424F]'
+                        : 'text-[var(--ink-dim)] border-[var(--rule)] hover:border-[var(--rule-strong)]'
                     }`}
                   >
                     <span>{r.emoji}</span>
@@ -458,7 +458,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
                   </button>
                 ))}
               </div>
-              <p className="text-[10px] text-[#7E8899] font-mono mt-1.5">Optional.</p>
+              <p className="text-[10px] text-[var(--ink-dim)] font-mono mt-1.5">Optional.</p>
             </div>
           )}
 
@@ -481,7 +481,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
                 onDelete();
                 onClose();
               }}
-              className="py-3 px-4 rounded-xl bg-transparent hover:bg-rose-500/10 border border-[#2A313C] hover:border-rose-500/40 text-[#98A2B3] hover:eb-danger text-xs font-mono font-bold flex items-center gap-1.5"
+              className="py-3 px-4 rounded-xl bg-transparent hover:bg-rose-500/10 border border-[var(--rule)] hover:border-rose-500/40 text-[var(--ink-muted)] hover:eb-danger text-xs font-mono font-bold flex items-center gap-1.5"
             >
               <Trash2 className="w-3.5 h-3.5 shrink-0" />
               Delete

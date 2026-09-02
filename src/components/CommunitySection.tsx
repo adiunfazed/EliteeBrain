@@ -98,7 +98,7 @@ export const CommunitySection: React.FC<CommunitySectionProps> = () => {
     <div className="space-y-6 font-sans select-none max-w-5xl mx-auto px-1 sm:px-0">
       
       {/* Community Header Banner */}
-      <div className="bg-gradient-to-r from-[#12161F] via-[#1A1F2C] to-[#12161F] border border-[#2A313C] rounded-3xl p-5 sm:p-7 relative overflow-hidden shadow-xl">
+      <div className="bg-gradient-to-r from-[var(--surface)] via-[#1A1F2C] to-[var(--surface)] border border-[var(--rule)] rounded-3xl p-5 sm:p-7 relative overflow-hidden shadow-xl">
         <div className="absolute top-0 right-0 w-80 h-80 bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-80 h-80 bg-red-500/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -117,7 +117,7 @@ export const CommunitySection: React.FC<CommunitySectionProps> = () => {
             <h1 className="text-xl sm:text-2xl md:text-3xl font-display font-extrabold text-white tracking-tight">
               Community & Media Hub
             </h1>
-            <p className="text-xs sm:text-sm text-[#98A2B3] leading-relaxed">
+            <p className="text-xs sm:text-sm text-[var(--ink-muted)] leading-relaxed">
               Connect with fellow elite mind performers in our Telegram community and subscribe to our official YouTube channel for protocol breakdowns, mental toughness, and focus mastery guides.
             </p>
           </div>
@@ -128,14 +128,14 @@ export const CommunitySection: React.FC<CommunitySectionProps> = () => {
               className="px-4 py-3 bg-sky-500/20 hover:bg-sky-500/30 border border-sky-500/40 rounded-2xl text-center transition-all cursor-pointer active:scale-95 flex flex-col items-center justify-center"
             >
               <span className="block text-xs sm:text-sm font-mono font-black text-sky-400">Telegram</span>
-              <span className="text-[10px] font-mono text-[#98A2B3] uppercase font-bold">Join Group</span>
+              <span className="text-[10px] font-mono text-[var(--ink-muted)] uppercase font-bold">Join Group</span>
             </button>
             <button
               onClick={handleOpenYt}
               className="px-4 py-3 bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 rounded-2xl text-center transition-all cursor-pointer active:scale-95 flex flex-col items-center justify-center"
             >
               <span className="block text-xs sm:text-sm font-mono font-black text-red-400">YouTube</span>
-              <span className="text-[10px] font-mono text-[#98A2B3] uppercase font-bold">Subscribe</span>
+              <span className="text-[10px] font-mono text-[var(--ink-muted)] uppercase font-bold">Subscribe</span>
             </button>
           </div>
         </div>
@@ -147,7 +147,7 @@ export const CommunitySection: React.FC<CommunitySectionProps> = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.22 }}
       >
-        <div className="bg-[#12161F] border border-sky-500/40 rounded-3xl p-5 sm:p-7 relative overflow-hidden shadow-2xl space-y-4">
+        <div className="bg-[var(--surface)] border border-sky-500/40 rounded-3xl p-5 sm:p-7 relative overflow-hidden shadow-2xl space-y-4">
           <div className="absolute top-0 right-0 w-64 h-64 bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
           
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
@@ -186,7 +186,7 @@ export const CommunitySection: React.FC<CommunitySectionProps> = () => {
 
               <button
                 onClick={handleCopyTg}
-                className="px-4 py-3 bg-[#1A1F2C] hover:bg-[#212631] border border-[#2A313C] text-white rounded-xl cursor-pointer transition-all active:scale-95 flex items-center justify-center gap-1.5 text-xs font-mono font-bold shrink-0"
+                className="px-4 py-3 bg-[#1A1F2C] hover:bg-[#212631] border border-[var(--rule)] text-white rounded-xl cursor-pointer transition-all active:scale-95 flex items-center justify-center gap-1.5 text-xs font-mono font-bold shrink-0"
               >
                 {copiedTg ? (
                   <>
@@ -195,7 +195,7 @@ export const CommunitySection: React.FC<CommunitySectionProps> = () => {
                   </>
                 ) : (
                   <>
-                    <Copy className="w-3.5 h-3.5 shrink-0 text-[#98A2B3]" />
+                    <Copy className="w-3.5 h-3.5 shrink-0 text-[var(--ink-muted)]" />
                     <span>Copy</span>
                   </>
                 )}
@@ -211,7 +211,7 @@ export const CommunitySection: React.FC<CommunitySectionProps> = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.22, delay: 0.08 }}
       >
-        <div className="bg-[#12161F] border border-red-500/40 rounded-3xl p-5 sm:p-7 relative overflow-hidden shadow-2xl space-y-4">
+        <div className="bg-[var(--surface)] border border-red-500/40 rounded-3xl p-5 sm:p-7 relative overflow-hidden shadow-2xl space-y-4">
           <div className="absolute top-0 right-0 w-64 h-64 bg-red-600/10 rounded-full blur-3xl pointer-events-none" />
           
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
@@ -251,7 +251,7 @@ export const CommunitySection: React.FC<CommunitySectionProps> = () => {
 
               <button
                 onClick={handleCopyYt}
-                className="px-4 py-3 bg-[#1A1F2C] hover:bg-[#212631] border border-[#2A313C] text-white rounded-xl cursor-pointer transition-all active:scale-95 flex items-center justify-center gap-1.5 text-xs font-mono font-bold shrink-0"
+                className="px-4 py-3 bg-[#1A1F2C] hover:bg-[#212631] border border-[var(--rule)] text-white rounded-xl cursor-pointer transition-all active:scale-95 flex items-center justify-center gap-1.5 text-xs font-mono font-bold shrink-0"
               >
                 {copiedYt ? (
                   <>
@@ -260,7 +260,7 @@ export const CommunitySection: React.FC<CommunitySectionProps> = () => {
                   </>
                 ) : (
                   <>
-                    <Copy className="w-3.5 h-3.5 shrink-0 text-[#98A2B3]" />
+                    <Copy className="w-3.5 h-3.5 shrink-0 text-[var(--ink-muted)]" />
                     <span>Copy</span>
                   </>
                 )}

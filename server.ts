@@ -4,6 +4,8 @@ import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import path from 'path';
 import { GoogleGenAI } from '@google/genai';
+import { getFirestore } from 'firebase-admin/firestore';
+import { getAuth } from 'firebase-admin/auth';
 import { initAdmin, isAdminAvailable, verifyUser, lastVerifyFailure } from './serverAuth';
 import { getLeaderboard, syncLeaderboardEntry } from './serverLeaderboard';
 import { buildCoachContext, describeContext } from './serverCoachContext';
@@ -338,6 +340,52 @@ async function startServer() {
     message: { error: 'Too many coach requests. Please wait a moment and try again.' },
   });
 
+  /**
+   * Limits for everything else.
+   *
+   * Only the coach was protected, so the leaderboard and push endpoints could
+   * be hammered freely — each leaderboard call reads every user document, so a
+   * loop could exhaust the Firestore free tier in minutes.
+   *
+   * Keyed by authenticated user where possible, falling back to IP. Keying on
+   * IP alone would throttle everyone behind one college network together.
+   */
+  const keyByUser = (req: any): string => {
+    const auth = String(req.headers?.authorization || '');
+    if (auth.length > 40) return `u:${auth.slice(-32)}`;
+    return `ip:${req.ip}`;
+  };
+
+  /** Reads: generous, but bounded. */
+  const readLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    limit: 40,
+    keyGenerator: keyByUser,
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+    message: { error: 'Too many requests. Please wait a moment.' },
+  });
+
+  /** Writes: tighter, since each one costs a database round trip. */
+  const writeLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    limit: 15,
+    keyGenerator: keyByUser,
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+    message: { error: 'Too many requests. Please wait a moment.' },
+  });
+
+  /** Sensitive one-off actions: deliberately strict. */
+  const strictLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 5,
+    keyGenerator: keyByUser,
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+    message: { error: 'Too many attempts. Please try again later.' },
+  });
+
 
   // Health check
   /**
@@ -382,7 +430,7 @@ async function startServer() {
    * Leaderboard read. Returns real entries only — on failure it errors rather
    * than substituting placeholder users.
    */
-  app.get('/api/leaderboard', async (req, res) => {
+  app.get('/api/leaderboard', readLimiter, async (req, res) => {
     if (!isAdminAvailable()) {
       return res.status(503).json({ error: 'Leaderboard temporarily unavailable.' });
     }
@@ -428,7 +476,7 @@ async function startServer() {
    * rounds; this shows exactly which fields each account actually has.
    * Returns booleans and dates only — no emails, no payment identifiers.
    */
-  app.get('/api/probe/entitlements', async (req, res) => {
+  app.get('/api/probe/entitlements', strictLimiter, async (req, res) => {
     const key = req.headers['x-probe-key'];
     if (!process.env.ADMIN_PROBE_KEY || key !== process.env.ADMIN_PROBE_KEY) {
       return res.status(404).json({ error: 'Not found' });
@@ -469,7 +517,7 @@ async function startServer() {
   });
 
   /** The public VAPID key, needed by the browser to subscribe. */
-  app.get('/api/push/key', (req, res) => {
+  app.get('/api/push/key', readLimiter, (req, res) => {
     const key = process.env.VAPID_PUBLIC_KEY;
     if (!key) return res.status(503).json({ error: 'Push not configured.' });
     res.json({ key });
@@ -477,7 +525,7 @@ async function startServer() {
 
   /** Register a device. Stored under the verified user, never trusting a uid
       supplied by the client. */
-  app.post('/api/push/subscribe', async (req, res) => {
+  app.post('/api/push/subscribe', writeLimiter, async (req, res) => {
     if (!isAdminAvailable()) return res.status(503).json({ error: 'Unavailable.' });
     try {
       const idToken = (req.headers.authorization || '').replace(/^Bearer\s+/i, '') || undefined;
@@ -504,7 +552,7 @@ async function startServer() {
     }
   });
 
-  app.post('/api/push/unsubscribe', async (req, res) => {
+  app.post('/api/push/unsubscribe', writeLimiter, async (req, res) => {
     if (!isAdminAvailable()) return res.status(503).json({ error: 'Unavailable.' });
     try {
       const idToken = (req.headers.authorization || '').replace(/^Bearer\s+/i, '') || undefined;
@@ -626,7 +674,7 @@ async function startServer() {
    * The caller's authoritative entitlement, straight from the database.
    * Lets the client reconcile when its local copy disagrees.
    */
-  app.get('/api/entitlement', async (req, res) => {
+  app.get('/api/entitlement', readLimiter, async (req, res) => {
     if (!isAdminAvailable()) return res.status(503).json({ error: 'Unavailable.' });
     try {
       const idToken = (req.headers.authorization || '').replace(/^Bearer\s+/i, '') || undefined;
@@ -645,6 +693,97 @@ async function startServer() {
       });
     } catch (err: any) {
       res.status(500).json({ error: 'Could not read your plan.' });
+    }
+  });
+
+  /**
+   * Delete the caller's account and all their data.
+   *
+   * Required under India's DPDP Act 2023 (right to erasure) and by app-store
+   * policy. Deliberately server-side: a client cannot be trusted to remove
+   * everything, and subcollections must be walked explicitly because deleting
+   * a Firestore document does NOT delete what is nested under it.
+   *
+   * Irreversible, so it requires the caller's own token — never a uid supplied
+   * in the request body.
+   */
+  app.post('/api/account/delete', strictLimiter, async (req, res) => {
+    if (!isAdminAvailable()) {
+      return res.status(503).json({ error: 'Account deletion is unavailable right now.' });
+    }
+
+    try {
+      const idToken = (req.headers.authorization || '').replace(/^Bearer\s+/i, '') || undefined;
+      const verified = await verifyUser(idToken);
+      if (!verified) return res.status(401).json({ error: 'Sign in first.' });
+
+      // Confirmation phrase, so an accidental or forged request cannot wipe
+      // an account on its own.
+      if (req.body?.confirm !== 'DELETE') {
+        return res.status(400).json({ error: 'Confirmation missing.' });
+      }
+
+      const db = getFirestore();
+      const uid = verified.uid;
+
+      // Every subcollection under the user document. Missing one would leave
+      // orphaned personal data behind, which is exactly what erasure forbids.
+      const SUBCOLLECTIONS = [
+        'tasks',
+        'focusSessions',
+        'goals',
+        'habits',
+        'habitLogs',
+        'routineBlocks',
+        'routineLogs',
+        'sleepLogs',
+        'goalSnapshots',
+        'coachChat',
+        'pushSubscriptions',
+      ];
+
+      for (const name of SUBCOLLECTIONS) {
+        // Paged, so a user with thousands of records cannot exhaust memory or
+        // exceed the 500-operation batch limit.
+        for (;;) {
+          const snap = await db.collection('users').doc(uid).collection(name).limit(400).get();
+          if (snap.empty) break;
+
+          const batch = db.batch();
+          snap.docs.forEach((d) => batch.delete(d.ref));
+          await batch.commit();
+
+          if (snap.size < 400) break;
+        }
+      }
+
+      // Leaderboard entry, so a deleted account stops appearing publicly.
+      await db.collection('leaderboard').doc(uid).delete().catch(() => {});
+
+      // Any pending payment requests naming this user.
+      const payments = await db
+        .collection('paymentRequests')
+        .where('userId', '==', uid)
+        .limit(200)
+        .get()
+        .catch(() => null);
+      if (payments && !payments.empty) {
+        const batch = db.batch();
+        payments.docs.forEach((d) => batch.delete(d.ref));
+        await batch.commit();
+      }
+
+      await db.collection('users').doc(uid).delete();
+
+      // The auth record goes LAST: if anything above fails, the user can still
+      // sign in and retry rather than being locked out with data remaining.
+      await getAuth().deleteUser(uid);
+
+      console.info('Account deleted:', uid);
+      res.json({ ok: true });
+    } catch (err: any) {
+      console.error('Account deletion failed:', err?.message || err);
+      res.status(500).json({ error: 'Could not delete the account. Please try again.' });
     }
   });
 

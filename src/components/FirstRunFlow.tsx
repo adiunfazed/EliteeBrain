@@ -119,7 +119,7 @@ export const FirstRunFlow: React.FC<Props> = ({ userId, onDone }) => {
             </span>
 
             <h2 className="eb-heading text-2xl mt-4">{current.label}</h2>
-            <p className="text-xs text-[#8A93A5] mt-1.5 leading-relaxed">{current.hint}</p>
+            <p className="text-xs text-[var(--ink-muted)] mt-1.5 leading-relaxed">{current.hint}</p>
 
             <input
               autoFocus
@@ -131,7 +131,7 @@ export const FirstRunFlow: React.FC<Props> = ({ userId, onDone }) => {
               }}
               placeholder={current.placeholder}
               maxLength={90}
-              className="w-full mt-5 bg-[var(--surface-sunk)] border border-[var(--rule)] focus:border-[var(--signal)] rounded-xl px-4 py-3.5 text-sm text-[#F2F4F7] placeholder:text-[#7E8899] outline-none"
+              className="w-full mt-5 bg-[var(--surface-sunk)] border border-[var(--rule)] focus:border-[var(--signal)] rounded-xl px-4 py-3.5 text-sm text-[var(--ink)] placeholder:text-[var(--ink-dim)] outline-none"
             />
 
             <button
@@ -147,7 +147,7 @@ export const FirstRunFlow: React.FC<Props> = ({ userId, onDone }) => {
               {step > 0 ? (
                 <button
                   onClick={() => setStep(step - 1)}
-                  className="text-[11px] font-mono text-[#8A93A5] hover:text-[#F2F4F7]"
+                  className="text-[11px] font-mono text-[var(--ink-muted)] hover:text-[var(--ink)]"
                 >
                   Back
                 </button>
@@ -157,7 +157,7 @@ export const FirstRunFlow: React.FC<Props> = ({ userId, onDone }) => {
 
               <button
                 onClick={onDone}
-                className="text-[11px] font-mono text-[#7E8899] hover:text-[#8A93A5]"
+                className="text-[11px] font-mono text-[var(--ink-dim)] hover:text-[var(--ink-muted)]"
               >
                 Skip for now
               </button>

@@ -210,11 +210,11 @@ export const SlidingPuzzle: React.FC<{ profile: UserProfile, onProfileUpdate?: (
           <p className="text-slate-400 text-sm mt-1">Restore the masterpiece.</p>
         </div>
         <div className="flex gap-2">
-          <div className="bg-[#12161F] border border-[#2A313C] rounded-xl px-3 py-2 flex flex-col items-center">
+          <div className="bg-[var(--surface)] border border-[var(--rule)] rounded-xl px-3 py-2 flex flex-col items-center">
             <span className="text-[10px] uppercase font-bold text-slate-400">Moves</span>
             <span className="font-mono font-bold text-white">{moves}</span>
           </div>
-          <div className="bg-[#12161F] border border-[#2A313C] rounded-xl px-3 py-2 flex flex-col items-center min-w-[60px]">
+          <div className="bg-[var(--surface)] border border-[var(--rule)] rounded-xl px-3 py-2 flex flex-col items-center min-w-[60px]">
             <span className="text-[10px] uppercase font-bold text-slate-400">Time</span>
             <span className="font-mono font-bold text-white">{formatTime(time)}</span>
           </div>
@@ -222,7 +222,7 @@ export const SlidingPuzzle: React.FC<{ profile: UserProfile, onProfileUpdate?: (
       </div>
 
       <div className="w-full flex justify-between items-center mb-6 gap-2 flex-wrap">
-        <div className="flex bg-[#12161F] border border-[#2A313C] rounded-xl p-1">
+        <div className="flex bg-[var(--surface)] border border-[var(--rule)] rounded-xl p-1">
           {[3, 4, 5].map((size) => (
             <button
               key={size}
@@ -231,7 +231,7 @@ export const SlidingPuzzle: React.FC<{ profile: UserProfile, onProfileUpdate?: (
                 setSeed(Math.random());
               }}
               className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-colors ${
-                gridSize === size ? 'bg-[#2A313C] text-white' : 'text-slate-400 hover:text-white'
+                gridSize === size ? 'bg-[var(--rule)] text-white' : 'text-slate-400 hover:text-white'
               }`}
             >
               {size}x{size}
@@ -245,20 +245,20 @@ export const SlidingPuzzle: React.FC<{ profile: UserProfile, onProfileUpdate?: (
               getNewImage();
               setSeed(Math.random());
             }}
-            className="flex items-center gap-2 px-3 py-2 bg-[#12161F] border border-[#2A313C] text-white rounded-xl hover:bg-[#1C212B] transition-colors text-xs font-bold"
+            className="flex items-center gap-2 px-3 py-2 bg-[var(--surface)] border border-[var(--rule)] text-white rounded-xl hover:bg-[#1C212B] transition-colors text-xs font-bold"
           >
             <ImageIcon className="w-3 h-3 shrink-0" /> New Image
           </button>
           <button
             onClick={() => setSeed(Math.random())}
-            className="eb-press flex items-center gap-2 px-3 py-2 bg-[#12161F] border border-[#2A313C] text-white rounded-xl hover:bg-[#1C212B] text-xs font-bold"
+            className="eb-press flex items-center gap-2 px-3 py-2 bg-[var(--surface)] border border-[var(--rule)] text-white rounded-xl hover:bg-[#1C212B] text-xs font-bold"
           >
             <RotateCcw className="w-3 h-3 shrink-0" /> Restart
           </button>
           <button
             onClick={handleHint}
             disabled={isWon || hintBusy}
-            title="Highlight the next tile to move"
+            title="Highlight the next tile to move" aria-label="Highlight the next tile to move"
             className="eb-press eb-glow-emerald flex items-center gap-2 px-3 py-2 bg-emerald-500/12 border border-emerald-500/35 eb-done rounded-xl hover:bg-emerald-500/20 disabled:opacity-40 text-xs font-bold"
           >
             <Lightbulb className="w-3 h-3 shrink-0" />
@@ -268,8 +268,8 @@ export const SlidingPuzzle: React.FC<{ profile: UserProfile, onProfileUpdate?: (
         </div>
       </div>
 
-      <div className="w-full max-w-[500px] aspect-square bg-[#0D1117] border border-[#2A313C] rounded-2xl p-2 relative shadow-2xl">
-        <div className="w-full h-full relative overflow-hidden rounded-xl bg-[#171B22]">
+      <div className="w-full max-w-[500px] aspect-square bg-[#0D1117] border border-[var(--rule)] rounded-2xl p-2 relative shadow-2xl">
+        <div className="w-full h-full relative overflow-hidden rounded-xl bg-[var(--surface-sunk)]">
           <AnimatePresence>
             {tiles.map((tile) => {
               const isEmpty = tile.id === gridSize * gridSize - 1;
@@ -358,7 +358,7 @@ export const SlidingPuzzle: React.FC<{ profile: UserProfile, onProfileUpdate?: (
               <div className="flex gap-4">
                 <button
                   onClick={() => setSeed(Math.random())}
-                  className="px-6 py-3 bg-[#171B22] border border-[#2A313C] text-white font-bold rounded-xl hover:bg-[#1C212B] transition-colors"
+                  className="px-6 py-3 bg-[var(--surface-sunk)] border border-[var(--rule)] text-white font-bold rounded-xl hover:bg-[#1C212B] transition-colors"
                 >
                   Play Again
                 </button>

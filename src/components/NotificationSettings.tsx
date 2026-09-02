@@ -91,18 +91,18 @@ export const NotificationSettings: React.FC<Props> = ({ isOpen, onClose }) => {
         soundFx.playClick();
         onChange(!checked);
       }}
-      className="w-full flex items-start gap-3 p-3 rounded-xl bg-[#171B22] border border-[#2A313C] hover:border-[#3A424F] text-left transition-colors"
+      className="w-full flex items-start gap-3 p-3 rounded-xl bg-[var(--surface-sunk)] border border-[var(--rule)] hover:border-[var(--rule-strong)] text-left transition-colors"
     >
       <span
         className={`shrink-0 w-10 h-6 rounded-full p-0.5 flex items-center transition-colors ${
-          checked ? 'bg-[#8B5CF6] justify-end' : 'bg-[#2A313C] justify-start'
+          checked ? 'bg-[#8B5CF6] justify-end' : 'bg-[var(--rule)] justify-start'
         }`}
       >
         <motion.span layout className="w-5 h-5 shrink-0 rounded-full bg-white shadow" />
       </span>
       <span className="min-w-0">
-        <span className="block text-xs font-bold text-[#F4F6F8]">{label}</span>
-        <span className="block text-[10px] text-[#98A2B3] mt-0.5 leading-relaxed">{hint}</span>
+        <span className="block text-xs font-bold text-[var(--ink)]">{label}</span>
+        <span className="block text-[10px] text-[var(--ink-muted)] mt-0.5 leading-relaxed">{hint}</span>
       </span>
     </button>
   );
@@ -122,24 +122,24 @@ export const NotificationSettings: React.FC<Props> = ({ isOpen, onClose }) => {
           exit={{ y: '100%' }}
           transition={{ type: 'spring', damping: 30, stiffness: 300 }}
           onClick={(e: React.MouseEvent) => e.stopPropagation()}
-          className="w-full sm:max-w-md max-h-[88vh] overflow-y-auto bg-[#0E1116] border border-[#2A313C] rounded-t-3xl sm:rounded-3xl p-4 sm:p-5 space-y-4"
+          className="w-full sm:max-w-md max-h-[88vh] overflow-y-auto bg-[var(--ground)] border border-[var(--rule)] rounded-t-3xl sm:rounded-3xl p-4 sm:p-5 space-y-4"
         >
-          <div className="sm:hidden w-10 h-1 rounded-full bg-[#2A313C] mx-auto" />
+          <div className="sm:hidden w-10 h-1 rounded-full bg-[var(--rule)] mx-auto" />
 
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <h3 className="text-base font-black font-mono text-[#F4F6F8] flex items-center gap-2">
+              <h3 className="text-base font-black font-mono text-[var(--ink)] flex items-center gap-2">
                 <Bell className="w-4 h-4 shrink-0 text-[#A78BFA]" />
                 Notifications
               </h3>
-              <p className="text-[11px] text-[#98A2B3] mt-1 leading-relaxed">
+              <p className="text-[11px] text-[var(--ink-muted)] mt-1 leading-relaxed">
                 Reminders built from your own routine, habits and tasks.
               </p>
             </div>
             <button
               onClick={onClose}
               aria-label="Close"
-              className="shrink-0 w-10 h-10 rounded-xl hover:bg-[#171B22] text-[#98A2B3] flex items-center justify-center"
+              className="shrink-0 w-10 h-10 rounded-xl hover:bg-[var(--surface-sunk)] text-[var(--ink-muted)] flex items-center justify-center"
             >
               <X className="w-4 h-4 shrink-0" />
             </button>
@@ -152,7 +152,7 @@ export const NotificationSettings: React.FC<Props> = ({ isOpen, onClose }) => {
                 <Smartphone className="w-3.5 h-3.5 shrink-0" />
                 Add to Home Screen first
               </p>
-              <p className="text-[11px] text-[#98A2B3] mt-1.5 leading-relaxed">
+              <p className="text-[11px] text-[var(--ink-muted)] mt-1.5 leading-relaxed">
                 On iPhone and iPad, Apple only allows notifications for apps added to the Home
                 Screen. In Safari: tap Share, then <strong>Add to Home Screen</strong>, and open
                 EliteLife from the new icon.
@@ -166,7 +166,7 @@ export const NotificationSettings: React.FC<Props> = ({ isOpen, onClose }) => {
                 <BellOff className="w-3.5 h-3.5 shrink-0" />
                 Blocked in your browser
               </p>
-              <p className="text-[11px] text-[#98A2B3] mt-1.5 leading-relaxed">
+              <p className="text-[11px] text-[var(--ink-muted)] mt-1.5 leading-relaxed">
                 Notifications were declined for this site. Re-allow them in your browser's site
                 settings, then come back here.
               </p>
@@ -174,7 +174,7 @@ export const NotificationSettings: React.FC<Props> = ({ isOpen, onClose }) => {
           )}
 
           {support === 'unsupported' && (
-            <p className="text-[11px] text-[#98A2B3] leading-relaxed">
+            <p className="text-[11px] text-[var(--ink-muted)] leading-relaxed">
               This browser doesn't support notifications.
             </p>
           )}
@@ -256,8 +256,8 @@ export const NotificationSettings: React.FC<Props> = ({ isOpen, onClose }) => {
                     onChange={(v) => update({ tasks: v })}
                   />
 
-                  <div className="p-3 rounded-xl bg-[#171B22] border border-[#2A313C]">
-                    <p className="text-xs font-bold text-[#F4F6F8]">Remind me this early</p>
+                  <div className="p-3 rounded-xl bg-[var(--surface-sunk)] border border-[var(--rule)]">
+                    <p className="text-xs font-bold text-[var(--ink)]">Remind me this early</p>
                     <div className="flex items-center gap-1.5 mt-2 flex-wrap">
                       {[0, 5, 10, 15, 30].map((m) => (
                         <button
@@ -266,7 +266,7 @@ export const NotificationSettings: React.FC<Props> = ({ isOpen, onClose }) => {
                           className={`text-[11px] font-semibold px-2.5 py-1.5 rounded-full border ${
                             prefs.leadMinutes === m
                               ? 'eb-chip-active'
-                              : 'text-[#7E8899] border-[#2A313C]'
+                              : 'text-[var(--ink-dim)] border-[var(--rule)]'
                           }`}
                         >
                           {m === 0 ? 'On time' : `${m} min`}
@@ -275,9 +275,9 @@ export const NotificationSettings: React.FC<Props> = ({ isOpen, onClose }) => {
                     </div>
                   </div>
 
-                  <div className="p-3 rounded-xl bg-[#171B22] border border-[#2A313C]">
-                    <p className="text-xs font-bold text-[#F4F6F8]">Evening check-in</p>
-                    <p className="text-[10px] text-[#98A2B3] mt-0.5 mb-2">
+                  <div className="p-3 rounded-xl bg-[var(--surface-sunk)] border border-[var(--rule)]">
+                    <p className="text-xs font-bold text-[var(--ink)]">Evening check-in</p>
+                    <p className="text-[10px] text-[var(--ink-muted)] mt-0.5 mb-2">
                       Only sent if something is still open.
                     </p>
                     <div className="flex items-center gap-2">
@@ -285,12 +285,12 @@ export const NotificationSettings: React.FC<Props> = ({ isOpen, onClose }) => {
                         type="time"
                         value={prefs.dailySummaryAt}
                         onChange={(e) => update({ dailySummaryAt: e.target.value })}
-                        className="bg-[#0E1116] border border-[#2A313C] rounded-lg px-2 py-1.5 text-[11px] text-[#F4F6F8] outline-none"
+                        className="bg-[var(--ground)] border border-[var(--rule)] rounded-lg px-2 py-1.5 text-[11px] text-[var(--ink)] outline-none"
                       />
                       {prefs.dailySummaryAt && (
                         <button
                           onClick={() => update({ dailySummaryAt: '' })}
-                          className="text-[10px] font-mono text-[#7E8899] hover:eb-danger"
+                          className="text-[10px] font-mono text-[var(--ink-dim)] hover:eb-danger"
                         >
                           turn off
                         </button>
@@ -316,7 +316,7 @@ export const NotificationSettings: React.FC<Props> = ({ isOpen, onClose }) => {
             </>
           )}
 
-          <p className="text-[10px] text-[#7E8899] leading-relaxed">
+          <p className="text-[10px] text-[var(--ink-dim)] leading-relaxed">
             Reminders are scheduled by the app while it's open or running in the background. If
             you fully close it, some may not arrive.
           </p>

@@ -28,7 +28,7 @@ export const DailyChallengeCard: React.FC<Props> = ({ profile, onLaunchModule })
           ? 'bg-yellow-500/10 border-yellow-500/40'
           : completed
             ? 'bg-emerald-500/10 border-emerald-500/30'
-            : 'bg-[#0E1116] border-[#2A313C]'
+            : 'bg-[var(--ground)] border-[var(--rule)]'
       }`}
     >
       <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -49,31 +49,31 @@ export const DailyChallengeCard: React.FC<Props> = ({ profile, onLaunchModule })
         )}
       </div>
 
-      <h3 className="text-base sm:text-lg font-black text-[#F4F6F8] font-mono tracking-tight mt-2 break-words">
+      <h3 className="text-base sm:text-lg font-black text-[var(--ink)] font-mono tracking-tight mt-2 break-words">
         {challenge.name}
       </h3>
-      <p className="text-[11px] text-[#98A2B3] mt-0.5">{challenge.tagline}</p>
+      <p className="text-[11px] text-[var(--ink-muted)] mt-0.5">{challenge.tagline}</p>
 
       {completed ? (
         <>
           <div className="mt-4 grid grid-cols-3 gap-2">
-            <div className="bg-[#0E1116]/60 border border-[#2A313C] rounded-xl p-2.5 text-center min-w-0">
-              <p className="text-lg font-black font-mono text-[#F4F6F8] tabular-nums leading-none">
+            <div className="bg-[var(--ground)]/60 border border-[var(--rule)] rounded-xl p-2.5 text-center min-w-0">
+              <p className="text-lg font-black font-mono text-[var(--ink)] tabular-nums leading-none">
                 {todayScore}
               </p>
-              <p className="text-[11px] font-mono text-[#7E8899] mt-1">TODAY</p>
+              <p className="text-[11px] font-mono text-[var(--ink-dim)] mt-1">TODAY</p>
             </div>
-            <div className="bg-[#0E1116]/60 border border-[#2A313C] rounded-xl p-2.5 text-center min-w-0">
+            <div className="bg-[var(--ground)]/60 border border-[var(--rule)] rounded-xl p-2.5 text-center min-w-0">
               <p className="text-lg font-black font-mono text-yellow-400 tabular-nums leading-none">
                 {best}
               </p>
-              <p className="text-[11px] font-mono text-[#7E8899] mt-1">BEST</p>
+              <p className="text-[11px] font-mono text-[var(--ink-dim)] mt-1">BEST</p>
             </div>
-            <div className="bg-[#0E1116]/60 border border-[#2A313C] rounded-xl p-2.5 text-center min-w-0">
-              <p className="text-lg font-black font-mono text-[#98A2B3] tabular-nums leading-none">
+            <div className="bg-[var(--ground)]/60 border border-[var(--rule)] rounded-xl p-2.5 text-center min-w-0">
+              <p className="text-lg font-black font-mono text-[var(--ink-muted)] tabular-nums leading-none">
                 {attempts}
               </p>
-              <p className="text-[11px] font-mono text-[#7E8899] mt-1">ATTEMPTS</p>
+              <p className="text-[11px] font-mono text-[var(--ink-dim)] mt-1">ATTEMPTS</p>
             </div>
           </div>
 
@@ -110,7 +110,7 @@ export const DailyChallengeCard: React.FC<Props> = ({ profile, onLaunchModule })
       ) : (
         <>
           {previousBest > 0 && (
-            <p className="text-[11px] text-[#98A2B3] mt-3">
+            <p className="text-[11px] text-[var(--ink-muted)] mt-3">
               Your best so far: <span className="text-yellow-400 font-bold">{previousBest}</span>
               {attempts > 0 && ` · ${attempts} attempt${attempts === 1 ? '' : 's'}`}
             </p>

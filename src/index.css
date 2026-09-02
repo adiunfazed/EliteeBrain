@@ -26,7 +26,11 @@
   --surface-sunk: #EBEFF5;
   --ink: #0E1116;
   --ink-muted: #647085;
+  /* Dimmer than muted — used for hints and secondary labels. */
+  --ink-dim: #7A8698;
   --rule: #D1D8E2;
+  /* A stronger rule for hover and emphasis. */
+  --rule-strong: #B8C2D0;
 
   --signal: #7C5CFF;
   --signal-ink: #5B3FD6;
@@ -46,7 +50,9 @@
   /* 30% — secondary. Text, rules, and structure. */
   --ink: #F2F4F7;
   --ink-muted: #8A93A5;
+  --ink-dim: #7E8899;
   --rule: #262C38;
+  --rule-strong: #39414F;
 
   /* 10% — accent. Used sparingly: one primary action per view. */
   --signal: #7C5CFF;
@@ -1128,3 +1134,83 @@ button.btn-quiet,
        rubber-band into view on iOS. --- */
 .eb-overlay-lock { overscroll-behavior: none; }
 body.eb-locked { overflow: hidden; position: relative; }
+
+
+/* ==================================================================
+   Accessibility
+   ================================================================== */
+
+/*
+ * Visible focus for keyboard users.
+ *
+ * :focus-visible only fires for keyboard navigation, so pointer users never
+ * see a ring — this adds keyboard access without changing how tapping looks.
+ */
+:where(button, a, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* Never remove focus rings without replacing them. */
+:where(button, a, input, textarea, select):focus:not(:focus-visible) {
+  outline: none;
+}
+
+/*
+ * Reduced motion.
+ *
+ * This app animates heavily, and for people with vestibular disorders that is
+ * genuinely nauseating rather than merely annoying. Motion is removed while
+ * keeping opacity transitions, so state changes are still perceivable.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animate-pulse,
+  .animate-spin {
+    animation: none !important;
+  }
+}
+
+/* Skip link, so keyboard users are not forced through the header time. */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 200;
+  padding: 12px 20px;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--signal);
+  border-radius: 0 0 12px 0;
+  font-weight: 600;
+}
+.skip-link:focus {
+  left: 0;
+}
+
+/* Screen-reader-only text for icon buttons that carry meaning. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Minimum touch target, per WCAG 2.5.5. */
+button, [role='button'] {
+  min-height: 32px;
+}

@@ -28,7 +28,7 @@ export const RealityVsPlan: React.FC<Props> = ({ input, onGo }) => {
       </span>
 
       {!report.hasPlan ? (
-        <p className="text-[11px] text-[#98A2B3] mt-2.5 leading-relaxed">
+        <p className="text-[11px] text-[var(--ink-muted)] mt-2.5 leading-relaxed">
           Nothing scheduled in the last week. Give tasks a date, or add routine blocks, and
           this compares what you planned with what happened.
         </p>
@@ -37,7 +37,7 @@ export const RealityVsPlan: React.FC<Props> = ({ input, onGo }) => {
           {report.execution !== null && (
             <p className="eb-heading text-2xl tabular-nums mt-1">
               {Math.round(report.execution * 100)}%
-              <span className="text-xs font-bold text-[#7E8899] ml-2">executed</span>
+              <span className="text-xs font-bold text-[var(--ink-dim)] ml-2">executed</span>
             </p>
           )}
 
@@ -47,12 +47,12 @@ export const RealityVsPlan: React.FC<Props> = ({ input, onGo }) => {
               .map((r) => (
                 <div key={r.label}>
                   <div className="flex items-center justify-between gap-2 text-[10px] font-mono">
-                    <span className="text-[#98A2B3]">{r.label}</span>
-                    <span className="text-[#7E8899] tabular-nums">
+                    <span className="text-[var(--ink-muted)]">{r.label}</span>
+                    <span className="text-[var(--ink-dim)] tabular-nums">
                       {r.actual} / {r.planned} {r.unit}
                     </span>
                   </div>
-                  <div className="mt-1 h-1.5 w-full bg-[#171B22] rounded-full overflow-hidden">
+                  <div className="mt-1 h-1.5 w-full bg-[var(--surface-sunk)] rounded-full overflow-hidden">
                     <motion.div
                       className={`h-full rounded-full ${
                         (r.ratio as number) >= 0.8
@@ -71,20 +71,20 @@ export const RealityVsPlan: React.FC<Props> = ({ input, onGo }) => {
           </div>
 
           {report.insight && (
-            <p className="text-[11px] text-[#98A2B3] mt-3.5 leading-relaxed">{report.insight}</p>
+            <p className="text-[11px] text-[var(--ink-muted)] mt-3.5 leading-relaxed">{report.insight}</p>
           )}
         </>
       )}
 
       {signals.length > 0 && (
-        <div className="mt-4 pt-3.5 border-t border-[#2A313C] space-y-2">
+        <div className="mt-4 pt-3.5 border-t border-[var(--rule)] space-y-2">
           <span className="eb-label flex items-center gap-1.5">
             <Lightbulb className="w-3 h-3 shrink-0 eb-warn" />
             What your data shows
           </span>
           {signals.map((s) => (
             <div key={s.key} className="flex items-start justify-between gap-3">
-              <p className="text-[11px] text-[#98A2B3] leading-relaxed min-w-0">{s.message}</p>
+              <p className="text-[11px] text-[var(--ink-muted)] leading-relaxed min-w-0">{s.message}</p>
               {onGo && (
                 <button
                   onClick={() =>

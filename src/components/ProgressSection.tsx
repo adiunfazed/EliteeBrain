@@ -91,10 +91,10 @@ export const ProgressSection: React.FC<Props> = ({ profile, userId }) => {
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-lg sm:text-xl font-black text-[#F4F6F8] font-mono tracking-tight">
+        <h2 className="text-lg sm:text-xl font-black text-[var(--ink)] font-mono tracking-tight">
           What you've actually done
         </h2>
-        <p className="text-[11px] sm:text-xs text-[#98A2B3] mt-1 leading-relaxed">
+        <p className="text-[11px] sm:text-xs text-[var(--ink-muted)] mt-1 leading-relaxed">
           Every number here comes from activity you logged. Nothing is estimated.
         </p>
       </div>
@@ -109,14 +109,14 @@ export const ProgressSection: React.FC<Props> = ({ profile, userId }) => {
             >
               <div className="flex items-center gap-1.5">
                 <Icon className={`w-3.5 h-3.5 shrink-0 ${t.tint}`} />
-                <span className="text-[11px] font-mono font-bold text-[#98A2B3] tracking-widest uppercase truncate">
+                <span className="text-[11px] font-mono font-bold text-[var(--ink-muted)] tracking-widest uppercase truncate">
                   {t.label}
                 </span>
               </div>
               <p className="text-xl sm:eb-heading text-2xl mt-1.5 tabular-nums">
                 {t.value}
               </p>
-              <p className="text-[10px] text-[#7E8899] font-mono mt-0.5 truncate">{t.sub}</p>
+              <p className="text-[10px] text-[var(--ink-dim)] font-mono mt-0.5 truncate">{t.sub}</p>
             </div>
           );
         })}
@@ -124,19 +124,19 @@ export const ProgressSection: React.FC<Props> = ({ profile, userId }) => {
 
       {/* Personal records */}
       <div>
-        <h3 className="text-sm font-black text-[#F4F6F8] font-mono tracking-tight flex items-center gap-2">
+        <h3 className="text-sm font-black text-[var(--ink)] font-mono tracking-tight flex items-center gap-2">
           <Trophy className="w-4 h-4 shrink-0 text-yellow-400" />
           Personal bests
         </h3>
-        <p className="text-[11px] text-[#98A2B3] mt-1">
+        <p className="text-[11px] text-[var(--ink-muted)] mt-1">
           Your scores against your own previous results — not against anyone else.
         </p>
 
         {records.length === 0 ? (
-          <div className="mt-3 text-center py-10 px-6 border border-dashed border-[#2A313C] rounded-2xl">
-            <Trophy className="w-7 h-7 shrink-0 text-[#7E8899] mx-auto mb-2.5" />
-            <p className="text-sm font-bold text-[#F4F6F8] font-mono">No records yet</p>
-            <p className="text-[11px] text-[#98A2B3] mt-1 max-w-xs mx-auto leading-relaxed">
+          <div className="mt-3 text-center py-10 px-6 border border-dashed border-[var(--rule)] rounded-2xl">
+            <Trophy className="w-7 h-7 shrink-0 text-[var(--ink-dim)] mx-auto mb-2.5" />
+            <p className="text-sm font-bold text-[var(--ink)] font-mono">No records yet</p>
+            <p className="text-[11px] text-[var(--ink-muted)] mt-1 max-w-xs mx-auto leading-relaxed">
               Finish a training module and your best score will appear here.
             </p>
           </div>
@@ -152,14 +152,14 @@ export const ProgressSection: React.FC<Props> = ({ profile, userId }) => {
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs font-bold text-[#F4F6F8] truncate">{r.name}</span>
+                    <span className="text-xs font-bold text-[var(--ink)] truncate">{r.name}</span>
                     {r.isNewRecord && (
                       <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-yellow-500/15 text-yellow-300 border border-yellow-500/30 shrink-0">
                         NEW RECORD
                       </span>
                     )}
                   </div>
-                  <p className="text-[10px] font-mono text-[#98A2B3] mt-1">
+                  <p className="text-[10px] font-mono text-[var(--ink-muted)] mt-1">
                     {r.previousBest > 0 ? `Previous best ${r.previousBest} · ` : ''}
                     Last {r.lastScore} · {r.attempts} attempt{r.attempts === 1 ? '' : 's'}
                   </p>
@@ -169,7 +169,7 @@ export const ProgressSection: React.FC<Props> = ({ profile, userId }) => {
                   <p className="text-xl font-black font-mono text-yellow-400 tabular-nums leading-none">
                     {r.best}
                   </p>
-                  <p className="text-[11px] font-mono text-[#7E8899] mt-1">BEST</p>
+                  <p className="text-[11px] font-mono text-[var(--ink-dim)] mt-1">BEST</p>
                 </div>
               </motion.div>
             ))}
@@ -177,7 +177,7 @@ export const ProgressSection: React.FC<Props> = ({ profile, userId }) => {
         )}
       </div>
 
-      <p className="text-[10px] text-[#7E8899] font-mono leading-relaxed text-center max-w-md mx-auto">
+      <p className="text-[10px] text-[var(--ink-dim)] font-mono leading-relaxed text-center max-w-md mx-auto">
         These are EliteLife activity and training metrics. They measure your practice on
         this app — not intelligence, and not a clinical assessment.
       </p>

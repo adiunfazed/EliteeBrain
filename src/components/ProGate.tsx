@@ -37,10 +37,10 @@ export const ProGate: React.FC<Props> = ({ profile, feature, blurb, onOpenPro, c
         <Crown className="w-6 h-6 shrink-0 eb-warn" />
       </span>
 
-      <h3 className="text-base font-black font-mono text-[#F4F6F8] mt-3 tracking-tight">
+      <h3 className="text-base font-black font-mono text-[var(--ink)] mt-3 tracking-tight">
         {feature} is a Pro feature
       </h3>
-      <p className="text-[11px] text-[#98A2B3] mt-1.5 max-w-xs mx-auto leading-relaxed">
+      <p className="text-[11px] text-[var(--ink-muted)] mt-1.5 max-w-xs mx-auto leading-relaxed">
         {expired
           ? 'Your free month has ended. Your data is safe and comes straight back when you unlock Pro.'
           : blurb}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback , lazy, Suspense} from 'react';
 import { AnimatePresence } from 'motion/react';
 import { UserProfile, ModuleId, SessionResult } from './types';
 import { applyDayRollover, applyStreakReset, loadProfile, saveProfile, processModuleResult, MODULE_METADATA, createInitialProfile, resetAdminProfile, countConsecutiveCompletedDays, setActiveUser } from './utils/storage';
@@ -22,23 +22,27 @@ import { SplashScreen } from './components/SplashScreen';
 import { AchievementUnlockedModal } from './components/AchievementUnlockedModal';
 import { AchievementsGalleryModal } from './components/AchievementsGalleryModal';
 
-import { DigitSpanModule } from './components/modules/DigitSpanModule';
-import { StroopModule } from './components/modules/StroopModule';
-import { SpatialNBackModule } from './components/modules/SpatialNBackModule';
-import { StillnessModule } from './components/modules/StillnessModule';
-import { PatternMatrixModule } from './components/modules/PatternMatrixModule';
-import { CognitiveShiftModule } from './components/modules/CognitiveShiftModule';
-import { VisuospatialModule } from './components/modules/VisuospatialModule';
-import { ReactionInhibitorModule } from './components/modules/ReactionInhibitorModule';
-import { MentalMathModule } from './components/modules/MentalMathModule';
-import { VocabularyModule } from './components/modules/VocabularyModule';
-import { ArticulationModule } from './components/modules/ArticulationModule';
+const DigitSpanModule = lazy(() => import('./components/modules/DigitSpanModule').then((m) => ({ default: m.DigitSpanModule })));
+const StroopModule = lazy(() => import('./components/modules/StroopModule').then((m) => ({ default: m.StroopModule })));
+const SpatialNBackModule = lazy(() => import('./components/modules/SpatialNBackModule').then((m) => ({ default: m.SpatialNBackModule })));
+const StillnessModule = lazy(() => import('./components/modules/StillnessModule').then((m) => ({ default: m.StillnessModule })));
+const PatternMatrixModule = lazy(() => import('./components/modules/PatternMatrixModule').then((m) => ({ default: m.PatternMatrixModule })));
+const CognitiveShiftModule = lazy(() => import('./components/modules/CognitiveShiftModule').then((m) => ({ default: m.CognitiveShiftModule })));
+const VisuospatialModule = lazy(() => import('./components/modules/VisuospatialModule').then((m) => ({ default: m.VisuospatialModule })));
+const ReactionInhibitorModule = lazy(() => import('./components/modules/ReactionInhibitorModule').then((m) => ({ default: m.ReactionInhibitorModule })));
+const MentalMathModule = lazy(() => import('./components/modules/MentalMathModule').then((m) => ({ default: m.MentalMathModule })));
+const VocabularyModule = lazy(() => import('./components/modules/VocabularyModule').then((m) => ({ default: m.VocabularyModule })));
+const ArticulationModule = lazy(() => import('./components/modules/ArticulationModule').then((m) => ({ default: m.ArticulationModule })));
 import { resolveEntitlement, startTrialFields } from './lib/entitlement';
 import { goalById } from './lib/goals';
 import { ScrollProgress } from './components/ScrollProgress';
 import { XpProvider } from './components/XpToast';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { UpdateBanner } from './components/UpdateBanner';
+import { DeleteAccountModal } from './components/DeleteAccountModal';
+import { UndoToast } from './components/UndoToast';
+import { Lang, initLang, setLang } from './lib/i18n';
+import { TemplatePicker } from './components/TemplatePicker';
 import { refreshPushTimezone } from './lib/notifications';
 
 export default function App() {
@@ -76,7 +80,17 @@ export default function App() {
   const [authResolved, setAuthResolved] = useState(false);
 
   // Theme & Accessibility States
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(true); // Dark mode by default
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('elitebrain_theme');
+      if (saved === 'light') return false;
+      if (saved === 'dark') return true;
+      // No stored choice: follow the system, defaulting to dark.
+      return !window.matchMedia?.('(prefers-color-scheme: light)').matches;
+    } catch {
+      return true;
+    }
+  });
   const [isColorblind, setIsColorblind] = useState<boolean>(false);
   const [isOnboardingOpen, setIsOnboardingOpen] = useState<boolean>(() => {
     return localStorage.getItem('elitebrain_onboarded') !== 'true';
@@ -85,6 +99,9 @@ export default function App() {
   // Modal States
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSignOutModalOpen, setIsSignOutModalOpen] = useState(false);
+  const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(false);
+  const [lang, setLangState] = useState<Lang>(() => initLang());
+  const [showTemplates, setShowTemplates] = useState(false);
   const [isAICoachOpen, setIsAICoachOpen] = useState(false);
   const [isProModalOpen, setIsProModalOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
@@ -123,6 +140,12 @@ export default function App() {
       root.classList.add('dark');
     } else {
       root.classList.remove('dark');
+    }
+
+    try {
+      localStorage.setItem('elitebrain_theme', isDarkMode ? 'dark' : 'light');
+    } catch {
+      /* private mode — the theme simply resets next launch */
     }
 
     if (isColorblind) {
@@ -482,7 +505,7 @@ export default function App() {
       />
 
       {/* Main Content Dashboard */}
-      <main className="max-w-7xl mx-auto px-4 md:px-8 py-6">
+      <main id="main-content" className="max-w-7xl mx-auto px-4 md:px-8 py-6">
         <Dashboard
           profile={profile}
           isHydrated={!currentUser || isHydrated}
@@ -495,7 +518,21 @@ export default function App() {
         />
       </main>
 
-      {/* Active Game Modules Overlays */}
+      {/* Active Game Modules Overlays. Loaded on demand — keeping eleven
+          modules out of the first bundle is most of the startup cost. */}
+      <Suspense
+        fallback={
+          activeModuleId ? (
+            <div className="fixed inset-0 z-50 bg-[var(--ground)] flex flex-col items-center justify-center gap-4">
+              <span
+                className="w-10 h-10 rounded-full border-2 border-[var(--rule)] animate-spin"
+                style={{ borderTopColor: 'var(--signal)' }}
+              />
+              <p className="t-sub">Loading…</p>
+            </div>
+          ) : null
+        }
+      >
       {activeModuleId === 'digit-span' && (
         <DigitSpanModule
           currentLevel={profile.modules['digit-span']?.level || 1}
@@ -605,6 +642,8 @@ export default function App() {
         />
       )}
 
+      </Suspense>
+
       {/* Post Session Summary Modal */}
       {lastResult && (
         <SummaryModal result={lastResult} onClose={() => setLastResult(null)} />
@@ -650,7 +689,15 @@ export default function App() {
         onUpdateProfile={updateAndSyncProfile}
         onClose={() => setIsSignOutModalOpen(false)}
         onConfirmSignOut={handleSignOut}
+        onDeleteAccount={() => {
+          setIsSignOutModalOpen(false);
+          setIsDeleteAccountOpen(true);
+        }}
       />
+
+      {isDeleteAccountOpen && currentUser && (
+        <DeleteAccountModal profile={profile} onClose={() => setIsDeleteAccountOpen(false)} />
+      )}
 
       {/* AI Cognitive Coach Modal */}
       <AICoachModal
@@ -680,11 +727,27 @@ export default function App() {
               /* private mode — the screen may reappear, which is harmless */
             }
             setShowFirstRun(false);
+            setShowTemplates(true);
           }}
         />
       )}
 
+      {showTemplates && currentUser && (
+        <TemplatePicker
+          userId={currentUser.uid}
+          onDone={() => setShowTemplates(false)}
+          onSkip={() => setShowTemplates(false)}
+        />
+      )}
+
+      {/* Skip link: first tab stop, so keyboard users can jump past the
+          header instead of tabbing through it on every screen. */}
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
+
       <UpdateBanner ready={!showSplash && authResolved} />
+      <UndoToast />
 
       <div className="eb-ambient" aria-hidden="true" />
 

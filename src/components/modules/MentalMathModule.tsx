@@ -138,7 +138,7 @@ export const MentalMathModule: React.FC<Props> = ({ currentLevel, onFinishSessio
           style={{ fontSize: 'clamp(44px, 14vw, 64px)', lineHeight: 1 }}
         >
           {correct}
-          <span className="text-[#8A93A5]">/{QUESTIONS}</span>
+          <span className="text-[var(--ink-muted)]">/{QUESTIONS}</span>
         </p>
 
         <div className="flex items-center gap-1.5 mt-5">
@@ -172,7 +172,7 @@ export const MentalMathModule: React.FC<Props> = ({ currentLevel, onFinishSessio
         <button
           onClick={onClose}
           aria-label="Quit"
-          className="w-10 h-10 rounded-xl border border-[var(--rule)] flex items-center justify-center text-[#8A93A5]"
+          className="w-10 h-10 rounded-xl border border-[var(--rule)] flex items-center justify-center text-[var(--ink-muted)]"
         >
           <X className="w-4 h-4 shrink-0" />
         </button>

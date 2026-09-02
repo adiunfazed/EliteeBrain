@@ -45,8 +45,8 @@ export class ErrorBoundary extends Component<Props, State> {
   public render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-[#0B0E14] text-[#F4F6F8] flex items-center justify-center p-4 font-sans select-none">
-          <div className="max-w-md w-full bg-[#12161F] border border-[#2A313C] rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6 text-center relative overflow-hidden">
+        <div className="min-h-screen bg-[#0B0E14] text-[var(--ink)] flex items-center justify-center p-4 font-sans select-none">
+          <div className="max-w-md w-full bg-[var(--surface)] border border-[var(--rule)] rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6 text-center relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-500 via-amber-500 to-indigo-500" />
             
             <div className="w-14 h-14 shrink-0 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center justify-center mx-auto text-red-400">
@@ -57,13 +57,13 @@ export class ErrorBoundary extends Component<Props, State> {
               <h2 className="text-xl font-mono font-bold tracking-tight text-white">
                 Application Recovery
               </h2>
-              <p className="text-xs text-[#98A2B3] leading-relaxed">
+              <p className="text-xs text-[var(--ink-muted)] leading-relaxed">
                 EliteLife encountered an unexpected UI state exception. Don't worry, your data is protected.
               </p>
             </div>
 
             {this.state.error && (
-              <div className="bg-[#0B0E14] border border-[#2A313C] rounded-xl p-3 text-left overflow-x-auto max-h-32 text-[11px] font-mono text-red-300">
+              <div className="bg-[#0B0E14] border border-[var(--rule)] rounded-xl p-3 text-left overflow-x-auto max-h-32 text-[11px] font-mono text-red-300">
                 {this.state.error.toString()}
               </div>
             )}
@@ -79,7 +79,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
               <button
                 onClick={this.handleClearCache}
-                className="w-full h-11 bg-[#171B22] hover:bg-[#1E232D] border border-[#2A313C] text-[#C4B5FD] font-mono text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
+                className="w-full h-11 bg-[var(--surface-sunk)] hover:bg-[#1E232D] border border-[var(--rule)] text-[#C4B5FD] font-mono text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
               >
                 <Trash2 className="w-4 h-4 shrink-0 eb-warn" />
                 <span>Reset Cache & Restore Default</span>

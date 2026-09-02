@@ -30,7 +30,7 @@ interface Props {
  */
 /** One colour per block kind, so a block looks the same everywhere. */
 /** Matching hexes for the tile classes, used to tint incomplete habits. */
-const TILE_HEX = ['#7C5CFF', '#FF6B57', '#FFB020', '#00C2A8', '#8A93A5'];
+const TILE_HEX = ['#7C5CFF', '#FF6B57', '#FFB020', '#00C2A8', 'var(--ink-muted)'];
 
 const BLOCK_TINT: Record<string, string> = {
   study: '#7C5CFF',
@@ -39,7 +39,7 @@ const BLOCK_TINT: Record<string, string> = {
   sleep: '#6C7BFF',
   meal: '#00C2A8',
   personal: '#FF6B57',
-  custom: '#8A93A5',
+  custom: 'var(--ink-muted)',
 };
 
 export const TodayPane: React.FC<Props> = ({
@@ -136,7 +136,7 @@ export const TodayPane: React.FC<Props> = ({
             ? 'bg-emerald-500 border-emerald-500 text-slate-950'
             : partial
               ? 'bg-amber-500 border-amber-500 text-slate-950'
-              : 'border-[#3A424F] hover:border-emerald-500/60'
+              : 'border-[var(--rule-strong)] hover:border-emerald-500/60'
         }`}
       >
         <AnimatePresence>
@@ -163,7 +163,7 @@ export const TodayPane: React.FC<Props> = ({
       <div className="eb-card p-4 sm:p-5 flex items-center gap-4">
         <div className="relative w-16 h-16 shrink-0">
           <svg viewBox="0 0 44 44" className="w-full h-full -rotate-90">
-            <circle cx="22" cy="22" r="19" fill="none" stroke="#171B22" strokeWidth="4" />
+            <circle cx="22" cy="22" r="19" fill="none" stroke="var(--surface-sunk)" strokeWidth="4" />
             <motion.circle
               cx="22"
               cy="22"
@@ -178,7 +178,7 @@ export const TodayPane: React.FC<Props> = ({
               transition={{ duration: 0.5, ease: 'easeOut' }}
             />
           </svg>
-          <span className="absolute inset-0 flex items-center justify-center text-[11px] font-mono font-black text-[#F4F6F8] tabular-nums">
+          <span className="absolute inset-0 flex items-center justify-center text-[11px] font-mono font-black text-[var(--ink)] tabular-nums">
             {Math.round(pct * 100)}%
           </span>
         </div>
@@ -188,15 +188,15 @@ export const TodayPane: React.FC<Props> = ({
           </p>
           <p className="eb-stat text-2xl sm:text-3xl mt-1">
             {doneCount} / {totalCount}
-            <span className="text-xs font-bold text-[#7E8899] ml-2">done today</span>
+            <span className="text-xs font-bold text-[var(--ink-dim)] ml-2">done today</span>
           </p>
         </div>
       </div>
 
       {empty && (
-        <div className="text-center py-12 px-6 border border-dashed border-[#2A313C] rounded-2xl">
+        <div className="text-center py-12 px-6 border border-dashed border-[var(--rule)] rounded-2xl">
           <p className="eb-heading text-base">Nothing scheduled yet.</p>
-          <p className="text-[11px] text-[#98A2B3] mt-1.5 max-w-sm mx-auto leading-relaxed">
+          <p className="text-[11px] text-[var(--ink-muted)] mt-1.5 max-w-sm mx-auto leading-relaxed">
             Build the routine you want to follow each day, then tick it off here. Link blocks to a
             goal and your goal moves as you do the work.
           </p>
@@ -224,7 +224,7 @@ export const TodayPane: React.FC<Props> = ({
             <span className="eb-label">
               Your routine
             </span>
-            <span className="text-[10px] font-mono text-[#7E8899] tabular-nums">
+            <span className="text-[10px] font-mono text-[var(--ink-dim)] tabular-nums">
               {adherence.done}/{adherence.total}
             </span>
           </div>
@@ -233,7 +233,7 @@ export const TodayPane: React.FC<Props> = ({
               <motion.div
                 key={block.id}
                 layout
-                style={{ color: BLOCK_TINT[block.kind] || '#8A93A5' }}
+                style={{ color: BLOCK_TINT[block.kind] || 'var(--ink-muted)' }}
                 className={`eb-card-tap eb-rail eb-shine relative overflow-hidden rounded-2xl border p-3.5 flex items-center gap-3 ${
                   state === 'done'
                     ? 'bg-emerald-500/[0.09] border-emerald-500/30'
@@ -253,13 +253,13 @@ export const TodayPane: React.FC<Props> = ({
                 <div className="min-w-0 flex-1">
                   <p
                     className={`eb-heading text-sm break-words relative ${
-                      state === 'skipped' ? 'text-[#7E8899] line-through' : 'text-[#F2F4F7]'
+                      state === 'skipped' ? 'text-[var(--ink-dim)] line-through' : 'text-[var(--ink)]'
                     }`}
                   >
                     {block.title}
                   </p>
                   <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                    <span className="text-[10px] font-mono text-[#98A2B3] flex items-center gap-1">
+                    <span className="text-[10px] font-mono text-[var(--ink-muted)] flex items-center gap-1">
                       <Clock className="w-2.5 h-2.5 shrink-0" />
                       {block.startTime}–{block.endTime}
                     </span>
@@ -336,7 +336,7 @@ export const TodayPane: React.FC<Props> = ({
 
                   <p
                     className={`eb-heading text-sm mt-3 leading-snug break-words relative ${
-                      stats.completedToday ? '' : 'text-[#F2F4F7]'
+                      stats.completedToday ? '' : 'text-[var(--ink)]'
                     }`}
                   >
                     {habit.title}
@@ -344,7 +344,7 @@ export const TodayPane: React.FC<Props> = ({
 
                   <p
                     className={`text-[10px] mt-1 relative ${
-                      stats.completedToday ? 'opacity-80' : 'text-[#8A93A5]'
+                      stats.completedToday ? 'opacity-80' : 'text-[var(--ink-muted)]'
                     }`}
                   >
                     {habit.metric === 'yes_no'
@@ -385,9 +385,9 @@ export const TodayPane: React.FC<Props> = ({
               <button
                 key={t.id}
                 onClick={() => onGo('tasks')}
-                className="eb-press eb-shine w-full text-left rounded-2xl border border-[#2A313C] bg-[#0E1116] p-3"
+                className="eb-press eb-shine w-full text-left rounded-2xl border border-[var(--rule)] bg-[var(--ground)] p-3"
               >
-                <p className="text-sm text-[#F4F6F8] break-words">{t.title}</p>
+                <p className="text-sm text-[var(--ink)] break-words">{t.title}</p>
               </button>
             ))}
           </div>
