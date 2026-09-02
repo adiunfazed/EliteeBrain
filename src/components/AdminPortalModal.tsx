@@ -40,7 +40,7 @@ interface PaymentRequest {
   userId: string;
   userEmail: string;
   userName: string;
-  plan: 'annual' | 'monthly' | 'lifetime';
+  plan: 'yearly' | 'monthly' | 'lifetime';
   amountINR: number;
   utrNumber: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
@@ -331,11 +331,19 @@ export const AdminPortalModal: React.FC<Props> = ({
         const userSnap = await getDoc(userDocRef);
 
         const now = Date.now();
+
+        // Extend from any unexpired time they already have, not from today.
+        // Setting it from now would delete days the user has already paid for
+        // whenever they renew early.
+        const existingRaw = userSnap.exists() ? (userSnap.data() as any)?.proExpiresAt : null;
+        const existingMs = existingRaw ? Date.parse(existingRaw) : NaN;
+        const base = Number.isFinite(existingMs) && existingMs > now ? existingMs : now;
+
         let expiresAtMs: number;
         if (req.plan === 'monthly') {
-          expiresAtMs = now + 30 * 24 * 60 * 60 * 1000;
-        } else if (req.plan === 'annual') {
-          expiresAtMs = now + 365 * 24 * 60 * 60 * 1000;
+          expiresAtMs = base + 30 * 24 * 60 * 60 * 1000;
+        } else if (req.plan === 'yearly') {
+          expiresAtMs = base + 365 * 24 * 60 * 60 * 1000;
         } else {
           expiresAtMs = now + 100 * 365 * 24 * 60 * 60 * 1000;
         }

@@ -65,7 +65,7 @@ export function toMillis(value: any): number | null {
   return null;
 }
 
-export type EntitlementStatus = 'lifetime' | 'trial' | 'expired' | 'free';
+export type EntitlementStatus = 'lifetime' | 'subscription' | 'trial' | 'expired' | 'free';
 
 export interface Entitlement {
   isPro: boolean;
@@ -78,6 +78,14 @@ export function resolveEntitlement(data: any, now: number = Date.now()): Entitle
 
   if (readField(data, 'lifetimePro') === true || readField(data, 'proPlanType') === 'lifetime') {
     return { isPro: true, status: 'lifetime' };
+  }
+
+  // Active dated subscription, before the trial: a paying customer whose
+  // trial also lapsed must not read as expired. No isProUser flag required —
+  // the expiry date alone is the grant, and it is written server-side.
+  const expiryMs = toMillis(readField(data, 'proExpiresAt'));
+  if (expiryMs !== null && now < expiryMs) {
+    return { isPro: true, status: 'subscription' };
   }
 
   const startMs = toMillis(readField(data, 'trialStartedAt'));

@@ -41,6 +41,16 @@ const STALE_MS = 5 * 60 * 1000;
  */
 const MAX_RECOMPUTE_PER_REQUEST = 6;
 
+/** How long a cached entry is considered current. */
+const CACHE_TTL_MS = 5 * 60 * 1000;
+
+/** True when an entry is old enough to be worth recomputing. */
+function isStale(entry: { updatedAt?: string }): boolean {
+  if (!entry?.updatedAt) return true;
+  const at = Date.parse(entry.updatedAt);
+  return !Number.isFinite(at) || Date.now() - at > CACHE_TTL_MS;
+}
+
 /** Mirrors resolveEntitlement — Pro means lifetime or an unexpired trial. */
 /* ------------------------------------------------------------------ */
 /* XP rules — must match src/lib/xp.ts                                 */
@@ -275,6 +285,8 @@ export async function getLeaderboard(
   const entries: LeaderboardEntry[] = [];
   const toPersist: LeaderboardEntry[] = [];
   let recomputed = 0;
+  /** Cached entries due a background refresh. */
+  const needsRefresh: string[] = [];
 
   for (const doc of usersSnap.docs) {
     const data = doc.data();
@@ -297,14 +309,23 @@ export async function getLeaderboard(
       continue;
     }
 
-    // Serve a stale entry rather than blocking the response on a recompute.
-    // Only a few accounts are refreshed per request, so the first load stays
-    // fast no matter how many members exist.
-    if (cached && recomputed >= MAX_RECOMPUTE_PER_REQUEST) {
+    // ALWAYS serve the cached value when one exists.
+    //
+    // Previously a handful of accounts were recomputed inline on each request,
+    // and which ones depended on whichever caches happened to be stale at that
+    // moment. Two devices therefore saw different XP for the same people and
+    // ranked them differently. Reading from cache only means every device sees
+    // an identical board; refreshes happen below, after the ranking is fixed.
+    if (cached) {
       entries.push({ ...cached, displayName, isPro: pro, photoURL });
+      if (isStale(cached) && needsRefresh.length < MAX_RECOMPUTE_PER_REQUEST) {
+        needsRefresh.push(doc.id);
+      }
       continue;
     }
 
+    // No cache at all: this account has never been ranked, so it must be
+    // computed now or it would be missing from the board entirely.
     try {
       recomputed++;
       const { career, weekly } = await computeUserXp(doc.id);
@@ -324,6 +345,25 @@ export async function getLeaderboard(
       // One unreadable account must not take down the whole board.
       console.warn('Could not compute XP for', doc.id, (err as Error)?.message);
       if (cached) entries.push({ ...cached, displayName, isPro: pro });
+    }
+  }
+
+  // Refresh stale entries AFTER the ranking is decided, so this request's
+  // output is unaffected and the next one is fresher.
+  for (const staleUid of needsRefresh) {
+    try {
+      const { career, weekly } = await computeUserXp(staleUid);
+      const existing = entries.find((e) => e.uid === staleUid);
+      if (!existing) continue;
+      toPersist.push({
+        ...existing,
+        careerXp: career,
+        weeklyXp: weekly,
+        level: levelFromXp(career),
+        updatedAt: new Date().toISOString(),
+      });
+    } catch {
+      /* a single unreadable account must not fail the board */
     }
   }
 

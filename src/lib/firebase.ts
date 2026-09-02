@@ -480,7 +480,7 @@ export interface PaymentRequestDoc {
   userId: string;
   userEmail: string;
   userName: string;
-  plan: 'monthly' | 'annual' | 'lifetime';
+  plan: 'monthly' | 'yearly' | 'lifetime';
   amountINR: number;
   utrNumber: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
@@ -591,7 +591,7 @@ export async function reviewPaymentRequest(
   targetUserId: string,
   newStatus: 'APPROVED' | 'REJECTED',
   reviewerEmail: string,
-  planType: 'monthly' | 'annual' | 'lifetime' = 'lifetime',
+  planType: 'monthly' | 'yearly' | 'lifetime' = 'lifetime',
   amountINR: number = 1999
 ) {
   // Update local list

@@ -15,7 +15,7 @@ import type { UserProfile } from '../types';
 export const TRIAL_DAYS = 30;
 export const LIFETIME_PRICE_INR = 1999;
 
-export type EntitlementStatus = 'lifetime' | 'trial' | 'expired' | 'free';
+export type EntitlementStatus = 'lifetime' | 'subscription' | 'trial' | 'expired' | 'free';
 
 export interface Entitlement {
   status: EntitlementStatus;
@@ -23,6 +23,9 @@ export interface Entitlement {
   isPro: boolean;
   /** Whole days left in the trial. 0 for every non-trial status. */
   trialDaysLeft: number;
+  /** Days left on a paid subscription. */
+  daysRemaining?: number;
+  proExpiresAt?: string;
   trialStartedAt?: string;
   trialEndsAt?: string;
 }
@@ -56,6 +59,27 @@ export function resolveEntitlement(
   // this field existed keep working.
   if (profile.lifetimePro === true || profile.proPlanType === 'lifetime') {
     return { status: 'lifetime', isPro: true, trialDaysLeft: 0 };
+  }
+
+  // Active dated subscription. Checked before the trial so a paying customer
+  // whose trial also lapsed is never reported as expired. An expiry in the
+  // past deliberately falls through — access must end when it is paid up to.
+  const expiry = parseDate(profile.proExpiresAt);
+  if (expiry !== null && now < expiry) {
+    return {
+      status: 'subscription',
+      isPro: true,
+      trialDaysLeft: 0,
+      proExpiresAt: new Date(expiry).toISOString(),
+      // Whole calendar days remaining, matching how the trial counts.
+      daysRemaining: Math.max(
+        1,
+        Math.round(
+          (new Date(expiry).setHours(0, 0, 0, 0) - new Date(now).setHours(0, 0, 0, 0)) /
+            86400000
+        )
+      ),
+    };
   }
 
   const startMs = parseDate(profile.trialStartedAt);
@@ -107,13 +131,6 @@ export function resolveEntitlement(
     };
   }
 
-  // Legacy: a dated grant from before the lifetime model. Honour it until it
-  // runs out so nobody who already had access loses it on deploy.
-  const legacyExpiry = parseDate(profile.proExpiresAt);
-  if (profile.isProUser === true && legacyExpiry !== null && now < legacyExpiry) {
-    return { status: 'lifetime', isPro: true, trialDaysLeft: 0 };
-  }
-
   return { status: 'free', isPro: false, trialDaysLeft: 0 };
 }
 
@@ -122,6 +139,8 @@ export function entitlementLabel(e: Entitlement): string {
   switch (e.status) {
     case 'lifetime':
       return 'Lifetime Pro';
+    case 'subscription':
+      return e.daysRemaining ? `Pro · ${e.daysRemaining} days left` : 'Pro';
     case 'trial':
       return `Trial — ${e.trialDaysLeft} day${e.trialDaysLeft === 1 ? '' : 's'} left`;
     case 'expired':

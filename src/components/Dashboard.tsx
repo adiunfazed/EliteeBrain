@@ -6,6 +6,7 @@ import { ModuleRoster } from './ModuleRoster';
 import { ModuleCard } from './ModuleCard';
 import { AchievementsDashboardSection } from './AchievementsDashboardSection';
 import { LeaderboardScreen } from './LeaderboardScreen';
+import { ShareCard } from './ShareCard';
 import { RankProgressionSection } from './RankProgressionSection';
 import { AICoachSection } from './AICoachSection';
 import { GamesSection } from './GamesSection';
@@ -56,6 +57,7 @@ import {
   ChevronDown,
   ChevronRight,
   Medal,
+  Share2,
   Trophy,
   Brain,
   Flame,
@@ -108,6 +110,7 @@ export const Dashboard: React.FC<Props> = ({
   const [trainFilter, setTrainFilter] = useState<string | null>(null);
   const [moreDrawer, setMoreDrawer] = useState<string | null>('rank');
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showShare, setShowShare] = useState(false);
   const lastUnlockSignatureRef = useRef<string>('');
   const [habitHandoff, setHabitHandoff] = useState<{ title: string; minutes: number; habitId: string } | null>(null);
   const [tasksDone, setTasksDone] = useState(0);
@@ -841,6 +844,23 @@ export const Dashboard: React.FC<Props> = ({
               blurb="Your rank, momentum, weekly review and full history."
               onOpenPro={onOpenProModal}
             >
+              <button
+                onClick={() => {
+                  soundFx.playClick();
+                  setShowShare(true);
+                }}
+                className="w-full text-left rounded-2xl border border-[var(--rule)] p-4 mb-3 flex items-center gap-4 transition-transform active:scale-[0.99]"
+              >
+                <span className="w-11 h-11 rounded-xl shrink-0 flex items-center justify-center bg-[var(--surface-sunk)]">
+                  <Share2 className="w-5 h-5 shrink-0 text-[var(--signal-ink)]" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="t-section block">Share your week</span>
+                  <span className="t-sub block mt-0.5">Streak, tasks and XP as an image</span>
+                </span>
+                <ChevronRight className="w-5 h-5 shrink-0 text-[#7E8899]" />
+              </button>
+
               {/* Leaderboard is a destination, not a drawer — given its own
                   card so it does not read as one more collapsible row. */}
               <button
@@ -912,6 +932,7 @@ export const Dashboard: React.FC<Props> = ({
                             <RankProgressionSection
                               profile={profile}
                               derivedStreak={derivedStreak}
+                              statsPending={!serverStats.authoritative}
                               lifeXp={unifiedXp}
                               onLaunchModule={onLaunchModule}
                               onOpenBadgesGallery={onOpenBadgesGallery}
@@ -948,6 +969,26 @@ export const Dashboard: React.FC<Props> = ({
         )}
 
       </AnimatePresence>
+
+      {showShare && (
+        <ShareCard
+          displayName={profile.displayName || 'Athlete'}
+          careerXp={unifiedXp}
+          streakDays={derivedStreak}
+          tasksThisWeek={
+            allTasks.filter((t: any) => {
+              if (!t.completed || !t.completedAt) return false;
+              return Date.now() - Date.parse(t.completedAt) < 7 * 86400000;
+            }).length
+          }
+          focusMinutesThisWeek={Math.round(
+            allFocus
+              .filter((f: any) => Date.now() - Date.parse(f.startedAt || '') < 7 * 86400000)
+              .reduce((n: number, f: any) => n + (f.focusedSeconds || 0) / 60, 0)
+          )}
+          onClose={() => setShowShare(false)}
+        />
+      )}
 
       {/* PERSISTENT BOTTOM NAVIGATION BAR (Fixed at bottom of screen, sleek & compact) */}
       <div className="fixed bottom-0 inset-x-0 z-40 bg-[#0D1117]/95 backdrop-blur-2xl border-t border-[#2A313C] px-1.5 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] shadow-2xl">

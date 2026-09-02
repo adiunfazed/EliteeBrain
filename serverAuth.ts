@@ -66,7 +66,7 @@ export interface VerifiedUser {
   uid: string;
   email?: string;
   isPro: boolean;
-  status: 'lifetime' | 'trial' | 'expired' | 'free';
+  status: 'lifetime' | 'subscription' | 'trial' | 'expired' | 'free';
 }
 
 /**

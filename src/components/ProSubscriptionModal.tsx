@@ -7,6 +7,7 @@ import { getIdToken, User, createPaymentRequest, getAdminMerchantUpiId } from '.
 import { syncProfileToCloud, fetchProfileFromCloud } from '../lib/sync';
 import { saveProfile } from '../utils/storage';
 import { hasUsedTrial, LIFETIME_PRICE_INR, resolveEntitlement, entitlementLabel, startTrialFields } from '../lib/entitlement';
+import { PLANS, PlanId, savingVsMonthly } from '../lib/plans';
 
 interface Props {
   isOpen: boolean;
@@ -19,7 +20,7 @@ interface Props {
   onRefreshProfile?: () => void;
 }
 
-export type PlanId = 'lifetime';
+export type { PlanId } from '../lib/plans';
 
 export interface PlanDetails {
   id: PlanId;
@@ -32,16 +33,19 @@ export interface PlanDetails {
   color: string;
 }
 
-export const PLAN_CONFIGS: Record<PlanId, PlanDetails> = {
-  lifetime: {
-    id: 'lifetime',
-    name: 'Lifetime Pro',
-    priceINR: LIFETIME_PRICE_INR,
-    durationLabel: 'One payment. Yours permanently.',
-    description: 'Every training module, the AI Coach, full progress history and cloud sync — with no renewal.',
-    color: 'amber',
-  },
-};
+export const PLAN_CONFIGS: Record<string, PlanDetails> = Object.fromEntries(
+  PLANS.map((p) => [
+    p.id,
+    {
+      id: p.id as PlanId,
+      name: p.name,
+      priceINR: p.price,
+      durationLabel: p.cadence,
+      description: p.blurb,
+      color: p.id === 'lifetime' ? 'amber' : 'violet',
+    },
+  ])
+);
 
 export function getTimeRemainingText(proExpiresAt?: string, proPlanType?: string) {
   if (proPlanType === 'lifetime' || (proExpiresAt && new Date(proExpiresAt).getFullYear() > 2090)) {
@@ -78,7 +82,7 @@ export const ProSubscriptionModal: React.FC<Props> = ({
   onOpenAdminPortal,
   onRefreshProfile,
 }) => {
-  const [selectedPlan, setSelectedPlan] = useState<PlanId>('lifetime');
+  const [selectedPlan, setSelectedPlan] = useState<PlanId>('yearly');
   const [merchantUpiId, setMerchantUpiId] = useState('unfazed.adibiz@okicici');
   const [loading, setLoading] = useState(false);
   const [checkingStatus, setCheckingStatus] = useState(false);
@@ -205,7 +209,7 @@ export const ProSubscriptionModal: React.FC<Props> = ({
     }
 
     const message = encodeURIComponent(
-      `Hi! I've paid ₹${currentPlan.priceINR} for Elite Life Lifetime Pro.\n\n` +
+      `Hi! I've paid ₹${currentPlan.priceINR} for EliteLife ${currentPlan.name}.\n\n` +
         `Account: ${targetEmail}\nName: ${targetName}\n\n` +
         `Screenshot of the payment is attached.`
     );
@@ -457,34 +461,100 @@ export const ProSubscriptionModal: React.FC<Props> = ({
         )}
 
         {ent.status !== 'lifetime' && (
-        <div className="my-4 p-5 rounded-2xl bg-slate-950 border border-amber-500/40 ring-1 ring-amber-500/20">
-          <div className="flex items-baseline gap-2 flex-wrap">
-            <span className="text-2xl font-black font-mono eb-warn">
-              ₹{LIFETIME_PRICE_INR}
-            </span>
-            <span className="text-xs font-mono text-slate-400">one time</span>
-          </div>
-          <p className="text-sm font-bold text-slate-100 font-mono mt-1">
-            {PLAN_CONFIGS.lifetime.durationLabel}
-          </p>
-          <p className="text-[11px] text-slate-400 mt-2 font-sans leading-relaxed">
-            {PLAN_CONFIGS.lifetime.description}
-          </p>
+          <div className="my-5">
+            <p className="eb-label mb-3">Choose a plan</p>
 
-          <ul className="mt-3 space-y-1.5">
-            {[
-              'Every cognitive training module',
-              'AI Coach, unlimited',
-              'Full progress history and personal records',
-              'Cloud sync across your devices',
-            ].map((item) => (
-              <li key={item} className="flex items-start gap-2 text-[11px] text-slate-300 font-sans">
-                <Check className="w-3.5 h-3.5 eb-done shrink-0 mt-0.5 stroke-[3]" />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+            <div className="space-y-2.5">
+              {PLANS.map((plan) => {
+                const active = selectedPlan === plan.id;
+                const saving = savingVsMonthly(plan);
+
+                return (
+                  <button
+                    key={plan.id}
+                    onClick={() => {
+                      soundFx.playClick();
+                      setSelectedPlan(plan.id as PlanId);
+                    }}
+                    className="w-full text-left rounded-2xl border p-4 transition-colors relative"
+                    style={{
+                      background: active
+                        ? 'color-mix(in oklab, var(--signal) 12%, var(--surface))'
+                        : 'var(--surface)',
+                      borderColor: active ? 'var(--signal)' : 'var(--rule)',
+                      boxShadow: active
+                        ? '0 1px 0 0 rgba(255,255,255,0.07) inset, 0 10px 26px -18px var(--signal)'
+                        : undefined,
+                    }}
+                  >
+                    {plan.badge && (
+                      <span
+                        className="absolute -top-2 right-4 text-[10px] font-bold px-2 py-0.5 rounded-full"
+                        style={{ background: '#FFB020', color: '#1a1200' }}
+                      >
+                        {plan.badge}
+                      </span>
+                    )}
+
+                    <div className="flex items-center gap-3">
+                      {/* Radio, so the choice reads as a choice. */}
+                      <span
+                        className="w-5 h-5 rounded-full border-2 shrink-0 flex items-center justify-center"
+                        style={{ borderColor: active ? 'var(--signal)' : 'var(--rule)' }}
+                      >
+                        {active && (
+                          <span
+                            className="w-2.5 h-2.5 rounded-full"
+                            style={{ background: 'var(--signal)' }}
+                          />
+                        )}
+                      </span>
+
+                      <span className="min-w-0 flex-1">
+                        <span className="text-[15px] font-semibold block">{plan.name}</span>
+                        <span className="t-sub block mt-0.5">
+                          {plan.perMonth ? `₹${plan.perMonth} per month` : 'Never expires'}
+                          {saving ? ` · save ${saving}%` : ''}
+                        </span>
+                      </span>
+
+                      <span className="text-right shrink-0">
+                        <span className="font-display font-extrabold text-lg tabular-nums block leading-none">
+                          ₹{plan.price.toLocaleString('en-IN')}
+                        </span>
+                        <span className="text-[11px] text-[#7E8899] block mt-1">
+                          {plan.cadence}
+                        </span>
+                      </span>
+                    </div>
+
+                    {active && (
+                      <p className="t-sub mt-3 leading-snug">{plan.blurb}</p>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Same for every plan, so it is stated once rather than repeated
+                inside each card. */}
+            <div className="mt-4 p-4 rounded-2xl eb-card-sunk">
+              <p className="eb-label">Every plan includes</p>
+              <ul className="mt-2.5 space-y-1.5">
+                {[
+                  'All 11 training modules',
+                  'AI Coach with your real data',
+                  'Full history, records and leaderboard',
+                  'Sync across all your devices',
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-2 t-sub">
+                    <Check className="w-3.5 h-3.5 eb-done shrink-0 mt-0.5 stroke-[3]" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
         )}
 
         {/* Payment is only shown to people who can actually benefit from it —

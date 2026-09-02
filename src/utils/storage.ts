@@ -311,7 +311,13 @@ export function resetAdminProfile(existing?: UserProfile): UserProfile {
  * streak on a phone and a laptop.
  */
 export function applyStreakReset(profile: UserProfile): UserProfile {
-  if (!profile || profile.streakResetV3) return profile;
+  if (!profile) return profile;
+
+  // Check the DATE, not just the flag. An earlier build set streakResetV3
+  // without writing streakResetAt, so the guard passed while the reset date
+  // stayed undefined — and computeStreak then counted the entire history,
+  // which is why a streak jumped from 11 to 19 overnight.
+  if (profile.streakResetV3 && profile.streakResetAt) return profile;
 
   const today = new Date().toISOString().slice(0, 10);
   return {

@@ -10,6 +10,8 @@ import {
 } from 'lucide-react';
 
 interface RankProgressionSectionProps {
+  /** True while the authoritative figures are still loading. */
+  statsPending?: boolean;
   /** Activity-derived streak, so this never disagrees with the Home card. */
   derivedStreak?: number;
   /** Unified career XP including habits, tasks, routine, focus and sleep. */
@@ -68,6 +70,7 @@ const TIERS: TierInfo[] = [
 export const RankProgressionSection: React.FC<RankProgressionSectionProps> = ({
   profile,
   derivedStreak,
+  statsPending,
   lifeXp,
   onLaunchModule,
   onOpenBadgesGallery,
@@ -157,16 +160,20 @@ export const RankProgressionSection: React.FC<RankProgressionSectionProps> = ({
 
                   {/* Fluid size with a floor: a long tier name shrinks to fit
                       rather than being cut off, and wraps if it still needs to. */}
-                  <span
-                    className="font-display font-extrabold mt-1.5 leading-tight break-words"
-                    style={{
-                      color: stat.color,
-                      fontSize: 'clamp(17px, 5.2vw, 24px)',
-                      letterSpacing: '-0.02em',
-                    }}
-                  >
-                    {stat.value}
-                  </span>
+                  {statsPending ? (
+                    <span className="block h-6 w-16 rounded bg-[var(--surface-sunk)] animate-pulse mt-2" />
+                  ) : (
+                    <span
+                      className="font-display font-extrabold mt-1.5 leading-tight break-words"
+                      style={{
+                        color: stat.color,
+                        fontSize: 'clamp(17px, 5.2vw, 24px)',
+                        letterSpacing: '-0.02em',
+                      }}
+                    >
+                      {stat.value}
+                    </span>
+                  )}
 
                   <span className="text-[12px] text-[#8A93A5] mt-1.5 leading-snug break-words">
                     {stat.sub}

@@ -66,7 +66,7 @@ export interface DailyLog {
 
 export interface PendingPaymentInfo {
   utrNumber: string;
-  plan: 'monthly' | 'annual' | 'lifetime';
+  plan: 'monthly' | 'yearly' | 'lifetime';
   amountINR: number;
   submittedAt: string;
 }
@@ -80,7 +80,7 @@ export interface UserProfile {
   soundEnabled: boolean;
   isProUser?: boolean;
   proExpiresAt?: string;
-  proPlanType?: 'monthly' | 'annual' | 'lifetime' | 'trial';
+  proPlanType?: 'monthly' | 'yearly' | 'lifetime' | 'trial';
   /** ISO timestamp when the 1-month free trial began. Set once, never reset. */
   trialStartedAt?: string;
   /** Permanent: this account has claimed its one free trial. Never cleared. */
