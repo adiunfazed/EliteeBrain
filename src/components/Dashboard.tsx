@@ -730,30 +730,28 @@ export const Dashboard: React.FC<Props> = ({
                       setHubPane(id);
                     }}
                     aria-current={active ? 'page' : undefined}
-                    className="relative min-h-[66px] rounded-xl flex flex-col items-center justify-center gap-1.5 px-1 pt-1 overflow-hidden transition-colors"
-                    style={{
-                      background: active ? 'var(--surface)' : 'transparent',
-                      boxShadow: active
-                        ? '0 1px 0 0 rgba(255,255,255,0.07) inset, 0 4px 12px -8px rgba(0,0,0,0.8)'
-                        : undefined,
-                    }}
+                    className="relative min-h-[64px] rounded-xl flex flex-col items-center justify-center gap-1.5 px-1 transition-colors"
                   >
                     {active && (
                       <motion.span
                         layoutId="plan-tab-indicator"
-                        className="absolute top-0 left-1/2 -translate-x-1/2 h-[3px] w-8 rounded-full"
-                        style={{ background: 'var(--signal)' }}
+                        className="absolute inset-0 rounded-xl"
+                        style={{
+                          background:
+                            'linear-gradient(180deg, color-mix(in oklab, var(--signal) 20%, var(--surface)), var(--surface))',
+                          border: '1px solid color-mix(in oklab, var(--signal) 45%, var(--rule))',
+                        }}
                         transition={{ type: 'spring', stiffness: 420, damping: 34 }}
                       />
                     )}
 
                     <Icon
-                      className="w-[19px] h-[19px] shrink-0"
+                      className="relative w-[19px] h-[19px] shrink-0"
                       strokeWidth={active ? 2.4 : 1.9}
                       style={{ color: active ? 'var(--signal-ink)' : 'var(--ink-dim)' }}
                     />
                     <span
-                      className="text-[12px] leading-none text-center"
+                      className="relative text-[12px] leading-none text-center"
                       style={{
                         color: active ? 'var(--ink)' : 'var(--ink-dim)',
                         fontWeight: active ? 700 : 500,

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Upload,
+import {
   Plus,
   Check,
   Trash2,
@@ -45,7 +45,6 @@ import {
 } from '../lib/routine';
 import { todayISO } from '../lib/tasks';
 import { soundFx } from '../utils/audio';
-import { parseIcs } from '../lib/icsImport';
 
 interface Props {
   userId: string | null;
@@ -67,7 +66,6 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
   const [logs, setLogs] = useState<RoutineLog[]>([]);
   const [sleep, setSleep] = useState<SleepLog[]>([]);
   const [pane, setPane] = useState<Pane>(initialPane || 'routine');
-  const [importNote, setImportNote] = useState<string | null>(null);
 
   // useState only reads its initial value on first mount, so a later request
   // to open Sleep was ignored whenever this component was already mounted —
@@ -222,11 +220,6 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
 
   return (
     <div className="space-y-4">
-      {importNote && (
-        <p className="t-sub p-3 rounded-xl eb-card-sunk" role="status">
-          {importNote}
-        </p>
-      )}
       {/* Day / Week is a timescale switch on the same data, not a separate
           place to go. */}
       <div className="flex items-center justify-between gap-3">
@@ -253,43 +246,6 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
             </button>
           ))}
         </div>
-
-        {/* Import from a calendar export. File-based rather than OAuth: it
-            works with every calendar app and asks for no ongoing access. */}
-        <label className="min-h-[38px] px-3 rounded-xl border border-[var(--rule)] text-[13px] font-semibold text-[var(--ink-dim)] flex items-center gap-2 cursor-pointer shrink-0">
-          <Upload className="w-4 h-4 shrink-0" />
-          Import
-          <input
-            type="file"
-            accept=".ics,text/calendar"
-            className="hidden"
-            onChange={async (e) => {
-              const file = e.target.files?.[0];
-              e.target.value = '';
-              if (!file) return;
-
-              try {
-                const parsed = parseIcs(await file.text());
-                if (parsed.length === 0) {
-                  setImportNote('No repeating timed events found in that file.');
-                  return;
-                }
-
-                let added = 0;
-                for (const b of parsed) {
-                  const block = newRoutineBlock(b.title, 'work', b.startTime, b.endTime);
-                  if (b.weekdays.length > 0) block.weekdays = b.weekdays;
-                  await saveRoutineBlock(userId, block);
-                  added++;
-                }
-                setImportNote(`Added ${added} ${added === 1 ? 'block' : 'blocks'}. Edit or delete any you do not want.`);
-              } catch (err) {
-                console.error('Calendar import failed:', err);
-                setImportNote('Could not read that file. It needs to be an .ics export.');
-              }
-            }}
-          />
-        </label>
 
         <button
           onClick={() => {
