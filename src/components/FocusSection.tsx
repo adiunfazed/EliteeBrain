@@ -1,0 +1,438 @@
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Pause, Play, Square, Timer, Check, X } from 'lucide-react';
+import type { FocusSession, Task } from '../types';
+import {
+  ActiveFocus,
+  FOCUS_PRESETS,
+  elapsedSeconds,
+  formatClock,
+  formatDuration,
+  isFinished,
+  loadActiveFocus,
+  pauseFocus,
+  remainingSeconds,
+  resumeFocus,
+  saveActiveFocus,
+  saveFocusSession,
+  startFocus,
+  subscribeFocusSessions,
+  focusSecondsToday,
+} from '../lib/focus';
+import { bucketTasks, newTaskId, patchTask, subscribeTasks } from '../lib/tasks';
+import { soundFx } from '../utils/audio';
+import { setHabitValue, subscribeHabitLogs } from '../lib/goalStore';
+import { valueOn } from '../lib/habits';
+import { todayISO } from '../lib/tasks';
+
+interface Props {
+  userId: string | null;
+  /** Habit handed over from the Goals screen, if any. */
+  incomingHabit?: { title: string; minutes: number; habitId: string } | null;
+  onConsumeHabit?: () => void;
+  /** Task handed over from the task list, if any. */
+  incomingTask?: Task | null;
+  onConsumeIncoming?: () => void;
+}
+
+export const FocusSection: React.FC<Props> = ({ userId, incomingTask, onConsumeIncoming, incomingHabit, onConsumeHabit }) => {
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [sessions, setSessions] = useState<FocusSession[]>([]);
+  const [habitLogs, setHabitLogs] = useState<any[]>([]);
+  const [active, setActive] = useState<ActiveFocus | null>(() => loadActiveFocus());
+  const [minutes, setMinutes] = useState(25);
+  const [selectedTaskId, setSelectedTaskId] = useState<string>('');
+  const [freeLabel, setFreeLabel] = useState('');
+  const [justFinished, setJustFinished] = useState<FocusSession | null>(null);
+  const [reflected, setReflected] = useState(false);
+  const [, forceTick] = useState(0);
+
+  useEffect(() => subscribeTasks(userId, setTasks), [userId]);
+  useEffect(() => subscribeHabitLogs(userId, setHabitLogs), [userId]);
+  useEffect(() => subscribeFocusSessions(userId, setSessions), [userId]);
+
+  // A habit handed over starts immediately with the remaining minutes.
+  useEffect(() => {
+    if (!incomingHabit) return;
+    setFreeLabel(incomingHabit.title);
+    setSelectedTaskId('');
+    setMinutes(Math.max(5, incomingHabit.minutes));
+    persist(
+      startFocus(incomingHabit.title, Math.max(5, incomingHabit.minutes), undefined, Date.now(), incomingHabit.habitId)
+    );
+    onConsumeHabit?.();
+  }, [incomingHabit]);
+
+  // A task arriving from the list preselects itself and its estimated duration,
+  // so the user only has to press Start.
+  useEffect(() => {
+    if (!incomingTask) return;
+    setSelectedTaskId(incomingTask.id);
+    setFreeLabel(incomingTask.title);
+    if (incomingTask.estimatedMinutes) {
+      const nearest = FOCUS_PRESETS.reduce((best, p) =>
+        Math.abs(p - incomingTask.estimatedMinutes!) < Math.abs(best - incomingTask.estimatedMinutes!)
+          ? p
+          : best
+      );
+      setMinutes(nearest);
+    }
+    onConsumeIncoming?.();
+  }, [incomingTask, onConsumeIncoming]);
+
+  // Re-render once a second so the clock updates. The value itself is always
+  // derived from timestamps, so a missed tick never loses time.
+  useEffect(() => {
+    if (!active || active.pausedAt !== null) return;
+    const id = setInterval(() => forceTick((n) => n + 1), 1000);
+    return () => clearInterval(id);
+  }, [active]);
+
+  const todayTasks = useMemo(() => bucketTasks(tasks).today, [tasks]);
+  const secondsToday = useMemo(() => focusSecondsToday(sessions), [sessions]);
+
+  const persist = (next: ActiveFocus | null) => {
+    setActive(next);
+    saveActiveFocus(next);
+  };
+
+  const finish = useCallback(
+    async (completed: boolean) => {
+      if (!active) return;
+      const focusedSeconds = elapsedSeconds(active);
+      const session: FocusSession = {
+        id: newTaskId(),
+        taskId: active.taskId,
+        taskTitle: active.taskTitle,
+        plannedMinutes: active.plannedMinutes,
+        focusedSeconds,
+        startedAt: new Date(active.startedAt).toISOString(),
+        endedAt: new Date().toISOString(),
+        completed,
+      };
+
+      persist(null);
+
+      // Anything under a minute is a misfire, not a session worth recording.
+      if (focusedSeconds < 60) return;
+
+      setJustFinished(session);
+      setReflected(false);
+      if (completed) soundFx.playSuccess();
+
+      try {
+        await saveFocusSession(userId, session);
+        if (active.taskId) {
+          const task = tasks.find((t) => t.id === active.taskId);
+          await patchTask(userId, active.taskId, {
+            focusSeconds: (task?.focusSeconds || 0) + focusedSeconds,
+          });
+        }
+
+        // Credit the linked habit. The log id is date+habitId, so writing an
+        // absolute total overwrites rather than accumulating a duplicate row.
+        if (active.habitId) {
+          const today = todayISO();
+          const already = valueOn(habitLogs, active.habitId, today);
+          await setHabitValue(
+            userId,
+            active.habitId,
+            today,
+            already + Math.round(focusedSeconds / 60)
+          );
+        }
+      } catch (err) {
+        console.error('Could not save focus session:', err);
+      }
+    },
+    [active, tasks, userId]
+  );
+
+  // Auto-finish the moment the planned time elapses.
+  useEffect(() => {
+    if (active && active.pausedAt === null && isFinished(active)) {
+      finish(true);
+    }
+  });
+
+  const begin = () => {
+    const task = todayTasks.find((t) => t.id === selectedTaskId);
+    const title = task ? task.title : freeLabel.trim() || 'Focused work';
+    soundFx.playClick();
+    persist(startFocus(title, minutes, task?.id));
+    setJustFinished(null);
+  };
+
+  /* ---------- Running session: distraction-free ---------- */
+  if (active) {
+    const remaining = remainingSeconds(active);
+    const paused = active.pausedAt !== null;
+    const progress = 1 - remaining / (active.plannedMinutes * 60);
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className={`relative overflow-hidden rounded-2xl p-6 sm:p-10 text-center border transition-colors ${
+          paused
+            ? 'bg-[#12141A] border-[var(--rule)]'
+            : 'bg-[#0C1714] border-emerald-500/25 shadow-[0_0_50px_-20px_rgba(16,185,129,0.5)]'
+        }`}
+      >
+        <p className="eb-label">
+          {paused ? 'Paused' : 'Focusing on'}
+        </p>
+        <p className="text-sm sm:text-base font-bold text-[var(--ink)] mt-2 break-words max-w-md mx-auto">
+          {active.taskTitle}
+        </p>
+
+        {/* Progress ring — the clock reads as a dial rather than a number. */}
+        <div className="relative mx-auto mt-6 w-56 h-56 sm:w-64 sm:h-64">
+          <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90">
+            <circle cx="60" cy="60" r="54" fill="none" stroke="var(--surface-sunk)" strokeWidth="6" />
+            <motion.circle
+              cx="60"
+              cy="60"
+              r="54"
+              fill="none"
+              stroke={paused ? 'var(--ink-dim)' : '#10B981'}
+              strokeWidth="6"
+              strokeLinecap="round"
+              strokeDasharray={2 * Math.PI * 54}
+              animate={{
+                strokeDashoffset: 2 * Math.PI * 54 * (1 - Math.min(1, progress)),
+              }}
+              transition={{ ease: 'linear', duration: 0.9 }}
+            />
+          </svg>
+
+          {/* Soft pulse while running, so the screen feels alive when idle. */}
+          {!paused && (
+            <motion.span
+              className="absolute inset-6 rounded-full bg-emerald-500/10 blur-2xl"
+              animate={{ opacity: [0.35, 0.7, 0.35], scale: [0.96, 1.02, 0.96] }}
+              transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          )}
+
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span
+              className={`font-mono font-black tabular-nums tracking-tight transition-colors text-4xl sm:text-5xl ${
+                paused ? 'text-[var(--ink-dim)]' : 'text-[var(--ink)]'
+              }`}
+            >
+              {formatClock(remaining)}
+            </span>
+            <span className="text-[10px] font-mono text-[var(--ink-dim)] mt-1">
+              of {active.plannedMinutes} min
+            </span>
+          </div>
+        </div>
+
+        <div className="mt-7 flex items-center justify-center gap-2.5 flex-wrap">
+          <motion.button
+            whileTap={{ scale: 0.94 }}
+            onClick={() => {
+              soundFx.playClick();
+              persist(paused ? resumeFocus(active) : pauseFocus(active));
+            }}
+            className="px-5 py-3 rounded-xl bg-[var(--surface-sunk)] hover:bg-[#20252E] border border-[var(--rule)] text-[var(--ink)] text-xs font-mono font-bold flex items-center gap-2 transition-colors"
+          >
+            {paused ? <Play className="w-4 h-4 shrink-0" /> : <Pause className="w-4 h-4 shrink-0" />}
+            {paused ? 'Resume' : 'Pause'}
+          </motion.button>
+
+          <motion.button
+            whileTap={{ scale: 0.94 }}
+            onClick={() => finish(false)}
+            className="eb-lift eb-glow-emerald eb-shine px-5 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-mono font-black flex items-center gap-2"
+          >
+            <Check className="w-4 h-4 shrink-0 stroke-[3]" />
+            Finish now
+          </motion.button>
+
+          <motion.button
+            whileTap={{ scale: 0.94 }}
+            onClick={() => {
+              soundFx.playClick();
+              persist(null);
+            }}
+            className="px-4 py-3 rounded-xl bg-transparent hover:bg-rose-500/10 border border-[var(--rule)] hover:border-rose-500/40 text-[var(--ink-muted)] hover:eb-danger text-xs font-mono font-bold flex items-center gap-2 transition-colors"
+          >
+            <Square className="w-3.5 h-3.5 shrink-0" />
+            Cancel
+          </motion.button>
+        </div>
+
+        <p className="text-[10px] text-[var(--ink-dim)] font-mono mt-5">
+          Cancelling discards this session. Finishing keeps the time you did.
+        </p>
+      </motion.div>
+    );
+  }
+
+  /* ---------- Setup ---------- */
+  return (
+    <div className="space-y-4">
+      <AnimatePresence>
+        {justFinished && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 flex items-start gap-3"
+          >
+            <Check className="w-4 h-4 eb-done shrink-0 mt-0.5 stroke-[3]" />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-bold eb-done font-mono">Session complete</p>
+              <p className="text-[11px] text-[var(--ink-muted)] mt-0.5 break-words">
+                {formatDuration(justFinished.focusedSeconds)} on {justFinished.taskTitle}
+              </p>
+
+              {/* One question, answerable in a tap. A session that ends with
+                  no reflection leaves the user no better informed. */}
+              {justFinished.taskId && !reflected && (
+                <div className="flex items-center gap-2 mt-3 flex-wrap">
+                  <span className="text-[12px] text-[var(--ink-muted)]">Did you finish it?</span>
+                  <button
+                    onClick={async () => {
+                      setReflected(true);
+                      soundFx.playSuccess();
+                      try {
+                        await patchTask(userId, justFinished.taskId!, {
+                          completed: true,
+                          completedAt: new Date().toISOString(),
+                        });
+                      } catch (e) {
+                        console.error('Could not complete task:', e);
+                      }
+                    }}
+                    className="eb-press text-[11px] font-semibold px-2.5 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/35 eb-done"
+                  >
+                    Yes, mark done
+                  </button>
+                  <button
+                    onClick={() => setReflected(true)}
+                    className="eb-press text-[11px] font-semibold px-2.5 py-1.5 rounded-lg border border-[#262C38] text-[var(--ink-muted)]"
+                  >
+                    Not yet
+                  </button>
+                </div>
+              )}
+            </div>
+            <button
+              onClick={() => setJustFinished(null)}
+              aria-label="Dismiss"
+              className="shrink-0 w-10 h-10 rounded-lg hover:bg-emerald-500/15 text-[var(--ink-muted)] flex items-center justify-center"
+            >
+              <X className="w-3.5 h-3.5 shrink-0" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="eb-shine relative overflow-hidden bg-[#121722] border border-[var(--rule)] rounded-2xl p-4 space-y-4">
+        <div>
+          <p className="eb-label mb-2">
+            What are you working on?
+          </p>
+
+          {todayTasks.length > 0 ? (
+            <div className="space-y-1.5 max-h-44 overflow-y-auto pr-0.5">
+              {todayTasks.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => {
+                    soundFx.playClick();
+                    setSelectedTaskId(selectedTaskId === t.id ? '' : t.id);
+                  }}
+                  className={`eb-press eb-shine w-full text-left px-3 py-2.5 rounded-xl border text-sm flex items-center gap-2.5 ${
+                    selectedTaskId === t.id
+                      ? 'bg-[#8B5CF6]/15 border-[#8B5CF6]/50 text-[var(--ink)] shadow-[0_0_18px_-6px_rgba(92,108,242,0.7)]'
+                      : 'bg-[var(--surface-sunk)] border-[var(--rule)] text-[var(--ink-muted)] hover:border-[var(--rule-strong)]'
+                  }`}
+                >
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                      selectedTaskId === t.id ? 'bg-[#8B5CF6]' : 'bg-[var(--rule-strong)]'
+                    }`}
+                  />
+                  <span className="truncate">{t.title}</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <input
+              value={freeLabel}
+              onChange={(e) => setFreeLabel(e.target.value)}
+              placeholder="Name this session"
+              maxLength={100}
+              className="w-full eb-card-sunk focus:border-[#8B5CF6]/60 rounded-xl px-3 py-2.5 text-sm text-[var(--ink)] placeholder:text-[var(--ink-dim)] outline-none transition-colors"
+            />
+          )}
+        </div>
+
+        <div>
+          <p className="eb-label mb-2">
+            For how long?
+          </p>
+          <div className="flex items-center gap-2 flex-wrap">
+            {FOCUS_PRESETS.map((m) => (
+              <button
+                key={m}
+                onClick={() => {
+                  soundFx.playClick();
+                  setMinutes(m);
+                }}
+                className={`eb-press eb-shine px-4 py-2 rounded-xl border text-xs font-mono font-bold ${
+                  minutes === m
+                    ? 'eb-chip-active shadow-[0_0_18px_-6px_rgba(92,108,242,0.7)]'
+                    : 'text-[var(--ink-muted)] bg-[var(--surface-sunk)] border-[var(--rule)] hover:border-[var(--rule-strong)]'
+                }`}
+              >
+                {m} min
+              </button>
+            ))}
+
+            {/* Custom duration. Presets cover the common cases; this covers
+                everyone whose work does not fit them. */}
+            <label className="flex items-center gap-2 px-3 py-2 rounded-xl border border-[var(--rule)] focus-within:border-[var(--signal)]">
+              <input
+                type="number"
+                min={1}
+                max={240}
+                value={FOCUS_PRESETS.includes(minutes) ? '' : minutes}
+                placeholder="Custom"
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  // Clamped: a zero-minute session is meaningless and four
+                  // hours is already beyond what anyone sustains.
+                  if (!Number.isFinite(v)) return;
+                  setMinutes(Math.max(1, Math.min(240, Math.round(v))));
+                }}
+                className="w-16 bg-transparent text-sm font-semibold text-[var(--ink)] outline-none tabular-nums"
+              />
+              <span className="text-xs text-[var(--ink-dim)]">min</span>
+            </label>
+          </div>
+        </div>
+
+        <motion.button
+          whileTap={{ scale: 0.97 }}
+          onClick={begin}
+          disabled={todayTasks.length === 0 && !freeLabel.trim()}
+          className="eb-lift eb-glow-brand eb-shine w-full py-3.5 rounded-xl bg-[#8B5CF6] hover:bg-[#7C3AED] disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-mono font-black flex items-center justify-center gap-2"
+        >
+          <Timer className="w-4 h-4 shrink-0" />
+          Start focus
+        </motion.button>
+      </div>
+
+      {secondsToday > 0 && (
+        <p className="text-[11px] text-[var(--ink-muted)] font-mono text-center">
+          {formatDuration(secondsToday)} focused today
+        </p>
+      )}
+    </div>
+  );
+};
