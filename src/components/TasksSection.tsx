@@ -788,7 +788,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--ink-dim)] pointer-events-none" />
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--ink-dim)] pointer-events-none" />
         <input
           ref={searchRef}
           value={search}
@@ -800,13 +800,13 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
             }
           }}
           placeholder="Search tasks"
-          className="w-full eb-card focus:border-[#8B5CF6]/60 rounded-xl pl-9 pr-9 py-2.5 text-xs text-[var(--ink)] placeholder:text-[var(--ink-dim)] outline-none transition-colors"
+          className="w-full eb-card focus:border-[var(--signal)] rounded-xl pl-11 pr-11 py-3 text-[14px] text-[var(--ink)] placeholder:text-[var(--ink-dim)] outline-none transition-colors"
         />
         {search && (
           <button
             onClick={() => setSearch('')}
             aria-label="Clear search"
-            className="absolute right-1.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-lg text-[var(--ink-dim)] hover:text-[var(--ink)] flex items-center justify-center"
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg text-[var(--ink-dim)] hover:text-[var(--ink)] flex items-center justify-center"
           >
             <X className="w-3.5 h-3.5 shrink-0" />
           </button>

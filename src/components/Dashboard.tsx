@@ -474,6 +474,14 @@ export const Dashboard: React.FC<Props> = ({
               completedQuest={
                 profile.questLog?.date === todayISO() ? profile.questLog : null
               }
+              questLevel={
+                profile.questPin?.date === todayISO() ? profile.questPin.level : undefined
+              }
+              onPinLevel={(pinnedLevel) => {
+                const today = todayISO();
+                if (profile.questPin?.date === today) return;
+                onProfileUpdate?.({ ...profile, questPin: { date: today, level: pinnedLevel } });
+              }}
               onCompleteQuest={(quest) => {
                 const today = todayISO();
                 // Guarded by date: a second completion on the same day is a
@@ -721,33 +729,29 @@ export const Dashboard: React.FC<Props> = ({
                       soundFx.playClick();
                       setHubPane(id);
                     }}
-                    className="relative min-h-[62px] rounded-xl flex flex-col items-center justify-center gap-1.5 transition-colors"
+                    aria-current={active ? 'page' : undefined}
+                    className="relative min-h-[64px] rounded-xl flex flex-col items-center justify-center gap-1.5 px-1 transition-colors"
                     style={{
                       background: active ? 'var(--surface)' : 'transparent',
                       boxShadow: active
-                        ? '0 1px 0 0 rgba(255,255,255,0.06) inset, 0 6px 16px -10px rgba(0,0,0,0.9)'
+                        ? '0 1px 0 0 rgba(255,255,255,0.07) inset, 0 4px 12px -8px rgba(0,0,0,0.8)'
                         : undefined,
                     }}
                   >
                     <Icon
-                      className="w-[18px] h-[18px] shrink-0"
+                      className="w-[19px] h-[19px] shrink-0"
+                      strokeWidth={active ? 2.4 : 1.9}
                       style={{ color: active ? 'var(--signal-ink)' : 'var(--ink-dim)' }}
                     />
                     <span
-                      className="text-[12px] font-semibold"
-                      style={{ color: active ? 'var(--ink)' : 'var(--ink-dim)' }}
+                      className="text-[12px] leading-none text-center"
+                      style={{
+                        color: active ? 'var(--ink)' : 'var(--ink-dim)',
+                        fontWeight: active ? 700 : 500,
+                      }}
                     >
                       {label}
                     </span>
-
-                    {active && (
-                      <motion.span
-                        layoutId="plan-tab-underline"
-                        className="absolute bottom-1.5 h-[3px] w-6 rounded-full"
-                        style={{ background: 'var(--signal)' }}
-                        transition={{ type: 'spring', stiffness: 420, damping: 34 }}
-                      />
-                    )}
                   </button>
                 );
               })}

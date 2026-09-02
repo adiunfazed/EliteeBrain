@@ -23,6 +23,8 @@ interface Props {
   recentQuestIds?: string[];
   /** Today's completed quest, read back rather than recomputed. */
   completedQuest?: { id: string; title: string; xp: number } | null;
+  questLevel?: number;
+  onPinLevel?: (level: number) => void;
   onCompleteQuest: (quest: { id: string; title: string; xp: number }) => void;
   habits: Habit[];
   habitLogs: HabitLog[];
@@ -53,6 +55,8 @@ export const TodayScreen: React.FC<Props> = ({
   questDoneToday,
   recentQuestIds,
   completedQuest,
+  questLevel,
+  onPinLevel,
   onCompleteQuest,
   habits,
   habitLogs,
@@ -320,6 +324,8 @@ export const TodayScreen: React.FC<Props> = ({
           completedToday={questDoneToday}
           recentQuestIds={recentQuestIds}
           completedQuest={completedQuest}
+          questLevel={questLevel}
+          onPinLevel={onPinLevel}
           onComplete={onCompleteQuest}
         />
       </section>

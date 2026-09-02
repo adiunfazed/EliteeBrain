@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import { Swords, Check } from 'lucide-react';
 import { questForDay, Quest } from '../lib/quests';
@@ -18,6 +18,9 @@ interface Props {
    * returned a DIFFERENT quest while still showing it as done.
    */
   completedQuest?: { id: string; title: string; xp: number } | null;
+  /** Level the day's quest was created at, persisted so it survives reloads. */
+  questLevel?: number;
+  onPinLevel?: (level: number) => void;
   onComplete: (quest: Quest) => void;
 }
 
@@ -34,9 +37,35 @@ export const DailyQuestCard: React.FC<Props> = ({
   completedToday,
   recentQuestIds = [],
   completedQuest,
+  questLevel,
+  onPinLevel,
   onComplete,
 }) => {
   const today = todayISO();
+
+  /**
+   * The level this day's quest was generated at.
+   *
+   * Captured once per day and held for the rest of it. Without this, earning
+   * XP mid-day moves the difficulty band and silently rescales the quest.
+   */
+  const [pinned, setPinned] = useState<{ date: string; level: number }>(() => ({
+    date: today,
+    level: questLevel ?? level,
+  }));
+
+  useEffect(() => {
+    // Only re-pin when the DAY changes, never when the level does.
+    if (pinned.date !== today) {
+      setPinned({ date: today, level });
+      onPinLevel?.(level);
+    } else if (questLevel === undefined) {
+      // First time today: record the level so a reload sees the same quest.
+      onPinLevel?.(pinned.level);
+    }
+  }, [today, level, pinned.date, pinned.level, questLevel, onPinLevel]);
+
+  const pinnedLevel = pinned.date === today ? pinned.level : level;
 
   const quest = useMemo<Quest>(() => {
     // Once today's quest is completed, show the one that was actually
@@ -51,8 +80,8 @@ export const DailyQuestCard: React.FC<Props> = ({
       };
     }
 
-    return questForDay(userId || 'guest', today, level, recentQuestIds);
-  }, [userId, today, level, recentQuestIds, completedQuest]);
+    return questForDay(userId || 'guest', today, pinnedLevel, recentQuestIds);
+  }, [userId, today, pinnedLevel, recentQuestIds, completedQuest]);
 
   const accept = () => {
     if (completedToday) return;

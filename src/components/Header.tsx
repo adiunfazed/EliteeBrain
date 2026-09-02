@@ -195,27 +195,8 @@ export const Header: React.FC<Props> = ({
             {isDarkMode ? <Sun className="w-4 h-4 shrink-0 eb-warn" /> : <Moon className="w-4 h-4 shrink-0 text-slate-300" />}
           </button>
 
-          {/* Language. Only shown when more than one exists, so it does not
-              occupy space it has not earned. */}
-          {LANGUAGES.length > 1 && (
-            <button
-              onClick={() => {
-                soundFx.playClick();
-                const next = getLang() === 'en' ? 'hi' : 'en';
-                setLang(next);
-                // A reload is the honest way to re-render every string,
-                // including ones held in memo caches.
-                window.location.reload();
-              }}
-              title="Change language"
-              aria-label="Change language"
-              className="px-2.5 py-2 bg-[var(--surface-sunk)] border border-[var(--rule)] text-[var(--ink)] rounded-xl text-[12px] font-bold transition-all cursor-pointer active:scale-95"
-            >
-              {getLang() === 'en' ? 'अ' : 'A'}
-            </button>
-          )}
-
-          {/* Theme toggle */}
+          {/* Theme toggle. Desktop only — the mobile row is tight and the
+              system preference already handles most people. */}
           {onToggleDarkMode && (
             <button
               onClick={() => {
@@ -295,6 +276,27 @@ export const Header: React.FC<Props> = ({
 
         {/* MOBILE CONTROLS HEADER BAR (Visible on screens < md) */}
         <div className="flex items-center gap-1 sm:gap-1.5 md:hidden shrink-0">
+          {/* Language. Only shown when more than one exists, so it does not
+              occupy space it has not earned. */}
+          {LANGUAGES.length > 1 && (
+            <button
+              onClick={() => {
+                soundFx.playClick();
+                const next = getLang() === 'en' ? 'hi' : 'en';
+                setLang(next);
+                // A reload is the honest way to re-render every string,
+                // including ones held in memo caches.
+                window.location.reload();
+              }}
+              title="Change language"
+              aria-label="Change language"
+              className="px-2.5 py-2 bg-[var(--surface-sunk)] border border-[var(--rule)] text-[var(--ink)] rounded-xl text-[12px] font-bold transition-all cursor-pointer active:scale-95"
+            >
+              {getLang() === 'en' ? 'अ' : 'A'}
+            </button>
+          )}
+
+
           {/* Mobile Pro Badge / Get Pro Pill. Same gate as desktop: an
               unknown status must not render as "not Pro". */}
           {isHydrated === false ? (
