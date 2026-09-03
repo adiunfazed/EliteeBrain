@@ -41,6 +41,8 @@ import {
   rankTasks,
 } from '../lib/taskEngine';
 import { soundFx } from '../utils/audio';
+import { ComposerSheet } from './ComposerSheet';
+import { AddButton } from './AddButton';
 import { TaskDetailSheet } from './TaskDetailSheet';
 import { StuckTaskCard } from './StuckTaskCard';
 import { mostStuckTask } from '../lib/adaptive';
@@ -132,6 +134,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
   const searchRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
+  const [composerOpen, setComposerOpen] = useState(false);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [stuckDismissed, setStuckDismissed] = useState<string | null>(null);
 
@@ -633,8 +636,161 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
         </div>
       )}
 
-      {/* Quick add */}
-      <div className="eb-card p-3.5 sm:p-4">
+      {/* Search. Flex row rather than an absolutely-positioned icon: the
+          icon and the field are siblings, so text can never run under it. */}
+      <div
+        className="flex items-center gap-2.5 rounded-xl px-3.5 transition-colors"
+        style={{
+          background: 'var(--surface)',
+          border: `1px solid ${searchFocused ? 'var(--signal)' : 'var(--rule)'}`,
+          minHeight: 48,
+        }}
+      >
+        <Search className="w-4 h-4 shrink-0" style={{ color: 'var(--ink-dim)' }} />
+
+        <input
+          ref={searchRef}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          onFocus={() => setSearchFocused(true)}
+          onBlur={() => setSearchFocused(false)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              setSearch('');
+              searchRef.current?.blur();
+            }
+          }}
+          placeholder="Search tasks"
+          className="flex-1 min-w-0 bg-transparent text-[14px] text-[var(--ink)] placeholder:text-[var(--ink-dim)] outline-none border-0 p-0"
+        />
+
+        {search && (
+          <button
+            onClick={() => setSearch('')}
+            aria-label="Clear search"
+            className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center"
+            style={{ color: 'var(--ink-dim)' }}
+          >
+            <X className="w-3.5 h-3.5 shrink-0" />
+          </button>
+        )}
+      </div>
+
+      {/* Tabs + time filter */}
+      <div className="flex items-center gap-1.5 flex-wrap">
+        {[
+          { id: 'today' as TabId, label: 'Today', count: buckets.today.length },
+          { id: 'upcoming' as TabId, label: 'Upcoming', count: buckets.upcoming.length },
+          { id: 'completed' as TabId, label: 'Done', count: buckets.completed.length },
+        ].map((t) => (
+          <button
+            key={t.id}
+            onClick={() => {
+              soundFx.playClick();
+              setTab(t.id);
+            }}
+            data-active={tab === t.id}
+            className="eb-tab eb-shine text-[11px] font-mono px-3.5 py-2.5 flex items-center gap-1.5 shrink-0" 
+          >
+            {t.label}
+            <span className="text-[11px] opacity-70">{t.count}</span>
+          </button>
+        ))}
+
+        {tab !== 'completed' && (
+          <div className="flex items-center gap-1 ml-auto">
+            {[15, 30, 60].map((m) => (
+              <button
+                key={m}
+                onClick={() => setTimeFilter(timeFilter === m ? undefined : m)}
+                title={`Show what fits in ${m} minutes`}
+                className={`text-[11px] font-semibold px-2.5 py-1.5 rounded-lg border transition-all ${
+                  timeFilter === m
+                    ? 'eb-done bg-emerald-500/12 border-emerald-500/30'
+                    : 'text-[var(--ink-dim)] border-[var(--rule)] hover:border-[var(--rule-strong)]'
+                }`}
+              >
+                {m}m
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* List */}
+      {visible.length === 0 ? (
+        <div className="text-center py-12 px-6 border border-dashed border-[var(--rule)] rounded-2xl">
+          <p className="eb-heading text-base tracking-tight">
+            {tab === 'today'
+              ? 'Clear day.'
+              : tab === 'upcoming'
+                ? 'Nothing scheduled.'
+                : 'Nothing finished yet.'}
+          </p>
+          <p className="text-[11px] text-[var(--ink-muted)] mt-1.5 max-w-xs mx-auto leading-relaxed">
+            {tab === 'today'
+              ? 'Nothing is waiting on you. Add what matters and start.'
+              : tab === 'upcoming'
+                ? 'Give a task a date and it waits here until the day arrives.'
+                : 'Completed work collects here so you can see what you got done.'}
+          </p>
+          {tab !== 'completed' && (
+            <button
+              onClick={() => inputRef.current?.focus()}
+              className="eb-btn-primary eb-shine mt-4 px-4 py-2.5 rounded-xl text-xs font-mono font-black inline-flex items-center gap-1.5"
+            >
+              <Plus className="w-3.5 h-3.5 shrink-0" />
+              Add task
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {tab === 'today' && visible.some((t) => t.pinned) && (
+            <p className="text-[10px] font-mono font-bold eb-warn/80 tracking-widest uppercase pt-1">
+              Today's priorities
+            </p>
+          )}
+          <AnimatePresence initial={false}>
+            {visible.filter((t) => t.pinned).map((t) => renderCard(t, true))}
+          </AnimatePresence>
+
+          {tab === 'today' &&
+            visible.some((t) => t.pinned) &&
+            visible.some((t) => !t.pinned) && (
+              <p className="eb-label pt-2">
+                Everything else
+              </p>
+            )}
+          <AnimatePresence initial={false}>
+            {visible.filter((t) => !t.pinned).map((t) => renderCard(t))}
+          </AnimatePresence>
+        </div>
+      )}
+
+      {!userId && (
+        <p className="text-[10px] text-[var(--ink-muted)] font-mono text-center">
+          Signed out — tasks stay on this device until you sign in.
+        </p>
+      )}
+
+      <TaskDetailSheet
+        task={detailTask}
+        goals={goals}
+        onClose={() => setDetailId(null)}
+        onPatch={(changes) => detailTask && patch(detailTask, changes)}
+        onDelete={() => detailTask && handleDelete(detailTask)}
+        onStartFocus={onStartFocus}
+      />
+
+      <AddButton label="Add task" onClick={() => setComposerOpen(true)} />
+
+      <ComposerSheet
+        open={composerOpen}
+        title="New task"
+        onClose={() => setComposerOpen(false)}
+      >
+
         <div className="flex items-center gap-2">
           <input
             ref={inputRef}
@@ -785,154 +941,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
-
-      {/* Search. Flex row rather than an absolutely-positioned icon: the
-          icon and the field are siblings, so text can never run under it. */}
-      <div
-        className="flex items-center gap-2.5 rounded-xl px-3.5 transition-colors"
-        style={{
-          background: 'var(--surface)',
-          border: `1px solid ${searchFocused ? 'var(--signal)' : 'var(--rule)'}`,
-          minHeight: 48,
-        }}
-      >
-        <Search className="w-4 h-4 shrink-0" style={{ color: 'var(--ink-dim)' }} />
-
-        <input
-          ref={searchRef}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          onFocus={() => setSearchFocused(true)}
-          onBlur={() => setSearchFocused(false)}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') {
-              setSearch('');
-              searchRef.current?.blur();
-            }
-          }}
-          placeholder="Search tasks"
-          className="flex-1 min-w-0 bg-transparent text-[14px] text-[var(--ink)] placeholder:text-[var(--ink-dim)] outline-none border-0 p-0"
-        />
-
-        {search && (
-          <button
-            onClick={() => setSearch('')}
-            aria-label="Clear search"
-            className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center"
-            style={{ color: 'var(--ink-dim)' }}
-          >
-            <X className="w-3.5 h-3.5 shrink-0" />
-          </button>
-        )}
-      </div>
-
-      {/* Tabs + time filter */}
-      <div className="flex items-center gap-1.5 flex-wrap">
-        {[
-          { id: 'today' as TabId, label: 'Today', count: buckets.today.length },
-          { id: 'upcoming' as TabId, label: 'Upcoming', count: buckets.upcoming.length },
-          { id: 'completed' as TabId, label: 'Done', count: buckets.completed.length },
-        ].map((t) => (
-          <button
-            key={t.id}
-            onClick={() => {
-              soundFx.playClick();
-              setTab(t.id);
-            }}
-            data-active={tab === t.id}
-            className="eb-tab eb-shine text-[11px] font-mono px-3.5 py-2.5 flex items-center gap-1.5 shrink-0" 
-          >
-            {t.label}
-            <span className="text-[11px] opacity-70">{t.count}</span>
-          </button>
-        ))}
-
-        {tab !== 'completed' && (
-          <div className="flex items-center gap-1 ml-auto">
-            {[15, 30, 60].map((m) => (
-              <button
-                key={m}
-                onClick={() => setTimeFilter(timeFilter === m ? undefined : m)}
-                title={`Show what fits in ${m} minutes`}
-                className={`text-[11px] font-semibold px-2.5 py-1.5 rounded-lg border transition-all ${
-                  timeFilter === m
-                    ? 'eb-done bg-emerald-500/12 border-emerald-500/30'
-                    : 'text-[var(--ink-dim)] border-[var(--rule)] hover:border-[var(--rule-strong)]'
-                }`}
-              >
-                {m}m
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* List */}
-      {visible.length === 0 ? (
-        <div className="text-center py-12 px-6 border border-dashed border-[var(--rule)] rounded-2xl">
-          <p className="eb-heading text-base tracking-tight">
-            {tab === 'today'
-              ? 'Clear day.'
-              : tab === 'upcoming'
-                ? 'Nothing scheduled.'
-                : 'Nothing finished yet.'}
-          </p>
-          <p className="text-[11px] text-[var(--ink-muted)] mt-1.5 max-w-xs mx-auto leading-relaxed">
-            {tab === 'today'
-              ? 'Nothing is waiting on you. Add what matters and start.'
-              : tab === 'upcoming'
-                ? 'Give a task a date and it waits here until the day arrives.'
-                : 'Completed work collects here so you can see what you got done.'}
-          </p>
-          {tab !== 'completed' && (
-            <button
-              onClick={() => inputRef.current?.focus()}
-              className="eb-btn-primary eb-shine mt-4 px-4 py-2.5 rounded-xl text-xs font-mono font-black inline-flex items-center gap-1.5"
-            >
-              <Plus className="w-3.5 h-3.5 shrink-0" />
-              Add task
-            </button>
-          )}
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {tab === 'today' && visible.some((t) => t.pinned) && (
-            <p className="text-[10px] font-mono font-bold eb-warn/80 tracking-widest uppercase pt-1">
-              Today's priorities
-            </p>
-          )}
-          <AnimatePresence initial={false}>
-            {visible.filter((t) => t.pinned).map((t) => renderCard(t, true))}
-          </AnimatePresence>
-
-          {tab === 'today' &&
-            visible.some((t) => t.pinned) &&
-            visible.some((t) => !t.pinned) && (
-              <p className="eb-label pt-2">
-                Everything else
-              </p>
-            )}
-          <AnimatePresence initial={false}>
-            {visible.filter((t) => !t.pinned).map((t) => renderCard(t))}
-          </AnimatePresence>
-        </div>
-      )}
-
-      {!userId && (
-        <p className="text-[10px] text-[var(--ink-muted)] font-mono text-center">
-          Signed out — tasks stay on this device until you sign in.
-        </p>
-      )}
-
-      <TaskDetailSheet
-        task={detailTask}
-        goals={goals}
-        onClose={() => setDetailId(null)}
-        onPatch={(changes) => detailTask && patch(detailTask, changes)}
-        onDelete={() => detailTask && handleDelete(detailTask)}
-        onStartFocus={onStartFocus}
-      />
+      </ComposerSheet>
 
       {/* Toasts */}
       <div className="fixed left-1/2 -translate-x-1/2 bottom-24 z-50 flex flex-col gap-2 w-[calc(100%-2rem)] max-w-sm pointer-events-none">

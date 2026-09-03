@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import {
+import { Sun,
   Plus,
   Check,
   Trash2,
@@ -220,47 +220,53 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
 
   return (
     <div className="space-y-4">
-      {/* Day / Week is a timescale switch on the same data, not a separate
-          place to go. */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-1 p-1 rounded-xl bg-[var(--surface-sunk)] border border-[var(--rule)]">
-          {([
-            { id: 'routine' as Pane, label: 'Day' },
-            { id: 'week' as Pane, label: 'Week' },
-          ]).map(({ id, label }) => (
+      <div className="grid grid-cols-3 gap-1.5 p-1.5 rounded-2xl bg-[var(--surface-sunk)] border border-[var(--rule)]">
+        {([
+          { id: 'routine' as Pane, label: 'Day', icon: Sun },
+          { id: 'week' as Pane, label: 'Week', icon: CalendarDays },
+          { id: 'sleep' as Pane, label: 'Sleep', icon: Moon },
+        ]).map(({ id, label, icon: Icon }) => {
+          const active = pane === id;
+          return (
             <button
               key={id}
               onClick={() => {
                 soundFx.playClick();
                 setPane(id);
               }}
-              className="min-h-[38px] px-4 rounded-lg text-[13px] font-semibold transition-colors"
-              style={{
-                background: pane === id ? 'var(--surface)' : 'transparent',
-                color: pane === id ? 'var(--ink)' : 'var(--ink-dim)',
-                boxShadow:
-                  pane === id ? '0 1px 0 0 rgba(255,255,255,0.06) inset' : undefined,
-              }}
+              aria-current={active ? 'page' : undefined}
+              className="relative min-h-[56px] rounded-xl flex flex-col items-center justify-center gap-1.5 transition-colors"
             >
-              {label}
-            </button>
-          ))}
-        </div>
+              {active && (
+                <motion.span
+                  layoutId="life-tab-indicator"
+                  className="absolute inset-0 rounded-xl"
+                  style={{
+                    background:
+                      'linear-gradient(180deg, color-mix(in oklab, var(--signal) 20%, var(--surface)), var(--surface))',
+                    border: '1px solid color-mix(in oklab, var(--signal) 45%, var(--rule))',
+                  }}
+                  transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+                />
+              )}
 
-        <button
-          onClick={() => {
-            soundFx.playClick();
-            setPane(pane === 'sleep' ? 'routine' : 'sleep');
-          }}
-          className="min-h-[38px] px-4 rounded-xl border text-[13px] font-semibold flex items-center gap-2 transition-colors"
-          style={{
-            borderColor: pane === 'sleep' ? '#7C9CFF' : 'var(--rule)',
-            color: pane === 'sleep' ? '#7C9CFF' : 'var(--ink-dim)',
-          }}
-        >
-          <Moon className="w-4 h-4 shrink-0" />
-          Sleep
-        </button>
+              <Icon
+                className="relative w-[18px] h-[18px] shrink-0"
+                strokeWidth={active ? 2.4 : 1.9}
+                style={{ color: active ? 'var(--signal-ink)' : 'var(--ink-dim)' }}
+              />
+              <span
+                className="relative text-[12px] leading-none"
+                style={{
+                  color: active ? 'var(--ink)' : 'var(--ink-dim)',
+                  fontWeight: active ? 700 : 500,
+                }}
+              >
+                {label}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {pane === 'routine' && (

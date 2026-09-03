@@ -43,6 +43,8 @@ import { snapshotGoal, snapshotsFor, subscribeGoalSnapshots } from '../lib/goalS
 import { soundFx } from '../utils/audio';
 import { offerUndo } from '../lib/undo';
 import { EmptyState } from './EmptyState';
+import { ComposerSheet } from './ComposerSheet';
+import { AddButton } from './AddButton';
 
 interface Props {
   userId: string | null;
@@ -64,6 +66,8 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
   const pane: Pane = controlledPane ?? 'goals';
   const [goalDraft, setGoalDraft] = useState('');
   const goalInputRef = useRef<HTMLInputElement>(null);
+  const [goalComposerOpen, setGoalComposerOpen] = useState(false);
+  const [habitComposerOpen, setHabitComposerOpen] = useState(false);
   const habitInputRef = useRef<HTMLInputElement>(null);
   const [habitDraft, setHabitDraft] = useState('');
   const [expandedHabit, setExpandedHabit] = useState<string | null>(null);
@@ -107,6 +111,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
     const g = newGoal(title);
     setGoals((prev) => [g, ...prev]);
     setGoalDraft('');
+    setGoalComposerOpen(false);
     soundFx.playClick();
     try {
       await saveGoal(userId, g);
@@ -131,6 +136,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
 
     setHabits((prev) => [h, ...prev]);
     setHabitDraft('');
+    setHabitComposerOpen(false);
     // Reset the composer so the next habit starts from defaults rather than
     // silently inheriting the last one's settings.
     setDraftCadence('daily');
@@ -888,7 +894,13 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
       {/* ---- GOALS ---- */}
       {pane === 'goals' && (
         <div className="space-y-3">
-          <div className="flex items-center gap-2">
+          <AddButton label="Add goal" onClick={() => setGoalComposerOpen(true)} />
+
+          <ComposerSheet
+            open={goalComposerOpen}
+            title="New goal"
+            onClose={() => setGoalComposerOpen(false)}
+          >
             <input
               ref={goalInputRef}
               value={goalDraft}
@@ -896,17 +908,17 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
               onKeyDown={(e) => e.key === 'Enter' && addGoal()}
               placeholder="What are you working toward?"
               maxLength={120}
-              className="flex-1 min-w-0 eb-card focus:border-[#8B5CF6]/60 rounded-xl px-3 py-2.5 text-sm text-[var(--ink)] placeholder:text-[var(--ink-dim)] outline-none"
+              className="w-full rounded-xl px-4 py-3.5 text-[15px] text-[var(--ink)] placeholder:text-[var(--ink-dim)] outline-none"
+              style={{ background: 'var(--surface-sunk)', border: '1px solid var(--rule)' }}
             />
-            <button
-              onClick={addGoal}
-              disabled={!goalDraft.trim()}
-              aria-label="Add goal"
-              className="eb-btn-primary eb-shine shrink-0 w-11 h-11 rounded-xl flex items-center justify-center"
-            >
-              <Plus className="w-5 h-5 shrink-0" />
+            <p className="t-sub mt-2.5 leading-snug">
+              Something you are working toward over weeks. Break it into milestones afterwards.
+            </p>
+            <button onClick={addGoal} disabled={!goalDraft.trim()} className="btn-lg w-full mt-5">
+              <Plus className="w-4 h-4 shrink-0" />
+              Add goal
             </button>
-          </div>
+          </ComposerSheet>
 
           {activeGoals.length === 0 ? (
             <EmptyState
@@ -926,6 +938,13 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
       {/* ---- HABITS ---- */}
       {pane === 'habits' && (
         <div className="space-y-3">
+          <AddButton label="Add habit" onClick={() => setHabitComposerOpen(true)} />
+
+          <ComposerSheet
+            open={habitComposerOpen}
+            title="New habit"
+            onClose={() => setHabitComposerOpen(false)}
+          >
           <div className="flex items-center gap-2">
             <input
               ref={habitInputRef}
@@ -1061,6 +1080,12 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
               )}
             </div>
           )}
+            <button onClick={addHabit} disabled={!habitDraft.trim()} className="btn-lg w-full mt-5">
+              <Plus className="w-4 h-4 shrink-0" />
+              Add habit
+            </button>
+          </ComposerSheet>
+
 
           {activeHabits.length === 0 ? (
             <EmptyState
