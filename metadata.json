@@ -1,6 +1,0 @@
-{
-  "name": "Elite Brain",
-  "description": "Self-adjusting 30-day cognitive enhancement & neural training suite featuring adaptive memory, focus, fluid IQ, and stillness modules.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}
