@@ -1,81 +1,127 @@
 /**
  * Image analysis for the Coach tools.
  *
- * Uses the Gemini key already configured — no new provider, no extra cost.
- * Each tool has its own instruction set rather than one generic "describe
- * this image" prompt, because the useful answer differs completely between
- * a plate of food and a standing posture.
+ * Uses the Gemini key already configured. Each tool has its own instruction
+ * set, because the useful answer differs completely between a plate of food
+ * and a person standing side-on.
  *
- * Images are analysed and discarded. Nothing is stored server-side: these are
- * photographs of people's bodies, meals and homes, and keeping them would
- * create a liability with no corresponding benefit.
+ * Images are analysed and discarded. Nothing is written to disk: these are
+ * photographs of people's bodies, meals and homes.
  */
 
-export type VisionTool = 'physique' | 'food' | 'posture' | 'outfit';
+export type VisionTool = 'food' | 'physique' | 'outfit';
 
 /** Largest image accepted, before base64 encoding. */
 export const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 
-const SHARED_RULES = `
-You are EliteLife Coach. Be specific, practical and brief — six sentences at most.
-Write plainly. No emoji, no exclamation marks, no motivational filler.
-If the image is unclear or does not show what this tool expects, say so plainly
-and ask for a better photo rather than guessing.
+const SHARED = `
+You are EliteLife Coach. Write plainly and specifically. No emoji, no
+exclamation marks, no motivational filler, no hedging language.
+Be direct. The user asked for an honest assessment, so give one.
 `;
 
 const PROMPTS: Record<VisionTool, string> = {
   /**
-   * Deliberately constrained. Commenting on someone's body carries real risk
-   * of harm — particularly with a young audience — so this is framed around
-   * training and health, never appearance, attractiveness or comparison.
+   * Food. Indian dishes are the common case for this audience and are the
+   * hardest for a generic model — "curry" is not an answer. The prompt names
+   * that explicitly and asks for per-component breakdown.
    */
-  physique: `${SHARED_RULES}
-The user has shared a photo for fitness feedback.
+  food: `${SHARED}
+Identify everything visible in this photo of food. Be specific: name the actual
+dish, not a category. If it is Indian food, name it properly — rajma, chole,
+paneer butter masala, poha, upma, biryani, dosa, thali components individually.
+Do the same for any cuisine. If it is fruit or dry fruit, name the variety.
 
-Rules you must follow:
-- Comment ONLY on visible posture, muscular development and training balance.
-- Never comment on attractiveness, weight, body fat, or how they compare to
-  anyone else.
+Then give this exact structure:
+
+WHAT THIS IS
+One line naming the dish or items.
+
+ROUGH NUMBERS
+Calories: <number> kcal
+Protein: <number> g
+Carbs: <number> g
+Fat: <number> g
+Fibre: <number> g
+
+For a mixed plate, estimate the total across everything visible, and note the
+portion size you assumed.
+
+WHAT IT IS GOOD FOR
+Two lines on what this meal actually provides.
+
+WHAT IT IS MISSING
+One or two lines naming what to ADD to balance it. Never say to remove or eat
+less of something, and never call food good or bad.
+
+End with one line: these are estimates from a photograph and can be off by a
+fair margin, especially for oil and portion size.`,
+
+  /**
+   * Physique and posture, merged.
+   *
+   * The user asked for brutal honesty, and that is reasonable for training
+   * feedback. Two hard limits remain: no body-fat or weight estimates, which
+   * cannot be known from a photo and which cause real harm when wrong, and
+   * nothing framed around appearance or attractiveness. Direct about TRAINING
+   * is useful; direct about someone's body is not.
+   */
+  physique: `${SHARED}
+This is a photo shared for training and posture feedback. Assess it honestly.
+Do not soften your assessment to be kind — the user explicitly asked for a
+straight answer.
+
+Give this exact structure:
+
+RATING
+<score>/10 — one line explaining the score.
+Score on visible muscular development, symmetry and posture only.
+
+POSTURE
+Name what you can actually see: head position, shoulder level, spinal curve,
+hip tilt, knee alignment. Say plainly what is off. If posture is good, say so.
+Note what the angle does not let you assess.
+
+WHAT YOUR TRAINING IS DOING WELL
+Two specific things.
+
+WHAT IS LAGGING
+Two specific muscle groups or movement patterns that are visibly behind, and
+the exercises that fix each.
+
+DO THIS NEXT
+Three concrete things for the next month.
+
+Rules you must not break:
 - Never estimate body-fat percentage or weight. You cannot know these from a
-  photo and a wrong number can do real harm.
-- Never suggest restriction, cutting, or eating less.
-- Frame everything as what to TRAIN next, not what is wrong with them.
+  photo, and a wrong number does real damage.
+- Never comment on attractiveness or compare them to anyone else.
+- Never suggest eating less, restricting, or cutting.
+- Frame everything as what to TRAIN, not what is wrong with them as a person.`,
 
-Give: two things their training appears to be doing well, and two specific
-exercises or movement patterns to add. Then one line noting that a photo shows
-limited information.`,
+  outfit: `${SHARED}
+This is a photo shared for style feedback. Be honest and direct — the user
+asked for a real opinion, not encouragement.
 
-  food: `${SHARED_RULES}
-The user has shared a photo of food.
+Give this exact structure:
 
-Identify what is on the plate. Give a rough estimate of calories and the
-protein/carbohydrate/fat balance, and state clearly that these are estimates
-from a photograph and may be well off.
+RATING
+<score>/10 — one line explaining the score.
 
-Then give one practical suggestion to make this meal more balanced — something
-to add rather than something to remove.
+WHAT WORKS
+Two specific things: fit, colour, proportion, texture, or how the pieces sit
+together.
 
-Never tell the user not to eat something, and never frame food as good or bad.`,
+WHAT DOES NOT
+Two specific things, named plainly. If the fit is wrong, say where. If the
+colours clash, say which.
 
-  posture: `${SHARED_RULES}
-The user has shared a photo to check their posture.
+FIX IT
+Two concrete swaps or changes that would raise the score.
 
-Comment on what is visible: head position, shoulder alignment, spinal curve,
-hip position. Name specifically what you can see, and say what you cannot
-assess from this angle.
-
-Give two stretches or strengthening exercises that address what you observed.
-If the posture looks broadly fine, say so rather than inventing a problem.`,
-
-  outfit: `${SHARED_RULES}
-The user has shared a photo of an outfit for style feedback.
-
-Say what works about it: fit, colour, proportion, or how the pieces sit
-together. Then give two specific, actionable suggestions — a different
-silhouette, a colour that would work better, a piece to swap.
-
-Be constructive and direct. Never comment on the person's body, only on the
-clothing and how it is worn.`,
+If the outfit genuinely works, say so and explain why rather than inventing
+faults. Comment only on the clothing and how it is worn — never on the
+person's body.`,
 };
 
 export interface VisionResult {
@@ -83,10 +129,11 @@ export interface VisionResult {
 }
 
 /**
- * Analyse an image for one tool.
+ * Analyse an image.
  *
- * Throws on failure so the caller decides what the user sees — a vision
- * failure should not be dressed up as advice.
+ * Throws with a specific message on failure. Previously any problem produced
+ * the same generic error, which made a safety block indistinguishable from a
+ * network fault and left users with no idea what to do.
  */
 export async function analyseImage(
   ai: any,
@@ -102,22 +149,48 @@ export async function analyseImage(
     contents: [
       {
         role: 'user',
-        parts: [
-          { inlineData: { mimeType, data: base64 } },
-          { text: prompt },
-        ],
+        parts: [{ inlineData: { mimeType, data: base64 } }, { text: prompt }],
       },
     ],
-    config: { temperature: 0.4 },
+    config: {
+      temperature: 0.4,
+      // Photos of people routinely trip the default thresholds — a posture
+      // photo in gym clothing is not adult content. Loosened to BLOCK_ONLY_HIGH
+      // so legitimate fitness and outfit photos are not silently refused,
+      // while genuinely harmful content still is.
+      safetySettings: [
+        { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
+        { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
+        { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' },
+        { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' },
+      ],
+    },
   });
 
   const text = response?.text?.trim();
-  if (!text) throw new Error('No response from the model');
+  if (text) return { text };
 
-  return { text };
+  // No text means the response was blocked or empty. Report which, so the
+  // user gets an actionable message instead of "something went wrong".
+  const blockReason =
+    response?.promptFeedback?.blockReason ||
+    response?.candidates?.[0]?.finishReason ||
+    null;
+
+  if (blockReason === 'SAFETY' || blockReason === 'PROHIBITED_CONTENT') {
+    throw new Error(
+      'That photo could not be analysed. Try one that clearly shows what you want assessed.'
+    );
+  }
+
+  if (blockReason === 'MAX_TOKENS') {
+    throw new Error('The response was cut short. Try again.');
+  }
+
+  console.warn('Vision returned no text. Reason:', blockReason, JSON.stringify(response?.promptFeedback || {}));
+  throw new Error('No usable response came back. Try a clearer photo.');
 }
 
-/** Accepted image types. Anything else is rejected before reaching the model. */
 export function isAllowedMime(mime: string): boolean {
   return ['image/jpeg', 'image/png', 'image/webp', 'image/heic'].includes(mime);
 }

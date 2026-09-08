@@ -862,8 +862,25 @@ async function startServer() {
 
       res.json({ text: result.text });
     } catch (err: any) {
-      console.error('Vision failed:', err?.message || err);
-      res.status(500).json({ error: 'Could not analyse that image. Please try again.' });
+      const message = String(err?.message || '');
+      console.error('Vision failed:', message, err?.status || '');
+
+      // Pass through the messages analyseImage raises deliberately — they are
+      // written for the user and say what to do next.
+      if (message.includes('photo') || message.includes('response')) {
+        return res.status(422).json({ error: message });
+      }
+
+      // Quota and rate limits are common on the free tier and worth naming,
+      // since the user can simply wait rather than assuming it is broken.
+      const code = Number(err?.status || err?.code || 0);
+      if (code === 429) {
+        return res.status(429).json({
+          error: 'Too many requests right now. Wait a minute and try again.',
+        });
+      }
+
+      res.status(500).json({ error: 'Could not reach the analysis service. Try again shortly.' });
     }
   });
 

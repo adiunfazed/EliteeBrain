@@ -148,6 +148,18 @@ export const ImageToolScreen: React.FC<Props> = ({ tool, onBack }) => {
 
       <p className="t-sub mt-3 leading-relaxed">{tool.blurb}</p>
 
+      {/* What makes a usable photo. A bad angle is the commonest reason these
+          come back with nothing worth reading. */}
+      {!result && !busy && (
+        <p className="t-meta mt-3 leading-relaxed">
+          {tool.id === 'food'
+            ? 'Shoot from above, with the whole plate in frame and good light.'
+            : tool.id === 'physique'
+              ? 'Stand side-on or front-on, full body in frame, fitted clothing.'
+              : 'Full length, straight on, in good light.'}
+        </p>
+      )}
+
       {/* Preview */}
       {preview && (
         <motion.img

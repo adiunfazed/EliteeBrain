@@ -1,10 +1,10 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import {
-  Dumbbell, Apple, PersonStanding, Shirt, Mic, MessageSquare, ChevronRight,
+  Dumbbell, Apple, Shirt, Mic, MessageSquare, ChevronRight,
 } from 'lucide-react';
 
-export type CoachToolId = 'physique' | 'food' | 'posture' | 'outfit' | 'voice' | 'chat';
+export type CoachToolId = 'physique' | 'food' | 'outfit' | 'voice' | 'chat';
 
 export interface CoachTool {
   id: CoachToolId;
@@ -27,31 +27,23 @@ export const COACH_TOOLS: CoachTool[] = [
   {
     id: 'food',
     name: 'Food scanner',
-    blurb: 'Photograph a meal for a rough breakdown and one way to balance it.',
+    blurb: 'Photograph any meal for calories, protein, carbs and fat — Indian dishes included.',
     icon: Apple,
     accent: '#00C2A8',
     needs: 'camera',
   },
   {
-    id: 'posture',
-    name: 'Posture check',
-    blurb: 'A side-on photo, and what to stretch or strengthen.',
-    icon: PersonStanding,
-    accent: '#7FD4E8',
-    needs: 'camera',
-  },
-  {
     id: 'physique',
-    name: 'Training check',
-    blurb: 'Feedback on what your training is building and what to add next.',
+    name: 'Physique & posture',
+    blurb: 'An honest rating of your build and posture, and what to train next.',
     icon: Dumbbell,
     accent: '#FFB020',
     needs: 'camera',
   },
   {
     id: 'outfit',
-    name: 'Outfit feedback',
-    blurb: 'What works, and two things that would work better.',
+    name: 'Outfit rating',
+    blurb: 'An honest score on what you are wearing, and what would improve it.',
     icon: Shirt,
     accent: '#E8A0C8',
     needs: 'camera',
@@ -59,7 +51,7 @@ export const COACH_TOOLS: CoachTool[] = [
   {
     id: 'voice',
     name: 'Voice coach',
-    blurb: 'Speak on a prompt and get feedback on how you said it.',
+    blurb: 'Speak on a prompt and get rated on clarity, structure and delivery.',
     icon: Mic,
     accent: '#A78BFA',
     needs: 'microphone',

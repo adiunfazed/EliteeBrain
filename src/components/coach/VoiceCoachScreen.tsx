@@ -44,10 +44,23 @@ export const VoiceCoachScreen: React.FC<Props> = ({ onBack }) => {
 
   const recognitionRef = useRef<any>(null);
   const finalRef = useRef('');
+  /** True once the user pressed Done, so auto-restart stops. */
+  const stoppedByUser = useRef(false);
 
   useEffect(() => {
     const w = window as any;
     setSupported(!!(w.SpeechRecognition || w.webkitSpeechRecognition));
+
+    // Leaving the screen must release the microphone, or it keeps listening
+    // in the background.
+    return () => {
+      stoppedByUser.current = true;
+      try {
+        recognitionRef.current?.stop();
+      } catch {
+        /* nothing running */
+      }
+    };
   }, []);
 
   // Elapsed timer, so the user can see they are being heard.
@@ -73,19 +86,28 @@ export const VoiceCoachScreen: React.FC<Props> = ({ onBack }) => {
       recognition.lang = 'en-IN';
 
       finalRef.current = '';
+      stoppedByUser.current = false;
       setTranscript('');
       setSeconds(0);
       setError(null);
       setFeedback(null);
 
       recognition.onresult = (event: any) => {
+        // Rebuild from the full result list rather than appending from
+        // resultIndex. Appending double-counted finals on browsers where
+        // resultIndex does not advance, which is why words repeated three
+        // and four times.
+        let finals = '';
         let interim = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const chunk = event.results[i][0].transcript;
-          if (event.results[i].isFinal) finalRef.current += chunk + ' ';
+
+        for (let i = 0; i < event.results.length; i++) {
+          const chunk = event.results[i][0]?.transcript || '';
+          if (event.results[i].isFinal) finals += chunk + ' ';
           else interim += chunk;
         }
-        setTranscript((finalRef.current + interim).trim());
+
+        finalRef.current = finals;
+        setTranscript((finals + interim).replace(/\s+/g, ' ').trim());
       };
 
       recognition.onerror = (event: any) => {
@@ -102,7 +124,18 @@ export const VoiceCoachScreen: React.FC<Props> = ({ onBack }) => {
       };
 
       recognition.onend = () => {
-        setPhase((p) => (p === 'listening' ? 'reviewing' : p));
+        // Chrome stops after a few seconds of silence even with continuous
+        // set, which ended the session while the user was still thinking.
+        // Restart unless they pressed Done.
+        if (stoppedByUser.current) {
+          setPhase('reviewing');
+          return;
+        }
+        try {
+          recognition.start();
+        } catch {
+          setPhase('reviewing');
+        }
       };
 
       recognitionRef.current = recognition;
@@ -115,6 +148,7 @@ export const VoiceCoachScreen: React.FC<Props> = ({ onBack }) => {
   };
 
   const stop = () => {
+    stoppedByUser.current = true;
     try {
       recognitionRef.current?.stop();
     } catch {
@@ -144,12 +178,18 @@ export const VoiceCoachScreen: React.FC<Props> = ({ onBack }) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
-          message:
-            `I was asked to speak on this prompt: "${prompt}"\n\n` +
-            `This is a transcript of what I said. Give me feedback on clarity, structure, ` +
-            `vocabulary and how well I answered — six sentences at most. Be specific about ` +
-            `what to change. Do not comment on grammar of speech-to-text artefacts, since ` +
-            `the transcript is imperfect.\n\nTranscript:\n${text}`,
+          userMessage:
+            `I spoke on this prompt: "${prompt}"\n\n` +
+            `Below is a transcript of what I said. Rate my delivery honestly.\n\n` +
+            `Give exactly this structure:\n` +
+            `RATING\n<score>/10 — one line why.\n\n` +
+            `WHAT WORKED\nTwo specific things about clarity, structure or word choice.\n\n` +
+            `WHAT DID NOT\nTwo specific weaknesses. Be direct.\n\n` +
+            `DO THIS NEXT TIME\nTwo concrete changes.\n\n` +
+            `The transcript comes from speech-to-text, so ignore punctuation, ` +
+            `capitalisation and obvious mis-transcriptions. Judge the substance and ` +
+            `structure of what was said, not the typing.\n\nTranscript:\n${text}`,
+          mode: 'chat',
           history: [],
         }),
       });
@@ -161,7 +201,7 @@ export const VoiceCoachScreen: React.FC<Props> = ({ onBack }) => {
         return;
       }
 
-      setFeedback(data.reply || data.text || null);
+      setFeedback(data.reply || null);
     } catch {
       setError('Network problem getting feedback.');
     }
