@@ -24,13 +24,13 @@ interface Props {
   questDoneToday: boolean;
   recentQuestIds?: string[];
   /** Today's completed quest, read back rather than recomputed. */
-  completedQuest?: { id: string; title: string; xp: number } | null;
-  questLevel?: number;
+  completedQuest?: { id: string; title: string; objective?: string; xp: number } | null;
+  storedQuest?: { date: string; id: string; title: string; objective?: string; xp: number } | null;
   careerXp?: number;
   streakDays?: number;
   /** Opens the rank and standings view in More. */
   onOpenRank?: () => void;
-  onPinLevel?: (level: number) => void;
+  onStoreQuest?: (q: { date: string; id: string; title: string; objective?: string; xp: number }) => void;
   onCompleteQuest: (quest: { id: string; title: string; xp: number }) => void;
   habits: Habit[];
   habitLogs: HabitLog[];
@@ -61,11 +61,11 @@ export const TodayScreen: React.FC<Props> = ({
   questDoneToday,
   recentQuestIds,
   completedQuest,
-  questLevel,
+  storedQuest,
   careerXp,
   streakDays,
   onOpenRank,
-  onPinLevel,
+  onStoreQuest,
   onCompleteQuest,
   habits,
   habitLogs,
@@ -103,7 +103,7 @@ export const TodayScreen: React.FC<Props> = ({
   );
 
   const suggestions = useMemo(
-    () => suggestNextActions(suggestInput, 3).filter((s) => !dismissed.includes(s.id)),
+    () => suggestNextActions(suggestInput, 1).filter((s) => !dismissed.includes(s.id)),
     [suggestInput, dismissed]
   );
 
@@ -333,8 +333,8 @@ export const TodayScreen: React.FC<Props> = ({
           completedToday={questDoneToday}
           recentQuestIds={recentQuestIds}
           completedQuest={completedQuest}
-          questLevel={questLevel}
-          onPinLevel={onPinLevel}
+          storedQuest={storedQuest}
+          onStoreQuest={onStoreQuest}
           onComplete={onCompleteQuest}
         />
       </section>
@@ -448,6 +448,24 @@ export const TodayScreen: React.FC<Props> = ({
               />
             </div>
           </button>
+
+          {/* Sleep sits here rather than in its own section: it is one row of
+              at-a-glance state, which is what this block already is. */}
+          <button
+            onClick={() => onGo('routine')}
+            className="w-full text-left rounded-2xl p-4 mt-2 flex items-center gap-3.5 transition-transform active:scale-[0.99]"
+            style={{ background: 'var(--surface)', border: '1px solid var(--rule)' }}
+          >
+            <span
+              className="w-9 h-9 rounded-xl shrink-0 flex items-center justify-center"
+              style={{ background: 'color-mix(in oklab, #7C9CFF 16%, transparent)' }}
+            >
+              <Moon className="w-4 h-4 shrink-0" style={{ color: '#7C9CFF' }} />
+            </span>
+            <span className="t-body flex-1 min-w-0">Sleep</span>
+            <span className="t-meta">{sleptLastNight ? 'Logged' : 'Not logged'}</span>
+            <ChevronRight className="w-4 h-4 shrink-0" style={{ color: 'var(--ink-dim)' }} />
+          </button>
         </section>
       )}
 
@@ -521,7 +539,7 @@ export const TodayScreen: React.FC<Props> = ({
       {day.length > 0 && (
         <section className="sec enter enter-2">
           <div className="sec-head">
-            <span className="sec-label">Your day</span>
+            <span className="sec-label">Today</span>
             <button onClick={() => onGo('routine')} className="t-meta hover:text-[var(--ink)]">
               Edit
             </button>
@@ -568,13 +586,17 @@ export const TodayScreen: React.FC<Props> = ({
 
       {/* ---------------- Tasks ---------------- */}
       {(todayTasks.length > 0 || doneTasks.length > 0) && (
-        <section className="sec enter enter-2">
-          <div className="sec-head">
-            <span className="sec-label">To do today</span>
-            <button onClick={() => onGo('tasks')} className="t-meta hover:text-[var(--ink)]">
-              All tasks
-            </button>
-          </div>
+        <section className={day.length > 0 ? 'mt-4' : 'sec enter enter-2'}>
+          {day.length > 0 ? (
+            <p className="eb-label mb-2">Tasks</p>
+          ) : (
+            <div className="sec-head">
+              <span className="sec-label">Today</span>
+              <button onClick={() => onGo('tasks')} className="t-meta hover:text-[var(--ink)]">
+                All tasks
+              </button>
+            </div>
+          )}
 
           <div className="surface-lift px-4">
             {todayTasks.map((t) => {
@@ -614,10 +636,18 @@ export const TodayScreen: React.FC<Props> = ({
 
       {/* ---------------- Habits ---------------- */}
       {openHabits.length > 0 && (
-        <section className="sec enter enter-3">
-          <div className="sec-head">
-            <span className="sec-label">To repeat</span>
-          </div>
+        <section
+          className={
+            day.length > 0 || todayTasks.length > 0 ? 'mt-4' : 'sec enter enter-3'
+          }
+        >
+          {day.length > 0 || todayTasks.length > 0 ? (
+            <p className="eb-label mb-2">Habits</p>
+          ) : (
+            <div className="sec-head">
+              <span className="sec-label">Today</span>
+            </div>
+          )}
 
           <div className="surface-lift px-4">
           {openHabits.map((h) => (
@@ -633,16 +663,6 @@ export const TodayScreen: React.FC<Props> = ({
           </div>
         </section>
       )}
-
-      {/* ---------------- Sleep ---------------- */}
-      <section className="sec enter enter-3">
-        <button onClick={() => onGo('routine')} className="surface-lift row row-tap w-full text-left px-4">
-          <Moon className="w-4 h-4 text-[#7C9CFF] shrink-0" />
-          <span className="t-body flex-1 min-w-0">Sleep</span>
-          <span className="t-meta">{sleptLastNight ? 'Logged' : 'Not logged'}</span>
-          <ChevronRight className="w-4 h-4 text-[var(--ink-muted)] shrink-0" />
-        </button>
-      </section>
 
       {/* ---------------- Empty ---------------- */}
       {nothingPlanned && (

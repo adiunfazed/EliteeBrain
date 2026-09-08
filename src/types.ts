@@ -110,7 +110,8 @@ export interface UserProfile {
   /** Recent quest ids, to avoid immediate repeats. */
   recentQuestIds?: string[];
   /** Level today's quest was generated at, so it cannot rescale mid-day. */
-  questPin?: { date: string; level: number };
+  /** Today's chosen quest, stored whole so it cannot be recomputed. */
+  questPin?: { date: string; id: string; title: string; objective?: string; xp: number };
   /** Spaced-review state, keyed by word. Belongs to the signed-in user. */
   vocabStore?: Record<string, any>;
   /** Best word count reached in a story-building session. */

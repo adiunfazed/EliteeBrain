@@ -50,29 +50,57 @@ export const RankEmblem: React.FC<Props> = ({ tier, size = 40, locked = false })
       style={{ opacity: locked ? 0.28 : 1, flexShrink: 0 }}
     >
       <defs>
-        <linearGradient id={`${id}-fill`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={tier.color} stopOpacity="0.34" />
-          <stop offset="100%" stopColor={tier.color} stopOpacity="0.08" />
+        {/* Deeper fill than before: a faint wash read as an empty outline at
+            the sizes these actually render. */}
+        <linearGradient id={`${id}-fill`} x1="0" y1="0" x2="0.3" y2="1">
+          <stop offset="0%" stopColor={tier.color} stopOpacity="0.62" />
+          <stop offset="55%" stopColor={tier.color} stopOpacity="0.28" />
+          <stop offset="100%" stopColor={tier.color} stopOpacity="0.14" />
         </linearGradient>
+
+        {/* Rim light along the top edge, which is what gives a badge the
+            impression of being struck rather than drawn. */}
+        <linearGradient id={`${id}-rim`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.55" />
+          <stop offset="45%" stopColor="#ffffff" stopOpacity="0.06" />
+          <stop offset="100%" stopColor="#000000" stopOpacity="0.22" />
+        </linearGradient>
+
+        <clipPath id={`${id}-clip`}>
+          <path d={path} />
+        </clipPath>
       </defs>
+
+      <path d={path} fill={`url(#${id}-fill)`} />
+
+      {/* Inner shading, clipped to the crest so it never spills. */}
+      <g clipPath={`url(#${id}-clip)`}>
+        <rect x="0" y="0" width="100" height="100" fill={`url(#${id}-rim)`} />
+        {/* A diagonal sheen — one band, not a full gloss. */}
+        <path d="M-10 34 L110 -6 L110 14 L-10 54 Z" fill="#ffffff" opacity="0.07" />
+      </g>
 
       <path
         d={path}
-        fill={`url(#${id}-fill)`}
+        fill="none"
         stroke={tier.color}
-        strokeWidth="3"
+        strokeWidth="3.5"
         strokeLinejoin="round"
       />
 
       {/* Step marks — one to three, so Bronze 1 and Bronze 3 differ without
-          needing a numeral crammed inside the crest. */}
+          needing a numeral crammed inside the crest. Filled and outlined so
+          they hold up against the deeper background. */}
       {Array.from({ length: tier.step }).map((_, i) => (
         <circle
           key={i}
-          cx={50 + (i - (tier.step - 1) / 2) * 13}
-          cy={tier.base === 'BRONZE' ? 62 : 76}
-          r="3.6"
-          fill={tier.color}
+          cx={50 + (i - (tier.step - 1) / 2) * 14}
+          cy={tier.base === 'BRONZE' ? 64 : 77}
+          r="4.2"
+          fill="#ffffff"
+          fillOpacity="0.92"
+          stroke={tier.color}
+          strokeWidth="1.4"
         />
       ))}
     </svg>

@@ -17,19 +17,18 @@ interface Props {
    * list, and the selector avoids recent ids — so recomputing after completion
    * returned a DIFFERENT quest while still showing it as done.
    */
-  completedQuest?: { id: string; title: string; xp: number } | null;
-  /** Level the day's quest was created at, persisted so it survives reloads. */
-  questLevel?: number;
-  onPinLevel?: (level: number) => void;
+  completedQuest?: { id: string; title: string; objective?: string; xp: number } | null;
+  /** The quest generated for today, read back rather than recomputed. */
+  storedQuest?: { date: string; id: string; title: string; objective?: string; xp: number } | null;
+  onStoreQuest?: (q: { date: string; id: string; title: string; objective: string; xp: number }) => void;
   onComplete: (quest: Quest) => void;
 }
 
 /**
  * Today's quest.
  *
- * The quest itself is derived from the user id and the date, so it never
- * changes on refresh and matches across devices without any stored state.
- * Only the completion flag needs persisting.
+ * The day's quest is generated once and then persisted. Deriving it on every
+ * render meant any change to level or history silently rescaled it mid-day.
  */
 export const DailyQuestCard: React.FC<Props> = ({
   userId,
@@ -37,51 +36,60 @@ export const DailyQuestCard: React.FC<Props> = ({
   completedToday,
   recentQuestIds = [],
   completedQuest,
-  questLevel,
-  onPinLevel,
+  storedQuest,
+  onStoreQuest,
   onComplete,
 }) => {
   const today = todayISO();
 
   /**
-   * The level this day's quest was generated at.
+   * Today's quest, generated once and then read back.
    *
-   * Captured once per day and held for the rest of it. Without this, earning
-   * XP mid-day moves the difficulty band and silently rescales the quest.
+   * Previously the quest was derived from level and recent history on every
+   * render, so any change to those inputs silently rescaled it — "10 tricep
+   * dips" became "34 tricep dips" mid-day. Persisting the generated quest
+   * means there is nothing left to recompute.
    */
-  const [pinned, setPinned] = useState<{ date: string; level: number }>(() => ({
-    date: today,
-    level: questLevel ?? level,
-  }));
-
-  useEffect(() => {
-    // Only re-pin when the DAY changes, never when the level does.
-    if (pinned.date !== today) {
-      setPinned({ date: today, level });
-      onPinLevel?.(level);
-    } else if (questLevel === undefined) {
-      // First time today: record the level so a reload sees the same quest.
-      onPinLevel?.(pinned.level);
-    }
-  }, [today, level, pinned.date, pinned.level, questLevel, onPinLevel]);
-
-  const pinnedLevel = pinned.date === today ? pinned.level : level;
-
   const quest = useMemo<Quest>(() => {
-    // Once today's quest is completed, show the one that was actually
-    // completed — never a freshly selected one.
+    // Already completed: show exactly what was completed.
     if (completedQuest) {
       return {
         id: completedQuest.id,
         title: completedQuest.title,
         xp: completedQuest.xp,
-        objective: '',
+        objective: completedQuest.objective || '',
         category: 'productivity',
       };
     }
 
-    return questForDay(userId || 'guest', today, pinnedLevel, recentQuestIds);
-  }, [userId, today, pinnedLevel, recentQuestIds, completedQuest]);
+    // Already generated today: reuse it verbatim.
+    if (storedQuest && storedQuest.date === today) {
+      return {
+        id: storedQuest.id,
+        title: storedQuest.title,
+        xp: storedQuest.xp,
+        objective: storedQuest.objective || '',
+        category: 'productivity',
+      };
+    }
+
+    return questForDay(userId || 'guest', today, level, recentQuestIds);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [completedQuest, storedQuest, today, userId]);
+
+  // Persist the moment it is generated, so a reload or a level-up cannot
+  // produce a different one.
+  useEffect(() => {
+    if (completedQuest) return;
+    if (storedQuest?.date === today) return;
+    onStoreQuest?.({
+      date: today,
+      id: quest.id,
+      title: quest.title,
+      objective: quest.objective,
+      xp: quest.xp,
+    });
+  }, [quest, storedQuest, today, completedQuest, onStoreQuest]);
 
   const accept = () => {
     if (completedToday) return;

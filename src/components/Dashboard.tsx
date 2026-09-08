@@ -485,13 +485,14 @@ export const Dashboard: React.FC<Props> = ({
               }}
               careerXp={serverStats.authoritative ? unifiedXp : undefined}
               streakDays={derivedStreak}
-              questLevel={
-                profile.questPin?.date === todayISO() ? profile.questPin.level : undefined
+              storedQuest={
+                profile.questPin?.date === todayISO() ? profile.questPin : null
               }
-              onPinLevel={(pinnedLevel) => {
-                const today = todayISO();
-                if (profile.questPin?.date === today) return;
-                onProfileUpdate?.({ ...profile, questPin: { date: today, level: pinnedLevel } });
+              onStoreQuest={(q) => {
+                // Written once per day. Guarded so a re-render cannot replace
+                // an already-chosen quest with a freshly computed one.
+                if (profile.questPin?.date === q.date) return;
+                onProfileUpdate?.({ ...profile, questPin: q });
               }}
               onCompleteQuest={(quest) => {
                 const today = todayISO();
