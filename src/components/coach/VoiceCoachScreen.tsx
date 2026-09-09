@@ -43,12 +43,6 @@ export const VoiceCoachScreen: React.FC<Props> = ({ onBack }) => {
   const [supported, setSupported] = useState(true);
 
   const recognitionRef = useRef<any>(null);
-  /** Text from sessions that have already ended. */
-  const committedRef = useRef('');
-  /** Text from the session currently running. */
-  const sessionRef = useRef('');
-  /** True once the user pressed Done, so auto-restart stops. */
-  const stoppedByUser = useRef(false);
   /** Guards against two recognition instances running at once. */
   const runningRef = useRef(false);
 
@@ -59,7 +53,7 @@ export const VoiceCoachScreen: React.FC<Props> = ({ onBack }) => {
     // Leaving the screen must release the microphone, or it keeps listening
     // in the background.
     return () => {
-      stoppedByUser.current = true;
+      runningRef.current = false;
       try {
         recognitionRef.current?.stop();
       } catch {
@@ -91,32 +85,25 @@ export const VoiceCoachScreen: React.FC<Props> = ({ onBack }) => {
       recognition.interimResults = true;
       recognition.lang = 'en-IN';
 
-      committedRef.current = '';
-      sessionRef.current = '';
-      stoppedByUser.current = false;
       setTranscript('');
       setSeconds(0);
       setError(null);
       setFeedback(null);
 
       recognition.onresult = (event: any) => {
-        // Rebuild this session's text from its own results array — correct
-        // within a session, since re-reading the same finals is idempotent.
-        let sessionFinals = '';
+        // Rebuilt from the full results array every time. Reading the same
+        // final result twice produces the same string, so no event can add
+        // anything that is already there.
+        let finals = '';
         let interim = '';
 
         for (let i = 0; i < event.results.length; i++) {
           const chunk = event.results[i][0]?.transcript || '';
-          if (event.results[i].isFinal) sessionFinals += chunk + ' ';
+          if (event.results[i].isFinal) finals += chunk + ' ';
           else interim += chunk;
         }
 
-        sessionRef.current = sessionFinals;
-
-        // Text from previous sessions is held separately. The restart begins
-        // a fresh results array, so mixing the two was what repeated words.
-        const full = `${committedRef.current} ${sessionFinals} ${interim}`;
-        setTranscript(full.replace(/\s+/g, ' ').trim());
+        setTranscript(`${finals}${interim}`.replace(/\s+/g, ' ').trim());
       };
 
       recognition.onerror = (event: any) => {
@@ -133,23 +120,12 @@ export const VoiceCoachScreen: React.FC<Props> = ({ onBack }) => {
       };
 
       recognition.onend = () => {
-        // Commit this session's text before the next one clears the results
-        // array, or everything said so far is lost on restart.
-        committedRef.current = `${committedRef.current} ${sessionRef.current}`.trim();
-        sessionRef.current = '';
-
-        if (stoppedByUser.current) {
-          setPhase('reviewing');
-          return;
-        }
-
-        // Chrome ends recognition after a few seconds of silence even with
-        // continuous set, which cut people off mid-thought.
-        try {
-          recognition.start();
-        } catch {
-          setPhase('reviewing');
-        }
+        // Deliberately no auto-restart. Restarting begins a session with a
+        // fresh results array, and reconciling that with what was already
+        // said is what produced repeated words. One session, one array,
+        // rebuilt each time — idempotent by construction.
+        runningRef.current = false;
+        setPhase((p) => (p === 'listening' ? 'reviewing' : p));
       };
 
       recognitionRef.current = recognition;
@@ -163,7 +139,6 @@ export const VoiceCoachScreen: React.FC<Props> = ({ onBack }) => {
   };
 
   const stop = () => {
-    stoppedByUser.current = true;
     runningRef.current = false;
     try {
       recognitionRef.current?.stop();
@@ -284,7 +259,7 @@ export const VoiceCoachScreen: React.FC<Props> = ({ onBack }) => {
                 <Mic className="w-8 h-8 shrink-0" style={{ color: 'var(--signal-ink)' }} />
               </motion.span>
               <p className="t-figure text-2xl mt-4">{mmss}</p>
-              <p className="t-sub mt-1">Listening</p>
+              <p className="t-sub mt-1">Listening — keep talking</p>
             </div>
           )}
 

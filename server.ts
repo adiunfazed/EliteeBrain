@@ -348,7 +348,27 @@ async function startServer() {
 
   // Cap body size — the coach endpoint accepts chat history and would otherwise
   // accept an unbounded payload.
-  app.use(express.json({ limit: '128kb' }));
+  // Images are posted as base64, which inflates by a third. 128kb rejected
+  // every photo before the route ran. The vision endpoint enforces its own
+  // 4MB limit on the decoded bytes, so this ceiling only needs to clear it.
+  app.use(express.json({ limit: '8mb' }));
+
+  /**
+   * Body-parser failures must return JSON.
+   *
+   * Express answers an oversized body with an HTML error page, so the client
+   * saw a non-JSON response and reported its generic fallback with no way to
+   * tell what went wrong.
+   */
+  app.use((err: any, _req: any, res: any, next: any) => {
+    if (err?.type === 'entity.too.large') {
+      return res.status(413).json({ error: 'That image is too large. Try a smaller photo.' });
+    }
+    if (err instanceof SyntaxError && 'body' in err) {
+      return res.status(400).json({ error: 'Malformed request.' });
+    }
+    return next(err);
+  });
 
   // The coach endpoint spends real money on every call. Without a limit, one
   // script can drain the Gemini budget in minutes.

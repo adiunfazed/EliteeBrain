@@ -47,7 +47,7 @@ export const ImageToolScreen: React.FC<Props> = ({ tool, onBack }) => {
       img.onload = () => {
         URL.revokeObjectURL(url);
 
-        const maxSide = 1280;
+        const maxSide = 900;
         const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
         const canvas = document.createElement('canvas');
         canvas.width = Math.round(img.width * scale);
@@ -57,7 +57,7 @@ export const ImageToolScreen: React.FC<Props> = ({ tool, onBack }) => {
         if (!ctx) return reject(new Error('Could not read that image'));
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.78);
         resolve({ base64: dataUrl.split(',')[1], mime: 'image/jpeg' });
       };
 
@@ -102,7 +102,7 @@ export const ImageToolScreen: React.FC<Props> = ({ tool, onBack }) => {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        setError(data?.error || 'Could not analyse that photo.');
+        setError(data?.error || `Request failed (${res.status}). Please try again.`);
         setBusy(false);
         return;
       }
