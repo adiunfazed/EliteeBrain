@@ -135,6 +135,15 @@ export interface VisionResult {
  * the same generic error, which made a safety block indistinguishable from a
  * network fault and left users with no idea what to do.
  */
+/**
+ * Models to try, in order.
+ *
+ * A single hard-coded name fails completely if that model is unavailable on
+ * the account's tier or gets renamed — which is indistinguishable from a
+ * broken feature. Falling through keeps the tool working.
+ */
+const VISION_MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-flash-latest'];
+
 export async function analyseImage(
   ai: any,
   tool: VisionTool,
@@ -144,8 +153,40 @@ export async function analyseImage(
   const prompt = PROMPTS[tool];
   if (!prompt) throw new Error('Unknown tool');
 
+  let lastError: any = null;
+
+  for (const model of VISION_MODELS) {
+    try {
+      const result = await callModel(ai, model, prompt, base64, mimeType);
+      if (result) return result;
+    } catch (err: any) {
+      lastError = err;
+      const status = Number(err?.status || err?.code || 0);
+
+      // A safety block or a bad image will fail the same way on every model,
+      // so stop rather than retrying three times.
+      if (status === 400 || status === 429) break;
+
+      console.warn(`Vision model ${model} failed:`, err?.message || err);
+    }
+  }
+
+  // Carry the real reason forward. Reporting "something went wrong" for an
+  // expired key, a missing model and a safety block alike is what made this
+  // impossible to diagnose.
+  const detail = String(lastError?.message || 'no response');
+  throw new Error(`Analysis failed: ${detail.slice(0, 200)}`);
+}
+
+async function callModel(
+  ai: any,
+  model: string,
+  prompt: string,
+  base64: string,
+  mimeType: string
+): Promise<VisionResult | null> {
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
+    model,
     contents: [
       {
         role: 'user',
@@ -167,7 +208,7 @@ export async function analyseImage(
     },
   });
 
-  const text = response?.text?.trim();
+  const text = typeof response?.text === 'string' ? response.text.trim() : '';
   if (text) return { text };
 
   // No text means the response was blocked or empty. Report which, so the
@@ -187,8 +228,8 @@ export async function analyseImage(
     throw new Error('The response was cut short. Try again.');
   }
 
-  console.warn('Vision returned no text. Reason:', blockReason, JSON.stringify(response?.promptFeedback || {}));
-  throw new Error('No usable response came back. Try a clearer photo.');
+  console.warn('Vision returned no text. Reason:', blockReason);
+  return null;
 }
 
 export function isAllowedMime(mime: string): boolean {

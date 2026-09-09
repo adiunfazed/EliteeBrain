@@ -43,9 +43,14 @@ export const VoiceCoachScreen: React.FC<Props> = ({ onBack }) => {
   const [supported, setSupported] = useState(true);
 
   const recognitionRef = useRef<any>(null);
-  const finalRef = useRef('');
+  /** Text from sessions that have already ended. */
+  const committedRef = useRef('');
+  /** Text from the session currently running. */
+  const sessionRef = useRef('');
   /** True once the user pressed Done, so auto-restart stops. */
   const stoppedByUser = useRef(false);
+  /** Guards against two recognition instances running at once. */
+  const runningRef = useRef(false);
 
   useEffect(() => {
     const w = window as any;
@@ -71,6 +76,7 @@ export const VoiceCoachScreen: React.FC<Props> = ({ onBack }) => {
   }, [phase]);
 
   const start = () => {
+    if (runningRef.current) return;
     const w = window as any;
     const Recognition = w.SpeechRecognition || w.webkitSpeechRecognition;
 
@@ -85,7 +91,8 @@ export const VoiceCoachScreen: React.FC<Props> = ({ onBack }) => {
       recognition.interimResults = true;
       recognition.lang = 'en-IN';
 
-      finalRef.current = '';
+      committedRef.current = '';
+      sessionRef.current = '';
       stoppedByUser.current = false;
       setTranscript('');
       setSeconds(0);
@@ -93,21 +100,23 @@ export const VoiceCoachScreen: React.FC<Props> = ({ onBack }) => {
       setFeedback(null);
 
       recognition.onresult = (event: any) => {
-        // Rebuild from the full result list rather than appending from
-        // resultIndex. Appending double-counted finals on browsers where
-        // resultIndex does not advance, which is why words repeated three
-        // and four times.
-        let finals = '';
+        // Rebuild this session's text from its own results array — correct
+        // within a session, since re-reading the same finals is idempotent.
+        let sessionFinals = '';
         let interim = '';
 
         for (let i = 0; i < event.results.length; i++) {
           const chunk = event.results[i][0]?.transcript || '';
-          if (event.results[i].isFinal) finals += chunk + ' ';
+          if (event.results[i].isFinal) sessionFinals += chunk + ' ';
           else interim += chunk;
         }
 
-        finalRef.current = finals;
-        setTranscript((finals + interim).replace(/\s+/g, ' ').trim());
+        sessionRef.current = sessionFinals;
+
+        // Text from previous sessions is held separately. The restart begins
+        // a fresh results array, so mixing the two was what repeated words.
+        const full = `${committedRef.current} ${sessionFinals} ${interim}`;
+        setTranscript(full.replace(/\s+/g, ' ').trim());
       };
 
       recognition.onerror = (event: any) => {
@@ -124,13 +133,18 @@ export const VoiceCoachScreen: React.FC<Props> = ({ onBack }) => {
       };
 
       recognition.onend = () => {
-        // Chrome stops after a few seconds of silence even with continuous
-        // set, which ended the session while the user was still thinking.
-        // Restart unless they pressed Done.
+        // Commit this session's text before the next one clears the results
+        // array, or everything said so far is lost on restart.
+        committedRef.current = `${committedRef.current} ${sessionRef.current}`.trim();
+        sessionRef.current = '';
+
         if (stoppedByUser.current) {
           setPhase('reviewing');
           return;
         }
+
+        // Chrome ends recognition after a few seconds of silence even with
+        // continuous set, which cut people off mid-thought.
         try {
           recognition.start();
         } catch {
@@ -139,6 +153,7 @@ export const VoiceCoachScreen: React.FC<Props> = ({ onBack }) => {
       };
 
       recognitionRef.current = recognition;
+      runningRef.current = true;
       recognition.start();
       setPhase('listening');
       soundFx.playClick();
@@ -149,6 +164,7 @@ export const VoiceCoachScreen: React.FC<Props> = ({ onBack }) => {
 
   const stop = () => {
     stoppedByUser.current = true;
+    runningRef.current = false;
     try {
       recognitionRef.current?.stop();
     } catch {

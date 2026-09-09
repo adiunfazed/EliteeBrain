@@ -278,7 +278,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                 <span className="eb-label">
                   Today's routine
                 </span>
-                <span className="eb-heading text-sm tabular-nums">
+                <span className="t-section text-sm tabular-nums">
                   {adherence.done} / {adherence.total}
                 </span>
               </div>
@@ -436,7 +436,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
           {/* Timeline */}
           {day.length === 0 ? (
             <div className="text-center py-12 px-6 border border-dashed border-[var(--rule)] rounded-2xl">
-              <p className="eb-heading text-base">Build your day</p>
+              <p className="t-section text-base">Build your day</p>
               <p className="text-[13px] text-[var(--ink-muted)] mt-1.5 max-w-xs mx-auto leading-relaxed">
                 Add the blocks you actually repeat — study, gym, sleep. Tick them off as you go,
                 and link one to a goal so the goal moves when you do the work.
@@ -514,9 +514,9 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                                 );
                               }
                             }}
-                            className="bg-[var(--ground)] border border-[#262C38] rounded-lg px-1.5 py-1 text-[10px] text-[var(--ink)] outline-none"
+                            className="bg-[var(--ground)] border border-[#262C38] rounded-lg px-1.5 py-1 text-[12px] text-[var(--ink)] outline-none"
                           />
-                          <span className="text-[var(--ink-dim)] text-[10px]">→</span>
+                          <span className="text-[var(--ink-dim)] text-[12px]">→</span>
                           <input
                             type="time"
                             defaultValue={block.endTime}
@@ -530,7 +530,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                                 );
                               }
                             }}
-                            className="bg-[var(--ground)] border border-[#262C38] rounded-lg px-1.5 py-1 text-[10px] text-[var(--ink)] outline-none"
+                            className="bg-[var(--ground)] border border-[#262C38] rounded-lg px-1.5 py-1 text-[12px] text-[var(--ink)] outline-none"
                           />
                           <button
                             onClick={() => setEditingTimeFor(null)}
@@ -930,7 +930,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                 </div>
               </div>
 
-              <p className="text-[10px] text-[var(--ink-dim)] leading-relaxed text-center max-w-md mx-auto">
+              <p className="text-[12px] text-[var(--ink-dim)] leading-relaxed text-center max-w-md mx-auto">
                 Consistency measures how steady your bedtime is across recorded nights. It
                 describes your own logged times — it is not a health or medical measure.
               </p>

@@ -595,7 +595,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
                       key={s.label}
                       className="eb-card-sunk p-2 text-center"
                     >
-                      <p className="text-base font-black font-mono text-[var(--ink)] tabular-nums leading-none">
+                      <p className="t-figure text-base">
                         {s.value}
                       </p>
                       <p className="t-meta mt-1">{s.label}</p>
@@ -687,7 +687,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
           />
         </div>
 
-        <p className="text-[10px] text-[var(--ink-dim)] leading-relaxed">{health.reason}</p>
+        <p className="text-[12px] text-[var(--ink-dim)] leading-relaxed">{health.reason}</p>
 
         {left !== null && left >= 0 && (
           <p className="t-meta">
@@ -788,7 +788,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
               {bits.join(' · ')} feeding this goal
             </p>
           ) : (
-            <p className="text-[10px] text-[var(--ink-dim)] leading-relaxed">
+            <p className="text-[12px] text-[var(--ink-dim)] leading-relaxed">
               Nothing linked yet. Attach a routine block, habit or task and this goal moves when
               you do the work.
             </p>
@@ -1057,7 +1057,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
                   >
                     −
                   </button>
-                  <span className="w-12 text-center text-sm font-mono font-bold text-[var(--ink)] tabular-nums">
+                  <span className="w-12 text-center t-figure text-[15px]">
                     {draftTarget}
                   </span>
                   <button
@@ -1136,7 +1136,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
       )}
 
       {!userId && (
-        <p className="text-[10px] text-[var(--ink-muted)] font-mono text-center">
+        <p className="t-meta text-center">
           Signed out — goals and habits stay on this device until you sign in.
         </p>
       )}

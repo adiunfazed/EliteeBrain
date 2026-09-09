@@ -611,7 +611,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
               day: 'numeric',
             })}
           </p>
-          <p className="text-xl sm:eb-heading text-2xl tabular-nums mt-0.5">
+          <p className="t-figure text-2xl mt-1">
             {progress.done} / {progress.total}
             <span className="text-xs font-bold text-[var(--ink-dim)] ml-2">complete</span>
           </p>
@@ -736,7 +736,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
       {/* List */}
       {visible.length === 0 ? (
         <div className="text-center py-12 px-6 border border-dashed border-[var(--rule)] rounded-2xl">
-          <p className="eb-heading text-base tracking-tight">
+          <p className="t-section">
             {tab === 'today'
               ? 'Clear day.'
               : tab === 'upcoming'
@@ -753,7 +753,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
           {tab !== 'completed' && (
             <button
               onClick={() => inputRef.current?.focus()}
-              className="eb-btn-primary mt-4 px-4 py-2.5 rounded-xl text-xs font-mono font-black inline-flex items-center gap-1.5"
+              className="btn-lg mt-5"
             >
               <Plus className="w-3.5 h-3.5 shrink-0" />
               Add task
@@ -785,7 +785,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
       )}
 
       {!userId && (
-        <p className="text-[10px] text-[var(--ink-muted)] font-mono text-center">
+        <p className="t-meta text-center">
           Signed out — tasks stay on this device until you sign in.
         </p>
       )}

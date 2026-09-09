@@ -871,6 +871,13 @@ async function startServer() {
         return res.status(422).json({ error: message });
       }
 
+      // Show the real reason. Reporting the same generic failure for an
+      // invalid key, a missing model and a safety block made this impossible
+      // to diagnose from a user's report.
+      if (message.startsWith('Analysis failed:')) {
+        return res.status(502).json({ error: message });
+      }
+
       // Quota and rate limits are common on the free tier and worth naming,
       // since the user can simply wait rather than assuming it is broken.
       const code = Number(err?.status || err?.code || 0);
