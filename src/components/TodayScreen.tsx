@@ -25,6 +25,7 @@ interface Props {
   recentQuestIds?: string[];
   /** Today's completed quest, read back rather than recomputed. */
   completedQuest?: { id: string; title: string; objective?: string; xp: number } | null;
+  questReady?: boolean;
   storedQuest?: { date: string; id: string; title: string; objective?: string; xp: number } | null;
   careerXp?: number;
   streakDays?: number;
@@ -61,6 +62,7 @@ export const TodayScreen: React.FC<Props> = ({
   questDoneToday,
   recentQuestIds,
   completedQuest,
+  questReady,
   storedQuest,
   careerXp,
   streakDays,
@@ -333,6 +335,7 @@ export const TodayScreen: React.FC<Props> = ({
           completedToday={questDoneToday}
           recentQuestIds={recentQuestIds}
           completedQuest={completedQuest}
+          ready={questReady}
           storedQuest={storedQuest}
           onStoreQuest={onStoreQuest}
           onComplete={onCompleteQuest}

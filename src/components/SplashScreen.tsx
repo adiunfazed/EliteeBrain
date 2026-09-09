@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import { motion } from 'motion/react';
-import { EliteLifeLogo } from './EliteLifeLogo';
 import { Activity, Sparkles } from 'lucide-react';
 
 interface Props {
@@ -13,7 +12,7 @@ export const SplashScreen: React.FC<Props> = ({ onFinish, ready = false }) => {
   useEffect(() => {
     // A brief floor so the logo does not flash on a fast load, and a ceiling
     // so a slow network never traps the user on a splash screen.
-    const MIN_MS = 700;
+    const MIN_MS = 1250;
     const MAX_MS = 3000;
     const started = Date.now();
 
@@ -36,7 +35,7 @@ export const SplashScreen: React.FC<Props> = ({ onFinish, ready = false }) => {
       onClick={() => {
         if (onFinish) onFinish();
       }}
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0B0E14] text-[var(--ink)] select-none cursor-pointer overflow-hidden font-sans"
+      className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-[#0B0E14] text-[var(--ink)] select-none overflow-hidden font-sans"
     >
       {/* Background Radial Gradient & Grid Accent */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(92,108,242,0.12)_0%,transparent_70%)] pointer-events-none" />
@@ -50,14 +49,60 @@ export const SplashScreen: React.FC<Props> = ({ onFinish, ready = false }) => {
         transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
         className="relative flex flex-col items-center space-y-7 z-10 p-8 text-center max-w-sm w-full"
       >
-        {/* Elite Life Logo */}
-        <EliteLifeLogo size="hero" showSubtext={true} />
+        {/* Letters converge, then the wordmark resolves. Kept to a single
+            beat — a logo that assembles for two seconds becomes a delay. */}
+        <div className="relative h-[72px] flex items-center justify-center">
+          <motion.span
+            initial={{ x: -90, opacity: 0, rotate: -14 }}
+            animate={{ x: 0, opacity: 1, rotate: 0 }}
+            transition={{ type: 'spring', stiffness: 180, damping: 18, delay: 0.1 }}
+            className="font-display font-extrabold leading-none"
+            style={{ fontSize: 62, color: '#FFFFFF', letterSpacing: '-0.04em' }}
+          >
+            E
+          </motion.span>
+
+          <motion.span
+            initial={{ x: 90, y: 60, opacity: 0, rotate: 14 }}
+            animate={{ x: 0, y: 0, opacity: 1, rotate: 0 }}
+            transition={{ type: 'spring', stiffness: 180, damping: 18, delay: 0.1 }}
+            className="font-display font-extrabold leading-none"
+            style={{ fontSize: 62, color: '#A78BFA', letterSpacing: '-0.04em' }}
+          >
+            L
+          </motion.span>
+
+          {/* Light sweep across the letters as they land. */}
+          <motion.span
+            initial={{ x: '-140%', opacity: 0 }}
+            animate={{ x: '140%', opacity: [0, 0.5, 0] }}
+            transition={{ delay: 0.5, duration: 0.7, ease: 'easeOut' }}
+            className="absolute inset-y-0 w-16 pointer-events-none"
+            style={{
+              background:
+                'linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent)',
+              filter: 'blur(6px)',
+            }}
+          />
+        </div>
+
+        {/* The full name resolves once the letters have met. */}
+        <motion.p
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.62, duration: 0.4 }}
+          className="font-display font-extrabold tracking-tight"
+          style={{ fontSize: 21, marginTop: 4 }}
+        >
+          Elite<span style={{ color: '#A78BFA' }}>Life</span>
+        </motion.p>
 
         <motion.p
           initial={{ y: 10, opacity: 0 }}
           animate={{ y: 0, opacity: 0.85 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-          className="text-xs md:text-sm font-mono text-[#C4B5FD] tracking-wide"
+          transition={{ delay: 0.75, duration: 0.4 }}
+          className="t-sub"
+          style={{ color: '#C4B5FD' }}
         >
           Plan. Execute. Improve.
         </motion.p>
@@ -66,7 +111,7 @@ export const SplashScreen: React.FC<Props> = ({ onFinish, ready = false }) => {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.4, duration: 0.4 }}
+          transition={{ delay: 0.88, duration: 0.35 }}
           className="w-full space-y-2 pt-2"
         >
           <div className="h-1.5 w-full bg-[var(--surface-sunk)] rounded-full overflow-hidden border border-[var(--rule)]">

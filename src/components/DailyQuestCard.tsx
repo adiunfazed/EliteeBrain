@@ -6,6 +6,8 @@ import { todayISO } from '../lib/tasks';
 import { soundFx } from '../utils/audio';
 
 interface Props {
+  /** False until the profile has loaded. Nothing is generated before then. */
+  ready?: boolean;
   userId: string | null;
   level: number;
   completedToday: boolean;
@@ -34,6 +36,7 @@ export const DailyQuestCard: React.FC<Props> = ({
   userId,
   level,
   completedToday,
+  ready = true,
   recentQuestIds = [],
   completedQuest,
   storedQuest,
@@ -73,13 +76,22 @@ export const DailyQuestCard: React.FC<Props> = ({
       };
     }
 
+    // Placeholder while the profile loads. Rendering a real quest here and
+    // swapping it a moment later is exactly the flicker being reported.
+    if (!ready) {
+      return { id: 'pending', title: '', objective: '', xp: 0, category: 'productivity' };
+    }
+
     return questForDay(userId || 'guest', today, level, recentQuestIds);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [completedQuest, storedQuest, today, userId]);
+  }, [completedQuest, storedQuest, today, userId, ready]);
 
   // Persist the moment it is generated, so a reload or a level-up cannot
   // produce a different one.
   useEffect(() => {
+    // Never persist a quest generated from an unloaded profile — that is what
+    // wrote a throwaway quest and then replaced it moments later.
+    if (!ready) return;
     if (completedQuest) return;
     if (storedQuest?.date === today) return;
     onStoreQuest?.({
@@ -89,13 +101,22 @@ export const DailyQuestCard: React.FC<Props> = ({
       objective: quest.objective,
       xp: quest.xp,
     });
-  }, [quest, storedQuest, today, completedQuest, onStoreQuest]);
+  }, [quest, storedQuest, today, completedQuest, onStoreQuest, ready]);
 
   const accept = () => {
     if (completedToday) return;
     soundFx.playSuccess();
     onComplete(quest);
   };
+
+  if (!ready || quest.id === 'pending') {
+    return (
+      <div
+        className="rounded-2xl border p-4 sm:p-5 animate-pulse"
+        style={{ background: 'var(--surface)', borderColor: 'var(--rule)', minHeight: 132 }}
+      />
+    );
+  }
 
   return (
     <div

@@ -485,6 +485,7 @@ export const Dashboard: React.FC<Props> = ({
               }}
               careerXp={serverStats.authoritative ? unifiedXp : undefined}
               streakDays={derivedStreak}
+              questReady={!currentUser || isHydrated}
               storedQuest={
                 profile.questPin?.date === todayISO() ? profile.questPin : null
               }
@@ -762,11 +763,11 @@ export const Dashboard: React.FC<Props> = ({
 
             <div className="grid grid-cols-4 gap-1.5 p-1.5 rounded-2xl bg-[var(--surface-sunk)] border border-[var(--rule)]">
               {([
-                { id: 'tasks' as const, label: t('plan.tasks'), icon: CheckSquare },
-                { id: 'habits' as const, label: t('plan.habits'), icon: Repeat },
-                { id: 'routine' as const, label: t('plan.routine'), icon: Clock },
-                { id: 'goals' as const, label: t('plan.goals'), icon: Target },
-              ]).map(({ id, label, icon: Icon }) => {
+                { id: 'tasks' as const, label: t('plan.tasks'), icon: CheckSquare, accent: '#7C5CFF' },
+                { id: 'habits' as const, label: t('plan.habits'), icon: Repeat, accent: '#00C2A8' },
+                { id: 'routine' as const, label: t('plan.routine'), icon: Clock, accent: '#7FD4E8' },
+                { id: 'goals' as const, label: t('plan.goals'), icon: Target, accent: '#FFB020' },
+              ]).map(({ id, label, icon: Icon, accent }) => {
                 const active = hubPane === id;
                 return (
                   <button
@@ -783,9 +784,9 @@ export const Dashboard: React.FC<Props> = ({
                         layoutId="plan-tab-indicator"
                         className="absolute inset-0 rounded-xl"
                         style={{
-                          background:
-                            'linear-gradient(180deg, color-mix(in oklab, var(--signal) 20%, var(--surface)), var(--surface))',
-                          border: '1px solid color-mix(in oklab, var(--signal) 45%, var(--rule))',
+                          background: `linear-gradient(180deg, color-mix(in oklab, ${accent} 22%, var(--surface)), var(--surface))`,
+                          border: `1px solid color-mix(in oklab, ${accent} 50%, var(--rule))`,
+                          boxShadow: `0 1px 0 0 rgba(255,255,255,0.08) inset, 0 6px 16px -10px ${accent}`,
                         }}
                         transition={{ type: 'spring', stiffness: 420, damping: 34 }}
                       />
@@ -794,7 +795,7 @@ export const Dashboard: React.FC<Props> = ({
                     <Icon
                       className="relative w-[19px] h-[19px] shrink-0"
                       strokeWidth={active ? 2.4 : 1.9}
-                      style={{ color: active ? 'var(--signal-ink)' : 'var(--ink-dim)' }}
+                      style={{ color: active ? accent : 'var(--ink-dim)' }}
                     />
                     <span
                       className="relative text-[12px] leading-none text-center"
