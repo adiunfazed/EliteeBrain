@@ -14,6 +14,52 @@ interface Props {
 const MAX_BYTES = 4 * 1024 * 1024;
 
 /**
+ * Split the model's reply into its headed sections.
+ *
+ * The prompts ask for ALL-CAPS headings, so anything matching that on its own
+ * line starts a section. Text before the first heading is kept as an
+ * unheaded block rather than dropped, in case the model ignores the format.
+ */
+function parseSections(text: string): { heading: string | null; body: string }[] {
+  const lines = text.split('\n');
+  const out: { heading: string | null; body: string }[] = [];
+  let current: { heading: string | null; body: string[] } = { heading: null, body: [] };
+
+  const isHeading = (line: string) =>
+    /^[A-Z][A-Z\s]{2,40}$/.test(line.trim()) && line.trim().length > 2;
+
+  for (const line of lines) {
+    if (isHeading(line)) {
+      if (current.heading || current.body.join('').trim()) {
+        out.push({ heading: current.heading, body: current.body.join('\n').trim() });
+      }
+      current = { heading: line.trim(), body: [] };
+    } else {
+      current.body.push(line);
+    }
+  }
+
+  if (current.heading || current.body.join('').trim()) {
+    out.push({ heading: current.heading, body: current.body.join('\n').trim() });
+  }
+
+  return out.filter((s) => s.body || s.heading);
+}
+
+/** Pull "7/10" out of a rating line. */
+function extractScore(body: string): number | null {
+  const m = /(\d{1,2})\s*\/\s*10/.exec(body);
+  if (!m) return null;
+  const n = Number(m[1]);
+  return n >= 0 && n <= 10 ? n : null;
+}
+
+/** The rating line without its score, since the score is shown separately. */
+function stripScore(body: string): string {
+  return body.replace(/^\s*\d{1,2}\s*\/\s*10\s*[—–-]?\s*/, '').trim();
+}
+
+/**
  * Shared screen for the photo-based Coach tools.
  *
  * One component for all four: the flow is identical and only the prompt
@@ -200,11 +246,49 @@ export const ImageToolScreen: React.FC<Props> = ({ tool, onBack }) => {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl p-5 mt-6"
-          style={{ background: 'var(--surface)', border: '1px solid var(--rule)' }}
+          className="mt-6 space-y-2.5"
         >
-          <p className="t-body whitespace-pre-wrap leading-relaxed">{result}</p>
-          <p className="t-meta mt-4">
+          {parseSections(result).map((section, i) => {
+            // A rating line gets its own treatment: it is the answer people
+            // came for, and burying it in a paragraph wastes it.
+            const score = section.heading === 'RATING' ? extractScore(section.body) : null;
+
+            return (
+              <div
+                key={i}
+                className="rounded-2xl p-4"
+                style={{
+                  background: score !== null
+                    ? `linear-gradient(150deg, color-mix(in oklab, ${tool.accent} 16%, var(--surface)), var(--surface))`
+                    : 'var(--surface)',
+                  border: `1px solid ${
+                    score !== null
+                      ? `color-mix(in oklab, ${tool.accent} 40%, var(--rule))`
+                      : 'var(--rule)'
+                  }`,
+                }}
+              >
+                {section.heading && (
+                  <p className="eb-label" style={score !== null ? { color: tool.accent } : undefined}>
+                    {section.heading}
+                  </p>
+                )}
+
+                {score !== null && (
+                  <p className="t-figure mt-1.5" style={{ fontSize: 40, color: tool.accent }}>
+                    {score}
+                    <span className="text-[var(--ink-dim)] text-2xl">/10</span>
+                  </p>
+                )}
+
+                <p className={`t-body leading-relaxed ${section.heading ? 'mt-2' : ''}`}>
+                  {score !== null ? stripScore(section.body) : section.body}
+                </p>
+              </div>
+            );
+          })}
+
+          <p className="t-meta pt-1 leading-relaxed">
             A photo shows limited information. Treat this as a starting point, not a verdict.
           </p>
         </motion.div>

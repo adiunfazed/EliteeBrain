@@ -887,7 +887,12 @@ async function startServer() {
 
       // Pass through the messages analyseImage raises deliberately — they are
       // written for the user and say what to do next.
-      if (message.includes('photo') || message.includes('response')) {
+      if (
+        message.includes('photo') ||
+        message.includes('response') ||
+        message.includes('busy right now') ||
+        message.includes('Too many requests')
+      ) {
         return res.status(422).json({ error: message });
       }
 

@@ -156,26 +156,55 @@ export async function analyseImage(
   let lastError: any = null;
 
   for (const model of VISION_MODELS) {
-    try {
-      const result = await callModel(ai, model, prompt, base64, mimeType);
-      if (result) return result;
-    } catch (err: any) {
-      lastError = err;
-      const status = Number(err?.status || err?.code || 0);
+    // Three attempts per model with backoff. Overload is momentary and
+    // clears in a second or two, so waiting beats failing.
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const result = await callModel(ai, model, prompt, base64, mimeType);
+        if (result) return result;
+        break; // No text and no error: a safety block. Try the next model.
+      } catch (err: any) {
+        lastError = err;
+        const status = statusOf(err);
 
-      // A safety block or a bad image will fail the same way on every model,
-      // so stop rather than retrying three times.
-      if (status === 400 || status === 429) break;
+        // A safety block or a malformed request fails identically every time,
+        // so retrying is pointless.
+        if (status === 400) return Promise.reject(err);
 
-      console.warn(`Vision model ${model} failed:`, err?.message || err);
+        const retryable = status === 503 || status === 429 || status === 500;
+        if (!retryable || attempt === 2) break;
+
+        console.warn(`Vision ${model} attempt ${attempt + 1} failed (${status}), retrying`);
+        await new Promise((r) => setTimeout(r, 700 * Math.pow(2, attempt)));
+      }
     }
   }
 
-  // Carry the real reason forward. Reporting "something went wrong" for an
-  // expired key, a missing model and a safety block alike is what made this
-  // impossible to diagnose.
+  // Overload is worth naming plainly: the user has done nothing wrong and
+  // simply needs to try again shortly.
+  if (statusOf(lastError) === 503) {
+    throw new Error(
+      'The analysis service is busy right now. Wait about thirty seconds and try again.'
+    );
+  }
+
+  if (statusOf(lastError) === 429) {
+    throw new Error('Too many requests just now. Wait a minute and try again.');
+  }
+
   const detail = String(lastError?.message || 'no response');
   throw new Error(`Analysis failed: ${detail.slice(0, 200)}`);
+}
+
+/** Pull an HTTP status out of whatever shape the SDK threw. */
+function statusOf(err: any): number {
+  if (!err) return 0;
+  const direct = Number(err.status || err.code || 0);
+  if (direct >= 100) return direct;
+
+  // The SDK sometimes throws with the API's JSON body as the message.
+  const match = /"code"\s*:\s*(\d{3})/.exec(String(err.message || ''));
+  return match ? Number(match[1]) : 0;
 }
 
 async function callModel(

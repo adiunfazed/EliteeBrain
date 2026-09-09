@@ -579,49 +579,27 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
 
   return (
     <div className="space-y-4">
-      {/* TODAY header */}
-      <div className="eb-card p-4 sm:p-5 flex items-center gap-4">
-        <div className="relative w-16 h-16 shrink-0">
-          <svg viewBox="0 0 44 44" className="w-full h-full -rotate-90">
-            <circle cx="22" cy="22" r="19" fill="none" stroke="var(--surface-sunk)" strokeWidth="4" />
-            <motion.circle
-              cx="22"
-              cy="22"
-              r="19"
-              fill="none"
-              stroke={dayComplete ? '#10B981' : '#8B5CF6'}
-              strokeWidth="4"
-              strokeLinecap="round"
-              strokeDasharray={2 * Math.PI * 19}
-              initial={false}
-              animate={{ strokeDashoffset: 2 * Math.PI * 19 * (1 - pct) }}
-              transition={{ duration: 0.5, ease: 'easeOut' }}
-            />
-          </svg>
-          <span className="absolute inset-0 flex items-center justify-center t-meta font-black text-[var(--ink)] tabular-nums">
-            {Math.round(pct * 100)}%
-          </span>
-        </div>
+      {/* One line rather than a card: the ring duplicated Home and pushed
+          the list itself below the fold, which is what people complained
+          about. */}
+      <div className="flex items-baseline justify-between gap-3">
+        <h1 className="t-title">Tasks</h1>
+        <span className="t-meta shrink-0">
+          {priorities.done}/{priorities.total} done today
+        </span>
+      </div>
 
-        <div className="min-w-0 flex-1">
-          <p className="eb-label truncate">
-            {new Date().toLocaleDateString(undefined, {
-              weekday: 'long',
-              month: 'long',
-              day: 'numeric',
-            })}
-          </p>
-          <p className="t-figure text-2xl mt-1">
-            {progress.done} / {progress.total}
-            <span className="text-xs font-bold text-[var(--ink-dim)] ml-2">complete</span>
-          </p>
-          {priorities.total > 0 && (
-            <p className="t-meta mt-1">
-              Priorities {priorities.done}/{priorities.total}
-              {priorities.allDone && <span className="eb-done"> · all done</span>}
-            </p>
-          )}
-        </div>
+      <div
+        className="h-1.5 rounded-full overflow-hidden mt-3"
+        style={{ background: 'var(--surface-sunk)' }}
+      >
+        <motion.div
+          className="h-full rounded-full"
+          style={{ background: pct >= 1 ? 'var(--done)' : 'var(--signal)' }}
+          initial={false}
+          animate={{ width: `${Math.round(pct * 100)}%` }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+        />
       </div>
 
       {/* The "next action" card lives on Home, which owns that role. Repeating
@@ -706,10 +684,10 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
               setTab(t.id);
             }}
             data-active={tab === t.id}
-            className="eb-tab t-meta px-3.5 py-2.5 flex items-center gap-1.5 shrink-0" 
+            className="chip shrink-0"
           >
             {t.label}
-            <span className="text-[11px] opacity-70">{t.count}</span>
+            <span className="opacity-55">{t.count}</span>
           </button>
         ))}
 
@@ -720,7 +698,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                 key={m}
                 onClick={() => setTimeFilter(timeFilter === m ? undefined : m)}
                 title={`Show what fits in ${m} minutes`}
-                className={`text-[11px] font-semibold px-2.5 py-1.5 rounded-lg border transition-all ${
+                className={`chip shrink-0 ${
                   timeFilter === m
                     ? 'eb-done bg-emerald-500/12 border-emerald-500/30'
                     : 'text-[var(--ink-dim)] border-[var(--rule)] hover:border-[var(--rule-strong)]'

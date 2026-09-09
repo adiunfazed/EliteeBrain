@@ -273,18 +273,22 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
         <>
           {/* Today's adherence */}
           {adherence.total > 0 && (
-            <div className="eb-card p-4">
-              <div className="flex items-center justify-between gap-3">
-                <span className="eb-label">
-                  Today's routine
-                </span>
-                <span className="t-section text-sm tabular-nums">
-                  {adherence.done} / {adherence.total}
+            <div>
+              <div className="flex items-baseline justify-between gap-3">
+                <h1 className="t-title">Routine</h1>
+                <span className="t-meta shrink-0">
+                  {adherence.done}/{adherence.total} done today
                 </span>
               </div>
-              <div className="mt-2.5 h-1.5 w-full bg-[var(--surface-sunk)] rounded-full overflow-hidden">
+              <div
+                className="mt-3 h-1.5 w-full rounded-full overflow-hidden"
+                style={{ background: 'var(--surface-sunk)' }}
+              >
                 <motion.div
-                  className="h-full bg-[var(--signal)] rounded-full"
+                  className="h-full rounded-full"
+                  style={{
+                    background: adherence.ratio >= 1 ? 'var(--done)' : 'var(--signal)',
+                  }}
                   initial={false}
                   animate={{ width: `${adherence.ratio * 100}%` }}
                   transition={{ duration: 0.5, ease: 'easeOut' }}
@@ -294,9 +298,15 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
           )}
 
           {overload && (
-            <div className="rounded-2xl border border-amber-500/25 bg-amber-500/[0.06] p-3.5 flex items-start gap-2.5">
-              <AlertTriangle className="w-3.5 h-3.5 eb-warn shrink-0 mt-0.5" />
-              <p className="text-[11px] text-[var(--ink-muted)] leading-relaxed">{overload}</p>
+            <div
+              className="rounded-2xl p-4 flex items-start gap-3"
+              style={{
+                background: 'color-mix(in oklab, var(--warn) 9%, transparent)',
+                border: '1px solid color-mix(in oklab, var(--warn) 30%, var(--rule))',
+              }}
+            >
+              <AlertTriangle className="w-4 h-4 eb-warn shrink-0 mt-0.5" />
+              <p className="t-sub flex-1 min-w-0 leading-relaxed">{overload}</p>
             </div>
           )}
 

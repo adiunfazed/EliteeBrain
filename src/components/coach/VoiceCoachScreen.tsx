@@ -82,7 +82,7 @@ export const VoiceCoachScreen: React.FC<Props> = ({ onBack }) => {
     try {
       const recognition = new Recognition();
       recognition.continuous = true;
-      recognition.interimResults = true;
+      recognition.interimResults = false;
       recognition.lang = 'en-IN';
 
       setTranscript('');
@@ -91,19 +91,17 @@ export const VoiceCoachScreen: React.FC<Props> = ({ onBack }) => {
       setFeedback(null);
 
       recognition.onresult = (event: any) => {
-        // Rebuilt from the full results array every time. Reading the same
-        // final result twice produces the same string, so no event can add
-        // anything that is already there.
-        let finals = '';
-        let interim = '';
-
+        // With interim results off, every entry is a distinct final utterance,
+        // so concatenating the array gives the transcript exactly once.
+        // Rebuilding rather than appending keeps it idempotent: re-reading the
+        // same results produces the same string.
+        let text = '';
         for (let i = 0; i < event.results.length; i++) {
-          const chunk = event.results[i][0]?.transcript || '';
-          if (event.results[i].isFinal) finals += chunk + ' ';
-          else interim += chunk;
+          if (!event.results[i].isFinal) continue;
+          text += (event.results[i][0]?.transcript || '') + ' ';
         }
 
-        setTranscript(`${finals}${interim}`.replace(/\s+/g, ' ').trim());
+        setTranscript(text.replace(/\s+/g, ' ').trim());
       };
 
       recognition.onerror = (event: any) => {
@@ -259,7 +257,7 @@ export const VoiceCoachScreen: React.FC<Props> = ({ onBack }) => {
                 <Mic className="w-8 h-8 shrink-0" style={{ color: 'var(--signal-ink)' }} />
               </motion.span>
               <p className="t-figure text-2xl mt-4">{mmss}</p>
-              <p className="t-sub mt-1">Listening — keep talking</p>
+              <p className="t-sub mt-1">Listening — text appears after each phrase</p>
             </div>
           )}
 

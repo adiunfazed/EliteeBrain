@@ -661,7 +661,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
                 className="w-full bg-[var(--surface-sunk)] border border-[color-mix(in_oklab,var(--signal)_60%,transparent)] rounded-lg px-2 py-1 text-sm text-[var(--ink)] outline-none"
               />
             ) : (
-              <h4 className="text-sm font-bold text-[var(--ink)] break-words">{goal.title}</h4>
+              <h4 className="t-section break-words">{goal.title}</h4>
             )}
             <p className="t-meta mt-1">{progress.label}</p>
           </div>
@@ -915,6 +915,15 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
       {/* ---- GOALS ---- */}
       {pane === 'goals' && (
         <div className="space-y-3">
+          <div className="flex items-baseline justify-between gap-3">
+            <h1 className="t-title">Goals</h1>
+            {activeGoals.length > 0 && (
+              <span className="t-meta shrink-0">
+                {activeGoals.length} active
+              </span>
+            )}
+          </div>
+
           <AddButton label="Add goal" onClick={() => setGoalComposerOpen(true)} />
 
           <ComposerSheet
@@ -959,6 +968,16 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
       {/* ---- HABITS ---- */}
       {pane === 'habits' && (
         <div className="space-y-3">
+          <div className="flex items-baseline justify-between gap-3">
+            <h1 className="t-title">Habits</h1>
+            {activeHabits.length > 0 && (
+              <span className="t-meta shrink-0">
+                {activeHabits.filter((h) => habitStats(h, logs, today).completedToday).length}/
+                {activeHabits.length} done today
+              </span>
+            )}
+          </div>
+
           <AddButton label="Add habit" onClick={() => setHabitComposerOpen(true)} />
 
           <ComposerSheet
