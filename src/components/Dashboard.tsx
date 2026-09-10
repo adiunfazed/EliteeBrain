@@ -868,6 +868,7 @@ export const Dashboard: React.FC<Props> = ({
                   userId={currentUser?.uid || null}
                   profile={profile}
                   initialPane={lifePane}
+                  habits={allHabits.filter((h: any) => h.status === 'active')}
                   goals={allGoals
                     .filter((g: any) => g.status === 'active')
                     .map((g: any) => ({ id: g.id, title: g.title }))}

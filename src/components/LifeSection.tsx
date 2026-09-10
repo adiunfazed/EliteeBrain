@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import { Sun,
-  Plus,
   Check,
   Trash2,
   Moon,
@@ -14,6 +13,7 @@ import { Sun,
   CalendarDays,
 } from 'lucide-react';
 import type {
+  Habit,
   BlockKind,
   BlockState,
   RoutineBlock,
@@ -45,12 +45,17 @@ import {
 } from '../lib/routine';
 import { todayISO } from '../lib/tasks';
 import { soundFx } from '../utils/audio';
+import { ComposerSheet } from './ComposerSheet';
+import { AddButton } from './AddButton';
+import { RoutineComposer } from './RoutineComposer';
 
 interface Props {
   userId: string | null;
   profile: UserProfile;
   /** Active goals a routine block can be attached to. */
   goals?: { id: string; title: string }[];
+  /** Active habits a block can complete. */
+  habits?: Habit[];
   /** Open directly on a given pane, e.g. from the Sleep card on Home. */
   initialPane?: 'routine' | 'week' | 'sleep';
 }
@@ -61,11 +66,13 @@ const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
 const KINDS: BlockKind[] = ['study', 'work', 'exercise', 'sleep', 'meal', 'personal', 'custom'];
 
-export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }) => {
+export const LifeSection: React.FC<Props> = ({ userId, goals = [], habits = [], initialPane }) => {
   const [blocks, setBlocks] = useState<RoutineBlock[]>([]);
   const [logs, setLogs] = useState<RoutineLog[]>([]);
   const [sleep, setSleep] = useState<SleepLog[]>([]);
   const [pane, setPane] = useState<Pane>(initialPane || 'routine');
+  const [blockComposerOpen, setBlockComposerOpen] = useState(false);
+  const [editingBlock, setEditingBlock] = useState<RoutineBlock | null>(null);
 
   // useState only reads its initial value on first mount, so a later request
   // to open Sleep was ignored whenever this component was already mounted —
@@ -74,16 +81,8 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
     if (initialPane) setPane(initialPane);
   }, [initialPane]);
 
-  const [title, setTitle] = useState('');
-  const [kind, setKind] = useState<BlockKind>('study');
-  const [blockGoalId, setBlockGoalId] = useState<string | undefined>();
-  /** Empty means every day. */
-  const [blockDays, setBlockDays] = useState<number[]>([]);
   const [editingDaysFor, setEditingDaysFor] = useState<string | null>(null);
-  const [showAdvanced, setShowAdvanced] = useState(false);
   const [editingTimeFor, setEditingTimeFor] = useState<string | null>(null);
-  const [start, setStart] = useState('09:00');
-  const [end, setEnd] = useState('10:00');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
 
@@ -112,26 +111,6 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
       return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`;
     });
   }, [today]);
-
-  const addBlock = async () => {
-    const t = title.trim();
-    if (!t) return;
-    const block = newRoutineBlock(t, kind, start, end);
-    if (blockGoalId) block.goalId = blockGoalId;
-    if (blockDays.length > 0) block.weekdays = [...blockDays].sort((a, b) => a - b);
-    setBlocks((prev) => [block, ...prev]);
-    setTitle('');
-    setBlockGoalId(undefined);
-    setBlockDays([]);
-    soundFx.playClick();
-    try {
-      await saveRoutineBlock(userId, block);
-    } catch (e) {
-      console.error('Could not save block:', e);
-      setBlocks((prev) => prev.filter((b) => b.id !== block.id));
-    }
-  };
-
   const cycleState = async (block: RoutineBlock, current: BlockState) => {
     const order: BlockState[] = ['pending', 'done', 'partial', 'skipped'];
     const next = order[(order.indexOf(current) + 1) % order.length];
@@ -310,138 +289,53 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
             </div>
           )}
 
-          {/* Composer */}
-          <div className="eb-card p-3.5 space-y-2.5">
-            <div className="flex items-center gap-2">
-              <input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && addBlock()}
-                placeholder="Add a time block — e.g. Morning study"
-                maxLength={80}
-                className="flex-1 min-w-0 eb-card-sunk focus:border-[color-mix(in_oklab,var(--signal)_60%,transparent)] rounded-xl px-3 py-2.5 text-sm text-[var(--ink)] placeholder:text-[var(--ink-dim)] outline-none"
-              />
-              <button
-                onClick={addBlock}
-                disabled={!title.trim()}
-                aria-label="Add block"
-                className="eb-btn-primary shrink-0 w-11 h-11 rounded-xl flex items-center justify-center"
-              >
-                <Plus className="w-5 h-5 shrink-0" />
-              </button>
-            </div>
+          <AddButton label="Add block" onClick={() => setBlockComposerOpen(true)} />
 
-            <div className="flex items-center gap-2 flex-wrap">
-              <label className="flex items-center gap-1.5 t-meta">
-                <Clock className="w-3.5 h-3.5 shrink-0" />
-                <input
-                  type="time"
-                  value={start}
-                  onChange={(e) => setStart(e.target.value)}
-                  className="eb-card-sunk rounded-lg px-2 py-1.5 text-[11px] text-[var(--ink)] outline-none"
-                />
-                <span className="text-[var(--ink-dim)]">→</span>
-                <input
-                  type="time"
-                  value={end}
-                  onChange={(e) => setEnd(e.target.value)}
-                  className="eb-card-sunk rounded-lg px-2 py-1.5 text-[11px] text-[var(--ink)] outline-none"
-                />
-              </label>
-            </div>
-
-            <button
-              onClick={() => setShowAdvanced((v) => !v)}
-              className="eb-press t-meta hover:text-[var(--ink)] flex items-center gap-1.5"
-            >
-              {showAdvanced ? '− Fewer options' : '+ Days, type and goal'}
-            </button>
-
-            <div className={showAdvanced ? '' : 'hidden'}>
-              <p className="eb-label mb-1.5">
-                Repeats on
-                <span className="ml-1.5 normal-case tracking-normal text-[var(--ink-dim)]">
-                  {blockDays.length === 0 ? 'every day' : `${blockDays.length} day${blockDays.length === 1 ? '' : 's'}`}
-                </span>
-              </p>
-              <div className="flex items-center gap-1.5">
-                {DAY_LABELS.map((label, i) => {
-                  const on = blockDays.length === 0 || blockDays.includes(i);
-                  return (
-                    <button
-                      key={i}
-                      onClick={() =>
-                        setBlockDays((prev) => {
-                          // An empty list means every day, so the first tap
-                          // starts from all-selected rather than none.
-                          const base = prev.length === 0 ? [0, 1, 2, 3, 4, 5, 6] : prev;
-                          const next = base.includes(i)
-                            ? base.filter((d) => d !== i)
-                            : [...base, i].sort((a, b) => a - b);
-                          return next.length === 7 ? [] : next;
-                        })
-                      }
-                      aria-label={`Toggle day ${i}`}
-                      className={`eb-press flex-1 h-10 rounded-xl t-meta border ${
-                        on ? 'eb-chip-active' : 'text-[var(--ink-dim)] border-[#262C38]'
-                      }`}
-                    >
-                      {label}
-                    </button>
+          <ComposerSheet
+            open={blockComposerOpen}
+            title={editingBlock ? 'Edit block' : 'New routine block'}
+            onClose={() => {
+              setBlockComposerOpen(false);
+              setEditingBlock(null);
+            }}
+          >
+            <RoutineComposer
+              block={editingBlock}
+              habits={habits}
+              goals={goals.map((g) => ({ id: g.id, title: g.title }))}
+              onCancel={() => {
+                setBlockComposerOpen(false);
+                setEditingBlock(null);
+              }}
+              onSave={async (fields) => {
+                if (editingBlock) {
+                  const updated = {
+                    ...editingBlock,
+                    ...fields,
+                    updatedAt: new Date().toISOString(),
+                  };
+                  setBlocks((prev) => prev.map((b) => (b.id === updated.id ? updated : b)));
+                  await saveRoutineBlock(userId, updated);
+                } else {
+                  const created = newRoutineBlock(
+                    fields.title,
+                    fields.kind,
+                    fields.startTime,
+                    fields.endTime
                   );
-                })}
-              </div>
-            </div>
-
-            {goals.length > 0 && showAdvanced && (
-              <div>
-                <p className="eb-label mb-1.5">
-                  Counts toward a goal
-                </p>
-                <div className="eb-tabs w-fit max-w-full overflow-x-auto no-scrollbar">
-                  <button
-                    onClick={() => setBlockGoalId(undefined)}
-                    className={`eb-press text-[11px] font-semibold px-2.5 py-1.5 rounded-full border ${
-                      !blockGoalId
-                        ? 'eb-chip-active'
-                        : 'text-[var(--ink-dim)] border-[var(--rule)]'
-                    }`}
-                  >
-                    Nothing
-                  </button>
-                  {goals.map((g) => (
-                    <button
-                      key={g.id}
-                      onClick={() => setBlockGoalId(blockGoalId === g.id ? undefined : g.id)}
-                      className={`eb-press text-[11px] font-semibold px-2.5 py-1.5 rounded-full border max-w-full truncate ${
-                        blockGoalId === g.id
-                          ? 'eb-chip-active'
-                          : 'text-[var(--ink-dim)] border-[var(--rule)] hover:border-[var(--rule-strong)]'
-                      }`}
-                    >
-                      {g.title}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className={`items-center gap-1.5 flex-wrap ${showAdvanced ? 'flex' : 'hidden'}`}>
-              {KINDS.map((k) => (
-                <button
-                  key={k}
-                  onClick={() => setKind(k)}
-                  className={`eb-press text-[11px] font-semibold px-2.5 py-1.5 rounded-full border ${
-                    kind === k
-                      ? BLOCK_META[k].tint
-                      : 'text-[var(--ink-dim)] border-[var(--rule)] hover:border-[var(--rule-strong)]'
-                  }`}
-                >
-                  {BLOCK_META[k].label}
-                </button>
-              ))}
-            </div>
-          </div>
+                  Object.assign(created, {
+                    weekdays: fields.weekdays,
+                    habitId: fields.habitId,
+                    goalId: fields.goalId,
+                  });
+                  setBlocks((prev) => [...prev, created]);
+                  await saveRoutineBlock(userId, created);
+                }
+                setBlockComposerOpen(false);
+                setEditingBlock(null);
+              }}
+            />
+          </ComposerSheet>
 
           {/* Timeline */}
           {day.length === 0 ? (
@@ -709,10 +603,11 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                   <div className="flex items-center gap-0.5 shrink-0 opacity-70 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => {
-                        setEditingId(block.id);
-                        setEditText(block.title);
+                        soundFx.playClick();
+                        setEditingBlock(block);
+                        setBlockComposerOpen(true);
                       }}
-                      aria-label="Rename block"
+                      aria-label="Edit block"
                       className="w-10 h-10 shrink-0 rounded-lg hover:bg-[var(--surface-sunk)] text-[var(--ink-muted)] hover:text-[var(--ink)] flex items-center justify-center"
                     >
                       <Pencil className="w-3.5 h-3.5 shrink-0" />
@@ -859,7 +754,8 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                   type="time"
                   value={bedtime}
                   onChange={(e) => setBedtime(e.target.value)}
-                  className="eb-card-sunk rounded-lg px-2 py-1.5 text-[11px] text-[var(--ink)] outline-none"
+                  className="rounded-xl px-3 py-2.5 text-[15px] text-[var(--ink)] outline-none w-full"
+                  style={{ background: 'var(--surface-sunk)', border: '1px solid var(--rule)' }}
                 />
               </label>
               <label className="flex items-center gap-1.5 t-meta">
@@ -868,13 +764,11 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], initialPane }
                   type="time"
                   value={wakeTime}
                   onChange={(e) => setWakeTime(e.target.value)}
-                  className="eb-card-sunk rounded-lg px-2 py-1.5 text-[11px] text-[var(--ink)] outline-none"
+                  className="rounded-xl px-3 py-2.5 text-[15px] text-[var(--ink)] outline-none w-full"
+                  style={{ background: 'var(--surface-sunk)', border: '1px solid var(--rule)' }}
                 />
               </label>
-              <button
-                onClick={logSleep}
-                className="eb-press ml-auto t-meta font-black px-4 py-2.5 rounded-xl bg-indigo-500 hover:brightness-110 text-white"
-              >
+              <button onClick={logSleep} className="btn-lg ml-auto shrink-0">
                 {tonight ? 'Update' : 'Log sleep'}
               </button>
             </div>

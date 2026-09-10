@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState , useRef} from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Target, Repeat,
+import { CalendarDays, Target, Repeat,
   Plus,
   Flame,
   Check,
@@ -44,6 +44,9 @@ import { soundFx } from '../utils/audio';
 import { offerUndo } from '../lib/undo';
 import { EmptyState } from './EmptyState';
 import { ComposerSheet } from './ComposerSheet';
+import { HabitComposer } from './HabitComposer';
+import { HabitHistory } from './HabitHistory';
+import { GoalDetail } from './GoalDetail';
 import { AddButton } from './AddButton';
 
 interface Props {
@@ -68,6 +71,10 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
   const goalInputRef = useRef<HTMLInputElement>(null);
   const [goalComposerOpen, setGoalComposerOpen] = useState(false);
   const [habitComposerOpen, setHabitComposerOpen] = useState(false);
+  const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
+  const [historyHabit, setHistoryHabit] = useState<Habit | null>(null);
+  const [detailGoal, setDetailGoal] = useState<Goal | null>(null);
+  const [goalDeadline, setGoalDeadline] = useState<string | undefined>();
   const habitInputRef = useRef<HTMLInputElement>(null);
   const [habitDraft, setHabitDraft] = useState('');
   const [expandedHabit, setExpandedHabit] = useState<string | null>(null);
@@ -109,8 +116,10 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
     const title = goalDraft.trim();
     if (!title) return;
     const g = newGoal(title);
+    if (goalDeadline) g.deadline = goalDeadline;
     setGoals((prev) => [g, ...prev]);
     setGoalDraft('');
+    setGoalDeadline(undefined);
     setGoalComposerOpen(false);
     soundFx.playClick();
     try {
@@ -566,6 +575,31 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
               </button>
             )}
             <button
+              onClick={() => {
+                soundFx.playClick();
+                setHistoryHabit(habit);
+              }}
+              aria-label="View history"
+              title="History"
+              className="eb-press w-9 h-9 rounded-lg text-[var(--ink-dim)] hover:text-[var(--ink)] flex items-center justify-center"
+            >
+              <CalendarDays className="w-3.5 h-3.5 shrink-0" />
+            </button>
+
+            <button
+              onClick={() => {
+                soundFx.playClick();
+                setEditingHabit(habit);
+                setHabitComposerOpen(true);
+              }}
+              aria-label="Edit habit"
+              title="Edit"
+              className="eb-press w-9 h-9 rounded-lg text-[var(--ink-dim)] hover:text-[var(--ink)] flex items-center justify-center"
+            >
+              <Pencil className="w-3.5 h-3.5 shrink-0" />
+            </button>
+
+            <button
               onClick={() => deleteHabitForever(habit)}
               aria-label="Delete habit"
               title="Delete permanently"
@@ -661,7 +695,16 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
                 className="w-full bg-[var(--surface-sunk)] border border-[color-mix(in_oklab,var(--signal)_60%,transparent)] rounded-lg px-2 py-1 text-sm text-[var(--ink)] outline-none"
               />
             ) : (
-              <h4 className="t-section break-words">{goal.title}</h4>
+              <button
+                onClick={() => {
+                  soundFx.playClick();
+                  setDetailGoal(goal);
+                }}
+                className="text-left w-full"
+              >
+                <h4 className="t-section break-words">{goal.title}</h4>
+                <span className="t-meta mt-1 block">Tap for milestones and linked work</span>
+              </button>
             )}
             <p className="t-meta mt-1">{progress.label}</p>
           </div>
@@ -944,7 +987,40 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
             <p className="t-sub mt-2.5 leading-snug">
               Something you are working toward over weeks. Break it into milestones afterwards.
             </p>
-            <button onClick={addGoal} disabled={!goalDraft.trim()} className="btn-lg w-full mt-5">
+
+            <p className="eb-label mt-5 mb-2">Deadline</p>
+            <div className="flex items-center gap-2 flex-wrap">
+              {[
+                { label: 'No deadline', days: null },
+                { label: '1 month', days: 30 },
+                { label: '3 months', days: 90 },
+                { label: '6 months', days: 180 },
+              ].map((option) => {
+                const value =
+                  option.days === null
+                    ? undefined
+                    : (() => {
+                        const d = new Date();
+                        d.setDate(d.getDate() + option.days);
+                        return d.toISOString().slice(0, 10);
+                      })();
+
+                return (
+                  <button
+                    key={option.label}
+                    onClick={() => setGoalDeadline(value)}
+                    className="chip"
+                    data-active={
+                      option.days === null ? !goalDeadline : goalDeadline === value
+                    }
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            <button onClick={addGoal} disabled={!goalDraft.trim()} className="btn-lg w-full mt-6">
               <Plus className="w-4 h-4 shrink-0" />
               Add goal
             </button>
@@ -966,6 +1042,49 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
       )}
 
       {/* ---- HABITS ---- */}
+      {detailGoal && (
+        <ComposerSheet
+          open={!!detailGoal}
+          title={detailGoal.title}
+          onClose={() => setDetailGoal(null)}
+        >
+          <GoalDetail
+            goal={detailGoal}
+            percent={
+              goalProgress(
+                detailGoal,
+                habits,
+                logs,
+                today,
+                tasks,
+                routineBlocks,
+                routineLogs
+              ).percent
+            }
+            tasks={tasks}
+            habits={habits}
+            blocks={routineBlocks}
+            onToggleMilestone={(msId) => toggleMilestone(detailGoal, msId)}
+          />
+          <button onClick={() => setDetailGoal(null)} className="btn-quiet w-full mt-6">
+            Close
+          </button>
+        </ComposerSheet>
+      )}
+
+      {historyHabit && (
+        <ComposerSheet
+          open={!!historyHabit}
+          title={historyHabit.title}
+          onClose={() => setHistoryHabit(null)}
+        >
+          <HabitHistory habit={historyHabit} logs={logs} />
+          <button onClick={() => setHistoryHabit(null)} className="btn-quiet w-full mt-6">
+            Close
+          </button>
+        </ComposerSheet>
+      )}
+
       {pane === 'habits' && (
         <div className="space-y-3">
           <div className="flex items-baseline justify-between gap-3">
@@ -982,151 +1101,38 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
 
           <ComposerSheet
             open={habitComposerOpen}
-            title="New habit"
-            onClose={() => setHabitComposerOpen(false)}
+            title={editingHabit ? 'Edit habit' : 'New habit'}
+            onClose={() => {
+              setHabitComposerOpen(false);
+              setEditingHabit(null);
+            }}
           >
-          <div className="flex items-center gap-2">
-            <input
-              ref={habitInputRef}
-              value={habitDraft}
-              onChange={(e) => setHabitDraft(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && addHabit()}
-              placeholder="What will you repeat?"
-              maxLength={120}
-              className="flex-1 min-w-0 eb-card focus:border-[color-mix(in_oklab,var(--signal)_60%,transparent)] rounded-xl px-3 py-2.5 text-sm text-[var(--ink)] placeholder:text-[var(--ink-dim)] outline-none"
+            <HabitComposer
+              habit={editingHabit}
+              goals={goals.map((g) => ({ id: g.id, title: g.title }))}
+              onCancel={() => {
+                setHabitComposerOpen(false);
+                setEditingHabit(null);
+              }}
+              onSave={async (fields) => {
+                if (editingHabit) {
+                  const updated = {
+                    ...editingHabit,
+                    ...fields,
+                    updatedAt: new Date().toISOString(),
+                  };
+                  setHabits((prev) => prev.map((h) => (h.id === updated.id ? updated : h)));
+                  await saveHabit(userId, updated);
+                } else {
+                  const habit = newHabit(fields.title);
+                  Object.assign(habit, fields);
+                  setHabits((prev) => [habit, ...prev]);
+                  await saveHabit(userId, habit);
+                }
+                setHabitComposerOpen(false);
+                setEditingHabit(null);
+              }}
             />
-            <button
-              onClick={addHabit}
-              disabled={!habitDraft.trim()}
-              aria-label="Add habit"
-              className="eb-btn-primary shrink-0 w-11 h-11 rounded-xl flex items-center justify-center"
-            >
-              <Plus className="w-5 h-5 shrink-0" />
-            </button>
-          </div>
-
-          {/* Same controls the habit offers after creation, available up front. */}
-          <button
-            onClick={() => setShowHabitOptions((v) => !v)}
-            className="eb-press text-[11px] font-semibold text-[var(--ink-muted)] hover:text-[var(--ink)]"
-          >
-            {showHabitOptions ? '− Fewer options' : '+ How often, target and goal'}
-          </button>
-
-          {showHabitOptions && (
-            <div className="p-3 rounded-xl eb-card-sunk space-y-3 anim-in">
-              <div>
-                <p className="eb-label mb-1.5">How often</p>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  {([
-                    { id: 'daily' as const, label: 'Every day' },
-                    { id: 'weekly' as const, label: 'Weekly' },
-                    { id: 'selected_days' as const, label: 'Chosen days' },
-                  ]).map(({ id, label }) => (
-                    <button
-                      key={id}
-                      onClick={() => setDraftCadence(id)}
-                      className={`text-[11px] font-semibold px-3 py-2 rounded-lg border ${
-                        draftCadence === id
-                          ? 'eb-chip-active'
-                          : 'text-[var(--ink-muted)] border-[var(--rule)]'
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {draftCadence === 'selected_days' && (
-                <div>
-                  <p className="eb-label mb-1.5">On these days</p>
-                  <div className="flex items-center justify-between gap-1.5">
-                    {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => {
-                      const on = draftDays.includes(i);
-                      return (
-                        <button
-                          key={i}
-                          onClick={() =>
-                            setDraftDays((prev) =>
-                              on ? prev.filter((x) => x !== i) : [...prev, i].sort()
-                            )
-                          }
-                          className="shrink-0 w-10 h-10 rounded-full text-[13px] font-semibold transition-colors"
-                          style={{
-                            background: on ? 'var(--signal)' : 'transparent',
-                            border: `1px solid ${on ? 'var(--signal)' : 'var(--rule)'}`,
-                            color: on ? '#fff' : 'var(--ink-dim)',
-                          }}
-                        >
-                          {d}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <p className="eb-label mb-1.5">Times per day</p>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setDraftTarget((v) => Math.max(1, v - 1))}
-                    className="w-10 h-10 rounded-lg border border-[var(--rule)] text-[var(--ink)]"
-                  >
-                    −
-                  </button>
-                  <span className="w-12 text-center t-figure text-[15px]">
-                    {draftTarget}
-                  </span>
-                  <button
-                    onClick={() => setDraftTarget((v) => Math.min(99, v + 1))}
-                    className="w-10 h-10 rounded-lg border border-[var(--rule)] text-[var(--ink)]"
-                  >
-                    +
-                  </button>
-                  <span className="t-sub">
-                    {draftTarget === 1 ? 'Just once — tick it off' : `Counts up to ${draftTarget}`}
-                  </span>
-                </div>
-              </div>
-
-              {goals.filter((g) => g.status === 'active').length > 0 && (
-                <div>
-                  <p className="eb-label mb-1.5">Counts toward</p>
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <button
-                      onClick={() => setDraftGoalId(undefined)}
-                      className={`text-[11px] font-semibold px-3 py-2 rounded-lg border ${
-                        !draftGoalId ? 'eb-chip-active' : 'text-[var(--ink-muted)] border-[var(--rule)]'
-                      }`}
-                    >
-                      Nothing
-                    </button>
-                    {goals
-                      .filter((g) => g.status === 'active')
-                      .map((g) => (
-                        <button
-                          key={g.id}
-                          onClick={() => setDraftGoalId(draftGoalId === g.id ? undefined : g.id)}
-                          className={`text-[11px] font-semibold px-3 py-2 rounded-lg border max-w-full truncate ${
-                            draftGoalId === g.id
-                              ? 'eb-chip-active'
-                              : 'text-[var(--ink-muted)] border-[var(--rule)]'
-                          }`}
-                        >
-                          {g.title}
-                        </button>
-                      ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-            <button onClick={addHabit} disabled={!habitDraft.trim()} className="btn-lg w-full mt-5">
-              <Plus className="w-4 h-4 shrink-0" />
-              Add habit
-            </button>
           </ComposerSheet>
 
 

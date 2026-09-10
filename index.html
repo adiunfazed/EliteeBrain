@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="theme-color" content="#0B0710" />
+    <meta name="theme-color" content="#0B0E14" />
     <meta name="description" content="Your daily system for goals, habits, focused work and training. Plan the day, execute it, and see what actually moved." />
 
     <!-- Social preview: without these, shared links appear as a bare URL. -->
@@ -19,6 +19,17 @@
     <link rel="apple-touch-icon" href="/brand/elitelife-logo-192.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <title>EliteLife — Daily Performance System</title>
+      <style>
+      /* Painted before any script runs, so the moment between Chrome's splash
+         and React mounting is the same colour rather than a white flash. */
+      html, body { background: #0B0E14; margin: 0; }
+      #root:empty::after {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background: #0B0E14;
+      }
+    </style>
   </head>
   <body class="bg-slate-950 text-slate-100 antialiased selection:bg-cyan-500 selection:text-slate-950">
     <div id="root"></div>

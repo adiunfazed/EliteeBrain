@@ -483,7 +483,10 @@ export default function App() {
     <div className="min-h-screen bg-ground text-ink font-sans selection:bg-signal selection:text-white transition-colors duration-150 relative">
       <AnimatePresence>
         {(showSplash || !authResolved) && (
-          <SplashScreen ready={authResolved} onFinish={() => setShowSplash(false)} />
+          <SplashScreen
+            ready={authResolved && (!currentUser || isHydrated)}
+            onFinish={() => setShowSplash(false)}
+          />
         )}
       </AnimatePresence>
       <div className="paper-tooth" />

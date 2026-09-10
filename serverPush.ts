@@ -214,7 +214,39 @@ async function reminderFor(
   const ctx = await buildCoachContext(uid);
   if (!ctx) return null;
 
-  // 1. A routine block starting in the next 15 minutes. The most useful
+  // 1. A task whose reminder is due. Highest priority because the user set
+  //    this one deliberately, rather than it being inferred from a routine.
+  for (const task of ctx.timedTasksToday || []) {
+    const due = parseHHMM(task.dueTime);
+    if (due === null) continue;
+
+    const fireAt = due - task.reminderMinutesBefore;
+    const until = fireAt - minutes;
+
+    // Fire within the 12 minutes after the intended moment. The scheduler
+    // runs every 15, so a narrower window would miss reminders entirely.
+    if (until > 0 || until < -12) continue;
+
+    const slot = `task:${task.id}`;
+    if (sentSlots.includes(slot)) continue;
+
+    return {
+      slot,
+      payload: {
+        title: task.title,
+        // A clock time rather than a countdown: a countdown is wrong the
+        // moment delivery is delayed by even a minute.
+        body:
+          task.reminderMinutesBefore === 0
+            ? 'Due now.'
+            : `Due at ${task.dueTime}.`,
+        tag: 'task',
+        url: '/',
+      },
+    };
+  }
+
+  // 2. A routine block starting in the next 15 minutes. The most useful
   //    notification there is: the user already decided this matters.
   for (const block of ctx.routineToday) {
     if (block.state !== 'pending') continue;

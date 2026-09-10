@@ -12,8 +12,8 @@ export const SplashScreen: React.FC<Props> = ({ onFinish, ready = false }) => {
   useEffect(() => {
     // A brief floor so the logo does not flash on a fast load, and a ceiling
     // so a slow network never traps the user on a splash screen.
-    const MIN_MS = 1250;
-    const MAX_MS = 3000;
+    const MIN_MS = 2000;
+    const MAX_MS = 5000;
     const started = Date.now();
 
     if (ready) {
@@ -32,9 +32,6 @@ export const SplashScreen: React.FC<Props> = ({ onFinish, ready = false }) => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.6, ease: 'easeInOut' }}
-      onClick={() => {
-        if (onFinish) onFinish();
-      }}
       className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-[#0B0E14] text-[var(--ink)] select-none overflow-hidden font-sans"
     >
       {/* Background Radial Gradient & Grid Accent */}
@@ -105,6 +102,18 @@ export const SplashScreen: React.FC<Props> = ({ onFinish, ready = false }) => {
           style={{ color: '#C4B5FD' }}
         >
           Plan. Execute. Improve.
+        </motion.p>
+
+        {/* Status line. Tied to real readiness rather than a timer, so it
+            never claims to be done while work is still running. */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1, duration: 0.3 }}
+          className="t-meta"
+          style={{ minHeight: 18 }}
+        >
+          {ready ? 'Ready' : 'Getting your day together…'}
         </motion.p>
 
         {/* Smooth 2.5-second Loading Bar */}

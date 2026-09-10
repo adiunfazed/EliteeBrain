@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { ArrowLeft, Camera, Image as ImageIcon, RotateCcw, AlertTriangle } from 'lucide-react';
 import { getIdToken } from '../../lib/firebase';
@@ -46,6 +46,54 @@ function parseSections(text: string): { heading: string | null; body: string }[]
   return out.filter((s) => s.body || s.heading);
 }
 
+interface JobUpdate {
+  stage: 'queued' | 'running' | 'done' | 'failed';
+  waitingAhead: number;
+  result?: string | null;
+  error?: string | null;
+}
+
+/**
+ * Poll a job until it settles.
+ *
+ * Polls every second — often enough to feel live, rarely enough to be
+ * negligible. Gives up after three minutes so a lost job cannot hang the
+ * screen indefinitely.
+ */
+async function pollJob(
+  jobId: string,
+  token: string,
+  onUpdate: (u: JobUpdate) => void
+): Promise<{ result?: string | null; error?: string | null }> {
+  const deadline = Date.now() + 180_000;
+
+  while (Date.now() < deadline) {
+    await new Promise((r) => setTimeout(r, 1000));
+
+    try {
+      const res = await fetch(`/api/coach/vision/${jobId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) {
+        // A transient poll failure is not a job failure; keep waiting.
+        if (res.status >= 500) continue;
+        return { error: 'Lost track of that analysis. Please try again.' };
+      }
+
+      const data = (await res.json()) as JobUpdate;
+      onUpdate(data);
+
+      if (data.stage === 'done') return { result: data.result };
+      if (data.stage === 'failed') return { error: data.error || 'That did not work.' };
+    } catch {
+      // Network blip mid-poll — try again on the next tick.
+    }
+  }
+
+  return { error: 'This is taking unusually long. Please try again.' };
+}
+
 /** Pull "7/10" out of a rating line. */
 function extractScore(body: string): number | null {
   const m = /(\d{1,2})\s*\/\s*10/.exec(body);
@@ -74,6 +122,9 @@ export const ImageToolScreen: React.FC<Props> = ({ tool, onBack }) => {
   const [preview, setPreview] = useState<string | null>(null);
   const [result, setResult] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
+  const [ahead, setAhead] = useState(0);
+  const [stage, setStage] = useState<'queued' | 'running' | 'done' | 'failed'>('queued');
   const [error, setError] = useState<string | null>(null);
 
   const cameraRef = useRef<HTMLInputElement>(null);
@@ -85,6 +136,36 @@ export const ImageToolScreen: React.FC<Props> = ({ tool, onBack }) => {
    * A modern phone photo is 3–8MB, which is slow on Indian mobile data and
    * larger than the model needs. 1280px is ample for this kind of analysis.
    */
+  /**
+   * Progress as a real figure.
+   *
+   * Upload is the first 15%; queueing crawls from there so a long wait still
+   * visibly moves; analysis climbs to 95. It only reaches 100 when the result
+   * is in hand — a bar that hits 100 and then keeps spinning is worse than
+   * no bar at all.
+   */
+  const progressPct = (() => {
+    if (stage === 'done') return 100;
+    if (stage === 'queued') {
+      const base = ahead > 0 ? 15 : 25;
+      return Math.min(45, base + elapsed);
+    }
+    // Running: climb toward 95 over roughly fifteen seconds.
+    return Math.min(95, 50 + elapsed * 3);
+  })();
+
+  // Elapsed counter, so a slow analysis is visibly progressing.
+  useEffect(() => {
+    if (!busy) {
+      setElapsed(0);
+      setAhead(0);
+      setStage('queued');
+      return;
+    }
+    const id = window.setInterval(() => setElapsed((s) => s + 1), 1000);
+    return () => window.clearInterval(id);
+  }, [busy]);
+
   const shrink = (file: File): Promise<{ base64: string; mime: string }> =>
     new Promise((resolve, reject) => {
       const img = new Image();
@@ -145,15 +226,28 @@ export const ImageToolScreen: React.FC<Props> = ({ tool, onBack }) => {
         body: JSON.stringify({ tool: tool.id, image: base64, mimeType: mime }),
       });
 
-      const data = await res.json().catch(() => ({}));
+      const accepted = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        setError(data?.error || `Request failed (${res.status}). Please try again.`);
+        setError(accepted?.error || `Request failed (${res.status}). Please try again.`);
         setBusy(false);
         return;
       }
 
-      setResult(data.text);
+      // Poll until it finishes. Progress and queue position come from the
+      // server, so the bar reflects real work rather than a timer.
+      const data = await pollJob(accepted.jobId, token, (update) => {
+        setAhead(update.waitingAhead);
+        setStage(update.stage);
+      });
+
+      if (data.error) {
+        setError(data.error);
+        setBusy(false);
+        return;
+      }
+
+      setResult(data.result || '');
       soundFx.playSuccess();
     } catch (err) {
       console.error('Image tool failed:', err);
@@ -219,12 +313,42 @@ export const ImageToolScreen: React.FC<Props> = ({ tool, onBack }) => {
       )}
 
       {busy && (
-        <div className="flex items-center gap-3 mt-6">
-          <span
-            className="w-5 h-5 rounded-full border-2 animate-spin shrink-0"
-            style={{ borderColor: 'var(--rule)', borderTopColor: tool.accent }}
-          />
-          <p className="t-sub">Looking at it…</p>
+        <div
+          className="rounded-2xl p-5 mt-6"
+          style={{ background: 'var(--surface)', border: '1px solid var(--rule)' }}
+        >
+          <div className="flex items-baseline justify-between gap-3">
+            <p className="t-body min-w-0">
+              {stage === 'queued' && ahead > 0
+                ? `You are number ${ahead + 1} in line`
+                : stage === 'queued'
+                  ? 'Getting in line…'
+                  : 'Analysing your photo'}
+            </p>
+            <p className="t-figure shrink-0" style={{ fontSize: 22, color: tool.accent }}>
+              {progressPct}%
+            </p>
+          </div>
+
+          <div
+            className="h-2 rounded-full overflow-hidden mt-3"
+            style={{ background: 'var(--surface-sunk)' }}
+          >
+            <motion.div
+              className="h-full rounded-full"
+              style={{ background: tool.accent }}
+              animate={{ width: `${progressPct}%` }}
+              transition={{ duration: 0.5, ease: 'easeOut' }}
+            />
+          </div>
+
+          <p className="t-meta mt-2.5">
+            {stage === 'queued' && ahead > 0
+              ? `About ${Math.max(5, (ahead + 1) * 4)} seconds. Nobody is skipped — everyone gets a turn.`
+              : elapsed < 12
+                ? 'This usually takes a few seconds.'
+                : 'Nearly there — the model is still writing.'}
+          </p>
         </div>
       )}
 

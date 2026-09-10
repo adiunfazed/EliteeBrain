@@ -513,18 +513,25 @@ export const ProSubscriptionModal: React.FC<Props> = ({
                       <span className="min-w-0 flex-1">
                         <span className="text-[15px] font-semibold block">{plan.name}</span>
                         <span className="t-sub block mt-0.5">
-                          {plan.perMonth ? `₹${plan.perMonth} per month` : 'Never expires'}
-                          {saving ? ` · save ${saving}%` : ''}
+                          {plan.perMonth
+                            ? `Works out to ₹${plan.perMonth} a month`
+                            : 'Never expires, never renews'}
                         </span>
+                        {saving ? (
+                          <span
+                            className="t-meta block mt-1 font-semibold"
+                            style={{ color: 'var(--done)' }}
+                          >
+                            Save {saving}% against monthly
+                          </span>
+                        ) : null}
                       </span>
 
                       <span className="text-right shrink-0">
-                        <span className="font-display font-extrabold text-lg tabular-nums block leading-none">
+                        <span className="t-figure block" style={{ fontSize: 22 }}>
                           ₹{plan.price.toLocaleString('en-IN')}
                         </span>
-                        <span className="text-[11px] text-[var(--ink-dim)] block mt-1">
-                          {plan.cadence}
-                        </span>
+                        <span className="t-meta block mt-1">{plan.cadence}</span>
                       </span>
                     </div>
 
@@ -542,10 +549,12 @@ export const ProSubscriptionModal: React.FC<Props> = ({
               <p className="eb-label">Every plan includes</p>
               <ul className="mt-2.5 space-y-1.5">
                 {[
-                  'All 11 training modules',
-                  'AI Coach with your real data',
-                  'Full history, records and leaderboard',
-                  'Sync across all your devices',
+                  'AI Coach — photo analysis, voice feedback, and chat that knows your data',
+                  'All 11 training modules and the full game library',
+                  'Tasks, habits, routine and goals with reminders',
+                  'Streaks, ranks, leaderboard and daily quests',
+                  'Everything synced across your devices',
+                  'Every feature added later, at no extra cost',
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2 t-sub">
                     <Check className="w-3.5 h-3.5 eb-done shrink-0 mt-0.5 stroke-[3]" />

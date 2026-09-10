@@ -10,6 +10,28 @@ import { initAdmin, isAdminAvailable, verifyUser, lastVerifyFailure } from './se
 import { getLeaderboard, syncLeaderboardEntry } from './serverLeaderboard';
 import { buildCoachContext, describeContext } from './serverCoachContext';
 import { analyseImage, isAllowedMime, MAX_IMAGE_BYTES, VisionTool } from './serverVision';
+import { enqueue } from './serverQueue';
+import { createJob, getJob, markRunning, markDone, markFailed } from './serverJobs';
+
+/**
+ * A message worth showing the user.
+ *
+ * The tools raise deliberate, actionable messages; anything else is an
+ * internal fault and should not be dumped on screen.
+ */
+function userFacing(err: any): string {
+  const message = String(err?.message || '');
+  if (
+    message.includes('photo') ||
+    message.includes('busy right now') ||
+    message.includes('Too many') ||
+    message.includes('Waited too long') ||
+    message.includes('response')
+  ) {
+    return message;
+  }
+  return 'That did not work. Please try again.';
+}
 import { readField, resolveEntitlement } from './serverEntitlement';
 import {
   initPush,
@@ -873,14 +895,33 @@ async function startServer() {
         return res.status(503).json({ error: 'Image analysis is not configured.' });
       }
 
-      const result = await analyseImage(
-        client,
-        tool as VisionTool,
-        base64,
-        String(mimeType)
-      );
+      // Accept the work and answer straight away with a job id. The client
+      // polls for progress, so queue position and stage are real figures
+      // rather than an animation guessing at what is happening.
+      const job = createJob(verified.uid);
 
-      res.json({ text: result.text });
+      res.status(202).json({
+        jobId: job.id,
+        position: job.position,
+        waitingAhead: job.position - 1,
+      });
+
+      // Runs after the response. A failure here is recorded on the job and
+      // collected by the next poll.
+      void enqueue(async () => {
+        markRunning(job.id);
+        try {
+          const result = await analyseImage(
+            client,
+            tool as VisionTool,
+            base64,
+            String(mimeType)
+          );
+          markDone(job.id, result.text);
+        } catch (err: any) {
+          markFailed(job.id, userFacing(err));
+        }
+      }).catch((err: any) => markFailed(job.id, userFacing(err)));
     } catch (err: any) {
       const message = String(err?.message || '');
       console.error('Vision failed:', message, err?.status || '');
@@ -891,7 +932,9 @@ async function startServer() {
         message.includes('photo') ||
         message.includes('response') ||
         message.includes('busy right now') ||
-        message.includes('Too many requests')
+        message.includes('Too many requests') ||
+        message.includes('Too many people') ||
+        message.includes('Waited too long')
       ) {
         return res.status(422).json({ error: message });
       }
@@ -913,6 +956,36 @@ async function startServer() {
       }
 
       res.status(500).json({ error: 'Could not reach the analysis service. Try again shortly.' });
+    }
+  });
+
+  /**
+   * Poll an analysis job.
+   *
+   * Cheap and frequent, so it is on the read limiter rather than the coach
+   * limiter — polling must not consume the caller's analysis allowance.
+   */
+  app.get('/api/coach/vision/:jobId', readLimiter, async (req, res) => {
+    if (!isAdminAvailable()) return res.status(503).json({ error: 'Unavailable right now.' });
+
+    try {
+      const idToken = (req.headers.authorization || '').replace(/^Bearer\s+/i, '') || undefined;
+      const verified = await verifyUser(idToken);
+      if (!verified) return res.status(401).json({ error: 'Sign in first.' });
+
+      const job = getJob(String(req.params.jobId), verified.uid);
+      if (!job) return res.status(404).json({ error: 'That job has expired. Try again.' });
+
+      res.json({
+        stage: job.stage,
+        position: job.position,
+        waitingAhead: Math.max(0, job.position - 1),
+        result: job.result,
+        error: job.error,
+        elapsedMs: Date.now() - job.createdAt,
+      });
+    } catch {
+      res.status(500).json({ error: 'Could not check that job.' });
     }
   });
 

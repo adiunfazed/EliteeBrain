@@ -142,7 +142,12 @@ export interface VisionResult {
  * the account's tier or gets renamed — which is indistinguishable from a
  * broken feature. Falling through keeps the tool working.
  */
-const VISION_MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-flash-latest'];
+const VISION_MODELS = [
+  'gemini-2.5-flash-lite',
+  'gemini-2.0-flash-lite',
+  'gemini-2.5-flash',
+  'gemini-2.0-flash',
+];
 
 export async function analyseImage(
   ai: any,

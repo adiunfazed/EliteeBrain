@@ -25,6 +25,13 @@ function todayISO(): string {
 export interface CoachContext {
   today: string;
   openTasksToday: string[];
+  /** Timed tasks due today that have asked for a reminder. */
+  timedTasksToday: {
+    id: string;
+    title: string;
+    dueTime: string;
+    reminderMinutesBefore: number;
+  }[];
   overdueTasks: { title: string; daysLate: number; postponed: number }[];
   completedToday: number;
   habitsToday: { title: string; done: boolean; streak: number }[];
@@ -63,6 +70,7 @@ export async function buildCoachContext(uid: string): Promise<CoachContext | nul
 
     // --- Tasks: what's due today, and what's slipping ---
     const openTasksToday: string[] = [];
+    const timedTasksToday: CoachContext['timedTasksToday'] = [];
     const overdueTasks: CoachContext['overdueTasks'] = [];
 
     for (const doc of tasksSnap.docs) {
@@ -70,6 +78,16 @@ export async function buildCoachContext(uid: string): Promise<CoachContext | nul
       if (!t.title) continue;
       if (t.dueDate === today) {
         openTasksToday.push(String(t.title).slice(0, 60));
+
+        // Only tasks that asked for a reminder and have a time to fire at.
+        if (typeof t.dueTime === 'string' && typeof t.reminderMinutesBefore === 'number') {
+          timedTasksToday.push({
+            id: doc.id,
+            title: String(t.title).slice(0, 60),
+            dueTime: t.dueTime,
+            reminderMinutesBefore: t.reminderMinutesBefore,
+          });
+        }
       } else if (t.dueDate && t.dueDate < today) {
         const daysLate = Math.round(
           (Date.parse(`${today}T00:00:00Z`) - Date.parse(`${t.dueDate}T00:00:00Z`)) / 86400000
@@ -156,6 +174,7 @@ export async function buildCoachContext(uid: string): Promise<CoachContext | nul
     return {
       today,
       openTasksToday: openTasksToday.slice(0, 10),
+      timedTasksToday: timedTasksToday.slice(0, 20),
       overdueTasks: overdueTasks.slice(0, 5),
       completedToday: 0,
       habitsToday: habitsToday.slice(0, 10),

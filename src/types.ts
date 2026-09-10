@@ -186,6 +186,10 @@ export interface Task {
   /** ISO timestamp of the most recent postponement. */
   lastPostponedAt?: string;
   recurrence?: Recurrence;
+  /** Minutes before dueTime to send a reminder. 0 means at the time itself. */
+  reminderMinutesBefore?: number;
+  /** Set once a reminder has been sent, so it fires once rather than repeatedly. */
+  reminderSentAt?: string;
   /** Id of the recurring task this one was generated from. */
   seriesId?: string;
   /** Set on the parent once its successor exists, so we never spawn twice. */
@@ -266,6 +270,8 @@ export interface Habit {
   unit?: string;
   /** Optional link to a goal this habit supports. */
   goalId?: string;
+  /** HH:MM to remind at, on days the habit is scheduled. */
+  reminderTime?: string;
   status: HabitStatus;
   createdAt: string;
   updatedAt: string;
@@ -304,6 +310,8 @@ export interface RoutineBlock {
   /** Optional links into the rest of the system. */
   habitId?: string;
   goalId?: string;
+  /** Minutes before startTime to remind. Absent means no reminder. */
+  reminderMinutesBefore?: number;
   active: boolean;
   createdAt: string;
   updatedAt: string;

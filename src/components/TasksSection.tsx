@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Target,
+import { Bell, Target,
   Check,
   Plus,
   Trash2,
@@ -43,6 +43,7 @@ import {
 import { soundFx } from '../utils/audio';
 import { ComposerSheet } from './ComposerSheet';
 import { AddButton } from './AddButton';
+import { TaskComposer } from './TaskComposer';
 import { TaskDetailSheet } from './TaskDetailSheet';
 import { StuckTaskCard } from './StuckTaskCard';
 import { mostStuckTask } from '../lib/adaptive';
@@ -56,7 +57,7 @@ interface Props {
   onStartFocus?: (task: Task) => void;
 }
 
-type TabId = 'today' | 'upcoming' | 'completed';
+type TabId = 'today' | 'overdue' | 'upcoming' | 'completed';
 
 const PRIORITY_STYLE: Record<
   TaskPriority,
@@ -134,7 +135,9 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
   const searchRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
+  const [sortBy, setSortBy] = useState<'date' | 'priority' | 'quick'>('date');
   const [composerOpen, setComposerOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [stuckDismissed, setStuckDismissed] = useState<string | null>(null);
 
@@ -186,12 +189,31 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
 
 
   const visible = useMemo(() => {
-    let base = buckets[tab];
+    let base = tab === 'overdue' ? overdue : buckets[tab];
     if (tab !== 'completed' && timeFilter !== undefined) {
       base = rankTasks(base, { availableMinutes: timeFilter });
     }
-    return searchTasks(base, search);
-  }, [buckets, tab, timeFilter, search]);
+    const found = searchTasks(base, search);
+
+    // Sorting is applied last, so it never fights the search or time filter.
+    const PRIORITY_ORDER = { critical: 0, high: 1, normal: 2, low: 3 } as const;
+
+    if (sortBy === 'priority') {
+      return [...found].sort(
+        (a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority]
+      );
+    }
+
+    if (sortBy === 'quick') {
+      // Tasks without an estimate sort last: an unknown duration is not a
+      // quick win, and guessing one would be worse.
+      return [...found].sort(
+        (a, b) => (a.estimatedMinutes ?? 9999) - (b.estimatedMinutes ?? 9999)
+      );
+    }
+
+    return found;
+  }, [buckets, overdue, tab, timeFilter, search, sortBy]);
 
   const detailTask = useMemo(
     () => tasks.find((t) => t.id === detailId) || null,
@@ -476,6 +498,26 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                 </span>
               )}
 
+              {(task.subtasks?.length || 0) > 0 && (
+                <span className="t-meta flex items-center gap-1">
+                  <ListChecks className="w-3 h-3 shrink-0" />
+                  {task.subtasks!.filter((st) => st.done).length}/{task.subtasks!.length}
+                </span>
+              )}
+
+              {task.recurrence && (
+                <span className="t-meta flex items-center gap-1">
+                  <Repeat className="w-3 h-3 shrink-0" />
+                  {task.recurrence.freq}
+                </span>
+              )}
+
+              {task.reminderMinutesBefore !== undefined && (
+                <span className="t-meta flex items-center gap-1">
+                  <Bell className="w-3 h-3 shrink-0" />
+                </span>
+              )}
+
               {/* Which goal this moves. Without it, finishing a task feels
                   like clearing a list rather than making progress. */}
               {(() => {
@@ -554,8 +596,9 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                 </button>
                 <button
                   onClick={() => {
-                    setEditingId(task.id);
-                    setEditingText(task.title);
+                    soundFx.playClick();
+                    setEditingTask(task);
+                    setComposerOpen(true);
                   }}
                   aria-label="Edit task"
                   className="w-10 h-10 shrink-0 rounded-lg hover:bg-[var(--surface-sunk)] text-[var(--ink-muted)] hover:text-[var(--ink)] flex items-center justify-center transition-colors"
@@ -670,10 +713,37 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
         )}
       </div>
 
+      {/* Sort. Only shown where it changes anything — sorting the Done tab
+          by priority is meaningless. */}
+      {tab !== 'completed' && visible.length > 1 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          {([
+            { id: 'date' as const, label: 'By date' },
+            { id: 'priority' as const, label: 'By priority' },
+            { id: 'quick' as const, label: 'Quickest first' },
+          ]).map((option) => (
+            <button
+              key={option.id}
+              onClick={() => {
+                soundFx.playClick();
+                setSortBy(option.id);
+              }}
+              className="chip"
+              data-active={sortBy === option.id}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Tabs + time filter */}
       <div className="flex items-center gap-1.5 flex-wrap">
         {[
           { id: 'today' as TabId, label: 'Today', count: buckets.today.length },
+          ...(overdue.length > 0
+            ? [{ id: 'overdue' as TabId, label: 'Overdue', count: overdue.length }]
+            : []),
           { id: 'upcoming' as TabId, label: 'Upcoming', count: buckets.upcoming.length },
           { id: 'completed' as TabId, label: 'Done', count: buckets.completed.length },
         ].map((t) => (
@@ -781,160 +851,39 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
 
       <ComposerSheet
         open={composerOpen}
-        title="New task"
-        onClose={() => setComposerOpen(false)}
+        title={editingTask ? 'Edit task' : 'New task'}
+        onClose={() => {
+          setComposerOpen(false);
+          setEditingTask(null);
+        }}
       >
-
-        <div className="flex items-center gap-2">
-          <input
-            ref={inputRef}
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') handleAdd();
-              if (e.key === 'Escape') setDraft('');
-            }}
-            placeholder="What will you do?"
-            maxLength={180}
-            className="flex-1 min-w-0 eb-card-sunk focus:border-[color-mix(in_oklab,var(--signal)_60%,transparent)] rounded-xl px-3 py-2.5 text-sm text-[var(--ink)] placeholder:text-[var(--ink-dim)] outline-none transition-colors"
-          />
-          <motion.button
-            whileTap={{ scale: 0.94 }}
-            onClick={handleAdd}
-            disabled={!parsed?.title || busy}
-            aria-label="Add task"
-            className="eb-btn-primary shrink-0 w-11 h-11 rounded-xl disabled:cursor-not-allowed flex items-center justify-center"
-          >
-            <Plus className="w-5 h-5 shrink-0" />
-          </motion.button>
-        </div>
-
-        {/* Explicit controls. The quick-add syntax still works and takes
-            precedence; these exist so the options are visible. */}
-        <div className="flex items-center gap-1.5 flex-wrap mt-2.5">
-          {([
-            { id: 'today', label: 'Today', date: todayISO() },
-            { id: 'tomorrow', label: 'Tomorrow', date: addDays(todayISO(), 1) },
-            { id: 'week', label: 'Next week', date: addDays(todayISO(), 7) },
-          ] as const).map(({ id, label, date }) => (
-            <button
-              key={id}
-              onClick={() => setDraftDue(draftDue === date ? undefined : date)}
-              className={`text-[11px] font-semibold px-3 py-2 rounded-lg border transition-colors ${
-                draftDue === date
-                  ? 'eb-chip-active'
-                  : 'text-[var(--ink-muted)] border-[var(--rule)] hover:text-[var(--ink)]'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-
-          <label className="relative">
-            <input
-              type="date"
-              value={draftDue || ''}
-              min={todayISO()}
-              onChange={(e) => setDraftDue(e.target.value || undefined)}
-              className="text-[11px] font-semibold px-3 py-2 rounded-lg border border-[var(--rule)] bg-transparent text-[var(--ink-muted)] outline-none focus:border-[var(--signal)]"
-            />
-          </label>
-
-          {draftDue && (
-            <button
-              onClick={() => setDraftDue(undefined)}
-              className="text-[11px] text-[var(--ink-dim)] hover:eb-danger px-2 py-2"
-            >
-              Clear date
-            </button>
-          )}
-        </div>
-
-        <AnimatePresence>
-          {parsed && parsed.detected.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="overflow-hidden"
-            >
-              <p className="t-meta mt-2">
-                Understood:{' '}
-                <span className="eb-done">{parsed.detected.join(' · ')}</span>
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <button
-          onClick={() => setExpanded((v) => !v)}
-          className="t-meta hover:text-[var(--ink-muted)] mt-2.5 transition-colors"
-        >
-          {expanded ? '− Fewer options' : '+ More options'}
-        </button>
-
-        <AnimatePresence>
-          {expanded && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="overflow-hidden"
-            >
-              <div className="pt-3 space-y-2.5">
-                <div className="eb-tabs w-fit max-w-full overflow-x-auto no-scrollbar">
-                  {(Object.keys(CATEGORY_META) as TaskCategory[]).map((c) => (
-                    <button
-                      key={c}
-                      onClick={() => setDraftCategory(draftCategory === c ? undefined : c)}
-                      className={`text-[11px] font-semibold px-2.5 py-1.5 rounded-full border transition-all ${
-                        draftCategory === c
-                          ? CATEGORY_META[c].tint
-                          : 'text-[var(--ink-dim)] border-[var(--rule)] hover:border-[var(--rule-strong)]'
-                      }`}
-                    >
-                      {CATEGORY_META[c].label}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  {DURATION_PRESETS.map((m) => (
-                    <button
-                      key={m}
-                      onClick={() => setDraftMinutes(draftMinutes === m ? undefined : m)}
-                      className={`text-[11px] font-semibold px-2.5 py-1.5 rounded-full border transition-all ${
-                        draftMinutes === m
-                          ? 'text-[var(--signal-ink)] bg-[color-mix(in_oklab,var(--signal)_15%,transparent)] border-[var(--signal)]/30'
-                          : 'text-[var(--ink-dim)] border-[var(--rule)] hover:border-[var(--rule-strong)]'
-                      }`}
-                    >
-                      {m < 60 ? `${m}m` : `${m / 60}h`}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  {(Object.keys(ENERGY_META) as TaskEnergy[]).map((e) => (
-                    <button
-                      key={e}
-                      onClick={() => setDraftEnergy(draftEnergy === e ? undefined : e)}
-                      title={ENERGY_META[e].hint}
-                      className={`text-[11px] font-semibold px-2.5 py-1.5 rounded-full border transition-all flex items-center gap-1 ${
-                        draftEnergy === e
-                          ? 'eb-done bg-emerald-500/12 border-emerald-500/30'
-                          : 'text-[var(--ink-dim)] border-[var(--rule)] hover:border-[var(--rule-strong)]'
-                      }`}
-                    >
-                      <Battery className="w-3.5 h-3.5 shrink-0" />
-                      {ENERGY_META[e].label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <TaskComposer
+          task={editingTask}
+          goals={goals}
+          onCancel={() => {
+            setComposerOpen(false);
+            setEditingTask(null);
+          }}
+          onSave={async (fields) => {
+            if (editingTask) {
+              const updated = { ...editingTask, ...fields, updatedAt: new Date().toISOString() };
+              applyLocal((list) => list.map((t) => (t.id === updated.id ? updated : t)));
+              await saveTask(userId, updated);
+            } else {
+              const task = makeTask(fields.title, fields.priority, fields.dueDate);
+              Object.assign(task, {
+                dueTime: fields.dueTime,
+                estimatedMinutes: fields.estimatedMinutes,
+                goalId: fields.goalId,
+                notes: fields.notes,
+              });
+              applyLocal((list) => [task, ...list]);
+              await saveTask(userId, task);
+            }
+            setComposerOpen(false);
+            setEditingTask(null);
+          }}
+        />
       </ComposerSheet>
 
       {/* Toasts */}
