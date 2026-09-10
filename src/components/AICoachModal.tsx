@@ -159,7 +159,7 @@ export const AICoachModal: React.FC<Props> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn select-none">
+    <div className="fixed inset-0 z-[92] flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn select-none">
       <div className="relative w-full max-w-2xl h-[90vh] max-h-[700px] bg-slate-900 border border-cyan-500/30 rounded-2xl sm:rounded-2xl shadow-none shadow-cyan-500/10 flex flex-col overflow-hidden font-sans my-auto">
         
         {/* ChatGPT-style Header Bar */}

@@ -176,7 +176,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/85 backdrop-blur-md overflow-y-auto select-none font-sans">
+    <div className="fixed inset-0 z-[92] flex items-center justify-center p-3 sm:p-6 bg-slate-950/85 backdrop-blur-md overflow-y-auto select-none font-sans">
       <div className="relative w-full max-w-3xl bg-surface border border-rule rounded-2xl p-5 sm:p-8 shadow-none overflow-hidden my-auto">
         
         {/* Top Header Bar with Progress Indicator */}

@@ -12,7 +12,7 @@ export const MethodsModal: React.FC<MethodsModalProps> = ({ isOpen, onClose }) =
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/30 backdrop-blur-xs select-none animate-fadeIn">
+    <div className="fixed inset-0 z-[92] flex items-center justify-center p-4 bg-ink/30 backdrop-blur-xs select-none animate-fadeIn">
       <div className="bg-surface border border-rule rounded-[2px] w-full max-w-2xl max-h-[90vh] flex flex-col shadow-[0_24px_60px_-20px_rgba(20,23,26,0.28)]">
         {/* Header */}
         <div className="flex items-center justify-between p-4 md:p-6 border-b border-rule bg-surface-sunk">

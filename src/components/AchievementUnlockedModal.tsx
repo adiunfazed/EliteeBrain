@@ -149,7 +149,7 @@ export const AchievementUnlockedModal: React.FC<Props> = ({ unlockedIds, onClose
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
+      <div className="fixed inset-0 z-[92] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
         {/* Animated Background Confetti Light Rays */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center opacity-30">
           <motion.div

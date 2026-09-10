@@ -96,7 +96,7 @@ export const DayProgressCalendar: React.FC<DayProgressCalendarProps> = ({
 
       {/* Interactive Day Details Modal */}
       {selectedDayNum && selectedDayLog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/40 backdrop-blur-xs animate-fadeIn">
+        <div className="fixed inset-0 z-[92] flex items-center justify-center p-4 bg-ink/40 backdrop-blur-xs animate-fadeIn">
           <div className="relative w-full max-w-md bg-surface border border-rule rounded-2xl p-6 shadow-none font-sans">
             <button
               onClick={() => setSelectedDayNum(null)}

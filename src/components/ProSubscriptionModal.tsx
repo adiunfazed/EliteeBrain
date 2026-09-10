@@ -258,7 +258,7 @@ export const ProSubscriptionModal: React.FC<Props> = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-slate-950/85 backdrop-blur-md select-none overflow-y-auto"
+        className="fixed inset-0 z-[92] flex items-center justify-center p-3 md:p-6 bg-slate-950/85 backdrop-blur-md select-none overflow-y-auto"
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.92, y: 20 }}
@@ -282,16 +282,11 @@ export const ProSubscriptionModal: React.FC<Props> = ({
           <span className="t-meta eb-warn uppercase tracking-widest">
             ELITELIFE PRO
           </span>
-          <span className="t-meta eb-warn px-2.5 py-0.5 bg-amber-500/20 border border-amber-500/40 rounded-full flex items-center gap-1 whitespace-nowrap">
-            <Crown className="w-3.5 h-3.5 shrink-0 eb-warn" /> UNLOCK ALL 8 MODULES
-          </span>
         </div>
 
-        <h2 className="text-xl md:text-2xl font-black text-slate-100">
-          Select Your Subscription Plan
-        </h2>
-        <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">
-          One payment. No subscription, no renewal.
+        <h2 className="t-title">Choose your plan</h2>
+        <p className="t-sub mt-1 leading-relaxed">
+          Everything unlocked. Pay monthly, yearly, or once.
         </p>
 
         {/* PENDING VERIFICATION CARD (If payment is waiting in queue) */}

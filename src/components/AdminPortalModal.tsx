@@ -457,7 +457,7 @@ export const AdminPortalModal: React.FC<Props> = ({
 
   if (!isAdmin) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+      <div className="fixed inset-0 z-[92] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
         <div className="relative w-full max-w-md bg-[var(--surface-sunk)] border border-rose-500/40 rounded-2xl p-6 text-center shadow-none text-[var(--ink)]">
           <div className="w-12 h-12 shrink-0 rounded-2xl bg-rose-500/20 eb-danger flex items-center justify-center mx-auto mb-3">
             <AlertTriangle className="w-6 h-6 shrink-0" />
@@ -498,7 +498,7 @@ export const AdminPortalModal: React.FC<Props> = ({
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-black/80 backdrop-blur-md animate-fadeIn">
+    <div className="fixed inset-0 z-[92] flex items-center justify-center p-3 md:p-6 bg-black/80 backdrop-blur-md animate-fadeIn">
       <div className="relative w-full max-w-4xl bg-[var(--surface-sunk)] border border-[var(--rule)] rounded-2xl p-4 sm:p-5 md:p-7 shadow-none text-left overflow-hidden h-[92dvh] sm:h-auto sm:max-h-[90vh] flex flex-col text-[var(--ink)]">
         {/* Top Header */}
         <div className="flex items-center justify-between pb-4 border-b border-[var(--rule)] shrink-0">

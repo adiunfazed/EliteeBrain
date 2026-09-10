@@ -114,7 +114,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
-        className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4"
+        className="fixed inset-0 z-[92] bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4"
       >
         <motion.div
           initial={{ y: '100%', opacity: 0.5 }}
