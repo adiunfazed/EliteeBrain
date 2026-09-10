@@ -143,10 +143,12 @@ export interface VisionResult {
  * broken feature. Falling through keeps the tool working.
  */
 const VISION_MODELS = [
-  'gemini-2.5-flash-lite',
-  'gemini-2.0-flash-lite',
-  'gemini-2.5-flash',
-  'gemini-2.0-flash',
+  'gemini-3.5-flash-lite',
+  'gemini-3.6-flash',
+  // An alias Google repoints as models change, so it cannot go stale the way
+  // a pinned version does. Last resort rather than first choice, since an
+  // alias can shift behaviour without notice.
+  'gemini-flash-latest',
 ];
 
 export async function analyseImage(
@@ -172,9 +174,19 @@ export async function analyseImage(
         lastError = err;
         const status = statusOf(err);
 
-        // A safety block or a malformed request fails identically every time,
-        // so retrying is pointless.
+        // A safety block or malformed request fails identically every time.
         if (status === 400) return Promise.reject(err);
+
+        // 404 means the model no longer exists. Retrying it is pointless;
+        // move straight to the next one — and say so loudly, because a silent
+        // retirement is exactly what made this take several rounds to find.
+        if (status === 404) {
+          console.error(
+            `MODEL RETIRED: ${model} returned 404. Update VISION_MODELS in serverVision.ts. ` +
+              `Detail: ${String(err?.message || '').slice(0, 200)}`
+          );
+          break;
+        }
 
         const retryable = status === 503 || status === 429 || status === 500;
         if (!retryable || attempt === 2) break;

@@ -169,7 +169,7 @@ How to talk:
         try {
           response = await withTimeout(
             ai.models.generateContent({
-              model: 'gemini-2.5-flash',
+              model: 'gemini-3.6-flash',
               contents,
               config: { systemInstruction: systemPrompt, temperature: 0.7 },
             }),
@@ -1025,12 +1025,13 @@ async function startServer() {
     const TINY_PNG =
       'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
 
+    // Includes older names on purpose: seeing which generation still answers
+    // is how the last retirement was diagnosed.
     const models = [
-      'gemini-2.5-flash-lite',
-      'gemini-2.0-flash-lite',
-      'gemini-2.5-flash',
-      'gemini-2.0-flash',
+      'gemini-3.5-flash-lite',
+      'gemini-3.6-flash',
       'gemini-flash-latest',
+      'gemini-2.5-flash',
     ];
 
     const results: any[] = [];
