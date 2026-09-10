@@ -127,32 +127,42 @@ export const RoutineComposer: React.FC<Props> = ({
           <p className="eb-label mb-2">Ends</p>
           {/* Derived, not entered: picking both independently makes it easy to
               create a block that ends before it begins. */}
-          <div
-            className="w-full rounded-xl px-3 py-3 text-[15px] tabular-nums"
-            style={{
-              background: 'var(--surface)',
-              border: '1px solid var(--rule)',
-              color: 'var(--ink-dim)',
+          <input
+            type="time"
+            value={endTime}
+            onChange={(e) => {
+              const next = e.target.value;
+              if (!next) return;
+              // Setting the end directly recomputes the duration, so the two
+              // controls always agree rather than fighting each other.
+              const mins = durationOf(startTime, next);
+              setMinutes(mins > 0 ? mins : 1440 + mins);
             }}
-          >
-            {endTime}
-          </div>
+            className="w-full rounded-xl px-3 py-3 text-[15px] text-[var(--ink)] outline-none"
+            style={{ background: 'var(--surface-sunk)', border: '1px solid var(--rule)' }}
+          />
         </div>
       </div>
 
       <p className="eb-label mt-4 mb-2">How long</p>
       <div className="flex items-center gap-2 flex-wrap">
-        {[15, 30, 45, 60, 90, 120].map((m) => (
+        {[15, 30, 45, 60, 90, 120, 180, 240, 480].map((m) => (
           <button
             key={m}
             onClick={() => setMinutes(m)}
             className="chip"
             data-active={minutes === m}
           >
-            {m < 60 ? `${m}m` : `${m / 60}h`}
+            {m < 60 ? `${m}m` : m % 60 === 0 ? `${m / 60}h` : `${Math.floor(m / 60)}h ${m % 60}m`}
           </button>
         ))}
       </div>
+      <p className="t-meta mt-2">
+        {minutes >= 60
+          ? `${Math.floor(minutes / 60)}h${minutes % 60 ? ` ${minutes % 60}m` : ''}`
+          : `${minutes} minutes`}
+        {' · or set the end time above'}
+      </p>
 
       <p className="eb-label mt-5 mb-2">Type</p>
       <div className="flex items-center gap-2 flex-wrap">

@@ -10,7 +10,6 @@ import { CalendarDays, Target, Repeat,
   AlertTriangle,
   Pencil,
   Trash2,
-  ChevronDown,
   SlidersHorizontal,
 } from 'lucide-react';
 import type { Goal, Habit, HabitLog, Task } from '../types';
@@ -738,83 +737,6 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
           </p>
         )}
 
-        {/* Milestones — collapsed by default so a long list doesn't bury the
-            rest of the goal card. */}
-        {(goal.milestones || []).length > 0 && (
-          <div className="space-y-1.5">
-            <button
-              onClick={() =>
-                setOpenMilestones((prev) => ({ ...prev, [goal.id]: !prev[goal.id] }))
-              }
-              className="eb-press w-full flex items-center justify-between gap-2 py-1.5 text-left"
-            >
-              <span className="eb-label">
-                Milestones{' '}
-                <span className="normal-case tracking-normal text-[var(--ink-muted)]">
-                  {(goal.milestones || []).filter((m) => m.done).length} of{' '}
-                  {(goal.milestones || []).length} done
-                </span>
-              </span>
-              <ChevronDown
-                className={`w-3.5 h-3.5 text-[var(--ink-muted)] shrink-0 transition-transform ${
-                  openMilestones[goal.id] ? 'rotate-180' : ''
-                }`}
-              />
-            </button>
-
-            {openMilestones[goal.id] &&
-              (goal.milestones || []).map((m) => (
-              <button
-                key={m.id}
-                onClick={() => toggleMilestone(goal, m.id)}
-                className="w-full flex items-center gap-2.5 text-left"
-              >
-                <span
-                  className={`shrink-0 w-[18px] h-[18px] rounded-md border flex items-center justify-center ${
-                    m.done
-                      ? 'bg-emerald-500 border-emerald-500 text-slate-950'
-                      : 'border-[var(--rule-strong)]'
-                  }`}
-                >
-                  {m.done && <Check className="w-3.5 h-3.5 shrink-0 stroke-[3]" />}
-                </span>
-                <span
-                  className={`text-xs min-w-0 break-words ${
-                    m.done ? 'text-[var(--ink-dim)] line-through' : 'text-[var(--ink)]'
-                  }`}
-                >
-                  {m.title}
-                </span>
-              </button>
-            ))}
-          </div>
-        )}
-
-        <div className="flex items-center gap-2">
-          <input
-            value={msDraft}
-            onChange={(e) => setMsDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                addMilestone(goal, msDraft);
-                setMsDraft('');
-              }
-            }}
-            placeholder="Add a milestone"
-            className="flex-1 min-w-0 eb-card-sunk focus:border-[color-mix(in_oklab,var(--signal)_60%,transparent)] rounded-lg px-2.5 py-2 text-[11px] text-[var(--ink)] placeholder:text-[var(--ink-dim)] outline-none"
-          />
-          <button
-            onClick={() => {
-              addMilestone(goal, msDraft);
-              setMsDraft('');
-            }}
-            disabled={!msDraft.trim()}
-            aria-label="Add milestone"
-            className="shrink-0 w-10 h-10 rounded-lg eb-card-sunk disabled:opacity-40 text-[var(--ink)] flex items-center justify-center"
-          >
-            <Plus className="w-4 h-4 shrink-0" />
-          </button>
-        </div>
 
         <GoalHistoryChart snapshots={snapshotsFor(snapshots, goal.id)} />
 

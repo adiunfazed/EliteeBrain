@@ -70,6 +70,9 @@ export const TaskComposer: React.FC<Props> = ({ task, goals, onSave, onCancel })
   );
 
   const [showCalendar, setShowCalendar] = useState(false);
+  const [customMinutes, setCustomMinutes] = useState(
+    () => !!task?.estimatedMinutes && !DURATIONS.includes(task.estimatedMinutes)
+  );
   const [showMore, setShowMore] = useState(false);
 
   const save = () => {
@@ -212,14 +215,50 @@ export const TaskComposer: React.FC<Props> = ({ task, goals, onSave, onCancel })
                   {DURATIONS.map((m) => (
                     <button
                       key={m}
-                      onClick={() => setMinutes(minutes === m ? undefined : m)}
+                      onClick={() => {
+                        setMinutes(minutes === m ? undefined : m);
+                        setCustomMinutes(false);
+                      }}
                       className="chip"
-                      data-active={minutes === m}
+                      data-active={minutes === m && !customMinutes}
                     >
                       {m}m
                     </button>
                   ))}
+
+                  <button
+                    onClick={() => setCustomMinutes((v) => !v)}
+                    className="chip"
+                    data-active={customMinutes}
+                  >
+                    Custom
+                  </button>
                 </div>
+
+                {customMinutes && (
+                  <div className="flex items-center gap-3 mt-3">
+                    <input
+                      type="number"
+                      min={1}
+                      max={600}
+                      value={minutes ?? ''}
+                      onChange={(e) => {
+                        const n = Number(e.target.value);
+                        setMinutes(Number.isFinite(n) && n > 0 ? Math.min(600, n) : undefined);
+                      }}
+                      placeholder="Minutes"
+                      className="w-28 rounded-xl px-3 py-2.5 text-[15px] text-[var(--ink)] outline-none"
+                      style={{ background: 'var(--surface-sunk)', border: '1px solid var(--rule)' }}
+                    />
+                    <span className="t-meta">
+                      {minutes
+                        ? minutes >= 60
+                          ? `${Math.floor(minutes / 60)}h ${minutes % 60 || ''}${minutes % 60 ? 'm' : ''}`
+                          : `${minutes} minutes`
+                        : 'Enter minutes'}
+                    </span>
+                  </div>
+                )}
               </div>
 
               {goals.length > 0 && (

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Bell, Target,
+import { ArrowUpDown, Bell, Target,
   Check,
   Plus,
   Trash2,
@@ -445,81 +445,31 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
               </button>
             )}
 
-            <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-              {!task.completed && (
-                <button
-                  onClick={() => cyclePriority(task)}
-                  title="Change priority"
-                  className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border flex items-center gap-1 ${pri.chip}`}
-                >
-                  <PriIcon className="w-3.5 h-3.5 shrink-0" />
-                  {pri.label}
-                </button>
-              )}
-              {task.category && (
-                <span
-                  className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${CATEGORY_META[task.category].tint}`}
-                >
-                  {CATEGORY_META[task.category].label}
-                </span>
-              )}
-              {task.estimatedMinutes ? (
-                <span className="t-meta flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5 shrink-0" />~{task.estimatedMinutes}m
-                </span>
-              ) : null}
-              {task.energy && (
-                <span className="t-meta hidden sm:flex items-center gap-1">
-                  <Battery className="w-3.5 h-3.5 shrink-0" />
-                  {ENERGY_META[task.energy].label}
-                </span>
-              )}
-              {(task.subtasks?.length || 0) > 0 && (
-                <span className="t-meta flex items-center gap-1">
-                  <ListChecks className="w-3.5 h-3.5 shrink-0" />
-                  {subtaskProgress(task).done}/{subtaskProgress(task).total}
-                </span>
-              )}
-              {task.recurrence && (
-                <span className="t-meta flex items-center gap-1">
-                  <Repeat className="w-3.5 h-3.5 shrink-0" />
-                  {describeRecurrence(task.recurrence)}
-                </span>
-              )}
+            <div className="flex items-center gap-3 mt-1.5 flex-wrap">
               {task.dueDate && (
-                <span
-                  className={`t-meta flex items-center gap-1 ${
-                    isOverdue ? 'eb-warn' : ''
-                  }`}
-                >
+                <span className={`t-meta flex items-center gap-1 ${isOverdue ? 'eb-warn' : ''}`}>
                   <Calendar className="w-3.5 h-3.5 shrink-0" />
                   {prettyDate(task.dueDate)}
                   {task.dueTime ? ` · ${task.dueTime}` : ''}
                 </span>
               )}
 
+              {task.estimatedMinutes ? (
+                <span className="t-meta flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5 shrink-0" />
+                  {task.estimatedMinutes}m
+                </span>
+              ) : null}
+
               {(task.subtasks?.length || 0) > 0 && (
                 <span className="t-meta flex items-center gap-1">
-                  <ListChecks className="w-3 h-3 shrink-0" />
-                  {task.subtasks!.filter((st) => st.done).length}/{task.subtasks!.length}
+                  <ListChecks className="w-3.5 h-3.5 shrink-0" />
+                  {subtaskProgress(task).done}/{subtaskProgress(task).total}
                 </span>
               )}
 
-              {task.recurrence && (
-                <span className="t-meta flex items-center gap-1">
-                  <Repeat className="w-3 h-3 shrink-0" />
-                  {task.recurrence.freq}
-                </span>
-              )}
+              {task.recurrence && <Repeat className="w-3.5 h-3.5 shrink-0 text-[var(--ink-dim)]" />}
 
-              {task.reminderMinutesBefore !== undefined && (
-                <span className="t-meta flex items-center gap-1">
-                  <Bell className="w-3 h-3 shrink-0" />
-                </span>
-              )}
-
-              {/* Which goal this moves. Without it, finishing a task feels
-                  like clearing a list rather than making progress. */}
               {(() => {
                 const goal = task.goalId ? goals.find((g) => g.id === task.goalId) : null;
                 if (!goal) return null;
@@ -529,11 +479,59 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                     style={{ color: 'var(--signal-ink)' }}
                   >
                     <Target className="w-3.5 h-3.5 shrink-0" />
-                    <span className="truncate max-w-[140px]">{goal.title}</span>
+                    <span className="truncate max-w-[120px]">{goal.title}</span>
                   </span>
                 );
               })()}
             </div>
+
+            {/* Notes and steps, shown inline. Previously they existed but
+                nothing on the card indicated what they said. */}
+            {task.notes && !task.completed && (
+              <p className="t-sub mt-2 leading-snug line-clamp-2">{task.notes}</p>
+            )}
+
+            {(task.subtasks?.length || 0) > 0 && !task.completed && (
+              <div className="mt-2 space-y-1">
+                {task.subtasks!.slice(0, 3).map((st) => (
+                  <button
+                    key={st.id}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const next = (task.subtasks || []).map((x) =>
+                        x.id === st.id ? { ...x, done: !x.done } : x
+                      );
+                      applyLocal((list) =>
+                        list.map((t) => (t.id === task.id ? { ...t, subtasks: next } : t))
+                      );
+                      void patch(task, { subtasks: next });
+                    }}
+                    className="flex items-center gap-2 text-left w-full"
+                  >
+                    <span
+                      className="w-3.5 h-3.5 rounded shrink-0 flex items-center justify-center"
+                      style={{
+                        background: st.done ? 'var(--done)' : 'transparent',
+                        border: `1px solid ${st.done ? 'var(--done)' : 'var(--rule)'}`,
+                      }}
+                    >
+                      {st.done && <Check className="w-2.5 h-2.5 shrink-0 text-white" />}
+                    </span>
+                    <span
+                      className="t-meta min-w-0 truncate"
+                      style={{
+                        textDecoration: st.done ? 'line-through' : undefined,
+                      }}
+                    >
+                      {st.title}
+                    </span>
+                  </button>
+                ))}
+                {(task.subtasks?.length || 0) > 3 && (
+                  <p className="t-meta">+{task.subtasks!.length - 3} more</p>
+                )}
+              </div>
+            )}
 
             {!task.completed && (isOverdue || tab === 'today') && (
               <div className="flex items-center gap-1.5 mt-2 flex-wrap">
@@ -713,27 +711,21 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
         )}
       </div>
 
-      {/* Sort. Only shown where it changes anything — sorting the Done tab
-          by priority is meaningless. */}
+      {/* Sort. A single cycling control rather than three chips competing
+          with the tabs above them. */}
       {tab !== 'completed' && visible.length > 1 && (
-        <div className="flex items-center gap-2 flex-wrap">
-          {([
-            { id: 'date' as const, label: 'By date' },
-            { id: 'priority' as const, label: 'By priority' },
-            { id: 'quick' as const, label: 'Quickest first' },
-          ]).map((option) => (
-            <button
-              key={option.id}
-              onClick={() => {
-                soundFx.playClick();
-                setSortBy(option.id);
-              }}
-              className="chip"
-              data-active={sortBy === option.id}
-            >
-              {option.label}
-            </button>
-          ))}
+        <div className="flex items-center justify-end">
+          <button
+            onClick={() => {
+              soundFx.playClick();
+              const order = ['date', 'priority', 'quick'] as const;
+              setSortBy(order[(order.indexOf(sortBy) + 1) % order.length]);
+            }}
+            className="btn-text flex items-center gap-1.5"
+          >
+            <ArrowUpDown className="w-3.5 h-3.5 shrink-0" />
+            {sortBy === 'date' ? 'By date' : sortBy === 'priority' ? 'By priority' : 'Quickest first'}
+          </button>
         </div>
       )}
 
@@ -761,8 +753,11 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
           </button>
         ))}
 
+        {/* Time filter, behind a label. Bare numbers gave no clue what
+            they did. */}
         {tab !== 'completed' && (
-          <div className="flex items-center gap-1 ml-auto">
+          <div className="flex items-center gap-1.5 ml-auto">
+            <span className="t-meta shrink-0 hidden sm:inline">Fits in</span>
             {[15, 30, 60].map((m) => (
               <button
                 key={m}

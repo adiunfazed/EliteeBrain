@@ -20,7 +20,10 @@ import { createJob, getJob, markRunning, markDone, markFailed } from './serverJo
  * internal fault and should not be dumped on screen.
  */
 function userFacing(err: any): string {
-  const message = String(err?.message || '');
+  const message = String(err?.message || '').trim();
+  if (!message) return 'That did not work. Please try again.';
+
+  // Deliberate, user-facing messages pass through as written.
   if (
     message.includes('photo') ||
     message.includes('busy right now') ||
@@ -30,7 +33,12 @@ function userFacing(err: any): string {
   ) {
     return message;
   }
-  return 'That did not work. Please try again.';
+
+  // Everything else surfaces its real reason. Masking it is what kept this
+  // undiagnosable across several rounds of fixes. An API key is never part of
+  // an error message, so there is nothing sensitive to leak here.
+  console.error('Vision error surfaced to user:', message);
+  return message.slice(0, 220);
 }
 import { readField, resolveEntitlement } from './serverEntitlement';
 import {
@@ -867,6 +875,7 @@ async function startServer() {
       if (!verified) return res.status(401).json({ error: 'Sign in first.' });
 
       if (!verified.isPro) {
+        console.info('Vision blocked — not Pro:', verified.uid, verified.status);
         return res.status(403).json({
           error:
             verified.status === 'expired'
@@ -987,6 +996,89 @@ async function startServer() {
     } catch {
       res.status(500).json({ error: 'Could not check that job.' });
     }
+  });
+
+  /**
+   * Vision diagnostic.
+   *
+   * Tests each model with a tiny generated image and reports exactly what
+   * happens. Three rounds of fixing this blind has been enough — this gives
+   * ground truth about which models the key can reach and what they say when
+   * they refuse.
+   *
+   * Key-protected: it reveals model availability and error text, which is
+   * useful to an attacker probing the setup.
+   */
+  app.get('/api/diag/vision', async (req, res) => {
+    const key = req.headers['x-probe-key'] || req.query.key;
+    if (!process.env.ADMIN_PROBE_KEY || key !== process.env.ADMIN_PROBE_KEY) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
+    const client = makeGeminiClient();
+    if (!client) {
+      return res.json({ ok: false, reason: 'GEMINI_API_KEY is not set on this server.' });
+    }
+
+    // A 1x1 red PNG — the smallest valid image, so any failure is about the
+    // model or the key rather than the picture.
+    const TINY_PNG =
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+
+    const models = [
+      'gemini-2.5-flash-lite',
+      'gemini-2.0-flash-lite',
+      'gemini-2.5-flash',
+      'gemini-2.0-flash',
+      'gemini-flash-latest',
+    ];
+
+    const results: any[] = [];
+
+    for (const model of models) {
+      const started = Date.now();
+      try {
+        const response = await client.models.generateContent({
+          model,
+          contents: [
+            {
+              role: 'user',
+              parts: [
+                { inlineData: { mimeType: 'image/png', data: TINY_PNG } },
+                { text: 'Reply with the single word: ok' },
+              ],
+            },
+          ],
+        });
+
+        results.push({
+          model,
+          ok: true,
+          ms: Date.now() - started,
+          text: String(response?.text || '').slice(0, 60),
+        });
+      } catch (err: any) {
+        results.push({
+          model,
+          ok: false,
+          ms: Date.now() - started,
+          status: err?.status || err?.code || null,
+          error: String(err?.message || err).slice(0, 300),
+        });
+      }
+    }
+
+    const working = results.filter((r) => r.ok).map((r) => r.model);
+
+    res.json({
+      keyPresent: true,
+      keyLength: (process.env.GEMINI_API_KEY || '').trim().length,
+      workingModels: working,
+      verdict: working.length > 0
+        ? `Vision should work. Reachable: ${working.join(', ')}`
+        : 'No model responded. See the errors below for the reason.',
+      results,
+    });
   });
 
   app.get('/api/health', (req, res) => {
