@@ -283,7 +283,7 @@ export const TaskComposer: React.FC<Props> = ({ task, goals, onSave, onCancel })
               {/* Subtasks. A task with steps is a checklist, and splitting it
                   is what stops it being postponed indefinitely. */}
               <div>
-                <p className="eb-label mb-2">Steps</p>
+                <p className="eb-label mb-2">Subtasks</p>
                 <div className="space-y-1.5">
                   {subtasks.map((st, i) => (
                     <div key={st.id} className="flex items-center gap-2">
@@ -312,14 +312,14 @@ export const TaskComposer: React.FC<Props> = ({ task, goals, onSave, onCancel })
                             )
                           )
                         }
-                        placeholder={`Step ${i + 1}`}
+                        placeholder={`Subtask ${i + 1}`}
                         className="flex-1 min-w-0 rounded-lg px-3 py-2 text-[14px] text-[var(--ink)] outline-none"
                         style={{ background: 'var(--surface-sunk)', border: '1px solid var(--rule)' }}
                       />
 
                       <button
                         onClick={() => setSubtasks((prev) => prev.filter((x) => x.id !== st.id))}
-                        aria-label="Remove step"
+                        aria-label="Remove subtask"
                         className="w-8 h-8 rounded-lg shrink-0 flex items-center justify-center"
                         style={{ color: 'var(--ink-dim)' }}
                       >
@@ -339,7 +339,7 @@ export const TaskComposer: React.FC<Props> = ({ task, goals, onSave, onCancel })
                   className="btn-text mt-2 flex items-center gap-1.5"
                 >
                   <Plus className="w-3.5 h-3.5 shrink-0" />
-                  Add a step
+                  Add a subtask
                 </button>
               </div>
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowUpDown, Bell, Target,
+import { ChevronRight, ArrowUpDown, Bell, Target,
   Check,
   Plus,
   Trash2,
@@ -125,7 +125,6 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
   const [draftEnergy, setDraftEnergy] = useState<TaskEnergy | undefined>();
   const [draftMinutes, setDraftMinutes] = useState<number | undefined>();
   const [draftDue, setDraftDue] = useState<string | undefined>();
-  const [timeFilter, setTimeFilter] = useState<number | undefined>();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState('');
   const [busy, setBusy] = useState(false);
@@ -137,6 +136,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
   const [searchFocused, setSearchFocused] = useState(false);
   const [sortBy, setSortBy] = useState<'date' | 'priority' | 'quick'>('date');
   const [composerOpen, setComposerOpen] = useState(false);
+  const [openSubtasks, setOpenSubtasks] = useState<Record<string, boolean>>({});
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [stuckDismissed, setStuckDismissed] = useState<string | null>(null);
@@ -190,9 +190,6 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
 
   const visible = useMemo(() => {
     let base = tab === 'overdue' ? overdue : buckets[tab];
-    if (tab !== 'completed' && timeFilter !== undefined) {
-      base = rankTasks(base, { availableMinutes: timeFilter });
-    }
     const found = searchTasks(base, search);
 
     // Sorting is applied last, so it never fights the search or time filter.
@@ -213,7 +210,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
     }
 
     return found;
-  }, [buckets, overdue, tab, timeFilter, search, sortBy]);
+  }, [buckets, overdue, tab, search, sortBy]);
 
   const detailTask = useMemo(
     () => tasks.find((t) => t.id === detailId) || null,
@@ -492,8 +489,27 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
             )}
 
             {(task.subtasks?.length || 0) > 0 && !task.completed && (
-              <div className="mt-2 space-y-1">
-                {task.subtasks!.slice(0, 3).map((st) => (
+              <div className="mt-2">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setOpenSubtasks((prev) => ({ ...prev, [task.id]: !prev[task.id] }));
+                  }}
+                  className="flex items-center gap-1.5 t-meta"
+                >
+                  <ChevronRight
+                    className="w-3.5 h-3.5 shrink-0 transition-transform"
+                    style={{ transform: openSubtasks[task.id] ? 'rotate(90deg)' : undefined }}
+                  />
+                  {subtaskProgress(task).done}/{subtaskProgress(task).total} subtasks
+                </button>
+
+                {openSubtasks[task.id] && (
+                  <div
+                    className="mt-2 space-y-1.5 pl-2"
+                    style={{ borderLeft: '1px solid var(--rule)' }}
+                  >
+                    {task.subtasks!.map((st) => (
                   <button
                     key={st.id}
                     onClick={(e) => {
@@ -506,29 +522,29 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                       );
                       void patch(task, { subtasks: next });
                     }}
-                    className="flex items-center gap-2 text-left w-full"
-                  >
-                    <span
-                      className="w-3.5 h-3.5 rounded shrink-0 flex items-center justify-center"
-                      style={{
-                        background: st.done ? 'var(--done)' : 'transparent',
-                        border: `1px solid ${st.done ? 'var(--done)' : 'var(--rule)'}`,
-                      }}
-                    >
-                      {st.done && <Check className="w-2.5 h-2.5 shrink-0 text-white" />}
-                    </span>
-                    <span
-                      className="t-meta min-w-0 truncate"
-                      style={{
-                        textDecoration: st.done ? 'line-through' : undefined,
-                      }}
-                    >
-                      {st.title}
-                    </span>
-                  </button>
-                ))}
-                {(task.subtasks?.length || 0) > 3 && (
-                  <p className="t-meta">+{task.subtasks!.length - 3} more</p>
+                        className="flex items-center gap-2.5 text-left w-full py-1 pl-2"
+                      >
+                        <span
+                          className="w-4 h-4 rounded shrink-0 flex items-center justify-center"
+                          style={{
+                            background: st.done ? 'var(--done)' : 'transparent',
+                            border: `1px solid ${st.done ? 'var(--done)' : 'var(--rule)'}`,
+                          }}
+                        >
+                          {st.done && <Check className="w-3 h-3 shrink-0 text-white" />}
+                        </span>
+                        <span
+                          className="text-[13px] min-w-0 flex-1"
+                          style={{
+                            textDecoration: st.done ? 'line-through' : undefined,
+                            color: st.done ? 'var(--ink-dim)' : 'var(--ink)',
+                          }}
+                        >
+                          {st.title}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
                 )}
               </div>
             )}
@@ -570,10 +586,18 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                       soundFx.playClick();
                       onStartFocus(task);
                     }}
-                    className="text-[11px] font-semibold px-2.5 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 eb-done hover:bg-emerald-500/20 transition-colors flex items-center gap-1"
+                    className="w-full min-h-[42px] rounded-xl flex items-center justify-center gap-2 text-[14px] font-semibold transition-colors"
+                    style={{
+                      background: 'color-mix(in oklab, var(--done) 14%, transparent)',
+                      border: '1px solid color-mix(in oklab, var(--done) 40%, var(--rule))',
+                      color: 'var(--done)',
+                    }}
                   >
-                    <Timer className="w-3.5 h-3.5 shrink-0" />
-                    Focus
+                    <Timer className="w-4 h-4 shrink-0" />
+                    Start focus
+                    {task.estimatedMinutes ? (
+                      <span className="opacity-70">· {task.estimatedMinutes}m</span>
+                    ) : null}
                   </button>
                 )}
               </div>
@@ -753,27 +777,6 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
           </button>
         ))}
 
-        {/* Time filter, behind a label. Bare numbers gave no clue what
-            they did. */}
-        {tab !== 'completed' && (
-          <div className="flex items-center gap-1.5 ml-auto">
-            <span className="t-meta shrink-0 hidden sm:inline">Fits in</span>
-            {[15, 30, 60].map((m) => (
-              <button
-                key={m}
-                onClick={() => setTimeFilter(timeFilter === m ? undefined : m)}
-                title={`Show what fits in ${m} minutes`}
-                className={`chip shrink-0 ${
-                  timeFilter === m
-                    ? 'eb-done bg-emerald-500/12 border-emerald-500/30'
-                    : 'text-[var(--ink-dim)] border-[var(--rule)] hover:border-[var(--rule-strong)]'
-                }`}
-              >
-                {m}m
-              </button>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* List */}

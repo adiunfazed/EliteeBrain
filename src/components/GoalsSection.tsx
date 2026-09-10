@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState , useRef} from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { CalendarDays, Target, Repeat,
+import { MoreHorizontal, X, CalendarDays, Target, Repeat,
   Plus,
   Flame,
   Check,
@@ -12,7 +12,7 @@ import { CalendarDays, Target, Repeat,
   Trash2,
   SlidersHorizontal,
 } from 'lucide-react';
-import type { Goal, Habit, HabitLog, Task } from '../types';
+import type { Goal, Habit, HabitLog, Milestone, Task } from '../types';
 import {
   archiveHabit,
   newGoal,
@@ -74,10 +74,12 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
   const [historyHabit, setHistoryHabit] = useState<Habit | null>(null);
   const [detailGoal, setDetailGoal] = useState<Goal | null>(null);
   const [goalDeadline, setGoalDeadline] = useState<string | undefined>();
+  const [goalMilestones, setGoalMilestones] = useState<Milestone[]>([]);
   const habitInputRef = useRef<HTMLInputElement>(null);
   const [habitDraft, setHabitDraft] = useState('');
   const [expandedHabit, setExpandedHabit] = useState<string | null>(null);
   const [showArchived, setShowArchived] = useState(false);
+  const [openGoalActions, setOpenGoalActions] = useState<Record<string, boolean>>({});
 
   useEffect(() => subscribeGoals(userId, setGoals), [userId]);
   useEffect(() => subscribeHabits(userId, setHabits), [userId]);
@@ -116,9 +118,13 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
     if (!title) return;
     const g = newGoal(title);
     if (goalDeadline) g.deadline = goalDeadline;
+    // Blank rows are noise, so only milestones with a title are kept.
+    const filled = goalMilestones.filter((m) => m.title.trim());
+    if (filled.length > 0) g.milestones = filled;
     setGoals((prev) => [g, ...prev]);
     setGoalDraft('');
     setGoalDeadline(undefined);
+    setGoalMilestones([]);
     setGoalComposerOpen(false);
     soundFx.playClick();
     try {
@@ -811,6 +817,16 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
           </div>
         )}
 
+        <div className="pt-1">
+          <button
+            onClick={() => setOpenGoalActions((prev) => ({ ...prev, [goal.id]: !prev[goal.id] }))}
+            className="btn-text flex items-center gap-1.5"
+          >
+            <MoreHorizontal className="w-3.5 h-3.5 shrink-0" />
+            {openGoalActions[goal.id] ? 'Hide options' : 'Options'}
+          </button>
+
+          {openGoalActions[goal.id] && (
         <div className="flex items-center gap-2 pt-1 flex-wrap">
           <button
             onClick={() =>
@@ -859,6 +875,8 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
             <Trash2 className="w-3.5 h-3.5 shrink-0" />
             Delete
           </button>
+        </div>
+          )}
         </div>
       </div>
     );
@@ -909,6 +927,61 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
             <p className="t-sub mt-2.5 leading-snug">
               Something you are working toward over weeks. Break it into milestones afterwards.
             </p>
+
+            <p className="eb-label mt-5 mb-2">Milestones</p>
+            <p className="t-sub mb-3 leading-snug">
+              The steps that make this goal done. Progress is measured against these.
+            </p>
+
+            <div className="space-y-1.5">
+              {goalMilestones.map((ms, i) => (
+                <div key={ms.id} className="flex items-center gap-2">
+                  <span
+                    className="w-6 h-6 rounded-full shrink-0 flex items-center justify-center t-meta"
+                    style={{ background: 'var(--surface-sunk)', border: '1px solid var(--rule)' }}
+                  >
+                    {i + 1}
+                  </span>
+
+                  <input
+                    value={ms.title}
+                    onChange={(e) =>
+                      setGoalMilestones((prev) =>
+                        prev.map((x) => (x.id === ms.id ? { ...x, title: e.target.value } : x))
+                      )
+                    }
+                    placeholder={`Milestone ${i + 1}`}
+                    maxLength={100}
+                    className="flex-1 min-w-0 rounded-lg px-3 py-2.5 text-[14px] text-[var(--ink)] outline-none"
+                    style={{ background: 'var(--surface-sunk)', border: '1px solid var(--rule)' }}
+                  />
+
+                  <button
+                    onClick={() =>
+                      setGoalMilestones((prev) => prev.filter((x) => x.id !== ms.id))
+                    }
+                    aria-label="Remove milestone"
+                    className="w-8 h-8 rounded-lg shrink-0 flex items-center justify-center"
+                    style={{ color: 'var(--ink-dim)' }}
+                  >
+                    <X className="w-3.5 h-3.5 shrink-0" />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() =>
+                setGoalMilestones((prev) => [
+                  ...prev,
+                  { id: `ms_${Date.now()}_${prev.length}`, title: '', done: false },
+                ])
+              }
+              className="btn-text mt-2 flex items-center gap-1.5"
+            >
+              <Plus className="w-3.5 h-3.5 shrink-0" />
+              Add a milestone
+            </button>
 
             <p className="eb-label mt-5 mb-2">Deadline</p>
             <div className="flex items-center gap-2 flex-wrap">
