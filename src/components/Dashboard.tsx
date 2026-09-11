@@ -1045,7 +1045,11 @@ export const Dashboard: React.FC<Props> = ({
       )}
 
       {/* PERSISTENT BOTTOM NAVIGATION BAR (Fixed at bottom of screen, sleek & compact) */}
-      <div className="fixed bottom-0 inset-x-0 z-40 bg-[#0D1117]/95 backdrop-blur-2xl border-t border-[var(--rule)] px-1.5 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] overflow-visible">
+      <div className="fixed bottom-0 inset-x-0 z-40 bg-[#0D1117]/95 backdrop-blur-2xl px-1.5 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] overflow-visible"
+          style={{
+            borderTop: '1px solid color-mix(in oklab, var(--signal) 40%, var(--rule))',
+            boxShadow: '0 -1px 14px -6px color-mix(in oklab, var(--signal) 55%, transparent)',
+          }}>
         <div
           className="max-w-md mx-auto grid gap-0.5"
           style={{ gridTemplateColumns: `repeat(${navItems.length}, minmax(0, 1fr))` }}
@@ -1066,40 +1070,43 @@ export const Dashboard: React.FC<Props> = ({
                     setActiveSection(item.id);
                   }}
                   data-active={isActive}
-                  className="relative flex flex-col items-center justify-end cursor-pointer min-h-[46px]"
+                  className="relative flex items-end justify-center cursor-pointer min-h-[46px]"
                   aria-label="Arena"
                 >
                   <span
-                    className="absolute left-1/2 -translate-x-1/2 rounded-full flex items-center justify-center transition-transform"
+                    className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center gap-1.5 transition-transform"
                     style={{
-                      width: 52,
-                      height: 52,
-                      // Lifted above the bar, which is what makes it read as
-                      // the centrepiece rather than one tab of five.
-                      bottom: 20,
+                      // A raised tablet rather than a circle: a circle is the
+                      // create-button convention, and this is a destination.
+                      minWidth: 92,
+                      height: 44,
+                      paddingLeft: 10,
+                      paddingRight: 14,
+                      bottom: 16,
+                      borderRadius: 22,
                       background:
-                        'linear-gradient(160deg, color-mix(in oklab, var(--signal) 40%, var(--surface)), var(--surface))',
-                      border: `2px solid ${
-                        isActive ? 'var(--signal)' : 'color-mix(in oklab, var(--signal) 45%, var(--rule))'
+                        'linear-gradient(160deg, color-mix(in oklab, var(--signal) 45%, var(--surface)), color-mix(in oklab, var(--signal) 14%, var(--surface)))',
+                      border: `1.5px solid ${
+                        isActive ? 'var(--signal)' : 'color-mix(in oklab, var(--signal) 55%, var(--rule))'
                       }`,
                       boxShadow: isActive
-                        ? '0 0 0 4px color-mix(in oklab, var(--signal) 16%, transparent), 0 8px 22px -6px color-mix(in oklab, var(--signal) 70%, transparent)'
-                        : '0 6px 18px -8px color-mix(in oklab, var(--signal) 55%, transparent)',
-                      transform: isActive ? 'scale(1.04)' : undefined,
+                        ? '0 1px 0 0 rgba(255,255,255,0.16) inset, 0 0 0 4px color-mix(in oklab, var(--signal) 14%, transparent), 0 8px 22px -6px color-mix(in oklab, var(--signal) 75%, transparent)'
+                        : '0 1px 0 0 rgba(255,255,255,0.12) inset, 0 6px 18px -8px color-mix(in oklab, var(--signal) 60%, transparent)',
+                      transform: isActive ? 'translateY(-1px)' : undefined,
                     }}
                   >
                     {serverStats.authoritative ? (
-                      <RankEmblem tier={tier} size={30} />
+                      <RankEmblem tier={tier} size={26} />
                     ) : (
-                      <Swords className="w-5 h-5 shrink-0" style={{ color: 'var(--signal-ink)' }} />
+                      <Swords className="w-4 h-4 shrink-0" style={{ color: '#fff' }} />
                     )}
-                  </span>
 
-                  <span
-                    className="t-meta tracking-tight font-black uppercase"
-                    style={{ color: isActive ? 'var(--ink)' : 'var(--ink-muted)' }}
-                  >
-                    Arena
+                    <span
+                      className="text-[12px] font-extrabold tracking-wide uppercase"
+                      style={{ color: '#fff' }}
+                    >
+                      Arena
+                    </span>
                   </span>
                 </button>
               );

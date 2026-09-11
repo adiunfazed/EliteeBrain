@@ -365,23 +365,30 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
           {week.map((d, i) => {
             const met = d.value >= target;
             const isToday = i === 6;
+            // Today is still in progress, so an unfinished habit today is not
+            // a miss — marking it red would be wrong and discouraging.
+            const missed = !met && d.due && !isToday;
 
             return (
               <div key={d.iso} className="flex flex-col items-center gap-1 min-w-0">
                 <span className="t-meta leading-none">{d.label}</span>
                 <span
-                  className={`w-full rounded-full ${met ? 'glow-done' : isToday ? 'glow-today' : ''}`}
+                  className={`w-full rounded-full ${
+                    met ? 'glow-done' : isToday ? 'glow-today' : missed ? 'glow-missed' : ''
+                  }`}
                   style={{
                     aspectRatio: '1 / 1',
                     maxWidth: 28,
                     background: met
                       ? 'var(--done)'
-                      : d.due
-                        ? 'var(--surface-sunk)'
-                        : 'transparent',
+                      : missed
+                        ? 'color-mix(in oklab, var(--danger) 55%, transparent)'
+                        : d.due
+                          ? 'var(--surface-sunk)'
+                          : 'transparent',
                     border: isToday
                       ? '2px solid var(--signal)'
-                      : d.due && !met
+                      : d.due && !met && !missed
                         ? '1px solid var(--rule)'
                         : '1px solid transparent',
                   }}

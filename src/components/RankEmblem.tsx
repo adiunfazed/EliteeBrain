@@ -52,18 +52,23 @@ export const RankEmblem: React.FC<Props> = ({ tier, size = 40, locked = false })
       <defs>
         {/* Deeper fill than before: a faint wash read as an empty outline at
             the sizes these actually render. */}
+        {/* Near-solid at the top so the crest reads as metal rather than a
+            dark silhouette, easing to the tier colour at the base. */}
         <linearGradient id={`${id}-fill`} x1="0" y1="0" x2="0.3" y2="1">
-          <stop offset="0%" stopColor={tier.color} stopOpacity="0.62" />
-          <stop offset="55%" stopColor={tier.color} stopOpacity="0.28" />
-          <stop offset="100%" stopColor={tier.color} stopOpacity="0.14" />
+          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.55" />
+          <stop offset="18%" stopColor={tier.color} stopOpacity="1" />
+          <stop offset="70%" stopColor={tier.color} stopOpacity="0.88" />
+          <stop offset="100%" stopColor={tier.color} stopOpacity="0.72" />
         </linearGradient>
 
         {/* Rim light along the top edge, which is what gives a badge the
             impression of being struck rather than drawn. */}
+        {/* Rim light only. The previous version laid black over the lower
+            half, which is what made the emblem look mostly dark. */}
         <linearGradient id={`${id}-rim`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.55" />
-          <stop offset="45%" stopColor="#ffffff" stopOpacity="0.06" />
-          <stop offset="100%" stopColor="#000000" stopOpacity="0.22" />
+          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.45" />
+          <stop offset="40%" stopColor="#ffffff" stopOpacity="0.04" />
+          <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
         </linearGradient>
 
         <clipPath id={`${id}-clip`}>
@@ -77,14 +82,15 @@ export const RankEmblem: React.FC<Props> = ({ tier, size = 40, locked = false })
       <g clipPath={`url(#${id}-clip)`}>
         <rect x="0" y="0" width="100" height="100" fill={`url(#${id}-rim)`} />
         {/* A diagonal sheen — one band, not a full gloss. */}
-        <path d="M-10 34 L110 -6 L110 14 L-10 54 Z" fill="#ffffff" opacity="0.07" />
+        <path d="M-10 36 L110 -4 L110 18 L-10 58 Z" fill="#ffffff" opacity="0.14" />
       </g>
 
       <path
         d={path}
         fill="none"
-        stroke={tier.color}
-        strokeWidth="3.5"
+        stroke="#ffffff"
+        strokeOpacity="0.5"
+        strokeWidth="2.5"
         strokeLinejoin="round"
       />
 
@@ -98,9 +104,9 @@ export const RankEmblem: React.FC<Props> = ({ tier, size = 40, locked = false })
           cy={tier.base === 'BRONZE' ? 64 : 77}
           r="4.2"
           fill="#ffffff"
-          fillOpacity="0.92"
-          stroke={tier.color}
-          strokeWidth="1.4"
+          fillOpacity="0.96"
+          stroke="rgba(0,0,0,0.28)"
+          strokeWidth="1"
         />
       ))}
     </svg>

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'motion/react';
-import { SkipForward, Sun,
+import { Sun,
   Check,
   Trash2,
   Moon,
@@ -450,15 +450,6 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], habits = [], 
                       </span>
 
                       <span className="flex-1" />
-
-                      <button
-                        onClick={() => setBlockState(block, 'skipped')}
-                        aria-label="Skip today"
-                        className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                        style={{ color: 'var(--ink-dim)' }}
-                      >
-                        <SkipForward className="w-4 h-4 shrink-0" />
-                      </button>
 
                       <button
                         onClick={() => {

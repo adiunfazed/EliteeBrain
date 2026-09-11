@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { motion, AnimatePresence, Reorder, useDragControls } from 'motion/react';
-import { GripVertical, CalendarClock, ChevronRight, ArrowUpDown, Target,
+import { motion, AnimatePresence, Reorder } from 'motion/react';
+import { Pencil, GripVertical, CalendarClock, ChevronRight, ArrowUpDown, Target,
   Check,
   Plus,
   X,
@@ -34,6 +34,7 @@ import { soundFx } from '../utils/audio';
 import { ComposerSheet } from './ComposerSheet';
 import { AddButton } from './AddButton';
 import { SwipeableRow } from './SwipeableRow';
+import { DraggableTaskRow } from './DraggableTaskRow';
 import * as Icons from 'lucide-react';
 import { iconNameFor } from '../lib/taskIcons';
 import { byManualOrder, positionFor, needsRebalance, rebalance } from '../lib/ordering';
@@ -139,14 +140,6 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
   const [openSubtasks, setOpenSubtasks] = useState<Record<string, boolean>>({});
   /** Ids picked for a bulk action. */
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  /**
-   * A single drag controller, shared by every row.
-   *
-   * useDragControls is a hook and cannot be called per item. Only one row
-   * drags at a time, so one controller is sufficient — the handle that
-   * starts it determines which row moves.
-   */
-  const dragControls = useDragControls();
   /** Live order during a drag, before it is committed. */
   const [dragOrder, setDragOrder] = useState<Task[] | null>(null);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
@@ -395,20 +388,26 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
    */
   const commitReorder = async (moved: Task) => {
     const next = dragOrder;
-    setDragOrder(null);
     if (!next) return;
 
     const index = next.findIndex((t) => t.id === moved.id);
-    if (index < 0) return;
+    if (index < 0) {
+      setDragOrder(null);
+      return;
+    }
 
     const order = positionFor(
       next.filter((t) => t.id !== moved.id),
       index
     );
 
+    // Local state first, so the list already reflects the new order before
+    // the live drag order is dropped. Clearing it first left one frame of the
+    // old order, which looked exactly like a snap back.
     applyLocal((list) =>
       list.map((t) => (t.id === moved.id ? { ...t, manualOrder: order } : t))
     );
+    setDragOrder(null);
 
     try {
       await patchTask(userId, moved.id, { manualOrder: order });
@@ -588,6 +587,24 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
 
             {task.recurrence && (
               <Repeat className="w-3.5 h-3.5 shrink-0 text-[var(--ink-dim)]" />
+            )}
+
+            {/* Edit. Opens the full composer, so the name, date and everything
+                else can be changed. */}
+            {!task.completed && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  soundFx.playClick();
+                  setEditingTask(task);
+                  setComposerOpen(true);
+                }}
+                aria-label="Edit task"
+                className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center"
+                style={{ color: 'var(--ink-dim)' }}
+              >
+                <Pencil className="w-3.5 h-3.5 shrink-0" />
+              </button>
             )}
 
             {/* Completion control on the right, as the reference has it. */}
@@ -935,38 +952,18 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
           {sortBy === 'date' && selected.size === 0 ? (
             <Reorder.Group
               axis="y"
-              values={visible.filter((t) => !t.pinned)}
-              onReorder={(next) => setDragOrder(next)}
+              values={dragOrder ?? visible.filter((t) => !t.pinned)}
+              onReorder={setDragOrder}
               className="space-y-2"
             >
               {(dragOrder ?? visible.filter((t) => !t.pinned)).map((t) => (
-                <Reorder.Item
+                <DraggableTaskRow
                   key={t.id}
-                  value={t}
-                  // Dragged only from the handle, so scrolling, swiping and
-                  // long-press-to-select all keep working on the card itself.
-                  dragListener={false}
-                  dragControls={dragControls}
+                  task={t}
                   onDragEnd={() => commitReorder(t)}
-                  whileDrag={{ scale: 1.015, zIndex: 30 }}
-                  className="relative"
                 >
-                  {/* Grip. Small and quiet, but a definite target. */}
-                  <button
-                    onPointerDown={(e) => {
-                      e.preventDefault();
-                      soundFx.playClick();
-                      dragControls.start(e);
-                    }}
-                    aria-label="Drag to reorder"
-                    className="absolute right-1 top-1/2 -translate-y-1/2 z-20 w-8 h-12 flex items-center justify-center touch-none"
-                    style={{ color: 'var(--ink-dim)' }}
-                  >
-                    <GripVertical className="w-4 h-4 shrink-0" />
-                  </button>
-
-                  <div className="pr-7">{renderCard(t)}</div>
-                </Reorder.Item>
+                  {renderCard(t)}
+                </DraggableTaskRow>
               ))}
             </Reorder.Group>
           ) : (
