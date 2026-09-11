@@ -6,6 +6,7 @@ import { setHabitValue, setRoutineState } from '../lib/goalStore';
 import { addDays, patchTask, todayISO } from '../lib/tasks';
 import { DailyQuestCard } from './DailyQuestCard';
 import { XpPanel, StreakPanel, FocusPanel } from './dash/StatPanels';
+import { ActionsPanel, HabitsPanel, RoutinePanel } from './dash/TodayPanels';
 import { praiseFor } from '../lib/praise';
 import { reviewToday, suggestNextActions } from '../lib/nextAction';
 import { blocksForDate, minutesOf } from '../lib/routine';
@@ -507,134 +508,56 @@ export const TodayScreen: React.FC<Props> = ({
         </section>
       )}
 
-      {/* ---------------- Routine ---------------- */}
-      {day.length > 0 && (
-        <section className="sec enter enter-2">
-          <div className="sec-head">
-            <span className="sec-label">Today</span>
-            <button onClick={() => onGo('routine')} className="t-meta hover:text-[var(--ink)]">
-              Edit
-            </button>
-          </div>
+      {/* ---------------- Today's work ---------------- */}
+      <section className="sec">
+        <div className="dash">
+          <ActionsPanel
+            tasks={[...todayTasks, ...doneTasks]}
+            onToggle={completeTask}
+            onOpenAll={() => onGo('tasks')}
+          />
 
-          <div className="surface-lift px-4">
-          {day.map(({ block, state }) => {
-            const live = minutesOf(block.startTime) <= nowMin && minutesOf(block.endTime) > nowMin;
-            return (
-              <div key={block.id} className="row">
-                <button
-                  onClick={() => completeBlock(block)}
-                  aria-label={`Complete ${block.title}`}
-                  className={`shrink-0 w-6 h-6 rounded-full border flex items-center justify-center transition-colors ${
-                    state === 'done'
-                      ? 'bg-[var(--done)] border-[var(--done)]'
-                      : 'border-[var(--rule)] hover:border-[var(--signal)]'
-                  }`}
-                >
-                  {state === 'done' && <Check className="w-3.5 h-3.5 shrink-0 text-[#04231F] stroke-[3]" />}
-                </button>
+          <HabitsPanel
+            habits={habits
+              .filter((h: any) => h.status === 'active')
+              .slice(0, 8)
+              .map((h: any) => ({
+                id: h.id,
+                title: h.title,
+                done: valueOn(localHabits, h.id, today) >= Math.max(1, h.targetValue || 1),
+                streak: 0,
+              }))}
+            onToggle={async (id, done) => {
+              const habit = habits.find((h: any) => h.id === id);
+              if (!habit) return;
+              const value = done ? Math.max(1, habit.targetValue || 1) : 0;
 
-                <div className="min-w-0 flex-1">
-                  <p
-                    className={`t-body truncate ${
-                      state === 'done' ? 'text-[var(--ink-muted)] line-through' : ''
-                    }`}
-                  >
-                    {block.title}
-                  </p>
-                  <p className="t-meta mt-0.5">
-                    {block.startTime}–{block.endTime}
-                    {live && state !== 'done' && (
-                      <span className="text-[var(--done)]"> · now</span>
-                    )}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-          </div>
-        </section>
-      )}
+              setLocalHabits((prev) => [
+                { id: `${today}__${id}`, habitId: id, date: today, value, updatedAt: '' },
+                ...prev.filter((l: any) => !(l.habitId === id && l.date === today)),
+              ]);
+              soundFx.playClick();
 
-      {/* ---------------- Tasks ---------------- */}
-      {(todayTasks.length > 0 || doneTasks.length > 0) && (
-        <section className={day.length > 0 ? 'mt-4' : 'sec enter enter-2'}>
-          {day.length > 0 ? (
-            <p className="eb-label mb-2">Tasks</p>
-          ) : (
-            <div className="sec-head">
-              <span className="sec-label">Today</span>
-              <button onClick={() => onGo('tasks')} className="t-meta hover:text-[var(--ink)]">
-                All tasks
-              </button>
-            </div>
-          )}
+              try {
+                await setHabitValue(userId, id, today, value);
+              } catch (e) {
+                console.error('Could not update habit:', e);
+              }
+            }}
+            onOpenAll={() => onGo('habits')}
+          />
 
-          <div className="surface-lift px-4">
-            {todayTasks.map((t) => {
-              const overdue = !!t.dueDate && t.dueDate < today;
-              return (
-                <div key={t.id} className="row">
-                  <button
-                    onClick={() => completeTask(t)}
-                    aria-label={`Complete ${t.title}`}
-                    className="shrink-0 w-6 h-6 rounded-full border border-[var(--rule)] hover:border-[var(--signal)] transition-colors"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="t-body truncate">{t.title}</p>
-                    {(overdue || t.estimatedMinutes) && (
-                      <p className="t-meta mt-0.5">
-                        {overdue && <span className="eb-warn">Overdue</span>}
-                        {overdue && t.estimatedMinutes ? ' · ' : ''}
-                        {t.estimatedMinutes ? `${t.estimatedMinutes} min` : ''}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-
-            {doneTasks.map((t) => (
-              <div key={t.id} className="row opacity-50">
-                <span className="shrink-0 w-6 h-6 rounded-full bg-[var(--done)] flex items-center justify-center">
-                  <Check className="w-3.5 h-3.5 shrink-0 text-[#04231F] stroke-[3]" />
-                </span>
-                <p className="t-body flex-1 min-w-0 truncate line-through">{t.title}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* ---------------- Habits ---------------- */}
-      {openHabits.length > 0 && (
-        <section
-          className={
-            day.length > 0 || todayTasks.length > 0 ? 'mt-4' : 'sec enter enter-3'
-          }
-        >
-          {day.length > 0 || todayTasks.length > 0 ? (
-            <p className="eb-label mb-2">Habits</p>
-          ) : (
-            <div className="sec-head">
-              <span className="sec-label">Today</span>
-            </div>
-          )}
-
-          <div className="surface-lift px-4">
-          {openHabits.map((h) => (
-            <div key={h.id} className="row">
-              <button
-                onClick={() => completeHabit(h)}
-                aria-label={`Complete ${h.title}`}
-                className="shrink-0 w-6 h-6 rounded-full border border-[var(--rule)] hover:border-[var(--signal)] transition-colors"
-              />
-              <p className="t-body flex-1 min-w-0 truncate">{h.title}</p>
-            </div>
-          ))}
-          </div>
-        </section>
-      )}
+          <RoutinePanel
+            blocks={day.map((d: any) => ({
+              id: d.block.id,
+              title: d.block.title,
+              startTime: d.block.startTime,
+              state: d.state,
+            }))}
+            onOpenAll={() => onGo('routine')}
+          />
+        </div>
+      </section>
 
       {/* ---------------- Empty ---------------- */}
       {nothingPlanned && (
