@@ -8,8 +8,6 @@ import { AchievementsDashboardSection } from './AchievementsDashboardSection';
 import { LeaderboardScreen } from './LeaderboardScreen';
 import { ShareCard } from './ShareCard';
 import { RankProgress } from './RankProgress';
-import { RankEmblem } from './RankEmblem';
-import { tierFor } from '../lib/tiers';
 import { LevelUpToast } from './LevelUpToast';
 import { CoachTools, COACH_TOOLS, CoachToolId } from './coach/CoachTools';
 import { ImageToolScreen } from './coach/ImageToolScreen';
@@ -1060,7 +1058,6 @@ export const Dashboard: React.FC<Props> = ({
 
             // The centre tab is raised and carries the rank crest.
             if (item.id === 'progress') {
-              const tier = tierFor(unifiedXp);
 
               return (
                 <button
@@ -1074,16 +1071,15 @@ export const Dashboard: React.FC<Props> = ({
                   aria-label="Arena"
                 >
                   <span
-                    className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center gap-1.5 transition-transform"
+                    className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center gap-2 transition-transform whitespace-nowrap"
                     style={{
-                      // A raised tablet rather than a circle: a circle is the
-                      // create-button convention, and this is a destination.
-                      minWidth: 92,
-                      height: 44,
-                      paddingLeft: 10,
-                      paddingRight: 14,
+                      // An angular plate rather than a pill: straight edges
+                      // suit crossed blades, and a pill reads as a create
+                      // button, which this is not.
+                      width: 108,
+                      height: 42,
                       bottom: 16,
-                      borderRadius: 22,
+                      borderRadius: 10,
                       background:
                         'linear-gradient(160deg, color-mix(in oklab, var(--signal) 45%, var(--surface)), color-mix(in oklab, var(--signal) 14%, var(--surface)))',
                       border: `1.5px solid ${
@@ -1095,15 +1091,15 @@ export const Dashboard: React.FC<Props> = ({
                       transform: isActive ? 'translateY(-1px)' : undefined,
                     }}
                   >
-                    {serverStats.authoritative ? (
-                      <RankEmblem tier={tier} size={26} />
-                    ) : (
-                      <Swords className="w-4 h-4 shrink-0" style={{ color: '#fff' }} />
-                    )}
+                    <Swords
+                      className="w-[17px] h-[17px] shrink-0"
+                      strokeWidth={2.4}
+                      style={{ color: '#fff' }}
+                    />
 
                     <span
-                      className="text-[12px] font-extrabold tracking-wide uppercase"
-                      style={{ color: '#fff' }}
+                      className="text-[12.5px] font-extrabold uppercase whitespace-nowrap"
+                      style={{ color: '#fff', letterSpacing: '0.06em' }}
                     >
                       Arena
                     </span>

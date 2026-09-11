@@ -562,32 +562,30 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                 {task.title}
               </span>
 
-              {meta && (
-                <span className={`t-meta block mt-0.5 truncate ${isOverdue ? 'eb-warn' : ''}`}>
-                  {meta}
-                </span>
-              )}
+              <span className="flex items-center gap-2 mt-0.5">
+                {meta && (
+                  <span className={`t-meta truncate ${isOverdue ? 'eb-warn' : ''}`}>{meta}</span>
+                )}
+
+                {steps.total > 0 && (
+                  <span
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOpenSubtasks((prev) => ({ ...prev, [task.id]: !prev[task.id] }));
+                    }}
+                    className="t-meta flex items-center gap-1 shrink-0"
+                    style={{ color: 'var(--signal-ink)' }}
+                  >
+                    <ListChecks className="w-3.5 h-3.5 shrink-0" />
+                    {steps.done}/{steps.total}
+                  </span>
+                )}
+
+                {task.recurrence && (
+                  <Repeat className="w-3.5 h-3.5 shrink-0" style={{ color: 'var(--ink-dim)' }} />
+                )}
+              </span>
             </button>
-
-            {/* Subtask count. Compact, and the only way in to the list. */}
-            {steps.total > 0 && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setOpenSubtasks((prev) => ({ ...prev, [task.id]: !prev[task.id] }));
-                }}
-                className="shrink-0 flex items-center gap-1 px-2 py-1 rounded-lg t-meta"
-                style={{ background: 'var(--surface-sunk)' }}
-                aria-label="Show subtasks"
-              >
-                <ListChecks className="w-3.5 h-3.5 shrink-0" />
-                {steps.done}/{steps.total}
-              </button>
-            )}
-
-            {task.recurrence && (
-              <Repeat className="w-3.5 h-3.5 shrink-0 text-[var(--ink-dim)]" />
-            )}
 
             {/* Edit. Opens the full composer, so the name, date and everything
                 else can be changed. */}
@@ -806,7 +804,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
             {selected.size} selected
           </p>
 
-          <div className="grid grid-cols-3 gap-2 mt-3">
+          <div className="flex items-center gap-2 mt-3">
             <button
               onClick={async () => {
                 soundFx.playSuccess();
@@ -814,7 +812,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                 setSelected(new Set());
                 for (const t of picked) await handleToggle(t);
               }}
-              className="min-h-[44px] rounded-xl flex items-center justify-center gap-1.5 text-[13px] font-semibold"
+              className="min-h-[44px] px-4 rounded-xl flex items-center justify-center gap-1.5 text-[13px] font-semibold whitespace-nowrap shrink-0"
               style={{
                 background: 'color-mix(in oklab, var(--done) 18%, transparent)',
                 border: '1px solid color-mix(in oklab, var(--done) 45%, var(--rule))',
@@ -833,7 +831,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                 for (const t of picked) await patch(t, { dueDate: value });
                 pushToast(`Moved ${picked.length} to tomorrow.`);
               }}
-              className="min-h-[44px] rounded-xl flex items-center justify-center gap-1.5 text-[13px] font-semibold"
+              className="min-h-[44px] px-4 rounded-xl flex items-center justify-center gap-1.5 text-[13px] font-semibold whitespace-nowrap shrink-0"
               style={{
                 background: 'color-mix(in oklab, var(--warn) 16%, transparent)',
                 border: '1px solid color-mix(in oklab, var(--warn) 40%, var(--rule))',
@@ -846,7 +844,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
 
             <button
               onClick={() => setSelected(new Set())}
-              className="min-h-[44px] rounded-xl flex items-center justify-center text-[13px] font-semibold"
+              className="min-h-[44px] px-4 rounded-xl flex items-center justify-center text-[13px] font-semibold whitespace-nowrap flex-1"
               style={{
                 border: '1px solid var(--rule)',
                 color: 'var(--ink-dim)',
