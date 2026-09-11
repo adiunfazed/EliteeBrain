@@ -173,7 +173,7 @@ export const FocusSection: React.FC<Props> = ({ userId, incomingTask, onConsumeI
       <motion.div
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
-        className={`relative overflow-hidden rounded-2xl p-6 sm:p-10 text-center border transition-colors ${
+        className={`relative overflow-hidden rounded-xl p-6 sm:p-10 text-center border transition-colors ${
           paused
             ? 'bg-[#12141A] border-[var(--rule)]'
             : 'bg-[#0C1714] border-emerald-500/25 shadow-[0_0_50px_-20px_rgba(16,185,129,0.5)]'
@@ -280,7 +280,7 @@ export const FocusSection: React.FC<Props> = ({ userId, incomingTask, onConsumeI
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 flex items-start gap-3"
+            className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 flex items-start gap-3"
           >
             <Check className="w-4 h-4 eb-done shrink-0 mt-0.5 stroke-[3]" />
             <div className="min-w-0 flex-1">
@@ -331,7 +331,7 @@ export const FocusSection: React.FC<Props> = ({ userId, incomingTask, onConsumeI
         )}
       </AnimatePresence>
 
-      <div className="relative overflow-hidden bg-[#121722] border border-[var(--rule)] rounded-2xl p-4 space-y-4">
+      <div className="relative overflow-hidden bg-[#121722] border border-[var(--rule)] rounded-xl p-4 space-y-4">
         <div>
           <p className="eb-label mb-2">
             What are you working on?

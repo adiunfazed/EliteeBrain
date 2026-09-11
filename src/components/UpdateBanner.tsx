@@ -39,7 +39,7 @@ export const UpdateBanner: React.FC<Props> = ({ ready = true }) => {
           style={{ bottom: 'calc(4.75rem + env(safe-area-inset-bottom))' }}
         >
           <div
-            className="pointer-events-auto max-w-md mx-auto rounded-2xl border p-3 flex items-center gap-3"
+            className="pointer-events-auto max-w-md mx-auto rounded-xl border p-3 flex items-center gap-3"
             style={{
               background:
                 'linear-gradient(135deg, color-mix(in oklab, var(--signal) 18%, var(--surface)), var(--surface))',

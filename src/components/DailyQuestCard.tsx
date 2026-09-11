@@ -112,7 +112,7 @@ export const DailyQuestCard: React.FC<Props> = ({
   if (!ready || quest.id === 'pending') {
     return (
       <div
-        className="rounded-2xl border p-4 sm:p-5 animate-pulse"
+        className="rounded-xl border p-4 sm:p-5 animate-pulse"
         style={{ background: 'var(--surface)', borderColor: 'var(--rule)', minHeight: 132 }}
       />
     );
@@ -120,7 +120,7 @@ export const DailyQuestCard: React.FC<Props> = ({
 
   return (
     <div
-      className="rounded-2xl border p-4 sm:p-5"
+      className="rounded-xl border p-4 sm:p-5"
       style={{
         background: completedToday
           ? 'color-mix(in oklab, var(--done) 10%, var(--surface))'

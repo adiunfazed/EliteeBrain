@@ -176,8 +176,8 @@ export const StroopModule: React.FC<Props> = ({ currentLevel, onFinishSession, o
       {/* Main Gameplay Canvas */}
       <div className="flex-1 min-w-0 flex flex-col items-center justify-center p-4 max-w-xl mx-auto w-full">
         {phase === 'intro' && (
-          <div className="text-center bg-slate-900/80 border border-slate-800 p-6 md:p-8 rounded-2xl shadow-none w-full">
-            <div className="inline-flex p-4 rounded-2xl bg-violet-500/10 border border-violet-500/30 text-violet-400 mb-4">
+          <div className="text-center bg-slate-900/80 border border-slate-800 p-6 md:p-8 rounded-xl shadow-none w-full">
+            <div className="inline-flex p-4 rounded-xl bg-violet-500/10 border border-violet-500/30 text-violet-400 mb-4">
               <Zap className="w-8 h-8 shrink-0" />
             </div>
             <h3 className="text-2xl font-black text-slate-100 mb-2">Prefrontal Stroop Test</h3>
@@ -186,7 +186,7 @@ export const StroopModule: React.FC<Props> = ({ currentLevel, onFinishSession, o
             </p>
 
             {/* Visual Example Card */}
-            <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 mb-6 text-center">
+            <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 mb-6 text-center">
               <span className="text-xs text-slate-500 block mb-2 font-bold">EXAMPLE TRIAL:</span>
               <div className="text-4xl font-black font-mono tracking-widest text-blue-500 mb-3">
                 RED
@@ -203,7 +203,7 @@ export const StroopModule: React.FC<Props> = ({ currentLevel, onFinishSession, o
                 setResults([]);
                 startNextTrial();
               }}
-              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-400 hover:to-purple-500 text-white font-black text-sm tracking-wide cursor-pointer shadow-lg shadow-violet-500/20 flex items-center justify-center gap-2"
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-400 hover:to-purple-500 text-white font-black text-sm tracking-wide cursor-pointer shadow-lg shadow-violet-500/20 flex items-center justify-center gap-2"
             >
               <Play className="w-4 h-4 shrink-0 fill-current" />
               <span>Begin Training</span>
@@ -225,7 +225,7 @@ export const StroopModule: React.FC<Props> = ({ currentLevel, onFinishSession, o
             </div>
 
             {/* Stimulus Card */}
-            <div className="relative bg-slate-900 border-2 border-violet-500/60 rounded-2xl p-10 md:p-14 mb-8 shadow-none shadow-violet-500/10 overflow-hidden min-h-[160px] flex items-center justify-center">
+            <div className="relative bg-slate-900 border-2 border-violet-500/60 rounded-xl p-10 md:p-14 mb-8 shadow-none shadow-violet-500/10 overflow-hidden min-h-[160px] flex items-center justify-center">
               <div
                 className="text-5xl md:text-7xl font-black font-mono tracking-widest drop-shadow-none transition-all"
                 style={{ color: inkColor.hex }}
@@ -248,7 +248,7 @@ export const StroopModule: React.FC<Props> = ({ currentLevel, onFinishSession, o
                 <button
                   key={option.name}
                   onClick={() => handleAnswer(option)}
-                  className="py-4 px-3 rounded-2xl bg-slate-900 hover:bg-slate-800 border-2 border-slate-800 hover:border-slate-600 text-slate-100 font-black text-sm md:text-base tracking-wider transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2 shadow-lg"
+                  className="py-4 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border-2 border-slate-800 hover:border-slate-600 text-slate-100 font-black text-sm md:text-base tracking-wider transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2 shadow-lg"
                 >
                   <span className={`w-3.5 h-3.5 rounded-full ${option.bgClass}`} />
                   <span>{option.name}</span>

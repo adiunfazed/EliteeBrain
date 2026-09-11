@@ -458,8 +458,8 @@ export const AdminPortalModal: React.FC<Props> = ({
   if (!isAdmin) {
     return (
       <div className="fixed inset-0 z-[92] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-        <div className="relative w-full max-w-md bg-[var(--surface-sunk)] border border-rose-500/40 rounded-2xl p-6 text-center shadow-none text-[var(--ink)]">
-          <div className="w-12 h-12 shrink-0 rounded-2xl bg-rose-500/20 eb-danger flex items-center justify-center mx-auto mb-3">
+        <div className="relative w-full max-w-md bg-[var(--surface-sunk)] border border-rose-500/40 rounded-xl p-6 text-center shadow-none text-[var(--ink)]">
+          <div className="w-12 h-12 shrink-0 rounded-xl bg-rose-500/20 eb-danger flex items-center justify-center mx-auto mb-3">
             <AlertTriangle className="w-6 h-6 shrink-0" />
           </div>
           <h3 className="text-lg font-black text-[var(--ink)] mb-1">Access Restricted</h3>
@@ -499,7 +499,7 @@ export const AdminPortalModal: React.FC<Props> = ({
 
   return (
     <div className="fixed inset-0 z-[92] flex items-center justify-center p-3 md:p-6 bg-black/80 backdrop-blur-md animate-fadeIn">
-      <div className="relative w-full max-w-4xl bg-[var(--surface-sunk)] border border-[var(--rule)] rounded-2xl p-4 sm:p-5 md:p-7 shadow-none text-left overflow-hidden h-[92dvh] sm:h-auto sm:max-h-[90vh] flex flex-col text-[var(--ink)]">
+      <div className="relative w-full max-w-4xl bg-[var(--surface-sunk)] border border-[var(--rule)] rounded-xl p-4 sm:p-5 md:p-7 shadow-none text-left overflow-hidden h-[92dvh] sm:h-auto sm:max-h-[90vh] flex flex-col text-[var(--ink)]">
         {/* Top Header */}
         <div className="flex items-center justify-between pb-4 border-b border-[var(--rule)] shrink-0">
           <div className="flex items-center gap-2.5">
@@ -584,7 +584,7 @@ export const AdminPortalModal: React.FC<Props> = ({
           }`}
         >
           {/* Admin Merchant UPI Config Card */}
-          <div className="bg-[var(--ground)] border border-[var(--rule)] rounded-2xl p-4">
+          <div className="bg-[var(--ground)] border border-[var(--rule)] rounded-xl p-4">
             <div className="flex items-center justify-between gap-2">
               <div>
                 <span className="text-[10px] text-[var(--ink-muted)] font-mono uppercase tracking-wider block">
@@ -629,7 +629,7 @@ export const AdminPortalModal: React.FC<Props> = ({
           </div>
 
           {/* Admin Telegram Channel Link Config Card */}
-          <div className="bg-[var(--ground)] border border-[var(--rule)] rounded-2xl p-4">
+          <div className="bg-[var(--ground)] border border-[var(--rule)] rounded-xl p-4">
             <div className="flex items-center justify-between gap-2">
               <div>
                 <span className="text-[10px] text-[var(--ink-muted)] font-mono uppercase tracking-wider block">
@@ -674,7 +674,7 @@ export const AdminPortalModal: React.FC<Props> = ({
           </div>
 
           {/* Admin YouTube Channel Link Config Card */}
-          <div className="bg-[var(--ground)] border border-[var(--rule)] rounded-2xl p-4">
+          <div className="bg-[var(--ground)] border border-[var(--rule)] rounded-xl p-4">
             <div className="flex items-center justify-between gap-2">
               <div>
                 <span className="text-[10px] text-[var(--ink-muted)] font-mono uppercase tracking-wider block">
@@ -774,7 +774,7 @@ export const AdminPortalModal: React.FC<Props> = ({
         <div className="mt-4 flex-1 min-w-0 min-h-[38vh] overflow-y-auto overscroll-contain custom-scrollbar space-y-3 pr-1 pb-2">
           {activeTab === 'PAYMENTS' ? (
             filteredRequests.length === 0 ? (
-              <div className="text-center py-12 border border-dashed border-[var(--rule)] rounded-2xl">
+              <div className="text-center py-12 border border-dashed border-[var(--rule)] rounded-xl">
                 <Clock className="w-8 h-8 shrink-0 text-[var(--ink-muted)] mx-auto mb-2" />
                 <p className="text-xs text-[var(--ink-muted)] font-mono">
                   No payment requests found for status "{filterStatus}".
@@ -784,7 +784,7 @@ export const AdminPortalModal: React.FC<Props> = ({
               filteredRequests.map((req) => (
                 <div
                   key={req.id}
-                  className={`p-4 rounded-2xl border transition-all ${
+                  className={`p-4 rounded-xl border transition-all ${
                     req.status === 'PENDING'
                       ? 'bg-[var(--ground)] border-amber-500/40 shadow-lg'
                       : req.status === 'APPROVED'
@@ -863,7 +863,7 @@ export const AdminPortalModal: React.FC<Props> = ({
           ) : (
             /* Registered Users / Email List */
             filteredUsers.length === 0 ? (
-              <div className="text-center py-12 border border-dashed border-[var(--rule)] rounded-2xl">
+              <div className="text-center py-12 border border-dashed border-[var(--rule)] rounded-xl">
                 <Users className="w-8 h-8 shrink-0 text-[var(--ink-muted)] mx-auto mb-2" />
                 <p className="text-xs text-[var(--ink-muted)] font-mono">
                   No registered users match your search.
@@ -874,7 +874,7 @@ export const AdminPortalModal: React.FC<Props> = ({
                 {filteredUsers.map((u) => (
                   <div
                     key={u.uid}
-                    className="eb-lift p-3.5 rounded-2xl bg-[var(--ground)] border border-[var(--rule)] hover:border-[color-mix(in_oklab,var(--signal)_40%,transparent)] flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                    className="eb-lift p-3.5 rounded-xl bg-[var(--ground)] border border-[var(--rule)] hover:border-[color-mix(in_oklab,var(--signal)_40%,transparent)] flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                   >
                     <div className="flex items-start gap-3 min-w-0">
                       {u.photoURL ? (

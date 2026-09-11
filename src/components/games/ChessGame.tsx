@@ -1150,7 +1150,7 @@ export const ChessGame: React.FC<{
               className="absolute inset-0 z-20 bg-[#07090D]/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center"
             >
               <div
-                className={`p-5 rounded-2xl mb-4 border ${
+                className={`p-5 rounded-xl mb-4 border ${
                   gameStatus === 'won' || gameStatus === 'timeout_win'
                     ? 'bg-amber-500/20 eb-warn border-amber-500/40'
                     : gameStatus === 'drawn'
@@ -1450,7 +1450,7 @@ export const ChessGame: React.FC<{
           </div>
 
           {/* Large High-Res Chessboard Stage */}
-          <div className="relative w-full bg-[var(--surface-sunk)] rounded-2xl p-3 sm:p-4 border-2 border-[var(--rule)] shadow-none flex items-center justify-center overflow-hidden">
+          <div className="relative w-full bg-[var(--surface-sunk)] rounded-xl p-3 sm:p-4 border-2 border-[var(--rule)] shadow-none flex items-center justify-center overflow-hidden">
             {/* GameOver Overlay Screen */}
             <AnimatePresence>
               {(gameStatus === 'won' ||
@@ -1462,10 +1462,10 @@ export const ChessGame: React.FC<{
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
-                  className="absolute inset-0 z-30 bg-[#0D1117]/94 backdrop-blur-md rounded-2xl flex flex-col items-center justify-center p-6 text-center"
+                  className="absolute inset-0 z-30 bg-[#0D1117]/94 backdrop-blur-md rounded-xl flex flex-col items-center justify-center p-6 text-center"
                 >
                   <div
-                    className={`p-5 rounded-2xl mb-4 ${
+                    className={`p-5 rounded-xl mb-4 ${
                       gameStatus === 'won' || gameStatus === 'timeout_win'
                         ? 'bg-amber-500/20 eb-warn border border-amber-500/40 shadow-[0_0_30px_rgba(245,158,11,0.3)]'
                         : gameStatus === 'drawn'
@@ -1495,7 +1495,7 @@ export const ChessGame: React.FC<{
                   </h3>
 
                   {eloDelta !== null && (
-                    <div className="flex items-center gap-2 mb-6 bg-[var(--surface)] border border-[var(--rule)] px-5 py-2.5 rounded-2xl">
+                    <div className="flex items-center gap-2 mb-6 bg-[var(--surface)] border border-[var(--rule)] px-5 py-2.5 rounded-xl">
                       <span className="text-xs text-[var(--ink-muted)]">ELO RATING:</span>
                       <div className="flex items-center gap-1 text-sm font-mono font-black text-white">
                         <span>{userElo}</span>
@@ -1532,7 +1532,7 @@ export const ChessGame: React.FC<{
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
-                  className="absolute inset-0 z-40 bg-black/80 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center p-6"
+                  className="absolute inset-0 z-40 bg-black/80 backdrop-blur-sm rounded-xl flex flex-col items-center justify-center p-6"
                 >
                   <h4 className="text-lg font-display font-extrabold text-white mb-4 uppercase tracking-wider">
                     Promote Pawn
@@ -1553,7 +1553,7 @@ export const ChessGame: React.FC<{
                             promotion: p.code,
                           })
                         }
-                        className="px-4 py-3 bg-[var(--surface)] border-2 border-rose-500/60 rounded-2xl hover:bg-rose-500/20 text-white font-mono font-bold text-sm hover:scale-110 transition-all cursor-pointer shadow-none"
+                        className="px-4 py-3 bg-[var(--surface)] border-2 border-rose-500/60 rounded-xl hover:bg-rose-500/20 text-white font-mono font-bold text-sm hover:scale-110 transition-all cursor-pointer shadow-none"
                       >
                         {p.label}
                       </button>
@@ -1565,7 +1565,7 @@ export const ChessGame: React.FC<{
 
             {/* High Quality Chessboard Component */}
             <div
-              className="rounded-2xl overflow-hidden border-2 border-[var(--rule)] shadow-none mx-auto w-full"
+              className="rounded-xl overflow-hidden border-2 border-[var(--rule)] shadow-none mx-auto w-full"
               style={{ maxWidth: 'min(94vw, calc(100vh - 210px))' }}
             >
               <Chessboard

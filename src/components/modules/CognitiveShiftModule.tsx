@@ -196,8 +196,8 @@ export const CognitiveShiftModule: React.FC<Props> = ({ currentLevel, onFinishSe
       {/* Main Screen */}
       <div className="flex-1 min-w-0 flex flex-col items-center justify-center p-4 max-w-xl mx-auto w-full">
         {phase === 'intro' && (
-          <div className="text-center bg-slate-900/80 border border-slate-800 p-6 md:p-8 rounded-2xl shadow-none w-full">
-            <div className="inline-flex p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 eb-danger mb-4">
+          <div className="text-center bg-slate-900/80 border border-slate-800 p-6 md:p-8 rounded-xl shadow-none w-full">
+            <div className="inline-flex p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 eb-danger mb-4">
               <Shuffle className="w-8 h-8 shrink-0" />
             </div>
             <h3 className="text-2xl font-black text-slate-100 mb-2">Tri-Rule Set-Shifting</h3>
@@ -223,7 +223,7 @@ export const CognitiveShiftModule: React.FC<Props> = ({ currentLevel, onFinishSe
                 setElapsedTime(0);
                 startNextTrial();
               }}
-              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-400 hover:to-pink-500 text-white font-black text-sm tracking-wide cursor-pointer shadow-lg shadow-rose-500/20 flex items-center justify-center gap-2"
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-400 hover:to-pink-500 text-white font-black text-sm tracking-wide cursor-pointer shadow-lg shadow-rose-500/20 flex items-center justify-center gap-2"
             >
               <Play className="w-4 h-4 shrink-0 fill-current" />
               <span>Begin Cognitive Shift</span>
@@ -235,7 +235,7 @@ export const CognitiveShiftModule: React.FC<Props> = ({ currentLevel, onFinishSe
           <div className="w-full text-center">
             {/* Rule Banner */}
             <div
-              className={`p-4 rounded-2xl border-2 mb-6 transition-all shadow-none ${
+              className={`p-4 rounded-xl border-2 mb-6 transition-all shadow-none ${
                 currentStimulus.rule === 'PARITY'
                   ? 'bg-amber-950/50 border-amber-500 eb-warn'
                   : currentStimulus.rule === 'MAGNITUDE'
@@ -254,7 +254,7 @@ export const CognitiveShiftModule: React.FC<Props> = ({ currentLevel, onFinishSe
             </div>
 
             {/* Stimulus Card */}
-            <div className="bg-slate-900 border-2 border-slate-700 rounded-2xl p-10 md:p-12 mb-8 shadow-none flex items-center justify-center min-h-[180px]">
+            <div className="bg-slate-900 border-2 border-slate-700 rounded-xl p-10 md:p-12 mb-8 shadow-none flex items-center justify-center min-h-[180px]">
               <span
                 className={`text-7xl font-black font-mono drop-shadow-none ${
                   currentStimulus.color === 'cyan' ? 'text-cyan-400' : 'text-violet-400'
@@ -271,14 +271,14 @@ export const CognitiveShiftModule: React.FC<Props> = ({ currentLevel, onFinishSe
                   <button
                     disabled={phase === 'feedback'}
                     onClick={() => handleResponse('EVEN')}
-                    className="py-4 rounded-2xl bg-slate-900 hover:bg-amber-500 hover:text-slate-950 border border-slate-700 font-black text-base transition-all active:scale-95 cursor-pointer shadow-lg"
+                    className="py-4 rounded-xl bg-slate-900 hover:bg-amber-500 hover:text-slate-950 border border-slate-700 font-black text-base transition-all active:scale-95 cursor-pointer shadow-lg"
                   >
                     EVEN [Key 1 / ←]
                   </button>
                   <button
                     disabled={phase === 'feedback'}
                     onClick={() => handleResponse('ODD')}
-                    className="py-4 rounded-2xl bg-slate-900 hover:bg-amber-500 hover:text-slate-950 border border-slate-700 font-black text-base transition-all active:scale-95 cursor-pointer shadow-lg"
+                    className="py-4 rounded-xl bg-slate-900 hover:bg-amber-500 hover:text-slate-950 border border-slate-700 font-black text-base transition-all active:scale-95 cursor-pointer shadow-lg"
                   >
                     ODD [Key 2 / →]
                   </button>
@@ -290,14 +290,14 @@ export const CognitiveShiftModule: React.FC<Props> = ({ currentLevel, onFinishSe
                   <button
                     disabled={phase === 'feedback'}
                     onClick={() => handleResponse('GREATER')}
-                    className="py-4 rounded-2xl bg-slate-900 hover:bg-emerald-500 hover:text-slate-950 border border-slate-700 font-black text-base transition-all active:scale-95 cursor-pointer shadow-lg"
+                    className="py-4 rounded-xl bg-slate-900 hover:bg-emerald-500 hover:text-slate-950 border border-slate-700 font-black text-base transition-all active:scale-95 cursor-pointer shadow-lg"
                   >
                     GREATER &gt; 5 [1 / ←]
                   </button>
                   <button
                     disabled={phase === 'feedback'}
                     onClick={() => handleResponse('LESS')}
-                    className="py-4 rounded-2xl bg-slate-900 hover:bg-emerald-500 hover:text-slate-950 border border-slate-700 font-black text-base transition-all active:scale-95 cursor-pointer shadow-lg"
+                    className="py-4 rounded-xl bg-slate-900 hover:bg-emerald-500 hover:text-slate-950 border border-slate-700 font-black text-base transition-all active:scale-95 cursor-pointer shadow-lg"
                   >
                     LESS ≤ 5 [2 / →]
                   </button>
@@ -309,14 +309,14 @@ export const CognitiveShiftModule: React.FC<Props> = ({ currentLevel, onFinishSe
                   <button
                     disabled={phase === 'feedback'}
                     onClick={() => handleResponse('CYAN')}
-                    className="py-4 rounded-2xl bg-slate-900 hover:bg-cyan-500 hover:text-slate-950 border border-slate-700 font-black text-base text-cyan-400 transition-all active:scale-95 cursor-pointer shadow-lg"
+                    className="py-4 rounded-xl bg-slate-900 hover:bg-cyan-500 hover:text-slate-950 border border-slate-700 font-black text-base text-cyan-400 transition-all active:scale-95 cursor-pointer shadow-lg"
                   >
                     CYAN [1 / ←]
                   </button>
                   <button
                     disabled={phase === 'feedback'}
                     onClick={() => handleResponse('VIOLET')}
-                    className="py-4 rounded-2xl bg-slate-900 hover:bg-violet-500 hover:text-white border border-slate-700 font-black text-base text-violet-400 transition-all active:scale-95 cursor-pointer shadow-lg"
+                    className="py-4 rounded-xl bg-slate-900 hover:bg-violet-500 hover:text-white border border-slate-700 font-black text-base text-violet-400 transition-all active:scale-95 cursor-pointer shadow-lg"
                   >
                     VIOLET [2 / →]
                   </button>

@@ -49,7 +49,7 @@ export const SettingsModal: React.FC<Props> = ({
 
   return (
     <div className="fixed inset-0 z-[92] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xl animate-in fade-in duration-200">
-      <div className="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 md:p-8 shadow-none">
+      <div className="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-xl p-6 md:p-8 shadow-none">
         
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -71,7 +71,7 @@ export const SettingsModal: React.FC<Props> = ({
         <div className="space-y-4 text-xs">
           
           {/* Edit Athlete Name Section */}
-          <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-3">
+          <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <UserIcon className="w-4 h-4 shrink-0 text-[#8B5CF6]" />
@@ -111,7 +111,7 @@ export const SettingsModal: React.FC<Props> = ({
           </div>
 
           {/* Audio Toggle */}
-          <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-950/80 border border-slate-800">
+          <div className="flex items-center justify-between p-4 rounded-xl bg-slate-950/80 border border-slate-800">
             <div className="flex items-center gap-3">
               {profile.soundEnabled ? (
                 <Volume2 className="w-5 h-5 shrink-0 text-[#8B5CF6]" />
@@ -142,7 +142,7 @@ export const SettingsModal: React.FC<Props> = ({
 
           {/* Replay Onboarding Guide */}
           {onReplayOnboarding && (
-            <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-950/80 border border-slate-800">
+            <div className="flex items-center justify-between p-4 rounded-xl bg-slate-950/80 border border-slate-800">
               <div className="flex items-center gap-3">
                 <Sparkles className="w-5 h-5 shrink-0 eb-warn" />
                 <div>
@@ -165,7 +165,7 @@ export const SettingsModal: React.FC<Props> = ({
           )}
 
           {/* Cloud Synchronization Status */}
-          <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 flex items-center justify-between">
+          <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <CloudCheck className="w-5 h-5 eb-done shrink-0" />
               <div>

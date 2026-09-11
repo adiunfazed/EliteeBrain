@@ -243,10 +243,10 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
     <div className="space-y-6 font-sans select-none">
       
       {/* Top Banner */}
-      <div className="bg-gradient-to-r from-[var(--surface)] via-[#1A1F2C] to-[var(--surface)] border border-[var(--rule)] rounded-2xl p-6 sm:p-8 relative overflow-hidden shadow-none">
+      <div className="bg-gradient-to-r from-[var(--surface)] via-[#1A1F2C] to-[var(--surface)] border border-[var(--rule)] rounded-xl p-6 sm:p-8 relative overflow-hidden shadow-none">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-[color-mix(in_oklab,var(--signal)_20%,transparent)] border-2 border-[var(--signal)]/50 text-[var(--signal-ink)] flex items-center justify-center shadow-lg shrink-0">
+            <div className="w-14 h-14 rounded-xl bg-[color-mix(in_oklab,var(--signal)_20%,transparent)] border-2 border-[var(--signal)]/50 text-[var(--signal-ink)] flex items-center justify-center shadow-lg shrink-0">
               <Bot className="w-8 h-8 shrink-0" />
             </div>
             <div>
@@ -289,7 +289,7 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
       </div>
 
       {/* Main Chat Box Container */}
-      <div className="bg-[var(--surface)] border border-[var(--rule)] rounded-2xl p-3.5 sm:p-5 space-y-3 flex flex-col h-[min(72vh,620px)] relative overflow-hidden">
+      <div className="bg-[var(--surface)] border border-[var(--rule)] rounded-xl p-3.5 sm:p-5 space-y-3 flex flex-col h-[min(72vh,620px)] relative overflow-hidden">
         
         {/* Messages Scroll Area */}
         <div className="flex-1 min-w-0 overflow-y-auto space-y-3 pr-2 scrollbar-thin">
@@ -338,8 +338,8 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
               <div
                 className={`max-w-[82%] sm:max-w-[72%] px-4 py-3 text-sm leading-relaxed break-words ${
                   msg.sender === 'user'
-                    ? 'bg-[var(--signal)] text-white rounded-2xl rounded-br-md shadow-[0_4px_14px_-6px_rgba(139,92,246,0.8)]'
-                    : 'bg-[var(--surface-sunk)] border border-[var(--rule)] text-[#E7EAEE] rounded-2xl rounded-bl-md whitespace-pre-line'
+                    ? 'bg-[var(--signal)] text-white rounded-xl rounded-br-md shadow-[0_4px_14px_-6px_rgba(139,92,246,0.8)]'
+                    : 'bg-[var(--surface-sunk)] border border-[var(--rule)] text-[#E7EAEE] rounded-xl rounded-bl-md whitespace-pre-line'
                 }`}
               >
                 {msg.text}
@@ -369,7 +369,7 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
               <div className="w-8 h-8 rounded-xl bg-[color-mix(in_oklab,var(--signal)_20%,transparent)] border border-[color-mix(in_oklab,var(--signal)_40%,transparent)] text-[var(--signal-ink)] flex items-center justify-center shrink-0">
                 <Bot className="w-4 h-4 shrink-0" />
               </div>
-              <div className="px-4 py-3.5 bg-[var(--surface-sunk)] border border-[var(--rule)] rounded-2xl rounded-bl-md flex items-center gap-1.5">
+              <div className="px-4 py-3.5 bg-[var(--surface-sunk)] border border-[var(--rule)] rounded-xl rounded-bl-md flex items-center gap-1.5">
                 {[0, 1, 2].map((i) => (
                   <motion.span
                     key={i}
@@ -459,13 +459,13 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
                 : 'Pro subscription required for AI Coach chat...'
             }
             disabled={!profile.isProUser || isTyping}
-            className="flex-1 min-w-0 px-4 py-3 bg-[#0D1117] border border-[var(--rule)] text-white font-mono text-xs rounded-2xl focus:border-[var(--signal)] focus:outline-none disabled:opacity-50"
+            className="flex-1 min-w-0 px-4 py-3 bg-[#0D1117] border border-[var(--rule)] text-white font-mono text-xs rounded-xl focus:border-[var(--signal)] focus:outline-none disabled:opacity-50"
           />
 
           <button
             onClick={() => handleSendMessage()}
             disabled={!profile.isProUser || isTyping || !chatInput.trim()}
-            className="p-3 bg-[var(--signal)] hover:bg-[var(--signal)]/90 disabled:opacity-40 text-white rounded-2xl cursor-pointer transition-all active:scale-95 shrink-0"
+            className="p-3 bg-[var(--signal)] hover:bg-[var(--signal)]/90 disabled:opacity-40 text-white rounded-xl cursor-pointer transition-all active:scale-95 shrink-0"
           >
             <Send className="w-4 h-4 shrink-0" />
           </button>
@@ -474,7 +474,7 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
         {/* Non-Pro overlay if applicable */}
         {!profile.isProUser && (
           <div className="absolute inset-x-0 bottom-0 top-36 bg-[#0D1117]/85 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-20 space-y-3">
-            <div className="w-12 h-12 shrink-0 rounded-2xl bg-amber-500/20 border border-amber-500/40 eb-warn flex items-center justify-center">
+            <div className="w-12 h-12 shrink-0 rounded-xl bg-amber-500/20 border border-amber-500/40 eb-warn flex items-center justify-center">
               <Lock className="w-6 h-6 shrink-0" />
             </div>
             <h3 className="text-lg font-display font-bold text-white">

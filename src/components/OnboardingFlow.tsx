@@ -177,7 +177,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 
   return (
     <div className="fixed inset-0 z-[92] flex items-center justify-center p-3 sm:p-6 bg-slate-950/85 backdrop-blur-md overflow-y-auto select-none font-sans">
-      <div className="relative w-full max-w-3xl bg-surface border border-rule rounded-2xl p-5 sm:p-8 shadow-none overflow-hidden my-auto">
+      <div className="relative w-full max-w-3xl bg-surface border border-rule rounded-xl p-5 sm:p-8 shadow-none overflow-hidden my-auto">
         
         {/* Top Header Bar with Progress Indicator */}
         <div className="flex items-center justify-between pb-4 border-b border-rule mb-6">
@@ -257,7 +257,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 </div>
 
                 {/* Animated Brain Synapse Core Visual */}
-                <div className="relative mx-auto w-full max-w-md bg-gradient-to-b from-surface-sunk to-surface border border-rule rounded-2xl p-6 text-center overflow-hidden shadow-inner">
+                <div className="relative mx-auto w-full max-w-md bg-gradient-to-b from-surface-sunk to-surface border border-rule rounded-xl p-6 text-center overflow-hidden shadow-inner">
                   {/* Glowing Animated Ring Background */}
                   <div className="absolute inset-0 flex items-center justify-center opacity-20 pointer-events-none">
                     <motion.div
@@ -271,7 +271,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                     <motion.div
                       animate={{ scale: [1, 1.06, 1] }}
                       transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                      className="w-20 h-20 shrink-0 rounded-2xl bg-signal/20 border-2 border-signal/50 text-signal flex items-center justify-center mb-4 shadow-lg shadow-signal/20"
+                      className="w-20 h-20 shrink-0 rounded-xl bg-signal/20 border-2 border-signal/50 text-signal flex items-center justify-center mb-4 shadow-lg shadow-signal/20"
                     >
                       <Brain className="w-10 h-10 shrink-0" />
                     </motion.div>
@@ -347,7 +347,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 </div>
 
                 {/* Phase Selection Tabs */}
-                <div className="grid grid-cols-3 gap-2 bg-surface-sunk p-1 border border-rule rounded-2xl">
+                <div className="grid grid-cols-3 gap-2 bg-surface-sunk p-1 border border-rule rounded-xl">
                   <button
                     onClick={() => {
                       soundFx.playClick();
@@ -397,7 +397,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.2 }}
-                    className={`p-5 rounded-2xl border ${
+                    className={`p-5 rounded-xl border ${
                       activePhase === 1
                         ? 'bg-amber-500/10 border-amber-500/30'
                         : activePhase === 2
@@ -489,7 +489,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 </div>
 
                 {/* Interactive Simulator Card */}
-                <div className="bg-surface-sunk border border-rule rounded-2xl p-4 sm:p-5 space-y-4">
+                <div className="bg-surface-sunk border border-rule rounded-xl p-4 sm:p-5 space-y-4">
                   <div className="flex items-center justify-between border-b border-rule pb-3">
                     <div className="flex items-center gap-2">
                       <Cpu className="w-4 h-4 shrink-0 text-signal" />
@@ -634,7 +634,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                   const IconComp = currentPillar.icon;
 
                   return (
-                    <div className="bg-surface-sunk border border-rule rounded-2xl p-4 space-y-4">
+                    <div className="bg-surface-sunk border border-rule rounded-xl p-4 space-y-4">
                       <div className="flex items-start justify-between gap-3 border-b border-rule pb-3">
                         <div className="flex items-center gap-3">
                           <div className={`p-2.5 rounded-xl border ${currentPillar.accentColor}`}>
@@ -796,7 +796,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 {/* Setup Controls Form */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Primary Focus Selection */}
-                  <div className="p-4 bg-surface-sunk border border-rule rounded-2xl space-y-2">
+                  <div className="p-4 bg-surface-sunk border border-rule rounded-xl space-y-2">
                     <span className="text-xs font-mono font-bold text-ink block">
                       1. Primary Cognitive Goal
                     </span>
@@ -835,7 +835,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                   </div>
 
                   {/* Daily Commitment Selection */}
-                  <div className="p-4 bg-surface-sunk border border-rule rounded-2xl space-y-3">
+                  <div className="p-4 bg-surface-sunk border border-rule rounded-xl space-y-3">
                     <span className="text-xs font-mono font-bold text-ink block">
                       2. Daily Workout Commitment
                     </span>
@@ -877,7 +877,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 </div>
 
                 {/* Day 1 Launch Banner */}
-                <div className="bg-gradient-to-r from-signal/15 via-indigo-500/10 to-emerald-500/15 border border-signal/30 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="bg-gradient-to-r from-signal/15 via-indigo-500/10 to-emerald-500/15 border border-signal/30 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-signal text-white flex items-center justify-center font-bold font-mono text-sm shrink-0 shadow-lg shadow-signal/30">
                       <Play className="w-5 h-5 shrink-0 fill-current ml-0.5" />

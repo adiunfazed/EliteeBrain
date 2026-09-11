@@ -160,7 +160,7 @@ export const AICoachModal: React.FC<Props> = ({
 
   return (
     <div className="fixed inset-0 z-[92] flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn select-none">
-      <div className="relative w-full max-w-2xl h-[90vh] max-h-[700px] bg-slate-900 border border-cyan-500/30 rounded-2xl sm:rounded-2xl shadow-none shadow-cyan-500/10 flex flex-col overflow-hidden font-sans my-auto">
+      <div className="relative w-full max-w-2xl h-[90vh] max-h-[700px] bg-slate-900 border border-cyan-500/30 rounded-xl sm:rounded-xl shadow-none shadow-cyan-500/10 flex flex-col overflow-hidden font-sans my-auto">
         
         {/* ChatGPT-style Header Bar */}
         <div className="p-3.5 sm:p-4 border-b border-slate-800 bg-slate-950/90 flex items-center justify-between shrink-0">
@@ -238,7 +238,7 @@ export const AICoachModal: React.FC<Props> = ({
 
                 {/* Message Speech Bubble */}
                 <div
-                  className={`rounded-2xl p-3.5 text-xs sm:text-sm leading-relaxed ${
+                  className={`rounded-xl p-3.5 text-xs sm:text-sm leading-relaxed ${
                     isCoach
                       ? 'bg-slate-950/90 border border-slate-800 text-slate-200 shadow-md'
                       : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-medium shadow-lg'
@@ -263,7 +263,7 @@ export const AICoachModal: React.FC<Props> = ({
               <div className="w-8 h-8 rounded-xl bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 flex items-center justify-center shrink-0">
                 <Bot className="w-4 h-4 shrink-0" />
               </div>
-              <div className="bg-slate-950/90 border border-slate-800 rounded-2xl px-4 py-3 text-xs text-slate-400 flex items-center gap-2">
+              <div className="bg-slate-950/90 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-400 flex items-center gap-2">
                 <div className="w-2 h-2 shrink-0 rounded-full bg-cyan-400 animate-bounce" />
                 <div className="w-2 h-2 shrink-0 rounded-full bg-cyan-400 animate-bounce [animation-delay:0.2s]" />
                 <div className="w-2 h-2 shrink-0 rounded-full bg-cyan-400 animate-bounce [animation-delay:0.4s]" />
@@ -274,7 +274,7 @@ export const AICoachModal: React.FC<Props> = ({
 
           {/* Pro Unlock Banner inside Chat if not Pro */}
           {!profile.isProUser && (
-            <div className="p-4 bg-gradient-to-r from-amber-500/10 via-amber-600/10 to-cyan-500/10 border border-amber-500/40 rounded-2xl text-center space-y-2 mt-4 shadow-md">
+            <div className="p-4 bg-gradient-to-r from-amber-500/10 via-amber-600/10 to-cyan-500/10 border border-amber-500/40 rounded-xl text-center space-y-2 mt-4 shadow-md">
               <div className="flex items-center justify-center gap-1.5 eb-warn font-bold text-xs uppercase tracking-wider">
                 <Crown className="w-4 h-4 shrink-0" />
                 <span>Unlock the AI Coach</span>

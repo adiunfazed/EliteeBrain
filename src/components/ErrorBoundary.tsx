@@ -46,10 +46,10 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       return (
         <div className="min-h-screen bg-[#0B0E14] text-[var(--ink)] flex items-center justify-center p-4 font-sans select-none">
-          <div className="max-w-md w-full bg-[var(--surface)] border border-[var(--rule)] rounded-2xl p-6 sm:p-8 shadow-none space-y-6 text-center relative overflow-hidden">
+          <div className="max-w-md w-full bg-[var(--surface)] border border-[var(--rule)] rounded-xl p-6 sm:p-8 shadow-none space-y-6 text-center relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-500 via-amber-500 to-indigo-500" />
             
-            <div className="w-14 h-14 shrink-0 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center justify-center mx-auto text-red-400">
+            <div className="w-14 h-14 shrink-0 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center justify-center mx-auto text-red-400">
               <AlertTriangle className="w-7 h-7 shrink-0" />
             </div>
 

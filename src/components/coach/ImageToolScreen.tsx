@@ -275,7 +275,7 @@ export const ImageToolScreen: React.FC<Props> = ({ tool, onBack }) => {
 
       <div className="flex items-center gap-3.5 mt-6">
         <span
-          className="w-12 h-12 rounded-2xl shrink-0 flex items-center justify-center"
+          className="w-12 h-12 rounded-xl shrink-0 flex items-center justify-center"
           style={{ background: `color-mix(in oklab, ${tool.accent} 16%, transparent)` }}
         >
           <Icon className="w-6 h-6 shrink-0" style={{ color: tool.accent }} />
@@ -306,14 +306,14 @@ export const ImageToolScreen: React.FC<Props> = ({ tool, onBack }) => {
           animate={{ opacity: 1, scale: 1 }}
           src={preview}
           alt=""
-          className="w-full rounded-2xl mt-6 max-h-[300px] object-cover"
+          className="w-full rounded-xl mt-6 max-h-[300px] object-cover"
           style={{ border: '1px solid var(--rule)' }}
         />
       )}
 
       {busy && (
         <div
-          className="rounded-2xl p-5 mt-6"
+          className="rounded-xl p-5 mt-6"
           style={{ background: 'var(--surface)', border: '1px solid var(--rule)' }}
         >
           <div className="flex items-baseline justify-between gap-3">
@@ -353,7 +353,7 @@ export const ImageToolScreen: React.FC<Props> = ({ tool, onBack }) => {
 
       {error && (
         <div
-          className="rounded-2xl p-4 mt-6 flex items-start gap-3"
+          className="rounded-xl p-4 mt-6 flex items-start gap-3"
           style={{
             background: 'color-mix(in oklab, var(--warn) 10%, transparent)',
             border: '1px solid color-mix(in oklab, var(--warn) 35%, var(--rule))',
@@ -379,7 +379,7 @@ export const ImageToolScreen: React.FC<Props> = ({ tool, onBack }) => {
             return (
               <div
                 key={i}
-                className="rounded-2xl p-4"
+                className="rounded-xl p-4"
                 style={{
                   background: score !== null
                     ? `linear-gradient(150deg, color-mix(in oklab, ${tool.accent} 16%, var(--surface)), var(--surface))`

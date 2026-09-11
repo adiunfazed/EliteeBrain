@@ -194,7 +194,7 @@ export const TodayPane: React.FC<Props> = ({
       </div>
 
       {empty && (
-        <div className="text-center py-12 px-6 border border-dashed border-[var(--rule)] rounded-2xl">
+        <div className="text-center py-12 px-6 border border-dashed border-[var(--rule)] rounded-xl">
           <p className="eb-heading text-base">Nothing scheduled yet.</p>
           <p className="text-[11px] text-[var(--ink-muted)] mt-1.5 max-w-sm mx-auto leading-relaxed">
             Build the routine you want to follow each day, then tick it off here. Link blocks to a
@@ -234,7 +234,7 @@ export const TodayPane: React.FC<Props> = ({
                 key={block.id}
                 layout
                 style={{ color: BLOCK_TINT[block.kind] || 'var(--ink-muted)' }}
-                className={`eb-card-tap eb-rail relative overflow-hidden rounded-2xl border p-3.5 flex items-center gap-3 ${
+                className={`eb-card-tap eb-rail relative overflow-hidden rounded-xl border p-3.5 flex items-center gap-3 ${
                   state === 'done'
                     ? 'bg-emerald-500/[0.09] border-emerald-500/30'
                     : state === 'partial'
@@ -293,7 +293,7 @@ export const TodayPane: React.FC<Props> = ({
                   key={habit.id}
                   onClick={() => toggleHabit(habit)}
                   style={stats.completedToday ? undefined : { color: TILE_HEX[i % TILE_HEX.length] }}
-                  className={`eb-card-tap shrink-0 w-full max-w-[136px] rounded-2xl p-3.5 text-left ${
+                  className={`eb-card-tap shrink-0 w-full max-w-[136px] rounded-xl p-3.5 text-left ${
                     stats.completedToday ? `${tint} eb-raised` : 'eb-tint eb-card-sunk'
                   }`}
                 >
@@ -385,7 +385,7 @@ export const TodayPane: React.FC<Props> = ({
               <button
                 key={t.id}
                 onClick={() => onGo('tasks')}
-                className="eb-press w-full text-left rounded-2xl border border-[var(--rule)] bg-[var(--ground)] p-3"
+                className="eb-press w-full text-left rounded-xl border border-[var(--rule)] bg-[var(--ground)] p-3"
               >
                 <p className="text-sm text-[var(--ink)] break-words">{t.title}</p>
               </button>

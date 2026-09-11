@@ -23,7 +23,7 @@ export const DayProgressCalendar: React.FC<DayProgressCalendarProps> = ({
   const selectedDayLog = selectedDayNum ? profile.dailyLogs[selectedDayNum] : null;
 
   return (
-    <div className={`bg-surface border border-rule rounded-2xl p-4 md:p-6 shadow-md ${className}`}>
+    <div className={`bg-surface border border-rule rounded-xl p-4 md:p-6 shadow-md ${className}`}>
       {/* Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-rule mb-4">
         <div>
@@ -97,7 +97,7 @@ export const DayProgressCalendar: React.FC<DayProgressCalendarProps> = ({
       {/* Interactive Day Details Modal */}
       {selectedDayNum && selectedDayLog && (
         <div className="fixed inset-0 z-[92] flex items-center justify-center p-4 bg-ink/40 backdrop-blur-xs animate-fadeIn">
-          <div className="relative w-full max-w-md bg-surface border border-rule rounded-2xl p-6 shadow-none font-sans">
+          <div className="relative w-full max-w-md bg-surface border border-rule rounded-xl p-6 shadow-none font-sans">
             <button
               onClick={() => setSelectedDayNum(null)}
               className="absolute top-4 right-4 p-1.5 bg-surface hover:bg-surface-sunk border border-rule rounded-xl text-ink-muted hover:text-ink cursor-pointer"

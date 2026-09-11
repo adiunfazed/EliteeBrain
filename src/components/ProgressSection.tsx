@@ -133,7 +133,7 @@ export const ProgressSection: React.FC<Props> = ({ profile, userId }) => {
         </p>
 
         {records.length === 0 ? (
-          <div className="mt-3 text-center py-10 px-6 border border-dashed border-[var(--rule)] rounded-2xl">
+          <div className="mt-3 text-center py-10 px-6 border border-dashed border-[var(--rule)] rounded-xl">
             <Trophy className="w-7 h-7 shrink-0 text-[var(--ink-dim)] mx-auto mb-2.5" />
             <p className="text-sm font-bold text-[var(--ink)] font-mono">No records yet</p>
             <p className="text-[11px] text-[var(--ink-muted)] mt-1 max-w-xs mx-auto leading-relaxed">

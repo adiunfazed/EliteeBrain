@@ -202,8 +202,8 @@ export const DigitSpanModule: React.FC<Props> = ({ currentLevel, onFinishSession
       {/* Main Gameplay Screen */}
       <div className="flex-1 min-w-0 flex flex-col items-center justify-center p-4 max-w-xl mx-auto w-full">
         {phase === 'intro' && (
-          <div className="text-center bg-slate-900/80 border border-slate-800 p-6 md:p-8 rounded-2xl shadow-none w-full">
-            <div className="inline-flex p-4 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 mb-4">
+          <div className="text-center bg-slate-900/80 border border-slate-800 p-6 md:p-8 rounded-xl shadow-none w-full">
+            <div className="inline-flex p-4 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 mb-4">
               <Eye className="w-8 h-8 shrink-0" />
             </div>
             <h3 className="text-2xl font-black text-slate-100 mb-2">Memory Engram Challenge</h3>
@@ -212,7 +212,7 @@ export const DigitSpanModule: React.FC<Props> = ({ currentLevel, onFinishSession
               <span className="text-cyan-300 font-bold">{(exposureDurationMs / 1000).toFixed(1)} seconds</span>. Focus your mind, memorize the exact pattern, and type it from memory once hidden.
             </p>
 
-            <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 text-left text-xs mb-6 space-y-3">
+            <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 text-left text-xs mb-6 space-y-3">
               <div className="flex justify-between items-center text-slate-400">
                 <span>Sequence Length:</span>
                 <span className="font-bold text-slate-200">{sequenceLength} Digits</span>
@@ -257,7 +257,7 @@ export const DigitSpanModule: React.FC<Props> = ({ currentLevel, onFinishSession
                 setTrialResults([]);
                 startNextTrial();
               }}
-              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-sm tracking-wide cursor-pointer shadow-lg shadow-cyan-500/20 flex items-center justify-center gap-2"
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-sm tracking-wide cursor-pointer shadow-lg shadow-cyan-500/20 flex items-center justify-center gap-2"
             >
               <Play className="w-4 h-4 shrink-0 fill-current" />
               <span>Begin Training</span>
@@ -269,7 +269,7 @@ export const DigitSpanModule: React.FC<Props> = ({ currentLevel, onFinishSession
         {phase === 'memorize' && (
           <div className="w-full text-center">
             {getReadyCount !== null ? (
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 md:p-12 text-center animate-pulse shadow-none flex flex-col items-center">
+              <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 md:p-12 text-center animate-pulse shadow-none flex flex-col items-center">
                 <span className="text-xs font-bold uppercase tracking-widest text-slate-400 block mb-3">
                   GET READY TO READ
                 </span>
@@ -302,7 +302,7 @@ export const DigitSpanModule: React.FC<Props> = ({ currentLevel, onFinishSession
                 </div>
 
                 {/* Sequence Flash Box */}
-                <div className="relative bg-slate-900 border-2 border-cyan-500/60 rounded-2xl p-8 md:p-12 mb-6 shadow-none shadow-cyan-500/10 overflow-hidden">
+                <div className="relative bg-slate-900 border-2 border-cyan-500/60 rounded-xl p-8 md:p-12 mb-6 shadow-none shadow-cyan-500/10 overflow-hidden">
                   <div className="text-4xl md:text-6xl font-black font-mono tracking-[0.3em] text-slate-100 drop-shadow-lg pl-[0.3em]">
                     {currentSequence}
                   </div>
@@ -319,7 +319,7 @@ export const DigitSpanModule: React.FC<Props> = ({ currentLevel, onFinishSession
                 {/* Additional Prominent Skip Button */}
                 <button
                   onClick={handleSkipTimer}
-                  className="w-full py-3 px-5 rounded-2xl bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/50 text-cyan-300 text-xs font-mono font-bold cursor-pointer transition-all active:scale-95 touch-manipulation flex items-center justify-center gap-2 shadow-lg"
+                  className="w-full py-3 px-5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/50 text-cyan-300 text-xs font-mono font-bold cursor-pointer transition-all active:scale-95 touch-manipulation flex items-center justify-center gap-2 shadow-lg"
                 >
                   <FastForward className="w-4 h-4 shrink-0 text-cyan-400" />
                   <span>I'm Ready → Skip to Type Answer</span>
@@ -338,7 +338,7 @@ export const DigitSpanModule: React.FC<Props> = ({ currentLevel, onFinishSession
 
             {/* Input Display Box */}
             <div
-              className={`bg-slate-900 border-2 rounded-2xl p-6 md:p-8 mb-6 shadow-none transition-all ${
+              className={`bg-slate-900 border-2 rounded-xl p-6 md:p-8 mb-6 shadow-none transition-all ${
                 phase === 'feedback'
                   ? trialResults[trialResults.length - 1]?.correct
                     ? 'border-emerald-500/80 bg-emerald-950/20 eb-done'
@@ -363,33 +363,33 @@ export const DigitSpanModule: React.FC<Props> = ({ currentLevel, onFinishSession
 
             {/* On-Screen Virtual Keypad */}
             {phase === 'recall' && (
-              <div className="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl">
+              <div className="bg-slate-900/80 border border-slate-800 p-4 rounded-xl">
                 <div className="grid grid-cols-3 gap-2 max-w-xs mx-auto mb-3">
                   {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((num) => (
                     <button
                       key={num}
                       onClick={() => handleVirtualKey(num)}
-                      className="py-3 rounded-2xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-xl font-bold font-mono text-slate-200 active:scale-95 transition-all cursor-pointer"
+                      className="py-3 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-xl font-bold font-mono text-slate-200 active:scale-95 transition-all cursor-pointer"
                     >
                       {num}
                     </button>
                   ))}
                   <button
                     onClick={handleVirtualDelete}
-                    className="py-3 rounded-2xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-400 flex items-center justify-center active:scale-95 transition-all cursor-pointer"
+                    className="py-3 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-400 flex items-center justify-center active:scale-95 transition-all cursor-pointer"
                   >
                     <Delete className="w-5 h-5 shrink-0" />
                   </button>
                   <button
                     onClick={() => handleVirtualKey('0')}
-                    className="py-3 rounded-2xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-xl font-bold font-mono text-slate-200 active:scale-95 transition-all cursor-pointer"
+                    className="py-3 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-xl font-bold font-mono text-slate-200 active:scale-95 transition-all cursor-pointer"
                   >
                     0
                   </button>
                   <button
                     onClick={handleSubmitInput}
                     disabled={userInput.length === 0}
-                    className="py-3 rounded-2xl bg-cyan-500 hover:bg-cyan-400 disabled:opacity-40 text-slate-950 flex items-center justify-center font-bold active:scale-95 transition-all cursor-pointer shadow-lg shadow-cyan-500/20"
+                    className="py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 disabled:opacity-40 text-slate-950 flex items-center justify-center font-bold active:scale-95 transition-all cursor-pointer shadow-lg shadow-cyan-500/20"
                   >
                     <Check className="w-6 h-6 shrink-0 stroke-[3]" />
                   </button>

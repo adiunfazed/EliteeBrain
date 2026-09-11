@@ -60,7 +60,7 @@ export const LevelUpToast: React.FC<Props> = ({ careerXp }) => {
           role="status"
         >
           <div
-            className="max-w-sm mx-auto rounded-2xl p-3.5 flex items-center gap-3.5"
+            className="max-w-sm mx-auto rounded-xl p-3.5 flex items-center gap-3.5"
             style={{
               background: `linear-gradient(135deg, color-mix(in oklab, ${shown.color} 22%, var(--surface)), var(--surface))`,
               border: `1px solid color-mix(in oklab, ${shown.color} 50%, var(--rule))`,

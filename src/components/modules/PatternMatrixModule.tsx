@@ -341,8 +341,8 @@ export const PatternMatrixModule: React.FC<Props> = ({ currentLevel, onFinishSes
       {/* Main Container */}
       <div className="flex-1 min-w-0 flex flex-col items-center justify-center p-4 max-w-xl mx-auto w-full">
         {phase === 'intro' && (
-          <div className="text-center bg-slate-900/80 border border-slate-800 p-6 md:p-8 rounded-2xl shadow-none w-full">
-            <div className="inline-flex p-4 rounded-2xl bg-blue-500/10 border border-blue-500/30 text-blue-400 mb-4">
+          <div className="text-center bg-slate-900/80 border border-slate-800 p-6 md:p-8 rounded-xl shadow-none w-full">
+            <div className="inline-flex p-4 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-400 mb-4">
               <Boxes className="w-8 h-8 shrink-0" />
             </div>
             <h3 className="text-2xl font-black text-slate-100 mb-2">Dynamic Inductive Logic</h3>
@@ -359,7 +359,7 @@ export const PatternMatrixModule: React.FC<Props> = ({ currentLevel, onFinishSes
                 setElapsedTime(0);
                 startNextTrial();
               }}
-              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 text-white font-black text-sm tracking-wide cursor-pointer shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2"
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 text-white font-black text-sm tracking-wide cursor-pointer shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2"
             >
               <Play className="w-4 h-4 shrink-0 fill-current" />
               <span>Begin Logic Induction</span>
@@ -374,13 +374,13 @@ export const PatternMatrixModule: React.FC<Props> = ({ currentLevel, onFinishSes
             </span>
 
             {/* 3x3 Matrix Board */}
-            <div className="grid grid-cols-3 gap-3 bg-slate-900/90 border-2 border-blue-500/40 p-4 md:p-6 rounded-2xl shadow-none mb-4 max-w-md mx-auto">
+            <div className="grid grid-cols-3 gap-3 bg-slate-900/90 border-2 border-blue-500/40 p-4 md:p-6 rounded-xl shadow-none mb-4 max-w-md mx-auto">
               {problem.grid.map((tile, i) => {
                 const isTargetMissingSlot = i === 8;
                 return (
                   <div
                     key={i}
-                    className={`aspect-square flex items-center justify-center rounded-2xl border transition-all ${
+                    className={`aspect-square flex items-center justify-center rounded-xl border transition-all ${
                       isTargetMissingSlot
                         ? 'bg-blue-950/60 border-dashed border-blue-400 animate-pulse text-blue-400 font-black text-2xl'
                         : 'bg-slate-950/80 border-slate-800'
@@ -394,7 +394,7 @@ export const PatternMatrixModule: React.FC<Props> = ({ currentLevel, onFinishSes
 
             {/* Rule Explanation Callout during feedback */}
             {phase === 'feedback' && (
-              <div className="bg-slate-900 border border-blue-500/50 p-3 rounded-2xl mb-4 max-w-md mx-auto text-left flex items-start gap-2.5 animate-fadeIn">
+              <div className="bg-slate-900 border border-blue-500/50 p-3 rounded-xl mb-4 max-w-md mx-auto text-left flex items-start gap-2.5 animate-fadeIn">
                 <HelpCircle className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
                 <div className="text-[11px]">
                   <span className="font-bold text-blue-300 block mb-0.5">MATRIX RULE REASONING:</span>
@@ -423,7 +423,7 @@ export const PatternMatrixModule: React.FC<Props> = ({ currentLevel, onFinishSes
                     key={idx}
                     disabled={phase === 'feedback'}
                     onClick={() => handleSelectOption(idx)}
-                    className={`aspect-square flex items-center justify-center rounded-2xl border-2 transition-all p-2 cursor-pointer active:scale-95 ${btnStyle}`}
+                    className={`aspect-square flex items-center justify-center rounded-xl border-2 transition-all p-2 cursor-pointer active:scale-95 ${btnStyle}`}
                   >
                     {renderTileElements(opt)}
                   </button>

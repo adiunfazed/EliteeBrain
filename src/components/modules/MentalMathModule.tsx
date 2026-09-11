@@ -275,7 +275,7 @@ export const MentalMathModule: React.FC<Props> = ({ currentLevel, onFinishSessio
               key={opt}
               onClick={() => choose(opt)}
               disabled={revealed}
-              className={`min-h-[76px] rounded-2xl border text-2xl font-bold tabular-nums transition-all active:scale-[0.97] ${
+              className={`min-h-[76px] rounded-xl border text-2xl font-bold tabular-nums transition-all active:scale-[0.97] ${
                 revealed && isAnswer
                   ? 'border-[var(--done)] bg-[color-mix(in_oklab,var(--done)_16%,transparent)] eb-done'
                   : revealed && isChosen

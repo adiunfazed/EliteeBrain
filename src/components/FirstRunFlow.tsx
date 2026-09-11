@@ -114,7 +114,7 @@ export const FirstRunFlow: React.FC<Props> = ({ userId, onDone }) => {
             exit={{ opacity: 0, x: -16 }}
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
           >
-            <span className="w-12 h-12 shrink-0 rounded-2xl eb-card-sunk flex items-center justify-center">
+            <span className="w-12 h-12 shrink-0 rounded-xl eb-card-sunk flex items-center justify-center">
               <Icon className="w-5 h-5 shrink-0 text-[var(--signal-ink)]" />
             </span>
 

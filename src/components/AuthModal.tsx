@@ -116,7 +116,7 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-[92] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn overflow-y-auto">
-      <div className="relative w-full max-w-md bg-[var(--surface-sunk)] border border-[var(--rule)] rounded-2xl p-6 md:p-8 shadow-none my-auto text-center">
+      <div className="relative w-full max-w-md bg-[var(--surface-sunk)] border border-[var(--rule)] rounded-xl p-6 md:p-8 shadow-none my-auto text-center">
         {/* Close Button */}
         <button
           onClick={() => {
@@ -129,7 +129,7 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
         </button>
 
         {/* Icon Header */}
-        <div className="w-14 h-14 shrink-0 mx-auto mb-3 rounded-2xl bg-[color-mix(in_oklab,var(--signal)_15%,transparent)] border border-[var(--signal)]/30 flex items-center justify-center text-[#8B5CF6] shadow-lg">
+        <div className="w-14 h-14 shrink-0 mx-auto mb-3 rounded-xl bg-[color-mix(in_oklab,var(--signal)_15%,transparent)] border border-[var(--signal)]/30 flex items-center justify-center text-[#8B5CF6] shadow-lg">
           <Cloud className="w-7 h-7 shrink-0" />
         </div>
 
@@ -178,14 +178,14 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
 
         {/* Alerts */}
         {errorMsg && (
-          <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-3 mb-4 text-left flex items-start gap-2.5">
+          <div className="bg-rose-500/10 border border-rose-500/30 rounded-xl p-3 mb-4 text-left flex items-start gap-2.5">
             <AlertCircle className="w-4 h-4 eb-danger shrink-0 mt-0.5" />
             <p className="text-xs text-rose-200 font-medium leading-tight">{errorMsg}</p>
           </div>
         )}
 
         {successMsg && (
-          <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-3 mb-4 text-left flex items-start gap-2.5">
+          <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-3 mb-4 text-left flex items-start gap-2.5">
             <CheckCircle2 className="w-4 h-4 eb-done shrink-0 mt-0.5" />
             <p className="text-xs text-emerald-200 font-medium leading-tight">{successMsg}</p>
           </div>
@@ -194,7 +194,7 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
         {authMethod === 'google' ? (
           <div>
             {/* Features List */}
-            <div className="bg-[var(--ground)] rounded-2xl border border-[var(--rule)] p-3.5 mb-5 text-left space-y-2">
+            <div className="bg-[var(--ground)] rounded-xl border border-[var(--rule)] p-3.5 mb-5 text-left space-y-2">
               <div className="flex items-center gap-2 text-xs text-[var(--ink)]">
                 <CheckCircle2 className="w-4 h-4 eb-done shrink-0" />
                 <span>Instant 1-click Google authentication</span>
@@ -213,7 +213,7 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
             <button
               disabled={loading}
               onClick={handleGoogleClick}
-              className="w-full flex items-center justify-center gap-3 py-3.5 px-4 rounded-2xl bg-[var(--ink)] hover:bg-white text-slate-900 font-bold text-sm shadow-none cursor-pointer transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed mb-3"
+              className="w-full flex items-center justify-center gap-3 py-3.5 px-4 rounded-xl bg-[var(--ink)] hover:bg-white text-slate-900 font-bold text-sm shadow-none cursor-pointer transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed mb-3"
             >
               {loading ? (
                 <>

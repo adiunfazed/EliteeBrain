@@ -261,7 +261,7 @@ export const Game2048: React.FC<{ profile: UserProfile, onProfileUpdate?: (p: Us
       </div>
 
       <div 
-        className="w-full aspect-square bg-[#0D1117] border border-[var(--rule)] rounded-2xl p-2 relative overflow-hidden shadow-none touch-none"
+        className="w-full aspect-square bg-[#0D1117] border border-[var(--rule)] rounded-xl p-2 relative overflow-hidden shadow-none touch-none"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
@@ -307,7 +307,7 @@ export const Game2048: React.FC<{ profile: UserProfile, onProfileUpdate?: (p: Us
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 z-20 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center rounded-2xl"
+              className="absolute inset-0 z-20 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center rounded-xl"
             >
               <h3 className={`text-4xl font-display font-black mb-4 ${gameWon ? 'eb-warn' : 'text-white'}`}>
                 {gameWon ? 'You Win!' : 'Game Over'}

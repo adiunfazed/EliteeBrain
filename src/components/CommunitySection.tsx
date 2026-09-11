@@ -98,7 +98,7 @@ export const CommunitySection: React.FC<CommunitySectionProps> = () => {
     <div className="space-y-6 font-sans select-none max-w-5xl mx-auto px-1 sm:px-0">
       
       {/* Community Header Banner */}
-      <div className="bg-gradient-to-r from-[var(--surface)] via-[#1A1F2C] to-[var(--surface)] border border-[var(--rule)] rounded-2xl p-5 sm:p-7 relative overflow-hidden shadow-none">
+      <div className="bg-gradient-to-r from-[var(--surface)] via-[#1A1F2C] to-[var(--surface)] border border-[var(--rule)] rounded-xl p-5 sm:p-7 relative overflow-hidden shadow-none">
         <div className="absolute top-0 right-0 w-80 h-80 bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-80 h-80 bg-red-500/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -125,14 +125,14 @@ export const CommunitySection: React.FC<CommunitySectionProps> = () => {
           <div className="grid grid-cols-2 sm:flex items-center gap-2.5 shrink-0 w-full sm:w-auto">
             <button
               onClick={handleOpenTg}
-              className="px-4 py-3 bg-sky-500/20 hover:bg-sky-500/30 border border-sky-500/40 rounded-2xl text-center transition-all cursor-pointer active:scale-95 flex flex-col items-center justify-center"
+              className="px-4 py-3 bg-sky-500/20 hover:bg-sky-500/30 border border-sky-500/40 rounded-xl text-center transition-all cursor-pointer active:scale-95 flex flex-col items-center justify-center"
             >
               <span className="block text-xs sm:text-sm font-mono font-black text-sky-400">Telegram</span>
               <span className="t-meta uppercase font-bold">Join Group</span>
             </button>
             <button
               onClick={handleOpenYt}
-              className="px-4 py-3 bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 rounded-2xl text-center transition-all cursor-pointer active:scale-95 flex flex-col items-center justify-center"
+              className="px-4 py-3 bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 rounded-xl text-center transition-all cursor-pointer active:scale-95 flex flex-col items-center justify-center"
             >
               <span className="block text-xs sm:text-sm font-mono font-black text-red-400">YouTube</span>
               <span className="t-meta uppercase font-bold">Subscribe</span>
@@ -147,12 +147,12 @@ export const CommunitySection: React.FC<CommunitySectionProps> = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.22 }}
       >
-        <div className="bg-[var(--surface)] border border-sky-500/40 rounded-2xl p-5 sm:p-7 relative overflow-hidden shadow-none space-y-4">
+        <div className="bg-[var(--surface)] border border-sky-500/40 rounded-xl p-5 sm:p-7 relative overflow-hidden shadow-none space-y-4">
           <div className="absolute top-0 right-0 w-64 h-64 bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
           
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
             <div className="flex items-center gap-3.5 min-w-0">
-              <div className="w-12 h-12 rounded-2xl bg-sky-500 text-slate-950 flex items-center justify-center font-bold text-xl shadow-lg shadow-sky-500/25 shrink-0">
+              <div className="w-12 h-12 rounded-xl bg-sky-500 text-slate-950 flex items-center justify-center font-bold text-xl shadow-lg shadow-sky-500/25 shrink-0">
                 <Send className="w-6 h-6 shrink-0 fill-current ml-0.5" />
               </div>
               <div className="min-w-0 flex-1">
@@ -211,12 +211,12 @@ export const CommunitySection: React.FC<CommunitySectionProps> = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.22, delay: 0.08 }}
       >
-        <div className="bg-[var(--surface)] border border-red-500/40 rounded-2xl p-5 sm:p-7 relative overflow-hidden shadow-none space-y-4">
+        <div className="bg-[var(--surface)] border border-red-500/40 rounded-xl p-5 sm:p-7 relative overflow-hidden shadow-none space-y-4">
           <div className="absolute top-0 right-0 w-64 h-64 bg-red-600/10 rounded-full blur-3xl pointer-events-none" />
           
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
             <div className="flex items-center gap-3.5 min-w-0">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-red-600 to-rose-700 text-white flex items-center justify-center font-bold text-xl shadow-lg shadow-red-600/25 shrink-0">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-600 to-rose-700 text-white flex items-center justify-center font-bold text-xl shadow-lg shadow-red-600/25 shrink-0">
                 <Youtube className="w-7 h-7 shrink-0 fill-current" />
               </div>
               <div className="min-w-0 flex-1">

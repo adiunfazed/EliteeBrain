@@ -122,7 +122,7 @@ export const NotificationSettings: React.FC<Props> = ({ isOpen, onClose }) => {
           exit={{ y: '100%' }}
           transition={{ type: 'spring', damping: 30, stiffness: 300 }}
           onClick={(e: React.MouseEvent) => e.stopPropagation()}
-          className="w-full sm:max-w-md max-h-[88vh] overflow-y-auto bg-[var(--ground)] border border-[var(--rule)] rounded-t-3xl sm:rounded-2xl p-4 sm:p-5 space-y-4"
+          className="w-full sm:max-w-md max-h-[88vh] overflow-y-auto bg-[var(--ground)] border border-[var(--rule)] rounded-t-3xl sm:rounded-xl p-4 sm:p-5 space-y-4"
         >
           <div className="sm:hidden w-10 h-1 rounded-full bg-[var(--rule)] mx-auto" />
 
@@ -147,7 +147,7 @@ export const NotificationSettings: React.FC<Props> = ({ isOpen, onClose }) => {
 
           {/* iOS install requirement */}
           {support === 'ios_needs_install' && (
-            <div className="rounded-2xl border border-amber-500/25 bg-amber-500/[0.06] p-3.5">
+            <div className="rounded-xl border border-amber-500/25 bg-amber-500/[0.06] p-3.5">
               <p className="text-xs font-bold eb-warn flex items-center gap-1.5">
                 <Smartphone className="w-3.5 h-3.5 shrink-0" />
                 Add to Home Screen first
@@ -161,7 +161,7 @@ export const NotificationSettings: React.FC<Props> = ({ isOpen, onClose }) => {
           )}
 
           {support === 'denied' && (
-            <div className="rounded-2xl border border-rose-500/25 bg-rose-500/[0.06] p-3.5">
+            <div className="rounded-xl border border-rose-500/25 bg-rose-500/[0.06] p-3.5">
               <p className="text-xs font-bold eb-danger flex items-center gap-1.5">
                 <BellOff className="w-3.5 h-3.5 shrink-0" />
                 Blocked in your browser

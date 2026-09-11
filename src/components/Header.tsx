@@ -507,7 +507,7 @@ export const Header: React.FC<Props> = ({
             {/* Account & Display Name Section (below Dark Theme & Colorblind) */}
             <div className="mt-3 pt-3 border-t border-[var(--rule)]/60 space-y-2.5">
               {/* Account Display Name Card */}
-              <div className="bg-[var(--surface-sunk)] border border-[var(--rule)] p-2.5 rounded-2xl space-y-2">
+              <div className="bg-[var(--surface-sunk)] border border-[var(--rule)] p-2.5 rounded-xl space-y-2">
                 <div className="flex items-center justify-between text-xs text-[var(--ink-muted)]">
                   <span className="flex items-center gap-1.5 font-bold text-slate-200">
                     <UserIcon className="w-3.5 h-3.5 shrink-0 text-[#8B5CF6]" />

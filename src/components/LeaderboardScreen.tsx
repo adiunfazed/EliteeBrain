@@ -268,7 +268,7 @@ export const LeaderboardScreen: React.FC<Props> = ({ onBack }) => {
                     damping: 22,
                     delay: isFirst ? 0 : 0.1,
                   }}
-                  className={`relative rounded-2xl border p-3 sm:p-4 text-center min-w-0 ${
+                  className={`relative rounded-xl border p-3 sm:p-4 text-center min-w-0 ${
                     isFirst ? 'pt-6 pb-5' : 'pt-4'
                   }`}
                   style={{
@@ -347,7 +347,7 @@ export const LeaderboardScreen: React.FC<Props> = ({ onBack }) => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.24, delay: Math.min(i * 0.02, 0.3) }}
-                    className="rounded-2xl border p-3 flex items-center gap-3 min-w-0 transition-colors"
+                    className="rounded-xl border p-3 flex items-center gap-3 min-w-0 transition-colors"
                     style={{
                       background: isYou
                         ? 'color-mix(in oklab, var(--signal) 12%, var(--surface))'
@@ -403,7 +403,7 @@ export const LeaderboardScreen: React.FC<Props> = ({ onBack }) => {
             <>
               <p className="t-sub text-center py-3">Your position</p>
               <div
-                className="rounded-2xl border p-3 flex items-center gap-3 min-w-0"
+                className="rounded-xl border p-3 flex items-center gap-3 min-w-0"
                 style={{
                   background: 'color-mix(in oklab, var(--signal) 12%, var(--surface))',
                   borderColor: 'var(--signal)',

@@ -5,8 +5,7 @@ import type { Habit, HabitLog, RoutineBlock, RoutineLog, SleepLog, Task } from '
 import { setHabitValue, setRoutineState } from '../lib/goalStore';
 import { addDays, patchTask, todayISO } from '../lib/tasks';
 import { DailyQuestCard } from './DailyQuestCard';
-import { RankEmblem } from './RankEmblem';
-import { tierFor, tierLabel, tierProgress } from '../lib/tiers';
+import { XpPanel, StreakPanel, FocusPanel } from './dash/StatPanels';
 import { praiseFor } from '../lib/praise';
 import { reviewToday, suggestNextActions } from '../lib/nextAction';
 import { blocksForDate, minutesOf } from '../lib/routine';
@@ -31,6 +30,7 @@ interface Props {
   streakDays?: number;
   /** Opens the rank and standings view in More. */
   onOpenRank?: () => void;
+  focusMinutesToday?: number;
   onStoreQuest?: (q: { date: string; id: string; title: string; objective?: string; xp: number }) => void;
   onCompleteQuest: (quest: { id: string; title: string; xp: number }) => void;
   habits: Habit[];
@@ -67,6 +67,7 @@ export const TodayScreen: React.FC<Props> = ({
   careerXp,
   streakDays,
   onOpenRank,
+  focusMinutesToday,
   onStoreQuest,
   onCompleteQuest,
   habits,
@@ -426,65 +427,19 @@ export const TodayScreen: React.FC<Props> = ({
       )}
 
       {/* ---------------- Progress ---------------- */}
-      {careerXp !== undefined && (
-        <section className="sec">
-          <button
-            onClick={() => onOpenRank?.()}
-            className="w-full text-left rounded-2xl p-4 transition-transform active:scale-[0.99]"
-            style={{
-              background: 'var(--surface)',
-              border: '1px solid var(--rule)',
-            }}
-          >
-            <div className="flex items-center gap-3.5">
-              <RankEmblem tier={tierFor(careerXp)} size={42} />
+      <section className="sec">
+        <div className="dash">
+          <XpPanel careerXp={careerXp ?? 0} pending={careerXp === undefined} />
 
-              <div className="min-w-0 flex-1">
-                <p className="t-section" style={{ color: tierFor(careerXp).color }}>
-                  {tierLabel(tierFor(careerXp))}
-                </p>
-                <p className="t-meta mt-1">
-                  {careerXp.toLocaleString('en-IN')} XP
-                  {streakDays ? ` · ${streakDays} day streak` : ''}
-                </p>
-              </div>
+          <StreakPanel days={streakDays ?? 0} />
 
-              <ChevronRight className="w-4 h-4 shrink-0" style={{ color: 'var(--ink-dim)' }} />
-            </div>
-
-            <div
-              className="h-1.5 rounded-full overflow-hidden mt-3.5"
-              style={{ background: 'var(--surface-sunk)' }}
-            >
-              <div
-                className="h-full rounded-full transition-[width] duration-700"
-                style={{
-                  width: `${Math.round(tierProgress(careerXp) * 100)}%`,
-                  background: tierFor(careerXp).color,
-                }}
-              />
-            </div>
-          </button>
-
-          {/* Sleep sits here rather than in its own section: it is one row of
-              at-a-glance state, which is what this block already is. */}
-          <button
-            onClick={() => onGo('routine')}
-            className="w-full text-left rounded-2xl p-4 mt-2 flex items-center gap-3.5 transition-transform active:scale-[0.99]"
-            style={{ background: 'var(--surface)', border: '1px solid var(--rule)' }}
-          >
-            <span
-              className="w-9 h-9 rounded-xl shrink-0 flex items-center justify-center"
-              style={{ background: 'color-mix(in oklab, #7C9CFF 16%, transparent)' }}
-            >
-              <Moon className="w-4 h-4 shrink-0" style={{ color: '#7C9CFF' }} />
-            </span>
-            <span className="t-body flex-1 min-w-0">Sleep</span>
-            <span className="t-meta">{sleptLastNight ? 'Logged' : 'Not logged'}</span>
-            <ChevronRight className="w-4 h-4 shrink-0" style={{ color: 'var(--ink-dim)' }} />
-          </button>
-        </section>
-      )}
+          <FocusPanel
+            minutesToday={focusMinutesToday ?? 0}
+            suggestion={todayTasks[0]?.title ?? null}
+            onStart={() => onStartFocus?.(todayTasks[0])}
+          />
+        </div>
+      </section>
 
       {/* ---------------- End of day ---------------- */}
       {dayIsOver && (

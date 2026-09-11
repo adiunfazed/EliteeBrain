@@ -293,7 +293,7 @@ export const VocabularyModule: React.FC<Props> = ({
                       key={opt}
                       onClick={() => answer(opt)}
                       disabled={revealed}
-                      className="w-full text-left rounded-2xl border p-4 text-[15px] leading-snug transition-colors"
+                      className="w-full text-left rounded-xl border p-4 text-[15px] leading-snug transition-colors"
                       style={{
                         background: revealed && isAnswer
                           ? 'color-mix(in oklab, var(--done) 14%, transparent)'

@@ -60,10 +60,10 @@ export const SummaryModal: React.FC<Props> = ({ result, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-[92] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg bg-[var(--surface-sunk)] border border-[var(--rule)] rounded-2xl p-6 md:p-8 shadow-none overflow-hidden text-[var(--ink)]">
+      <div className="relative w-full max-w-lg bg-[var(--surface-sunk)] border border-[var(--rule)] rounded-xl p-6 md:p-8 shadow-none overflow-hidden text-[var(--ink)]">
         
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[color-mix(in_oklab,var(--signal)_15%,transparent)] border border-[var(--signal)]/30 mb-3 shadow-inner">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-[color-mix(in_oklab,var(--signal)_15%,transparent)] border border-[var(--signal)]/30 mb-3 shadow-inner">
             <Trophy className="w-8 h-8 shrink-0 text-[#8B5CF6]" />
           </div>
           <h2 className="text-2xl font-black text-[var(--ink)] tracking-tight">
@@ -81,15 +81,15 @@ export const SummaryModal: React.FC<Props> = ({ result, onClose }) => {
 
         {/* Core Scores */}
         <div className="grid grid-cols-3 gap-3 mb-6 text-center">
-          <div className="bg-[var(--ground)] border border-[var(--rule)] p-3 rounded-2xl">
+          <div className="bg-[var(--ground)] border border-[var(--rule)] p-3 rounded-xl">
             <span className="text-[10px] uppercase font-bold text-[var(--ink-muted)]">Accuracy</span>
             <div className="text-xl font-black text-[#8B5CF6] mt-0.5">{result.accuracy}%</div>
           </div>
-          <div className="bg-[var(--ground)] border border-[var(--rule)] p-3 rounded-2xl">
+          <div className="bg-[var(--ground)] border border-[var(--rule)] p-3 rounded-xl">
             <span className="text-[10px] uppercase font-bold text-[var(--ink-muted)]">Score</span>
             <div className="text-xl font-black text-indigo-300 mt-0.5">{result.score}</div>
           </div>
-          <div className="bg-[var(--ground)] border border-[var(--rule)] p-3 rounded-2xl">
+          <div className="bg-[var(--ground)] border border-[var(--rule)] p-3 rounded-xl">
             <span className="text-[10px] uppercase font-bold text-[var(--ink-muted)]">XP Gained</span>
             <div className="text-xl font-black eb-warn mt-0.5">+{result.xpGained}</div>
           </div>
@@ -97,7 +97,7 @@ export const SummaryModal: React.FC<Props> = ({ result, onClose }) => {
 
         {/* Custom Metrics */}
         {result.details && result.details.length > 0 && (
-          <div className="bg-[var(--ground)] border border-[var(--rule)] rounded-2xl p-4 mb-6">
+          <div className="bg-[var(--ground)] border border-[var(--rule)] rounded-xl p-4 mb-6">
             <h4 className="text-xs font-bold text-[var(--ink-muted)] uppercase tracking-wider mb-3">
               Performance Analytics
             </h4>
@@ -130,7 +130,7 @@ export const SummaryModal: React.FC<Props> = ({ result, onClose }) => {
             soundFx.playClick();
             onClose();
           }}
-          className="w-full py-3.5 rounded-2xl bg-[var(--signal)] hover:bg-[var(--signal)]/90 text-white font-black text-sm tracking-wide cursor-pointer transition-all shadow-md flex items-center justify-center gap-2 active:scale-95"
+          className="w-full py-3.5 rounded-xl bg-[var(--signal)] hover:bg-[var(--signal)]/90 text-white font-black text-sm tracking-wide cursor-pointer transition-all shadow-md flex items-center justify-center gap-2 active:scale-95"
         >
           <span>Return to Dashboard</span>
           <ArrowRight className="w-4 h-4 shrink-0" />

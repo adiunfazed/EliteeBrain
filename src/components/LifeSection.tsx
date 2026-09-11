@@ -215,7 +215,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], habits = [], 
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-3 gap-1.5 p-1.5 rounded-2xl bg-[var(--surface-sunk)] border border-[var(--rule)]">
+      <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-[var(--surface-sunk)] border border-[var(--rule)]">
         {([
           { id: 'routine' as Pane, label: 'Day', icon: Sun },
           { id: 'week' as Pane, label: 'Week', icon: CalendarDays },
@@ -230,31 +230,31 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], habits = [], 
                 setPane(id);
               }}
               aria-current={active ? 'page' : undefined}
-              className="relative min-h-[56px] rounded-xl flex flex-col items-center justify-center gap-1.5 transition-colors"
+              className="relative min-h-[38px] rounded-lg flex items-center justify-center gap-1.5 px-2 transition-colors"
             >
               {active && (
                 <motion.span
                   layoutId="life-tab-indicator"
                   className="absolute inset-0 rounded-xl"
                   style={{
-                    background:
-                      'linear-gradient(180deg, color-mix(in oklab, var(--signal) 20%, var(--surface)), var(--surface))',
+                    background: 'var(--surface)',
                     border: '1px solid color-mix(in oklab, var(--signal) 45%, var(--rule))',
+                    boxShadow: '0 1px 0 0 rgba(255,255,255,0.05) inset',
                   }}
                   transition={{ type: 'spring', stiffness: 420, damping: 34 }}
                 />
               )}
 
               <Icon
-                className="relative w-[18px] h-[18px] shrink-0"
+                className="relative w-[15px] h-[15px] shrink-0"
                 strokeWidth={active ? 2.4 : 1.9}
                 style={{ color: active ? 'var(--signal-ink)' : 'var(--ink-dim)' }}
               />
               <span
-                className="relative text-[12px] leading-none"
+                className="relative text-[12.5px] leading-none whitespace-nowrap"
                 style={{
                   color: active ? 'var(--ink)' : 'var(--ink-dim)',
-                  fontWeight: active ? 700 : 500,
+                  fontWeight: active ? 600 : 500,
                 }}
               >
                 {label}
@@ -294,7 +294,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], habits = [], 
 
           {overload && (
             <div
-              className="rounded-2xl p-4 flex items-start gap-3"
+              className="rounded-xl p-4 flex items-start gap-3"
               style={{
                 background: 'color-mix(in oklab, var(--warn) 9%, transparent)',
                 border: '1px solid color-mix(in oklab, var(--warn) 30%, var(--rule))',
@@ -355,7 +355,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], habits = [], 
 
           {/* Timeline */}
           {day.length === 0 ? (
-            <div className="text-center py-12 px-6 border border-dashed border-[var(--rule)] rounded-2xl">
+            <div className="text-center py-12 px-6 border border-dashed border-[var(--rule)] rounded-xl">
               <p className="t-section text-base">Build your day</p>
               <p className="text-[13px] text-[var(--ink-muted)] mt-1.5 max-w-xs mx-auto leading-relaxed">
                 Add the blocks you actually repeat — study, gym, sleep. Tick them off as you go,
@@ -369,7 +369,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], habits = [], 
                 const days = block.weekdays && block.weekdays.length > 0 ? block.weekdays : null;
 
                 return (
-                  <div key={block.id} className="rounded-2xl eb-card p-4">
+                  <div key={block.id} className="rounded-xl eb-card p-4">
                     <div className="flex items-start gap-3">
                       {/* Time, fixed width so every name starts at the same x. */}
                       <span
@@ -495,7 +495,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], habits = [], 
             return (
               <div
                 key={iso}
-                className="rounded-2xl overflow-hidden"
+                className="rounded-xl overflow-hidden"
                 style={{
                   background: 'var(--surface)',
                   border: `1px solid ${
@@ -646,7 +646,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], habits = [], 
           {stats.nights > 0 && (
             <>
               <div
-                className="grid grid-cols-3 rounded-2xl overflow-hidden"
+                className="grid grid-cols-3 rounded-xl overflow-hidden"
                 style={{
                   background: 'var(--surface)',
                   border: '1px solid var(--rule)',

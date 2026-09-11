@@ -45,17 +45,20 @@
 }
 
 .dark {
-  /* 60% — base. The canvas and the cards sitting on it. */
-  --ground: #0B0D12;
-  --surface: #14171F;
-  --surface-sunk: #1B1F29;
+  /* 60% — base. Near-black canvas with a faint purple cast in the
+     surfaces, so panels read as dark violet rather than grey. */
+  --ground: #08070C;
+  --surface: #100E17;
+  --surface-sunk: #17141F;
 
   /* 30% — secondary. Text, rules, and structure. */
-  --ink: #F2F4F7;
-  --ink-muted: #8A93A5;
-  --ink-dim: #7E8899;
-  --rule: #2C3340;
-  --rule-strong: #414A5B;
+  --ink: #F4F2F8;
+  --ink-muted: #9C96AD;
+  --ink-dim: #7D7790;
+  /* Thin and low contrast, as the brief asks — visible as an edge, never
+     as a line competing with the content. */
+  --rule: #241F30;
+  --rule-strong: #342C45;
 
   /* 10% — accent. Used sparingly: one primary action per view. */
   --signal: #7C5CFF;
@@ -1292,14 +1295,14 @@ button, [role='button'] {
 
 .panel,
 .eb-card {
-  border-radius: 16px;
+  border-radius: 12px;
   background: var(--surface);
   border: 1px solid var(--rule);
   box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.04) inset;
 }
 
 .eb-card-sunk {
-  border-radius: 14px;
+  border-radius: 10px;
   background: var(--surface-sunk);
   border: 1px solid var(--rule);
   box-shadow: none;
@@ -1627,13 +1630,12 @@ button, a[role='button'], [role='tab'] {
 
 .dark .eb-card,
 .dark .panel {
-  /* Three layers doing distinct jobs: a top highlight for the lit edge, a
-     tight shadow for the contact line, and a wider one for cast shadow.
-     Weight comes from this, not from a darker fill. */
+  /* Restrained: a faint lit edge and a tight contact shadow. The wider cast
+     shadow is gone — on a near-black ground it read as a smudge and worked
+     against the flat dashboard look the brief asks for. */
   box-shadow:
-    0 1px 0 0 rgba(255, 255, 255, 0.06) inset,
-    0 1px 2px 0 rgba(0, 0, 0, 0.5),
-    0 6px 16px -6px rgba(0, 0, 0, 0.7);
+    0 1px 0 0 rgba(255, 255, 255, 0.04) inset,
+    0 1px 3px 0 rgba(0, 0, 0, 0.45);
 }
 
 /* Pressing settles the card: the cast shadow shrinks as it meets the page. */
@@ -1758,4 +1760,92 @@ button > span,
   box-shadow:
     0 0 0 3px color-mix(in oklab, var(--danger) 14%, transparent),
     0 0 10px -2px color-mix(in oklab, var(--danger) 50%, transparent);
+}
+
+
+/* ==================================================================
+   Dashboard grid
+
+   The brief asks for an efficient grid on desktop that reflows on
+   mobile. One column on a phone, two from 640px, three from 1024px —
+   panels declare their own span rather than the layout hard-coding
+   positions, so adding one never means rewriting the grid.
+   ================================================================== */
+
+.dash {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .dash { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+}
+
+@media (min-width: 1024px) {
+  .dash { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+}
+
+/* A panel that needs the full row — a task list, a timeline. */
+.dash-wide { grid-column: 1 / -1; }
+
+@media (min-width: 1024px) {
+  .dash-span-2 { grid-column: span 2; }
+}
+
+/* ==================================================================
+   Dashboard panel
+
+   The unit of the redesign: a compact bordered block with a small
+   header, replacing the oversized standalone cards.
+   ================================================================== */
+
+.panel-sm {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.035) inset;
+  min-width: 0;
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.panel-title {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  white-space: nowrap;
+}
+
+/* Rows inside a panel: separated by a hairline rather than by gaps, which
+   is what gives a dashboard its density. */
+.panel-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  min-width: 0;
+}
+
+.panel-row + .panel-row {
+  border-top: 1px solid var(--rule);
+}
+
+.panel-row:first-of-type { padding-top: 2px; }
+.panel-row:last-of-type { padding-bottom: 2px; }
+
+/* Completed work is subdued and struck through, as the brief specifies. */
+.row-done .row-label {
+  text-decoration: line-through;
+  color: var(--ink-dim);
 }

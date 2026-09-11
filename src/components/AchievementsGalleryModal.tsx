@@ -111,12 +111,12 @@ export const AchievementsGalleryModal: React.FC<Props> = ({ isOpen, profile, onC
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.94, y: 16 }}
           transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-          className="relative w-full max-w-4xl bg-[#121620] border border-[#2D3748] rounded-2xl p-4 sm:p-6 shadow-none overflow-hidden flex flex-col max-h-[90vh]"
+          className="relative w-full max-w-4xl bg-[#121620] border border-[#2D3748] rounded-xl p-4 sm:p-6 shadow-none overflow-hidden flex flex-col max-h-[90vh]"
         >
           {/* Header Bar */}
           <div className="flex items-start justify-between pb-4 border-b border-[#2D3748] mb-4 shrink-0 gap-3">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-amber-500/20 border border-amber-500/40 eb-warn rounded-2xl shrink-0 shadow-inner">
+              <div className="p-3 bg-amber-500/20 border border-amber-500/40 eb-warn rounded-xl shrink-0 shadow-inner">
                 <Trophy className="w-6 h-6 shrink-0 sm:w-7 sm:h-7" />
               </div>
               <div>
@@ -147,7 +147,7 @@ export const AchievementsGalleryModal: React.FC<Props> = ({ isOpen, profile, onC
           </div>
 
           {/* Reward Status Card */}
-          <div className="bg-[#181E2A] border border-[#2D3748] rounded-2xl p-3.5 sm:p-4 mb-4 shrink-0 relative overflow-hidden">
+          <div className="bg-[#181E2A] border border-[#2D3748] rounded-xl p-3.5 sm:p-4 mb-4 shrink-0 relative overflow-hidden">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 mb-2.5">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 eb-warn flex items-center justify-center shrink-0">
@@ -203,7 +203,7 @@ export const AchievementsGalleryModal: React.FC<Props> = ({ isOpen, profile, onC
           </div>
 
           {/* Status Segmented Controls */}
-          <div className="grid grid-cols-3 gap-1 bg-[#0F141C] p-1 border border-[#2D3748] rounded-2xl mb-4 shrink-0 text-xs font-mono font-bold">
+          <div className="grid grid-cols-3 gap-1 bg-[#0F141C] p-1 border border-[#2D3748] rounded-xl mb-4 shrink-0 text-xs font-mono font-bold">
             <button
               onClick={() => {
                 soundFx.playClick();
@@ -260,7 +260,7 @@ export const AchievementsGalleryModal: React.FC<Props> = ({ isOpen, profile, onC
                     soundFx.playClick();
                     setActiveBadgeDetail(badge);
                   }}
-                  className={`flex flex-col justify-between p-4 rounded-2xl border transition-all cursor-pointer select-none shrink-0 ${
+                  className={`flex flex-col justify-between p-4 rounded-xl border transition-all cursor-pointer select-none shrink-0 ${
                     isUnlocked
                       ? 'bg-gradient-to-br from-[#1E2638] to-[#181E2A] border-amber-500/50 hover:border-amber-400 shadow-none'
                       : 'bg-[#161B26] border-[#2D3748] hover:border-slate-500'
@@ -271,7 +271,7 @@ export const AchievementsGalleryModal: React.FC<Props> = ({ isOpen, profile, onC
                     <div className="flex items-start justify-between gap-3 mb-2.5">
                       <div className="flex items-center gap-3">
                         <div
-                          className={`w-11 h-11 rounded-2xl border flex items-center justify-center shrink-0 shadow-md ${
+                          className={`w-11 h-11 rounded-xl border flex items-center justify-center shrink-0 shadow-md ${
                             isUnlocked
                               ? 'bg-gradient-to-br from-amber-500/30 to-amber-600/10 border-amber-500/50 eb-warn'
                               : 'bg-[#0F141C] border-[#2D3748] text-slate-400'
@@ -354,7 +354,7 @@ export const AchievementsGalleryModal: React.FC<Props> = ({ isOpen, profile, onC
                   initial={{ opacity: 0, scale: 0.9, y: 10 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.9, y: 10 }}
-                  className="bg-[#121620] border border-[#2D3748] rounded-2xl p-6 max-w-sm w-full text-center relative shadow-none"
+                  className="bg-[#121620] border border-[#2D3748] rounded-xl p-6 max-w-sm w-full text-center relative shadow-none"
                 >
                   <button
                     onClick={() => setActiveBadgeDetail(null)}
@@ -363,7 +363,7 @@ export const AchievementsGalleryModal: React.FC<Props> = ({ isOpen, profile, onC
                     <X className="w-5 h-5 shrink-0" />
                   </button>
 
-                  <div className="w-20 h-20 shrink-0 mx-auto rounded-2xl bg-amber-500/15 border border-amber-500/40 eb-warn flex items-center justify-center mb-4 shadow-none">
+                  <div className="w-20 h-20 shrink-0 mx-auto rounded-xl bg-amber-500/15 border border-amber-500/40 eb-warn flex items-center justify-center mb-4 shadow-none">
                     {renderBadgeIcon(activeBadgeDetail.icon, 'w-10 h-10')}
                   </div>
 
@@ -379,7 +379,7 @@ export const AchievementsGalleryModal: React.FC<Props> = ({ isOpen, profile, onC
                     {activeBadgeDetail.description}
                   </p>
 
-                  <div className="p-3.5 bg-[#0D1117] border border-[#2B3545] rounded-2xl text-xs font-mono text-[#A0AEC0] mb-5 text-left">
+                  <div className="p-3.5 bg-[#0D1117] border border-[#2B3545] rounded-xl text-xs font-mono text-[#A0AEC0] mb-5 text-left">
                     <strong className="eb-warn block mb-1 uppercase tracking-wider text-[10px]">
                       Unlock Requirement:
                     </strong>

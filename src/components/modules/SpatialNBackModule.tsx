@@ -196,8 +196,8 @@ export const SpatialNBackModule: React.FC<Props> = ({ currentLevel, onFinishSess
       {/* Main Gameplay Screen */}
       <div className="flex-1 min-w-0 flex flex-col items-center justify-center p-4 max-w-xl mx-auto w-full">
         {phase === 'intro' && (
-          <div className="text-center bg-slate-900/80 border border-slate-800 p-6 md:p-8 rounded-2xl shadow-none w-full">
-            <div className="inline-flex p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 eb-done mb-4">
+          <div className="text-center bg-slate-900/80 border border-slate-800 p-6 md:p-8 rounded-xl shadow-none w-full">
+            <div className="inline-flex p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 eb-done mb-4">
               <Grid className="w-8 h-8 shrink-0" />
             </div>
             <h3 className="text-2xl font-black text-slate-100 mb-2">Spatial {nValue}-Back Working Memory</h3>
@@ -205,7 +205,7 @@ export const SpatialNBackModule: React.FC<Props> = ({ currentLevel, onFinishSess
               Squares will flash sequentially in a 3x3 grid. Click <span className="eb-done font-bold">MATCH</span> (or press <span className="eb-done font-bold underline">SPACEBAR</span>) if the current square position is identical to the square position <span className="eb-done font-bold">{nValue} step{nValue > 1 ? 's' : ''} ago</span>!
             </p>
 
-            <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 text-left text-xs mb-6 space-y-2">
+            <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 text-left text-xs mb-6 space-y-2">
               <div className="flex justify-between text-slate-400">
                 <span>N-Back Factor:</span>
                 <span className="font-bold eb-done">{nValue}-Back</span>
@@ -221,7 +221,7 @@ export const SpatialNBackModule: React.FC<Props> = ({ currentLevel, onFinishSess
                 soundFx.playClick();
                 startGame();
               }}
-              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-sm tracking-wide cursor-pointer shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-sm tracking-wide cursor-pointer shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
             >
               <Play className="w-4 h-4 shrink-0 fill-current" />
               <span>Begin Training</span>
@@ -242,13 +242,13 @@ export const SpatialNBackModule: React.FC<Props> = ({ currentLevel, onFinishSess
             </div>
 
             {/* 3x3 Matrix Grid */}
-            <div className="grid grid-cols-3 gap-3 p-4 bg-slate-900 border-2 border-slate-800 rounded-2xl mb-8 max-w-xs mx-auto shadow-none">
+            <div className="grid grid-cols-3 gap-3 p-4 bg-slate-900 border-2 border-slate-800 rounded-xl mb-8 max-w-xs mx-auto shadow-none">
               {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((index) => {
                 const isActive = activeSquare === index;
                 return (
                   <div
                     key={index}
-                    className={`aspect-square rounded-2xl transition-all duration-150 flex items-center justify-center ${
+                    className={`aspect-square rounded-xl transition-all duration-150 flex items-center justify-center ${
                       isActive
                         ? 'bg-gradient-to-br from-emerald-400 to-teal-500 shadow-none shadow-emerald-500/40 border-2 border-emerald-300 scale-105'
                         : 'bg-slate-950 border border-slate-800/80'
@@ -267,7 +267,7 @@ export const SpatialNBackModule: React.FC<Props> = ({ currentLevel, onFinishSess
               <button
                 onClick={handleMatchClick}
                 disabled={matchPressedCurrentStep}
-                className={`w-full py-4 rounded-2xl font-black text-base tracking-wider uppercase transition-all active:scale-95 cursor-pointer shadow-none select-none touch-manipulation flex items-center justify-center gap-2 ${
+                className={`w-full py-4 rounded-xl font-black text-base tracking-wider uppercase transition-all active:scale-95 cursor-pointer shadow-none select-none touch-manipulation flex items-center justify-center gap-2 ${
                   matchPressedCurrentStep
                     ? 'bg-emerald-500/20 eb-done border border-emerald-500/50'
                     : 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 shadow-emerald-500/20'

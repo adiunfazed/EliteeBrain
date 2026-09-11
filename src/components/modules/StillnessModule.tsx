@@ -150,8 +150,8 @@ export const StillnessModule: React.FC<Props> = ({ currentLevel, onFinishSession
       {/* Main Canvas */}
       <div className="flex-1 min-w-0 flex flex-col items-center justify-center p-4 max-w-xl mx-auto w-full">
         {phase === 'intro' && (
-          <div className="text-center bg-slate-900/80 border border-slate-800 p-6 md:p-8 rounded-2xl shadow-none w-full">
-            <div className="inline-flex p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 eb-warn mb-4">
+          <div className="text-center bg-slate-900/80 border border-slate-800 p-6 md:p-8 rounded-xl shadow-none w-full">
+            <div className="inline-flex p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 eb-warn mb-4">
               <Compass className="w-8 h-8 shrink-0" />
             </div>
             <h3 className="text-2xl font-black text-slate-100 mb-2">Deep Focus & Physical Stillness</h3>
@@ -160,7 +160,7 @@ export const StillnessModule: React.FC<Props> = ({ currentLevel, onFinishSession
             </p>
 
             {/* Target Duration Selector */}
-            <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 mb-6 text-left">
+            <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 mb-6 text-left">
               <span className="text-xs font-bold text-slate-400 block mb-2">
                 SELECT MEDITATION / STILLNESS DURATION:
               </span>
@@ -214,7 +214,7 @@ export const StillnessModule: React.FC<Props> = ({ currentLevel, onFinishSession
                 soundFx.playClick();
                 startSession();
               }}
-              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-slate-950 font-black text-sm tracking-wide cursor-pointer shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2"
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-slate-950 font-black text-sm tracking-wide cursor-pointer shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2"
             >
               <Play className="w-4 h-4 shrink-0 fill-current" />
               <span>Begin Stillness Focus</span>
@@ -226,13 +226,13 @@ export const StillnessModule: React.FC<Props> = ({ currentLevel, onFinishSession
         {(phase === 'active' || phase === 'violation') && (
           <div className="w-full text-center">
             {phase === 'violation' ? (
-              <div className="bg-rose-950 border-2 border-rose-500 rounded-2xl p-8 mb-6 animate-bounce text-rose-200 shadow-none">
+              <div className="bg-rose-950 border-2 border-rose-500 rounded-xl p-8 mb-6 animate-bounce text-rose-200 shadow-none">
                 <AlertTriangle className="w-12 h-12 shrink-0 eb-danger mx-auto mb-2" />
                 <h3 className="text-2xl font-black uppercase tracking-wider">MOVEMENT DETECTED!</h3>
                 <p className="text-xs eb-danger mt-1">Timer reset back to {formatTime(targetDurationSec)}</p>
               </div>
             ) : (
-              <div className="relative bg-slate-900/90 border-2 border-amber-500/40 rounded-2xl p-10 md:p-14 mb-8 shadow-none shadow-amber-500/10 overflow-hidden flex flex-col items-center justify-center min-h-[260px]">
+              <div className="relative bg-slate-900/90 border-2 border-amber-500/40 rounded-xl p-10 md:p-14 mb-8 shadow-none shadow-amber-500/10 overflow-hidden flex flex-col items-center justify-center min-h-[260px]">
                 
                 {/* Concentric Stillness Pulsing Rings */}
                 <div className="absolute w-48 h-48 rounded-full border border-amber-500/20 animate-ping opacity-30 pointer-events-none" />

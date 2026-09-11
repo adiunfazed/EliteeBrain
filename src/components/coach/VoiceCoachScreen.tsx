@@ -220,7 +220,7 @@ export const VoiceCoachScreen: React.FC<Props> = ({ onBack }) => {
 
       {!supported ? (
         <div
-          className="rounded-2xl p-5 mt-6"
+          className="rounded-xl p-5 mt-6"
           style={{
             background: 'color-mix(in oklab, var(--warn) 10%, transparent)',
             border: '1px solid color-mix(in oklab, var(--warn) 35%, var(--rule))',
@@ -236,7 +236,7 @@ export const VoiceCoachScreen: React.FC<Props> = ({ onBack }) => {
       ) : (
         <>
           <div
-            className="rounded-2xl p-5 mt-5"
+            className="rounded-xl p-5 mt-5"
             style={{
               background:
                 'linear-gradient(160deg, color-mix(in oklab, var(--signal) 14%, var(--surface)), var(--surface))',
@@ -264,7 +264,7 @@ export const VoiceCoachScreen: React.FC<Props> = ({ onBack }) => {
 
           {transcript && (
             <div
-              className="rounded-2xl p-4 mt-6 max-h-52 overflow-y-auto"
+              className="rounded-xl p-4 mt-6 max-h-52 overflow-y-auto"
               style={{ background: 'var(--surface-sunk)', border: '1px solid var(--rule)' }}
             >
               <p className="eb-label">What you said</p>
@@ -276,7 +276,7 @@ export const VoiceCoachScreen: React.FC<Props> = ({ onBack }) => {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="rounded-2xl p-5 mt-5"
+              className="rounded-xl p-5 mt-5"
               style={{ background: 'var(--surface)', border: '1px solid var(--rule)' }}
             >
               <p className="eb-label">Feedback</p>

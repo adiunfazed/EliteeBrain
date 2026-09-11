@@ -22,7 +22,7 @@ export const AddButton: React.FC<Props> = ({ label, onClick }) => (
     transition={{ type: 'spring', stiffness: 400, damping: 28 }}
     onClick={onClick}
     aria-label={label}
-    className="fixed right-4 z-[70] flex items-center gap-2 pl-4 pr-5 rounded-2xl font-semibold text-white"
+    className="fixed right-4 z-[70] flex items-center gap-2 pl-4 pr-5 rounded-xl font-semibold text-white"
     style={{
       bottom: 'calc(5.25rem + env(safe-area-inset-bottom))',
       minHeight: 52,

@@ -31,9 +31,9 @@ export const ProGate: React.FC<Props> = ({ profile, feature, blurb, onOpenPro, c
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="text-center py-12 px-6 rounded-2xl border border-amber-500/25 bg-amber-500/[0.05]"
+      className="text-center py-12 px-6 rounded-xl border border-amber-500/25 bg-amber-500/[0.05]"
     >
-      <span className="w-12 h-12 shrink-0 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center mx-auto">
+      <span className="w-12 h-12 shrink-0 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center mx-auto">
         <Crown className="w-6 h-6 shrink-0 eb-warn" />
       </span>
 

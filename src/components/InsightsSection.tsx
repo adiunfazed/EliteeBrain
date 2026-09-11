@@ -29,7 +29,7 @@ export const InsightsSection: React.FC<Props> = ({ input }) => {
     return (
       <div className="text-center py-10 px-6">
         <span
-          className="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center"
+          className="w-14 h-14 rounded-xl mx-auto flex items-center justify-center"
           style={{ background: 'var(--surface-sunk)' }}
         >
           <Lightbulb className="w-6 h-6 shrink-0 text-[var(--ink-dim)]" />
@@ -53,7 +53,7 @@ export const InsightsSection: React.FC<Props> = ({ input }) => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.28, delay: Math.min(i * 0.05, 0.25) }}
-            className="rounded-2xl border p-4"
+            className="rounded-xl border p-4"
             style={{
               background: 'var(--surface)',
               borderColor: 'var(--rule)',

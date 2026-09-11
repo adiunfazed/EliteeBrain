@@ -34,7 +34,7 @@ export const EmptyState: React.FC<Props> = ({
     className="text-center py-12 px-6"
   >
     <span
-      className="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center"
+      className="w-14 h-14 rounded-xl mx-auto flex items-center justify-center"
       style={{ background: 'var(--surface-sunk)' }}
     >
       <Icon className="w-6 h-6 shrink-0 text-[var(--ink-dim)]" />

@@ -53,7 +53,7 @@ export const GoalDetail: React.FC<Props> = ({
     <div className="pb-2">
       {/* Progress. The headline figure, so it reads first. */}
       <div
-        className="rounded-2xl p-5"
+        className="rounded-xl p-5"
         style={{
           background:
             'linear-gradient(160deg, color-mix(in oklab, var(--signal) 16%, var(--surface)), var(--surface))',

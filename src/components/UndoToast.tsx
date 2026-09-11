@@ -26,7 +26,7 @@ export const UndoToast: React.FC = () => {
           style={{ bottom: 'calc(4.75rem + env(safe-area-inset-bottom))' }}
         >
           <div
-            className="pointer-events-auto max-w-sm mx-auto rounded-2xl border p-3 flex items-center gap-3"
+            className="pointer-events-auto max-w-sm mx-auto rounded-xl border p-3 flex items-center gap-3"
             style={{
               background: 'var(--surface)',
               borderColor: 'var(--rule)',

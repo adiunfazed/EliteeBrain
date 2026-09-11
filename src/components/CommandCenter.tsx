@@ -167,7 +167,7 @@ export const CommandCenter: React.FC<Props> = ({ input, displayName, onOpenHub, 
       {next ? (
         <motion.div
           layout
-          className="rounded-2xl border border-[var(--signal)]/30 bg-[#141020] p-4"
+          className="rounded-xl border border-[var(--signal)]/30 bg-[#141020] p-4"
         >
           <span className="t-meta text-[var(--signal-ink)] tracking-widest uppercase">
             Do this next
@@ -197,7 +197,7 @@ export const CommandCenter: React.FC<Props> = ({ input, displayName, onOpenHub, 
       ) : (
         <button
           onClick={() => onOpenHub('tasks')}
-          className="eb-press w-full text-left rounded-2xl border border-dashed border-[var(--rule)] p-4"
+          className="eb-press w-full text-left rounded-xl border border-dashed border-[var(--rule)] p-4"
         >
           <p className="text-sm font-bold text-[var(--ink)] font-mono">Nothing planned.</p>
           <p className="text-[11px] text-[var(--ink-muted)] mt-1">

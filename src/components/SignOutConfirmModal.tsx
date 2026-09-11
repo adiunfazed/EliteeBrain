@@ -57,7 +57,7 @@ export const SignOutConfirmModal: React.FC<Props> = ({
 
   return (
     <div className="fixed inset-0 z-[92] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
-      <div className="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 md:p-8 shadow-none text-center">
+      <div className="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-xl p-6 md:p-8 shadow-none text-center">
         {/* Close Button */}
         <button
           onClick={() => {
@@ -97,7 +97,7 @@ export const SignOutConfirmModal: React.FC<Props> = ({
         <p className="text-xs text-slate-400 font-mono mb-4">{user.email}</p>
 
         {/* Display Name Edit Form */}
-        <div className="bg-slate-950/90 border border-slate-800 rounded-2xl p-3 mb-4 space-y-2 text-left">
+        <div className="bg-slate-950/90 border border-slate-800 rounded-xl p-3 mb-4 space-y-2 text-left">
           <div className="flex items-center justify-between text-xs font-mono text-slate-300">
             <span className="flex items-center gap-1.5 font-bold">
               <UserIcon className="w-3.5 h-3.5 shrink-0 text-[#8B5CF6]" />
@@ -150,7 +150,7 @@ export const SignOutConfirmModal: React.FC<Props> = ({
         </div>
 
         {/* Status Box */}
-        <div className="bg-slate-950/80 rounded-2xl border border-[var(--signal)]/20 p-3.5 mb-5 text-left flex items-start gap-3">
+        <div className="bg-slate-950/80 rounded-xl border border-[var(--signal)]/20 p-3.5 mb-5 text-left flex items-start gap-3">
           <ShieldCheck className="w-5 h-5 text-[#8B5CF6] shrink-0 mt-0.5" />
           <div className="text-xs">
             <span className="font-bold text-[#8B5CF6] block mb-0.5">Google Cloud Sync Active</span>

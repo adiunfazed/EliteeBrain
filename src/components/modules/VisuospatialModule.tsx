@@ -139,7 +139,7 @@ export const VisuospatialModule: React.FC<Props> = ({ currentLevel, onFinishSess
 
     return (
       <div
-        className="grid grid-cols-4 gap-1.5 p-3 bg-slate-950 border border-slate-800 rounded-2xl transition-transform duration-700 relative"
+        className="grid grid-cols-4 gap-1.5 p-3 bg-slate-950 border border-slate-800 rounded-xl transition-transform duration-700 relative"
         style={{ transform: `rotate(${rotation}deg)` }}
       >
         {grid.map((filled, i) => {
@@ -207,8 +207,8 @@ export const VisuospatialModule: React.FC<Props> = ({ currentLevel, onFinishSess
       {/* Main Screen */}
       <div className="flex-1 min-w-0 flex flex-col items-center justify-center p-4 max-w-xl mx-auto w-full">
         {phase === 'intro' && (
-          <div className="text-center bg-slate-900/80 border border-slate-800 p-6 md:p-8 rounded-2xl shadow-none w-full">
-            <div className="inline-flex p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 mb-4">
+          <div className="text-center bg-slate-900/80 border border-slate-800 p-6 md:p-8 rounded-xl shadow-none w-full">
+            <div className="inline-flex p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 mb-4">
               <Box className="w-8 h-8 shrink-0" />
             </div>
             <h3 className="text-2xl font-black text-slate-100 mb-2">Visuospatial Mental Rotation</h3>
@@ -217,7 +217,7 @@ export const VisuospatialModule: React.FC<Props> = ({ currentLevel, onFinishSess
             </p>
 
             {/* Step-by-Step Educational Guide Card */}
-            <div className="bg-slate-950 p-4 rounded-2xl border border-indigo-500/30 mb-6 text-left space-y-2.5">
+            <div className="bg-slate-950 p-4 rounded-xl border border-indigo-500/30 mb-6 text-left space-y-2.5">
               <div className="flex items-center gap-2 text-indigo-400 font-bold text-xs uppercase tracking-wider">
                 <Compass className="w-4 h-4 shrink-0" />
                 <span>HOW TO SOLVE MENTAL ROTATIONS:</span>
@@ -244,7 +244,7 @@ export const VisuospatialModule: React.FC<Props> = ({ currentLevel, onFinishSess
                 setElapsedTime(0);
                 startNextTrial();
               }}
-              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white font-black text-sm tracking-wide cursor-pointer shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2"
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white font-black text-sm tracking-wide cursor-pointer shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2"
             >
               <Play className="w-4 h-4 shrink-0 fill-current" />
               <span>Begin Mental Rotation</span>
@@ -268,7 +268,7 @@ export const VisuospatialModule: React.FC<Props> = ({ currentLevel, onFinishSess
             </div>
 
             {/* Side-by-side shape comparison */}
-            <div className="grid grid-cols-2 gap-4 bg-slate-900 border-2 border-indigo-500/40 p-6 rounded-2xl shadow-none mb-4 max-w-md mx-auto items-center">
+            <div className="grid grid-cols-2 gap-4 bg-slate-900 border-2 border-indigo-500/40 p-6 rounded-xl shadow-none mb-4 max-w-md mx-auto items-center">
               <div className="flex flex-col items-center">
                 <span className="t-meta text-slate-400 uppercase mb-2">Reference Shape</span>
                 {renderShapeGrid(baseShape, 0)}
@@ -281,7 +281,7 @@ export const VisuospatialModule: React.FC<Props> = ({ currentLevel, onFinishSess
 
             {/* Feedback & Reasoning Banner */}
             {phase === 'feedback' && (
-              <div className="bg-slate-900 border border-indigo-500/50 p-3 rounded-2xl mb-4 max-w-md mx-auto text-left flex items-start gap-2.5 animate-fadeIn">
+              <div className="bg-slate-900 border border-indigo-500/50 p-3 rounded-xl mb-4 max-w-md mx-auto text-left flex items-start gap-2.5 animate-fadeIn">
                 <HelpCircle className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
                 <div className="text-[11px]">
                   <span className="font-bold text-indigo-300 block mb-0.5">MENTAL ROTATION STEP-BY-STEP:</span>
@@ -306,7 +306,7 @@ export const VisuospatialModule: React.FC<Props> = ({ currentLevel, onFinishSess
               <button
                 disabled={phase === 'feedback'}
                 onClick={() => handleUserChoice(true)}
-                className="py-4 rounded-2xl bg-slate-900 hover:bg-indigo-500 hover:text-white border border-slate-700 font-black text-sm tracking-wider uppercase transition-all active:scale-95 cursor-pointer shadow-lg select-none touch-manipulation flex items-center justify-center gap-2"
+                className="py-4 rounded-xl bg-slate-900 hover:bg-indigo-500 hover:text-white border border-slate-700 font-black text-sm tracking-wider uppercase transition-all active:scale-95 cursor-pointer shadow-lg select-none touch-manipulation flex items-center justify-center gap-2"
               >
                 <Check className="w-5 h-5 shrink-0 eb-done" />
                 <span>MATCHING (SAME)</span>
@@ -314,7 +314,7 @@ export const VisuospatialModule: React.FC<Props> = ({ currentLevel, onFinishSess
               <button
                 disabled={phase === 'feedback'}
                 onClick={() => handleUserChoice(false)}
-                className="py-4 rounded-2xl bg-slate-900 hover:bg-rose-500 hover:text-white border border-slate-700 font-black text-sm tracking-wider uppercase transition-all active:scale-95 cursor-pointer shadow-lg select-none touch-manipulation flex items-center justify-center gap-2"
+                className="py-4 rounded-xl bg-slate-900 hover:bg-rose-500 hover:text-white border border-slate-700 font-black text-sm tracking-wider uppercase transition-all active:scale-95 cursor-pointer shadow-lg select-none touch-manipulation flex items-center justify-center gap-2"
               >
                 <X className="w-5 h-5 shrink-0 eb-danger" />
                 <span>DIFFERENT (MIRROR)</span>

@@ -23,12 +23,12 @@ export const RankProgress: React.FC<Props> = ({ careerXp, pending = false }) => 
   const toGo = next ? next.min - careerXp : 0;
 
   if (pending) {
-    return <div className="rounded-2xl h-[132px] animate-pulse" style={{ background: 'var(--surface-sunk)' }} />;
+    return <div className="rounded-xl h-[132px] animate-pulse" style={{ background: 'var(--surface-sunk)' }} />;
   }
 
   return (
     <div
-      className="rounded-2xl p-5"
+      className="rounded-xl p-5"
       style={{
         background: 'var(--surface)',
         border: '1px solid var(--rule)',

@@ -29,7 +29,7 @@ export const StuckTaskCard: React.FC<Props> = ({ task, onStartFocus, onSplit, on
     <motion.div
       initial={{ opacity: 0, y: -6 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl border border-[var(--signal)]/30 bg-[#141020] p-4"
+      className="rounded-xl border border-[var(--signal)]/30 bg-[#141020] p-4"
     >
       <div className="flex items-start justify-between gap-3">
         <span className="t-meta text-[var(--signal-ink)] tracking-widest uppercase flex items-center gap-1.5">

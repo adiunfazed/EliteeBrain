@@ -166,7 +166,7 @@ export const AchievementUnlockedModal: React.FC<Props> = ({ unlockedIds, onClose
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: -20 }}
           transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-          className="relative w-full max-w-md bg-surface border border-amber-500/40 rounded-2xl p-6 sm:p-8 shadow-[0_25px_60px_-15px_rgba(245,158,11,0.25)] text-center overflow-hidden z-10"
+          className="relative w-full max-w-md bg-surface border border-amber-500/40 rounded-xl p-6 sm:p-8 shadow-[0_25px_60px_-15px_rgba(245,158,11,0.25)] text-center overflow-hidden z-10"
         >
           {/* Close Icon Top Right */}
           <button
@@ -218,7 +218,7 @@ export const AchievementUnlockedModal: React.FC<Props> = ({ unlockedIds, onClose
               initial={{ scale: 0 }}
               animate={{ scale: [0, 1.15, 1] }}
               transition={{ delay: 0.15, type: 'spring', stiffness: 400, damping: 20 }}
-              className={`relative z-10 w-24 h-24 rounded-2xl ${style.bg} border-2 ${style.border} flex items-center justify-center ${style.text} shadow-none transform rotate-3 hover:rotate-0 transition-transform`}
+              className={`relative z-10 w-24 h-24 rounded-xl ${style.bg} border-2 ${style.border} flex items-center justify-center ${style.text} shadow-none transform rotate-3 hover:rotate-0 transition-transform`}
             >
               {renderBadgeIcon(currentAchievement.icon, 'w-12 h-12')}
             </motion.div>

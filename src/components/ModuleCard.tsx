@@ -86,7 +86,7 @@ export const ModuleCard: React.FC<Props> = ({ config, state, isProUser, index = 
       onTouchEnd={() => setIsPressed(false)}
       onTouchCancel={() => setIsPressed(false)}
       onClick={handleCardClick}
-      className="group relative flex flex-col rounded-2xl p-4 cursor-pointer select-none touch-manipulation overflow-hidden transition-all duration-200"
+      className="group relative flex flex-col rounded-xl p-3 cursor-pointer select-none touch-manipulation overflow-hidden transition-all duration-200"
       style={{
         background: 'var(--surface)',
         border: `1px solid ${

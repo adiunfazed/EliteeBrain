@@ -143,8 +143,8 @@ export const ReactionInhibitorModule: React.FC<Props> = ({ currentLevel, onFinis
       {/* Main Container */}
       <div className="flex-1 min-w-0 flex flex-col items-center justify-center p-4 max-w-xl mx-auto w-full">
         {phase === 'intro' && (
-          <div className="text-center bg-slate-900/80 border border-slate-800 p-6 md:p-8 rounded-2xl shadow-none w-full">
-            <div className="inline-flex p-4 rounded-2xl bg-teal-500/10 border border-teal-500/30 text-teal-400 mb-4">
+          <div className="text-center bg-slate-900/80 border border-slate-800 p-6 md:p-8 rounded-xl shadow-none w-full">
+            <div className="inline-flex p-4 rounded-xl bg-teal-500/10 border border-teal-500/30 text-teal-400 mb-4">
               <Zap className="w-8 h-8 shrink-0" />
             </div>
             <h3 className="text-2xl font-black text-slate-100 mb-2">Visual Reaction Speed Tester</h3>
@@ -159,7 +159,7 @@ export const ReactionInhibitorModule: React.FC<Props> = ({ currentLevel, onFinis
                 setReactionTimes([]);
                 startSpeedTrial();
               }}
-              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-400 hover:to-emerald-500 text-slate-950 font-black text-sm tracking-wide cursor-pointer shadow-lg shadow-teal-500/20 flex items-center justify-center gap-2"
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-400 hover:to-emerald-500 text-slate-950 font-black text-sm tracking-wide cursor-pointer shadow-lg shadow-teal-500/20 flex items-center justify-center gap-2"
             >
               <Play className="w-4 h-4 shrink-0 fill-current" />
               <span>Start Reaction Speed Test</span>
@@ -175,7 +175,7 @@ export const ReactionInhibitorModule: React.FC<Props> = ({ currentLevel, onFinis
               e.preventDefault();
               handleClick();
             }}
-            className="w-full h-80 rounded-2xl bg-rose-600 border-4 border-rose-400 flex flex-col items-center justify-center p-8 text-center cursor-pointer shadow-none shadow-rose-600/30 select-none touch-manipulation active:scale-95 transition-all"
+            className="w-full h-80 rounded-xl bg-rose-600 border-4 border-rose-400 flex flex-col items-center justify-center p-8 text-center cursor-pointer shadow-none shadow-rose-600/30 select-none touch-manipulation active:scale-95 transition-all"
           >
             <div className="w-16 h-16 shrink-0 rounded-full bg-rose-950/40 border border-rose-300 flex items-center justify-center mb-4 animate-pulse">
               <Timer className="w-8 h-8 shrink-0 text-white" />
@@ -193,7 +193,7 @@ export const ReactionInhibitorModule: React.FC<Props> = ({ currentLevel, onFinis
               e.preventDefault();
               handleClick();
             }}
-            className="w-full h-80 rounded-2xl bg-emerald-500 border-4 border-emerald-300 flex flex-col items-center justify-center p-8 text-center cursor-pointer shadow-none shadow-emerald-500/50 select-none touch-manipulation active:scale-95 transition-all"
+            className="w-full h-80 rounded-xl bg-emerald-500 border-4 border-emerald-300 flex flex-col items-center justify-center p-8 text-center cursor-pointer shadow-none shadow-emerald-500/50 select-none touch-manipulation active:scale-95 transition-all"
           >
             <div className="w-20 h-20 shrink-0 rounded-full bg-white flex items-center justify-center mb-4 animate-ping">
               <Zap className="w-10 h-10 shrink-0 text-emerald-600 fill-current" />
@@ -207,7 +207,7 @@ export const ReactionInhibitorModule: React.FC<Props> = ({ currentLevel, onFinis
         {phase === 'too_early' && (
           <div
             onClick={handleClick}
-            className="w-full h-80 rounded-2xl bg-amber-950/90 border-4 border-amber-500 flex flex-col items-center justify-center p-8 text-center cursor-pointer shadow-none select-none"
+            className="w-full h-80 rounded-xl bg-amber-950/90 border-4 border-amber-500 flex flex-col items-center justify-center p-8 text-center cursor-pointer shadow-none select-none"
           >
             <ShieldAlert className="w-16 h-16 shrink-0 eb-warn mb-3" />
             <h3 className="text-2xl font-black eb-warn mb-2 uppercase">TOO EARLY!</h3>
@@ -220,7 +220,7 @@ export const ReactionInhibitorModule: React.FC<Props> = ({ currentLevel, onFinis
 
         {/* FEEDBACK PHASE */}
         {phase === 'feedback' && lastMs && (
-          <div className="w-full h-80 rounded-2xl bg-slate-900 border-2 border-teal-500/50 flex flex-col items-center justify-center p-8 text-center shadow-none">
+          <div className="w-full h-80 rounded-xl bg-slate-900 border-2 border-teal-500/50 flex flex-col items-center justify-center p-8 text-center shadow-none">
             <div className="inline-flex p-3 rounded-full bg-teal-500/10 text-teal-400 mb-3">
               <Award className="w-8 h-8 shrink-0" />
             </div>

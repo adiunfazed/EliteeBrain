@@ -122,7 +122,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
           exit={{ y: '100%', opacity: 0 }}
           transition={{ type: 'spring', damping: 30, stiffness: 300 }}
           onClick={(e: React.MouseEvent) => e.stopPropagation()}
-          className="w-full sm:max-w-lg max-h-[88vh] overflow-y-auto bg-[var(--ground)] border border-[var(--rule)] rounded-t-3xl sm:rounded-2xl p-4 sm:p-5 space-y-4"
+          className="w-full sm:max-w-lg max-h-[88vh] overflow-y-auto bg-[var(--ground)] border border-[var(--rule)] rounded-t-3xl sm:rounded-xl p-4 sm:p-5 space-y-4"
         >
           {/* Grab handle, mobile only */}
           <div className="sm:hidden w-10 h-1 rounded-full bg-[var(--rule)] mx-auto" />

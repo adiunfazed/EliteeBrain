@@ -303,7 +303,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
     const target = Math.max(1, habit.targetValue || 1);
 
     return (
-      <div className="rounded-2xl eb-card p-4">
+      <div className="rounded-xl eb-card p-4">
         {/* Top row: name, then the completion control on the right. */}
         <div className="flex items-start gap-3">
           <div className="min-w-0 flex-1">
@@ -483,7 +483,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
           soundFx.playClick();
           setDetailGoal(goal);
         }}
-        className="w-full text-left rounded-2xl eb-card p-4"
+        className="w-full text-left rounded-xl eb-card p-4"
       >
         <div className="flex items-start gap-3">
           <span
@@ -540,7 +540,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
   return (
     <div className="space-y-4">
       {warning && (
-        <div className="rounded-2xl border border-amber-500/25 bg-amber-500/[0.06] p-3.5 flex items-start gap-2.5">
+        <div className="rounded-xl border border-amber-500/25 bg-amber-500/[0.06] p-3.5 flex items-start gap-2.5">
           <AlertTriangle className="w-3.5 h-3.5 eb-warn shrink-0 mt-0.5" />
           <p className="text-[11px] text-[var(--ink-muted)] leading-relaxed">{warning}</p>
         </div>

@@ -92,7 +92,7 @@ export const GamesSection: React.FC<{ profile: UserProfile; onProfileUpdate?: (p
               {/* Hub header. The chess rating is the only persistent number
                   across the games, so it anchors the section. */}
               <div
-                className="rounded-2xl p-4 mb-1"
+                className="rounded-xl p-4 mb-1"
                 style={{ background: 'var(--surface)', border: '1px solid var(--rule)' }}
               >
                 <div className="flex items-center gap-4">
@@ -129,7 +129,7 @@ export const GamesSection: React.FC<{ profile: UserProfile; onProfileUpdate?: (p
                       soundFx.playClick();
                       setActiveGame(g.id as GameType);
                     }}
-                    className="group relative overflow-hidden w-full text-left rounded-2xl p-5 cursor-pointer select-none transition-colors"
+                    className="group relative overflow-hidden w-full text-left rounded-xl p-3.5 cursor-pointer select-none transition-colors"
                     style={{ background: 'var(--surface)', border: '1px solid var(--rule)' }}
                   >
                     {/* Oversized glyph, clipped — gives each card its own
@@ -142,7 +142,7 @@ export const GamesSection: React.FC<{ profile: UserProfile; onProfileUpdate?: (p
                     <div className="relative z-10">
                       <div className="flex items-start gap-4">
                         <span
-                          className="shrink-0 inline-flex items-center justify-center w-14 h-14 rounded-2xl"
+                          className="shrink-0 inline-flex items-center justify-center w-14 h-14 rounded-xl"
                           style={{ backgroundColor: `${g.accent}20`, color: g.accent }}
                         >
                           <Icon className="w-7 h-7 shrink-0" />
@@ -205,7 +205,7 @@ export const GamesSection: React.FC<{ profile: UserProfile; onProfileUpdate?: (p
             transition={{ duration: 0.3 }}
             className="w-full"
           >
-            <div className="mb-6 flex justify-between items-center bg-[var(--surface)] p-2 rounded-2xl border border-[var(--rule)]">
+            <div className="mb-6 flex justify-between items-center bg-[var(--surface)] p-2 rounded-xl border border-[var(--rule)]">
             </div>
 
             <GameShell

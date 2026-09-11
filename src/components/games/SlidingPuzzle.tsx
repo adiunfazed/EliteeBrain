@@ -268,7 +268,7 @@ export const SlidingPuzzle: React.FC<{ profile: UserProfile, onProfileUpdate?: (
         </div>
       </div>
 
-      <div className="w-full max-w-full max-w-[500px] aspect-square bg-[#0D1117] border border-[var(--rule)] rounded-2xl p-2 relative shadow-none">
+      <div className="w-full max-w-full max-w-[500px] aspect-square bg-[#0D1117] border border-[var(--rule)] rounded-xl p-2 relative shadow-none">
         <div className="w-full h-full relative overflow-hidden rounded-xl bg-[var(--surface-sunk)]">
           <AnimatePresence>
             {tiles.map((tile) => {
@@ -343,7 +343,7 @@ export const SlidingPuzzle: React.FC<{ profile: UserProfile, onProfileUpdate?: (
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 z-20 bg-black/60 backdrop-blur-md flex flex-col items-center justify-center rounded-2xl"
+              className="absolute inset-0 z-20 bg-black/60 backdrop-blur-md flex flex-col items-center justify-center rounded-xl"
             >
               <div className="bg-emerald-500/20 eb-done p-4 rounded-full mb-4">
                 <Check className="w-12 h-12 shrink-0" />

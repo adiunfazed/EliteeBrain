@@ -42,11 +42,11 @@ export const AchievementsDashboardSection: React.FC<Props> = ({ profile, onOpenG
   const featuredBadges = ACHIEVEMENTS_LIST.slice(0, 6);
 
   return (
-    <div className="bg-[var(--surface)] border border-[var(--rule)] rounded-2xl p-5 sm:p-6 mb-8 shadow-none">
+    <div className="bg-[var(--surface)] border border-[var(--rule)] rounded-xl p-5 sm:p-6 mb-8 shadow-none">
       {/* Top Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-amber-500/15 border border-amber-500/30 eb-warn rounded-2xl shadow-inner">
+          <div className="p-2.5 bg-amber-500/15 border border-amber-500/30 eb-warn rounded-xl shadow-inner">
             <Trophy className="w-5 h-5 shrink-0" />
           </div>
           <div>
@@ -69,7 +69,7 @@ export const AchievementsDashboardSection: React.FC<Props> = ({ profile, onOpenG
             soundFx.playClick();
             onOpenGallery();
           }}
-          className="px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 eb-danger text-xs font-mono font-bold rounded-2xl transition-all cursor-pointer flex items-center gap-1.5 shrink-0 self-start sm:self-auto"
+          className="px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 eb-danger text-xs font-mono font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shrink-0 self-start sm:self-auto"
         >
           <span>View Badges ({totalCount})</span>
           <ChevronRight className="w-3.5 h-3.5 shrink-0" />
@@ -90,7 +90,7 @@ export const AchievementsDashboardSection: React.FC<Props> = ({ profile, onOpenG
                 soundFx.playClick();
                 onOpenGallery();
               }}
-              className={`p-3.5 rounded-2xl border text-center flex flex-col items-center justify-between cursor-pointer transition-all ${
+              className={`p-3.5 rounded-xl border text-center flex flex-col items-center justify-between cursor-pointer transition-all ${
                 isUnlocked
                   ? 'bg-[var(--surface-sunk)] border-amber-500/40 hover:border-amber-500/80 shadow-md'
                   : 'bg-[var(--ground)] border-[var(--rule)] hover:border-slate-500'

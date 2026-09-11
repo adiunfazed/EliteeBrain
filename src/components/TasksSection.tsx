@@ -491,7 +491,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, height: 0, marginBottom: 0 }}
           transition={{ duration: 0.16 }}
-          className="relative overflow-hidden rounded-2xl eb-card"
+          className="relative overflow-hidden rounded-xl eb-card"
           style={
             selected.has(task.id)
               ? { outline: '2px solid var(--signal)', outlineOffset: -2 }
@@ -505,7 +505,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
             <span className={`absolute left-0 top-0 bottom-0 w-[3px] ${pri.bar}`} />
           )}
 
-          <div className="pl-4 pr-3 py-3">
+          <div className="pl-3.5 pr-2.5 py-2.5">
             {/* Title first, across the full width. Previously it shared a row
                 with five other elements and was the only one that could
                 shrink, so it always lost. */}
@@ -715,7 +715,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
 
       {/* Needs attention */}
       {overdue.length > 0 && tab === 'today' && (
-        <div className="rounded-2xl border border-amber-500/25 bg-amber-500/[0.06] p-3.5">
+        <div className="rounded-xl border border-amber-500/25 bg-amber-500/[0.06] p-3.5">
           <div className="flex items-center gap-1.5">
             <AlertTriangle className="w-3.5 h-3.5 shrink-0 eb-warn" />
             <span className="t-meta eb-warn tracking-widest uppercase">
@@ -798,7 +798,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl p-4"
+          className="rounded-xl p-4"
           style={{
             background: 'color-mix(in oklab, var(--signal) 14%, var(--surface))',
             border: '1px solid color-mix(in oklab, var(--signal) 40%, var(--rule))',
@@ -907,7 +907,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
 
       {/* List */}
       {visible.length === 0 ? (
-        <div className="text-center py-12 px-6 border border-dashed border-[var(--rule)] rounded-2xl">
+        <div className="text-center py-12 px-6 border border-dashed border-[var(--rule)] rounded-xl">
           <p className="t-section">
             {tab === 'today'
               ? 'Clear day.'

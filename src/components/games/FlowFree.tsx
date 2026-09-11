@@ -373,7 +373,7 @@ export const FlowFree: React.FC<{ profile: UserProfile, onProfileUpdate?: (p: Us
         </button>
       </div>
 
-      <div className="w-full max-w-full max-w-[500px] aspect-square bg-[#0D1117] border-2 border-[var(--rule)] rounded-2xl p-3 sm:p-4 shadow-none relative">
+      <div className="w-full max-w-full max-w-[500px] aspect-square bg-[#0D1117] border-2 border-[var(--rule)] rounded-xl p-3 sm:p-4 shadow-none relative">
         <div 
           ref={boardRef}
           className="w-full h-full relative"
@@ -464,7 +464,7 @@ export const FlowFree: React.FC<{ profile: UserProfile, onProfileUpdate?: (p: Us
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 z-20 bg-[#0D1117]/80 backdrop-blur-md flex flex-col items-center justify-center rounded-2xl"
+              className="absolute inset-0 z-20 bg-[#0D1117]/80 backdrop-blur-md flex flex-col items-center justify-center rounded-xl"
             >
               <h3 className="text-4xl font-display font-black text-white mb-2 uppercase tracking-wide">
                 Flow Complete
@@ -474,7 +474,7 @@ export const FlowFree: React.FC<{ profile: UserProfile, onProfileUpdate?: (p: Us
               </p>
               <button
                 onClick={() => setSeed(Math.random())}
-                className="px-8 py-4 bg-white text-slate-900 font-bold rounded-2xl flex items-center gap-2 hover:bg-slate-200 transition-colors shadow-none shadow-white/10"
+                className="px-8 py-4 bg-white text-slate-900 font-bold rounded-xl flex items-center gap-2 hover:bg-slate-200 transition-colors shadow-none shadow-white/10"
               >
                 <Play className="w-5 h-5 shrink-0" /> Next Level
               </button>

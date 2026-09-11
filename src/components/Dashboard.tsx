@@ -386,7 +386,7 @@ export const Dashboard: React.FC<Props> = ({
       
       {/* Prominent Non-Logged-In Guest Sync Banner */}
       {!currentUser && (
-        <div className="p-4 md:p-5 bg-surface border border-indigo-500/40 rounded-2xl shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative overflow-hidden">
+        <div className="p-4 md:p-5 bg-surface border border-indigo-500/40 rounded-xl shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative overflow-hidden">
           <div className="flex items-start gap-3">
             <div className="p-2.5 bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 rounded-xl shrink-0">
               <Cloud className="w-5 h-5 shrink-0 animate-pulse" />
@@ -492,6 +492,7 @@ export const Dashboard: React.FC<Props> = ({
               }}
               careerXp={serverStats.authoritative ? unifiedXp : undefined}
               streakDays={derivedStreak}
+              focusMinutesToday={Math.round((focusToday.seconds || 0) / 60)}
               questReady={!currentUser || isHydrated}
               storedQuest={
                 profile.questPin?.date === todayISO() ? profile.questPin : null
@@ -646,7 +647,7 @@ export const Dashboard: React.FC<Props> = ({
                           )}
                         </div>
 
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
                           {groupModules.map((meta, idx) => {
                             const state = profile.modules[meta.id] || {
                               level: 1,
@@ -768,7 +769,7 @@ export const Dashboard: React.FC<Props> = ({
               </h2>
             </div>
 
-            <div className="grid grid-cols-4 gap-1.5 p-1.5 rounded-2xl bg-[var(--surface-sunk)] border border-[var(--rule)]">
+            <div className="grid grid-cols-4 gap-1 p-1 rounded-xl bg-[var(--surface-sunk)] border border-[var(--rule)]">
               {([
                 { id: 'tasks' as const, label: t('plan.tasks'), icon: CheckSquare, accent: '#7C5CFF' },
                 { id: 'habits' as const, label: t('plan.habits'), icon: Repeat, accent: '#00C2A8' },
@@ -784,31 +785,31 @@ export const Dashboard: React.FC<Props> = ({
                       setHubPane(id);
                     }}
                     aria-current={active ? 'page' : undefined}
-                    className="relative min-h-[64px] rounded-xl flex flex-col items-center justify-center gap-1.5 px-1 transition-colors"
+                    className="relative min-h-[38px] rounded-lg flex items-center justify-center gap-1.5 px-2 transition-colors"
                   >
                     {active && (
                       <motion.span
                         layoutId="plan-tab-indicator"
                         className="absolute inset-0 rounded-xl"
                         style={{
-                          background: `linear-gradient(180deg, color-mix(in oklab, ${accent} 22%, var(--surface)), var(--surface))`,
-                          border: `1px solid color-mix(in oklab, ${accent} 50%, var(--rule))`,
-                          boxShadow: `0 1px 0 0 rgba(255,255,255,0.08) inset, 0 6px 16px -10px ${accent}`,
+                          background: 'var(--surface)',
+                          border: `1px solid color-mix(in oklab, ${accent} 45%, var(--rule))`,
+                          boxShadow: '0 1px 0 0 rgba(255,255,255,0.05) inset',
                         }}
                         transition={{ type: 'spring', stiffness: 420, damping: 34 }}
                       />
                     )}
 
                     <Icon
-                      className="relative w-[19px] h-[19px] shrink-0"
+                      className="relative w-[15px] h-[15px] shrink-0"
                       strokeWidth={active ? 2.4 : 1.9}
                       style={{ color: active ? accent : 'var(--ink-dim)' }}
                     />
                     <span
-                      className="relative text-[12px] leading-none text-center"
+                      className="relative text-[12.5px] leading-none whitespace-nowrap"
                       style={{
                         color: active ? 'var(--ink)' : 'var(--ink-dim)',
-                        fontWeight: active ? 700 : 500,
+                        fontWeight: active ? 600 : 500,
                       }}
                     >
                       {label}
@@ -964,7 +965,7 @@ export const Dashboard: React.FC<Props> = ({
                 soundFx.playClick();
                 setShowLeaderboard(true);
               }}
-              className="w-full text-left rounded-2xl p-4 flex items-center gap-4"
+              className="w-full text-left rounded-xl p-4 flex items-center gap-4"
               style={{
                 background:
                   'linear-gradient(150deg, color-mix(in oklab, var(--signal) 20%, var(--surface)), var(--surface))',
@@ -973,7 +974,7 @@ export const Dashboard: React.FC<Props> = ({
               }}
             >
               <span
-                className="w-12 h-12 rounded-2xl shrink-0 flex items-center justify-center"
+                className="w-12 h-12 rounded-xl shrink-0 flex items-center justify-center"
                 style={{ background: 'color-mix(in oklab, var(--signal) 22%, transparent)' }}
               >
                 <Trophy className="w-6 h-6 shrink-0" style={{ color: 'var(--signal-ink)' }} />
@@ -997,7 +998,7 @@ export const Dashboard: React.FC<Props> = ({
                 soundFx.playClick();
                 setShowShare(true);
               }}
-              className="w-full text-left rounded-2xl eb-card p-4 flex items-center gap-4"
+              className="w-full text-left rounded-xl eb-card p-4 flex items-center gap-4"
             >
               <span
                 className="w-11 h-11 rounded-xl shrink-0 flex items-center justify-center"

@@ -23,7 +23,7 @@ export const DailyChallengeCard: React.FC<Props> = ({ profile, onLaunchModule })
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25 }}
-      className={`rounded-2xl p-4 sm:p-5 border ${
+      className={`rounded-xl p-4 sm:p-5 border ${
         beatRecord
           ? 'bg-yellow-500/10 border-yellow-500/40'
           : completed

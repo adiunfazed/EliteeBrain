@@ -70,7 +70,7 @@ interface Props {
  * difference between a tool and an ambush.
  */
 export const CoachTools: React.FC<Props> = ({ onOpen }) => (
-  <div className="space-y-2">
+  <div className="space-y-1.5">
     {COACH_TOOLS.map((tool, i) => {
       const Icon = tool.icon;
 
@@ -81,14 +81,14 @@ export const CoachTools: React.FC<Props> = ({ onOpen }) => (
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.24, delay: Math.min(i * 0.04, 0.2) }}
           onClick={() => onOpen(tool.id)}
-          className="w-full text-left rounded-2xl p-4 flex items-center gap-4 transition-transform active:scale-[0.99]"
+          className="w-full text-left rounded-xl p-3 flex items-center gap-3 transition-transform active:scale-[0.99]"
           style={{ background: 'var(--surface)', border: '1px solid var(--rule)' }}
         >
           <span
-            className="w-11 h-11 rounded-xl shrink-0 flex items-center justify-center"
+            className="w-9 h-9 rounded-lg shrink-0 flex items-center justify-center"
             style={{ background: `color-mix(in oklab, ${tool.accent} 16%, transparent)` }}
           >
-            <Icon className="w-5 h-5 shrink-0" style={{ color: tool.accent }} />
+            <Icon className="w-4 h-4 shrink-0" style={{ color: tool.accent }} />
           </span>
 
           <span className="min-w-0 flex-1">
@@ -97,7 +97,7 @@ export const CoachTools: React.FC<Props> = ({ onOpen }) => (
             {tool.needs && <span className="t-meta block mt-1.5">Uses your {tool.needs}</span>}
           </span>
 
-          <ChevronRight className="w-5 h-5 shrink-0" style={{ color: 'var(--ink-dim)' }} />
+          <ChevronRight className="w-4 h-4 shrink-0" style={{ color: 'var(--ink-dim)' }} />
         </motion.button>
       );
     })}
