@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { motion, AnimatePresence, Reorder } from 'motion/react';
-import { CalendarClock, ChevronRight, ArrowUpDown, Bell, Target,
+import { motion, AnimatePresence, Reorder, useDragControls } from 'motion/react';
+import { GripVertical, CalendarClock, ChevronRight, ArrowUpDown, Bell, Target,
   Check,
   Plus,
   Trash2,
@@ -57,6 +57,8 @@ interface Props {
   goals?: { id: string; title: string }[];
   /** Hand a task to the Focus screen. */
   onStartFocus?: (task: Task) => void;
+  /** Opens a goal found by search. */
+  onOpenGoal?: (goalId: string) => void;
 }
 
 type TabId = 'today' | 'overdue' | 'upcoming' | 'completed';
@@ -117,7 +119,7 @@ interface ToastItem {
   undo?: () => void;
 }
 
-export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus }) => {
+export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus, onOpenGoal }) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [tab, setTab] = useState<TabId>('today');
   const [draft, setDraft] = useState('');
@@ -141,8 +143,14 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
   const [openSubtasks, setOpenSubtasks] = useState<Record<string, boolean>>({});
   /** Ids picked for a bulk action. */
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  /** Which task is currently liftable, set by a long press. */
-  const [dragging, setDragging] = useState<string | null>(null);
+  /**
+   * A single drag controller, shared by every row.
+   *
+   * useDragControls is a hook and cannot be called per item. Only one row
+   * drags at a time, so one controller is sufficient — the handle that
+   * starts it determines which row moves.
+   */
+  const dragControls = useDragControls();
   /** Live order during a drag, before it is committed. */
   const [dragOrder, setDragOrder] = useState<Task[] | null>(null);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
@@ -186,6 +194,13 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
     return { done, total: done + buckets.today.length };
   }, [tasks, buckets.today.length]);
   const priorities = useMemo(() => priorityProgress(tasks), [tasks]);
+
+  /** Goals whose title matches the current search. */
+  const matchingGoals = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (q.length < 2) return [];
+    return goals.filter((g) => g.title.toLowerCase().includes(q)).slice(0, 4);
+  }, [goals, search]);
   const overdue = useMemo(
     () => buckets.today.filter((t) => t.dueDate && t.dueDate < todayISO()),
     [buckets.today]
@@ -383,7 +398,6 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
    * reorder costs one write rather than one per row.
    */
   const commitReorder = async (moved: Task) => {
-    setDragging(null);
     const next = dragOrder;
     setDragOrder(null);
     if (!next) return;
@@ -556,7 +570,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                   soundFx.playClick();
                   setSelected((prev) => new Set(prev).add(task.id));
                 }}
-                className={`text-left text-sm leading-snug break-words w-full ${
+                className={`text-left text-[15px] leading-snug break-words w-full line-clamp-2 ${
                   task.completed ? 'text-[var(--ink-dim)] line-through' : 'text-[var(--ink)]'
                 }`}
               >
@@ -611,18 +625,24 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    setOpenSubtasks((prev) => ({ ...prev, [task.id]: !prev[task.id] }));
+                    // Undefined means open, so the first tap must close it.
+                    setOpenSubtasks((prev) => ({
+                      ...prev,
+                      [task.id]: prev[task.id] === false,
+                    }));
                   }}
                   className="flex items-center gap-1.5 t-meta"
                 >
                   <ChevronRight
                     className="w-3.5 h-3.5 shrink-0 transition-transform"
-                    style={{ transform: openSubtasks[task.id] ? 'rotate(90deg)' : undefined }}
+                    style={{
+                      transform: openSubtasks[task.id] !== false ? 'rotate(90deg)' : undefined,
+                    }}
                   />
                   {subtaskProgress(task).done}/{subtaskProgress(task).total} subtasks
                 </button>
 
-                {openSubtasks[task.id] && (
+                {openSubtasks[task.id] !== false && (
                   <div
                     className="mt-2 space-y-1.5 pl-2"
                     style={{ borderLeft: '1px solid var(--rule)' }}
@@ -675,7 +695,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                       soundFx.playClick();
                       onStartFocus(task);
                     }}
-                    className="w-full min-h-[44px] rounded-xl flex items-center justify-center gap-2 text-[14px] font-semibold whitespace-nowrap transition-colors"
+                    className="w-full min-h-[44px] px-4 rounded-xl flex items-center justify-center gap-2 text-[14px] font-semibold overflow-hidden transition-colors"
                     style={{
                       background: 'color-mix(in oklab, var(--done) 14%, transparent)',
                       border: '1px solid color-mix(in oklab, var(--done) 40%, var(--rule))',
@@ -683,10 +703,17 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                     }}
                   >
                     <Timer className="w-4 h-4 shrink-0" />
-                    <span className="whitespace-nowrap">
-                      Start focus
-                      {task.estimatedMinutes ? ` · ${task.estimatedMinutes} min` : ''}
-                    </span>
+                    <span className="truncate">Start focus</span>
+                    {task.estimatedMinutes ? (
+                      <span
+                        className="shrink-0 tabular-nums px-1.5 py-0.5 rounded-md text-[12px]"
+                        style={{
+                          background: 'color-mix(in oklab, var(--done) 18%, transparent)',
+                        }}
+                      >
+                        {task.estimatedMinutes}m
+                      </span>
+                    ) : null}
                   </button>
                 )}
 
@@ -851,6 +878,29 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
         )}
       </div>
 
+      {/* Goals matching the search. Tasks are the main result, but a goal
+          with that name is often what was actually being looked for. */}
+      {search.trim().length > 1 && matchingGoals.length > 0 && (
+        <div className="space-y-2">
+          <p className="eb-label">Goals</p>
+          {matchingGoals.map((g) => (
+            <button
+              key={g.id}
+              onClick={() => {
+                soundFx.playClick();
+                onOpenGoal?.(g.id);
+              }}
+              className="w-full text-left rounded-xl px-4 py-3 flex items-center gap-3"
+              style={{ background: 'var(--surface)', border: '1px solid var(--rule)' }}
+            >
+              <Target className="w-4 h-4 shrink-0" style={{ color: 'var(--signal-ink)' }} />
+              <span className="text-[14px] min-w-0 flex-1 truncate">{g.title}</span>
+              <ChevronRight className="w-4 h-4 shrink-0" style={{ color: 'var(--ink-dim)' }} />
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Bulk actions. Appears only once something is selected, so it costs
           nothing when unused. */}
       {selected.size > 0 && (
@@ -1002,30 +1052,29 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                 <Reorder.Item
                   key={t.id}
                   value={t}
-                  // Long-press to lift, so a normal scroll is never mistaken
-                  // for a drag on a touch screen.
-                  dragListener={dragging === t.id}
+                  // Dragged only from the handle, so scrolling, swiping and
+                  // long-press-to-select all keep working on the card itself.
+                  dragListener={false}
+                  dragControls={dragControls}
                   onDragEnd={() => commitReorder(t)}
-                  whileDrag={{ scale: 1.02, zIndex: 30 }}
+                  whileDrag={{ scale: 1.015, zIndex: 30 }}
                   className="relative"
                 >
-                  <div
+                  {/* Grip. Small and quiet, but a definite target. */}
+                  <button
                     onPointerDown={(e) => {
-                      const timer = window.setTimeout(() => {
-                        soundFx.playClick();
-                        setDragging(t.id);
-                      }, 320);
-                      const clear = () => {
-                        window.clearTimeout(timer);
-                        window.removeEventListener('pointerup', clear);
-                        window.removeEventListener('pointermove', clear);
-                      };
-                      window.addEventListener('pointerup', clear);
-                      window.addEventListener('pointermove', clear);
+                      e.preventDefault();
+                      soundFx.playClick();
+                      dragControls.start(e);
                     }}
+                    aria-label="Drag to reorder"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 z-20 w-8 h-12 flex items-center justify-center touch-none"
+                    style={{ color: 'var(--ink-dim)' }}
                   >
-                    {renderCard(t)}
-                  </div>
+                    <GripVertical className="w-4 h-4 shrink-0" />
+                  </button>
+
+                  <div className="pr-7">{renderCard(t)}</div>
                 </Reorder.Item>
               ))}
             </Reorder.Group>

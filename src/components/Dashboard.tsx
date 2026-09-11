@@ -823,6 +823,7 @@ export const Dashboard: React.FC<Props> = ({
 
             {hubPane === 'tasks' && (
               <TasksSection
+                onOpenGoal={() => setHubPane('goals')}
                 userId={currentUser?.uid || null}
                 goals={allGoals
                   .filter((g: any) => g.status === 'active')
