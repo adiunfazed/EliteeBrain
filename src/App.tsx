@@ -156,9 +156,23 @@ export default function App() {
     }
   }, [isDarkMode, isColorblind]);
 
+  /** Scroll position before a module opened, so closing returns you to it. */
+  const scrollBeforeModule = useRef(0);
+
   useEffect(() => {
     if (activeModuleId) {
+      scrollBeforeModule.current = window.scrollY;
       window.scrollTo({ top: 0, behavior: 'instant' });
+      return;
+    }
+
+    // Restored after paint, since the grid has to render before it can be
+    // scrolled to a position within it.
+    const restore = scrollBeforeModule.current;
+    if (restore > 0) {
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: restore, behavior: 'instant' });
+      });
     }
   }, [activeModuleId]);
 

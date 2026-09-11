@@ -1079,14 +1079,17 @@ export const Dashboard: React.FC<Props> = ({
                   <span
                     className="absolute left-1/2 -translate-x-1/2 pointer-events-none transition-opacity"
                     style={{
-                      width: 84,
-                      height: 26,
-                      bottom: 2,
+                      width: 130,
+                      height: 60,
+                      bottom: -6,
                       borderRadius: '50%',
                       background:
-                        'radial-gradient(ellipse at center, rgba(124,92,255,0.55), rgba(124,92,255,0) 70%)',
-                      filter: 'blur(6px)',
-                      opacity: isActive ? 1 : 0.55,
+                        'radial-gradient(ellipse at center, rgba(139,92,246,0.85), rgba(139,92,246,0.25) 45%, rgba(139,92,246,0) 72%)',
+                      filter: 'blur(10px)',
+                      opacity: isActive ? 1 : 0.7,
+                      // Above the bar's own background, which is 95% opaque
+                      // and was painting over most of the glow.
+                      zIndex: 0,
                     }}
                   />
 
@@ -1109,8 +1112,9 @@ export const Dashboard: React.FC<Props> = ({
                       // is drawn as a filter glow. Concrete rgba rather than
                       // color-mix, which is not reliable inside drop-shadow.
                       filter: isActive
-                        ? 'drop-shadow(0 0 7px rgba(124, 92, 255, 0.95)) drop-shadow(0 0 18px rgba(124, 92, 255, 0.55))'
-                        : 'drop-shadow(0 2px 6px rgba(124, 92, 255, 0.5))',
+                        ? 'drop-shadow(0 0 8px rgba(167,139,250,1)) drop-shadow(0 0 22px rgba(139,92,246,0.8))'
+                        : 'drop-shadow(0 0 5px rgba(167,139,250,0.7)) drop-shadow(0 3px 12px rgba(139,92,246,0.6))',
+                      zIndex: 1,
                       transform: isActive ? 'translateY(-2px)' : undefined,
                     }}
                   >

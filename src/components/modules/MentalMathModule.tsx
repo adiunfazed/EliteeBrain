@@ -31,7 +31,7 @@ export const MentalMathModule: React.FC<Props> = ({ currentLevel, onFinishSessio
   const [correct, setCorrect] = useState(0);
   const [answered, setAnswered] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState(perQuestion);
-  const [phase, setPhase] = useState<'playing' | 'done'>('playing');
+  const [phase, setPhase] = useState<'ready' | 'playing' | 'done'>('ready');
   const [times, setTimes] = useState<number[]>([]);
   const [results, setResults] = useState<boolean[]>([]);
 
@@ -126,6 +126,48 @@ export const MentalMathModule: React.FC<Props> = ({ currentLevel, onFinishSessio
       ],
     });
   }, [phase, stats, correct, perQuestion, currentLevel, onFinishSession]);
+
+  if (phase === 'ready') {
+    return (
+      <div className="fixed inset-0 z-50 bg-[var(--ground)] flex flex-col items-center justify-center p-6 text-center">
+        <Calculator className="w-12 h-12 shrink-0 text-[var(--signal-ink)]" />
+        <h2 className="t-title mt-5">Mental Math Sprint</h2>
+        <p className="t-sub mt-3 max-w-xs leading-relaxed">
+          Answer as many as you can. Each question has {perQuestion} seconds, and a wrong
+          answer costs nothing but time.
+        </p>
+
+        <div className="stat-strip grid-cols-2 mt-7 w-full max-w-[280px]">
+          <div>
+            <span className="eb-label block">Per question</span>
+            <span className="t-figure block mt-1.5" style={{ fontSize: 20 }}>
+              {perQuestion}s
+            </span>
+          </div>
+          <div>
+            <span className="eb-label block">Operations</span>
+            <span className="t-figure block mt-1.5" style={{ fontSize: 20 }}>
+              {operationsForLevel(currentLevel).join(' ')}
+            </span>
+          </div>
+        </div>
+
+        <button
+          onClick={() => {
+            soundFx.playClick();
+            setPhase('playing');
+          }}
+          className="btn-lg w-full max-w-[280px] mt-7"
+        >
+          Start
+        </button>
+
+        <button onClick={onClose} className="btn-text mt-3">
+          Not now
+        </button>
+      </div>
+    );
+  }
 
   if (phase === 'done') {
     return (

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { soundFx } from '../../utils/audio';
-import { Shuffle, ArrowLeft, Play, Zap, Keyboard, Timer } from 'lucide-react';
+import { X, Shuffle, ArrowLeft, Play, Zap, Keyboard, Timer } from 'lucide-react';
 
 interface Props {
   currentLevel: number;
@@ -155,22 +155,22 @@ export const CognitiveShiftModule: React.FC<Props> = ({ currentLevel, onFinishSe
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-slate-950 text-slate-100 overflow-y-auto">
       {/* HUD Bar */}
-      <div className="flex items-center justify-between p-4 md:px-8 border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-lg">
+      <div className="flex items-center gap-3 p-3 md:px-8 border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-lg">
         <button
           onClick={() => {
             soundFx.playClick();
             onClose();
           }}
-          className="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-slate-100 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 cursor-pointer"
+          aria-label="Exit module"
+        className="icon-btn shrink-0"
         >
-          <ArrowLeft className="w-4 h-4 shrink-0" />
-          <span>Exit Module</span>
+          <X className="w-4 h-4 shrink-0" />
         </button>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
           <Shuffle className="w-5 h-5 shrink-0 eb-danger" />
-          <h2 className="text-base font-bold text-slate-100">Cognitive Shift & Flexibility</h2>
-          <span className="text-xs px-2 py-0.5 rounded-full bg-rose-500/10 eb-danger font-mono border border-rose-500/30">
+          <h2 className="text-[15px] font-bold text-slate-100 truncate min-w-0">Cognitive Shift & Flexibility</h2>
+          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-rose-500/10 eb-danger border border-rose-500/30 shrink-0 whitespace-nowrap">
             Lvl {currentLevel}
           </span>
         </div>
