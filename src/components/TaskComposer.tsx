@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Calendar, Clock, Target, Plus, ChevronDown, X, Check } from 'lucide-react';
+import { Calendar, Clock, Target, Plus, ChevronDown, X, Check, Circle } from 'lucide-react';
+import * as Icons from 'lucide-react';
+import { TASK_ICONS } from '../lib/taskIcons';
 import { Task, TaskPriority, Subtask, Recurrence } from '../types';
 import { DatePicker } from './DatePicker';
 import { soundFx } from '../utils/audio';
@@ -20,6 +22,7 @@ interface Props {
     subtasks?: Subtask[];
     recurrence?: Recurrence;
     reminderMinutesBefore?: number;
+    iconId?: string;
   }) => void;
   onCancel: () => void;
 }
@@ -70,6 +73,7 @@ export const TaskComposer: React.FC<Props> = ({ task, goals, onSave, onCancel })
   );
 
   const [showCalendar, setShowCalendar] = useState(false);
+  const [iconId, setIconId] = useState<string | undefined>(task?.iconId);
   const [customMinutes, setCustomMinutes] = useState(
     () => !!task?.estimatedMinutes && !DURATIONS.includes(task.estimatedMinutes)
   );
@@ -90,6 +94,7 @@ export const TaskComposer: React.FC<Props> = ({ task, goals, onSave, onCancel })
       subtasks: subtasks.filter((st) => st.title.trim()),
       recurrence: dueDate ? recurrence : undefined,
       reminderMinutesBefore: dueTime ? reminderMinutes : undefined,
+      iconId,
     });
   };
 
@@ -109,6 +114,48 @@ export const TaskComposer: React.FC<Props> = ({ task, goals, onSave, onCancel })
         className="w-full rounded-xl px-4 py-3.5 text-[16px] text-[var(--ink)] placeholder:text-[var(--ink-dim)] outline-none"
         style={{ background: 'var(--surface-sunk)', border: '1px solid var(--rule)' }}
       />
+
+      {/* Icon. Optional, and directly under the title because choosing one is
+          part of naming the task rather than a setting. */}
+      <div className="flex items-center gap-2 mt-3 overflow-x-auto no-scrollbar pb-1">
+        <button
+          onClick={() => setIconId(undefined)}
+          className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-colors"
+          style={{
+            background: !iconId ? 'color-mix(in oklab, var(--signal) 16%, transparent)' : 'transparent',
+            border: `1px solid ${!iconId ? 'var(--signal)' : 'var(--rule)'}`,
+            color: !iconId ? 'var(--signal-ink)' : 'var(--ink-dim)',
+          }}
+          aria-label="No icon"
+        >
+          <Circle className="w-4 h-4 shrink-0" />
+        </button>
+
+        {TASK_ICONS.map((entry) => {
+          const Icon = (Icons as any)[entry.icon];
+          if (!Icon) return null;
+          const active = iconId === entry.id;
+
+          return (
+            <button
+              key={entry.id}
+              onClick={() => setIconId(active ? undefined : entry.id)}
+              title={entry.label}
+              aria-label={entry.label}
+              className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-colors"
+              style={{
+                background: active
+                  ? 'color-mix(in oklab, var(--signal) 16%, transparent)'
+                  : 'transparent',
+                border: `1px solid ${active ? 'var(--signal)' : 'var(--rule)'}`,
+                color: active ? 'var(--signal-ink)' : 'var(--ink-dim)',
+              }}
+            >
+              <Icon className="w-4 h-4 shrink-0" />
+            </button>
+          );
+        })}
+      </div>
 
       {/* Date — the second thing anyone sets, so it stays visible. */}
       <button

@@ -194,6 +194,8 @@ export interface Task {
    * than renumbering the whole list.
    */
   manualOrder?: number;
+  /** Chosen icon key. See lib/taskIcons. Absent falls back to the priority icon. */
+  iconId?: string;
   /** Set once a reminder has been sent, so it fires once rather than repeatedly. */
   reminderSentAt?: string;
   /** Id of the recurring task this one was generated from. */

@@ -34,6 +34,8 @@ import { soundFx } from '../utils/audio';
 import { ComposerSheet } from './ComposerSheet';
 import { AddButton } from './AddButton';
 import { SwipeableRow } from './SwipeableRow';
+import * as Icons from 'lucide-react';
+import { iconNameFor } from '../lib/taskIcons';
 import { byManualOrder, positionFor, needsRebalance, rebalance } from '../lib/ordering';
 import { TaskComposer } from './TaskComposer';
 import { TaskDetailSheet } from './TaskDetailSheet';
@@ -505,7 +507,14 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
             <span className={`absolute left-0 top-0 bottom-0 w-[3px] ${pri.bar}`} />
           )}
 
-          <div className="flex items-center gap-3 pl-4 pr-3 py-3">
+          <div
+            className="flex items-center gap-3 pl-4 pr-3 py-3"
+            onContextMenu={(e) => {
+              e.preventDefault();
+              soundFx.playClick();
+              setSelected((prev) => new Set(prev).add(task.id));
+            }}
+          >
             {/* Category mark. Fixed width so every title starts at the same x. */}
             <span
               className="w-9 h-9 rounded-xl shrink-0 flex items-center justify-center"
@@ -515,10 +524,17 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                   : `color-mix(in oklab, ${pri.hex} 16%, transparent)`,
               }}
             >
-              <pri.icon
-                className="w-4 h-4 shrink-0"
-                style={{ color: task.completed ? 'var(--ink-dim)' : pri.hex }}
-              />
+              {(() => {
+                const name = iconNameFor(task.iconId);
+                const Chosen = name ? (Icons as any)[name] : null;
+                const Icon = Chosen || pri.icon;
+                return (
+                  <Icon
+                    className="w-4 h-4 shrink-0"
+                    style={{ color: task.completed ? 'var(--ink-dim)' : pri.hex }}
+                  />
+                );
+              })()}
             </span>
 
             {/* Title and metadata take the remaining width. */}
@@ -534,15 +550,10 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                 }
                 setDetailId(task.id);
               }}
-              onContextMenu={(e) => {
-                e.preventDefault();
-                soundFx.playClick();
-                setSelected((prev) => new Set(prev).add(task.id));
-              }}
               className="flex-1 min-w-0 text-left"
             >
               <span
-                className={`block text-[15px] leading-snug line-clamp-1 ${
+                className={`block text-[15px] leading-snug line-clamp-2 ${
                   task.completed ? 'text-[var(--ink-dim)] line-through' : 'text-[var(--ink)]'
                 }`}
               >
@@ -588,7 +599,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
               <span
                 className={`w-[24px] h-[24px] rounded-full border-2 flex items-center justify-center transition-all ${
                   task.completed
-                    ? 'bg-emerald-500 border-emerald-500 text-slate-950'
+                    ? 'bg-emerald-500 border-emerald-500 text-slate-950 glow-done'
                     : 'border-[var(--rule-strong)]'
                 }`}
               >
@@ -767,46 +778,66 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl p-3 flex items-center gap-2.5 flex-wrap"
+          className="rounded-2xl p-4"
           style={{
             background: 'color-mix(in oklab, var(--signal) 14%, var(--surface))',
             border: '1px solid color-mix(in oklab, var(--signal) 40%, var(--rule))',
           }}
         >
-          <span className="text-[14px] font-semibold min-w-0 flex-1">
+          {/* Its own line, so the count can never be squeezed into a column. */}
+          <p className="text-[15px] font-semibold">
             {selected.size} selected
-          </span>
+          </p>
 
-          <button
-            onClick={async () => {
-              soundFx.playSuccess();
-              const picked = tasks.filter((t) => selected.has(t.id) && !t.completed);
-              setSelected(new Set());
-              for (const t of picked) await handleToggle(t);
-            }}
-            className="chip shrink-0"
-          >
-            <Check className="w-3.5 h-3.5 shrink-0" />
-            Complete
-          </button>
+          <div className="grid grid-cols-3 gap-2 mt-3">
+            <button
+              onClick={async () => {
+                soundFx.playSuccess();
+                const picked = tasks.filter((t) => selected.has(t.id) && !t.completed);
+                setSelected(new Set());
+                for (const t of picked) await handleToggle(t);
+              }}
+              className="min-h-[44px] rounded-xl flex items-center justify-center gap-1.5 text-[13px] font-semibold"
+              style={{
+                background: 'color-mix(in oklab, var(--done) 18%, transparent)',
+                border: '1px solid color-mix(in oklab, var(--done) 45%, var(--rule))',
+                color: 'var(--done)',
+              }}
+            >
+              <Check className="w-4 h-4 shrink-0" />
+              Done
+            </button>
 
-          <button
-            onClick={async () => {
-              const value = shiftDate(1);
-              const picked = tasks.filter((t) => selected.has(t.id));
-              setSelected(new Set());
-              for (const t of picked) await patch(t, { dueDate: value });
-              pushToast(`Moved ${picked.length} to tomorrow.`);
-            }}
-            className="chip shrink-0"
-          >
-            <CalendarClock className="w-3.5 h-3.5 shrink-0" />
-            Tomorrow
-          </button>
+            <button
+              onClick={async () => {
+                const value = shiftDate(1);
+                const picked = tasks.filter((t) => selected.has(t.id));
+                setSelected(new Set());
+                for (const t of picked) await patch(t, { dueDate: value });
+                pushToast(`Moved ${picked.length} to tomorrow.`);
+              }}
+              className="min-h-[44px] rounded-xl flex items-center justify-center gap-1.5 text-[13px] font-semibold"
+              style={{
+                background: 'color-mix(in oklab, var(--warn) 16%, transparent)',
+                border: '1px solid color-mix(in oklab, var(--warn) 40%, var(--rule))',
+                color: 'var(--warn)',
+              }}
+            >
+              <CalendarClock className="w-4 h-4 shrink-0" />
+              Tomorrow
+            </button>
 
-          <button onClick={() => setSelected(new Set())} className="chip shrink-0">
-            Cancel
-          </button>
+            <button
+              onClick={() => setSelected(new Set())}
+              className="min-h-[44px] rounded-xl flex items-center justify-center text-[13px] font-semibold"
+              style={{
+                border: '1px solid var(--rule)',
+                color: 'var(--ink-dim)',
+              }}
+            >
+              Cancel
+            </button>
+          </div>
         </motion.div>
       )}
 
@@ -995,6 +1026,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                 subtasks: fields.subtasks,
                 recurrence: fields.recurrence,
                 reminderMinutesBefore: fields.reminderMinutesBefore,
+                iconId: fields.iconId,
               });
               applyLocal((list) => [task, ...list]);
               await saveTask(userId, task);

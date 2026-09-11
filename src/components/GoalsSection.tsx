@@ -329,7 +329,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
               <span
                 className={`w-[26px] h-[26px] rounded-full border-2 flex items-center justify-center transition-all ${
                   stats.completedToday
-                    ? 'bg-emerald-500 border-emerald-500 text-slate-950'
+                    ? 'bg-emerald-500 border-emerald-500 text-slate-950 glow-done'
                     : 'border-[var(--rule-strong)]'
                 }`}
               >
@@ -370,7 +370,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
               <div key={d.iso} className="flex flex-col items-center gap-1 min-w-0">
                 <span className="t-meta leading-none">{d.label}</span>
                 <span
-                  className="w-full rounded-full"
+                  className={`w-full rounded-full ${met ? 'glow-done' : isToday ? 'glow-today' : ''}`}
                   style={{
                     aspectRatio: '1 / 1',
                     maxWidth: 28,

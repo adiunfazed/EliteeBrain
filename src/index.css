@@ -1719,3 +1719,34 @@ button > span,
   min-height: 34px;
   margin: 0 auto;
 }
+
+
+/* ==================================================================
+   Completion glow
+
+   A flat green circle reads as a state; a glowing one reads as an
+   achievement. Kept subtle — a coloured halo, not a light source.
+   ================================================================== */
+
+.dark .glow-done {
+  box-shadow:
+    0 0 0 3px color-mix(in oklab, var(--done) 18%, transparent),
+    0 0 12px -1px color-mix(in oklab, var(--done) 60%, transparent);
+}
+
+.dark .glow-today {
+  box-shadow:
+    0 0 0 3px color-mix(in oklab, var(--signal) 16%, transparent),
+    0 0 10px -1px color-mix(in oklab, var(--signal) 55%, transparent);
+}
+
+/* The tick lands with a small pulse rather than simply appearing. */
+@keyframes eb-pop {
+  0% { transform: scale(0.8); }
+  55% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+.glow-done {
+  animation: eb-pop 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}

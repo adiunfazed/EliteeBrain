@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'motion/react';
-import { Sun,
+import { SkipForward, Sun,
   Check,
   Trash2,
   Moon,
@@ -111,6 +111,22 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], habits = [], 
       return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`;
     });
   }, [today]);
+  /** Set a block to a specific state. */
+  const setBlockState = async (block: RoutineBlock, next: BlockState) => {
+    if (next === 'done') soundFx.playSuccess();
+    else soundFx.playClick();
+
+    setLogs((prev) => [
+      { id: `${today}__${block.id}`, blockId: block.id, date: today, state: next, updatedAt: '' },
+      ...prev.filter((l) => !(l.blockId === block.id && l.date === today)),
+    ]);
+    try {
+      await setRoutineState(userId, block.id, today, next);
+    } catch (e) {
+      console.error('Could not update block:', e);
+    }
+  };
+
   const cycleState = async (block: RoutineBlock, current: BlockState) => {
     const order: BlockState[] = ['pending', 'done', 'partial', 'skipped'];
     const next = order[(order.indexOf(current) + 1) % order.length];
@@ -348,280 +364,127 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], habits = [], 
             </div>
           ) : (
             <div className="space-y-2">
-              {day.map(({ block, state }) => (
-                <motion.div
-                  key={block.id}
-                  layout
-                  className={`group eb-lift relative overflow-hidden rounded-2xl border p-3.5 flex items-start gap-3 ${
-                  editingDaysFor === block.id || editingTimeFor === block.id ? 'pb-14' : ''
-                } ${stateStyle[state]}`}
-                >
-                  <span className={`absolute left-0 top-0 bottom-0 w-[3px] ${BLOCK_META[block.kind].bar}`} />
+              {day.map(({ block, state }) => {
+                const meta = BLOCK_META[block.kind] || BLOCK_META.custom;
+                const days = block.weekdays && block.weekdays.length > 0 ? block.weekdays : null;
 
-                  <button
-                    onClick={() => cycleState(block, state)}
-                    aria-label="Cycle block state"
-                    className="shrink-0 w-10 h-10 -m-1 flex items-center justify-center"
-                  >
-                    <span
-                      className={`w-6 h-6 rounded-lg border flex items-center justify-center ${
-                        state === 'done'
-                          ? 'bg-emerald-500 border-emerald-500 text-slate-950'
-                          : state === 'partial'
-                            ? 'bg-amber-500 border-amber-500 text-slate-950'
-                            : 'border-[var(--rule-strong)]'
-                      }`}
-                    >
-                      {state === 'done' && <Check className="w-3.5 h-3.5 shrink-0 stroke-[3]" />}
-                      {state === 'partial' && <MinusCircle className="w-3.5 h-3.5 shrink-0" />}
-                    </span>
-                  </button>
-
-                  <div className="min-w-0 flex-1">
-                    {editingId === block.id ? (
-                      <input
-                        autoFocus
-                        value={editText}
-                        onChange={(e) => setEditText(e.target.value)}
-                        onBlur={() => commitRename(block)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') commitRename(block);
-                          if (e.key === 'Escape') setEditingId(null);
-                        }}
-                        className="w-full bg-[var(--surface-sunk)] border border-[color-mix(in_oklab,var(--signal)_60%,transparent)] rounded-lg px-2 py-1 text-sm text-[var(--ink)] outline-none"
-                      />
-                    ) : (
-                      <p
-                        className={`text-sm font-bold break-words ${
-                          state === 'skipped' ? 'text-[var(--ink-dim)] line-through' : 'text-[var(--ink)]'
-                        }`}
-                      >
-                        {block.title}
-                      </p>
-                    )}
-                    <div className="flex items-center gap-2 mt-1 flex-wrap">
-                      {editingTimeFor === block.id ? (
-                        <span
-                          className="flex items-center gap-1.5"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <input
-                            type="time"
-                            defaultValue={block.startTime}
-                            onBlur={(e) => {
-                              if (e.target.value && e.target.value !== block.startTime) {
-                                patchRoutineBlock(userId, block.id, { startTime: e.target.value });
-                                setBlocks((prev) =>
-                                  prev.map((b) =>
-                                    b.id === block.id ? { ...b, startTime: e.target.value } : b
-                                  )
-                                );
-                              }
-                            }}
-                            className="bg-[var(--ground)] border border-[#262C38] rounded-lg px-1.5 py-1 text-[12px] text-[var(--ink)] outline-none"
-                          />
-                          <span className="text-[var(--ink-dim)] text-[12px]">→</span>
-                          <input
-                            type="time"
-                            defaultValue={block.endTime}
-                            onBlur={(e) => {
-                              if (e.target.value && e.target.value !== block.endTime) {
-                                patchRoutineBlock(userId, block.id, { endTime: e.target.value });
-                                setBlocks((prev) =>
-                                  prev.map((b) =>
-                                    b.id === block.id ? { ...b, endTime: e.target.value } : b
-                                  )
-                                );
-                              }
-                            }}
-                            className="bg-[var(--ground)] border border-[#262C38] rounded-lg px-1.5 py-1 text-[12px] text-[var(--ink)] outline-none"
-                          />
-                          <button
-                            onClick={() => setEditingTimeFor(null)}
-                            className="eb-press t-meta text-[var(--signal-ink)] px-1.5"
-                          >
-                            Done
-                          </button>
-                        </span>
-                      ) : (
-                        <button
-                          onClick={() => setEditingTimeFor(block.id)}
-                          className="eb-press t-meta hover:text-[var(--ink)]"
-                        >
-                          {block.startTime} – {block.endTime}
-                        </button>
-                      )}
-                      <span className="t-meta">
-                        {blockDuration(block)} min
-                      </span>
+                return (
+                  <div key={block.id} className="rounded-2xl eb-card p-4">
+                    <div className="flex items-start gap-3">
+                      {/* Time, fixed width so every name starts at the same x. */}
                       <span
-                        className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${BLOCK_META[block.kind].tint}`}
+                        className="w-[52px] shrink-0 text-center rounded-xl py-1.5"
+                        style={{ background: 'var(--surface-sunk)' }}
                       >
-                        {BLOCK_META[block.kind].label}
-                      </span>
-                      <button
-                        onClick={() =>
-                          setEditingTimeFor(editingTimeFor === block.id ? null : block.id)
-                        }
-                        className="eb-press t-meta hover:text-[var(--ink)] flex items-center gap-1 relative"
-                      >
-                        <Clock className="w-3.5 h-3.5 shrink-0" />
-                        {block.startTime}–{block.endTime}
-                      </button>
-                      <button
-                        onClick={() =>
-                          setEditingDaysFor(editingDaysFor === block.id ? null : block.id)
-                        }
-                        className="eb-press t-meta hover:text-[var(--ink)] flex items-center gap-1 relative"
-                      >
-                        <CalendarDays className="w-3.5 h-3.5 shrink-0" />
-                        {!block.weekdays || block.weekdays.length === 0
-                          ? 'Every day'
-                          : block.weekdays.map((d) => DAY_LABELS[d]).join(' ')}
-                      </button>
-                      {block.goalId && (
-                        <span className="t-meta text-[var(--signal-ink)] flex items-center gap-1">
-                          <Target className="w-3.5 h-3.5 shrink-0" />
-                          {goals.find((g) => g.id === block.goalId)?.title || 'Goal'}
+                        <span className="t-figure block text-[13px] tabular-nums">
+                          {block.startTime}
                         </span>
-                      )}
-                      {state === 'skipped' && (
-                        <span className="t-meta">Skipped</span>
-                      )}
-                    </div>
-                  </div>
+                      </span>
 
-                  {editingTimeFor === block.id && (
-                    <div className="absolute left-3 right-3 bottom-2 z-10 flex items-center gap-2 flex-wrap">
-                      <input
-                        type="time"
-                        defaultValue={block.startTime}
-                        onClick={(e) => e.stopPropagation()}
-                        onBlur={(e) => {
-                          if (e.target.value && e.target.value !== block.startTime) {
-                            patchRoutineBlock(userId, block.id, { startTime: e.target.value });
-                            setBlocks((prev) =>
-                              prev.map((b) =>
-                                b.id === block.id ? { ...b, startTime: e.target.value } : b
-                              )
-                            );
-                          }
-                        }}
-                        className="bg-[#0B0D12] border border-[#262C38] rounded-lg px-2 py-1.5 text-[11px] text-[var(--ink)] outline-none"
-                      />
-                      <span className="text-[var(--ink-dim)] text-[11px]">→</span>
-                      <input
-                        type="time"
-                        defaultValue={block.endTime}
-                        onClick={(e) => e.stopPropagation()}
-                        onBlur={(e) => {
-                          if (e.target.value && e.target.value !== block.endTime) {
-                            patchRoutineBlock(userId, block.id, { endTime: e.target.value });
-                            setBlocks((prev) =>
-                              prev.map((b) =>
-                                b.id === block.id ? { ...b, endTime: e.target.value } : b
-                              )
-                            );
-                          }
-                        }}
-                        className="bg-[#0B0D12] border border-[#262C38] rounded-lg px-2 py-1.5 text-[11px] text-[var(--ink)] outline-none"
-                      />
+                      <div className="min-w-0 flex-1">
+                        <p
+                          className="text-[15px] font-semibold leading-snug line-clamp-2"
+                          style={{
+                            textDecoration: state === 'done' ? 'line-through' : undefined,
+                            color: state === 'done' ? 'var(--ink-dim)' : 'var(--ink)',
+                          }}
+                        >
+                          {block.title}
+                        </p>
+                        <p className="t-meta mt-0.5 truncate">
+                          {meta.label} · {blockDuration(block)} min
+                        </p>
+                      </div>
 
-                      <select
-                        defaultValue={block.kind}
-                        onClick={(e) => e.stopPropagation()}
-                        onChange={(e) => {
-                          const kind = e.target.value as BlockKind;
-                          patchRoutineBlock(userId, block.id, { kind });
-                          setBlocks((prev) =>
-                            prev.map((b) => (b.id === block.id ? { ...b, kind } : b))
-                          );
-                        }}
-                        className="bg-[#0B0D12] border border-[#262C38] rounded-lg px-2 py-1.5 text-[11px] text-[var(--ink)] outline-none"
+                      {/* Same completion control as tasks and habits. */}
+                      <button
+                        onClick={() => setBlockState(block, state === 'done' ? 'pending' : 'done')}
+                        aria-label={state === 'done' ? 'Mark not done' : 'Mark done'}
+                        className="shrink-0 w-10 h-10 flex items-center justify-center"
                       >
-                        {KINDS.map((k) => (
-                          <option key={k} value={k}>
-                            {BLOCK_META[k].label}
-                          </option>
-                        ))}
-                      </select>
+                        <span
+                          className={`w-[26px] h-[26px] rounded-full border-2 flex items-center justify-center transition-all ${
+                            state === 'done'
+                              ? 'bg-emerald-500 border-emerald-500 text-slate-950 glow-done'
+                              : 'border-[var(--rule-strong)]'
+                          }`}
+                        >
+                          {state === 'done' && (
+                            <Check className="w-3.5 h-3.5 shrink-0 stroke-[3]" />
+                          )}
+                        </span>
+                      </button>
                     </div>
-                  )}
 
-                  {editingTimeFor === block.id && (
-                    <div
-                      className="absolute left-3 right-3 bottom-2 flex items-center gap-2 z-10"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <input
-                        type="time"
-                        defaultValue={block.startTime}
-                        onBlur={(e) =>
-                          e.target.value !== block.startTime &&
-                          updateBlockTime(block, { startTime: e.target.value })
-                        }
-                        className="flex-1 min-w-0 bg-[#0B0D12] border border-[#262C38] rounded-lg px-2 py-1.5 text-[11px] text-[var(--ink)] outline-none"
-                      />
-                      <span className="text-[var(--ink-dim)] text-xs">→</span>
-                      <input
-                        type="time"
-                        defaultValue={block.endTime}
-                        onBlur={(e) =>
-                          e.target.value !== block.endTime &&
-                          updateBlockTime(block, { endTime: e.target.value })
-                        }
-                        className="flex-1 min-w-0 bg-[#0B0D12] border border-[#262C38] rounded-lg px-2 py-1.5 text-[11px] text-[var(--ink)] outline-none"
-                      />
+                    {/* Which days it runs. Only shown when it is not every day,
+                        since "every day" is already in the line above. */}
+                    {days && (
+                      <div className="grid grid-cols-7 gap-1.5 mt-3.5">
+                        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((label, i) => {
+                          const on = days.includes(i);
+                          const isToday = new Date(`${today}T00:00:00`).getDay() === i;
+
+                          return (
+                            <div key={i} className="flex flex-col items-center gap-1 min-w-0">
+                              <span className="t-meta leading-none">{label}</span>
+                              <span
+                                className={`w-full rounded-full ${isToday && on ? 'glow-today' : ''}`}
+                                style={{
+                                  aspectRatio: '1 / 1',
+                                  maxWidth: 28,
+                                  background: on
+                                    ? 'color-mix(in oklab, var(--signal) 60%, transparent)'
+                                    : 'transparent',
+                                  border: on ? 'none' : '1px solid var(--rule)',
+                                }}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-2 mt-3">
+                      <span className="t-meta min-w-0 truncate">
+                        {block.startTime}–{block.endTime}
+                      </span>
+
+                      <span className="flex-1" />
+
+                      <button
+                        onClick={() => setBlockState(block, 'skipped')}
+                        aria-label="Skip today"
+                        className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                        style={{ color: 'var(--ink-dim)' }}
+                      >
+                        <SkipForward className="w-4 h-4 shrink-0" />
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          soundFx.playClick();
+                          setEditingBlock(block);
+                          setBlockComposerOpen(true);
+                        }}
+                        aria-label="Edit block"
+                        className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                        style={{ color: 'var(--ink-dim)' }}
+                      >
+                        <Pencil className="w-4 h-4 shrink-0" />
+                      </button>
+
+                      <button
+                        onClick={() => deleteBlock(block)}
+                        aria-label="Delete block"
+                        className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                        style={{ color: 'var(--ink-dim)' }}
+                      >
+                        <Trash2 className="w-4 h-4 shrink-0" />
+                      </button>
                     </div>
-                  )}
-
-                  {editingDaysFor === block.id && (
-                    <div className="absolute left-3 right-3 bottom-2 flex items-center gap-1 z-10">
-                      {DAY_LABELS.map((label, i) => {
-                        const active =
-                          !block.weekdays || block.weekdays.length === 0
-                            ? true
-                            : block.weekdays.includes(i);
-                        return (
-                          <button
-                            key={i}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleBlockDay(block, i);
-                            }}
-                            className={`eb-press flex-1 h-8 rounded-lg t-meta border ${
-                              active ? 'eb-chip-active' : 'text-[var(--ink-dim)] border-[#262C38] bg-[#0B0D12]'
-                            }`}
-                          >
-                            {label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  <div className="flex items-center gap-0.5 shrink-0 opacity-70 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={() => {
-                        soundFx.playClick();
-                        setEditingBlock(block);
-                        setBlockComposerOpen(true);
-                      }}
-                      aria-label="Edit block"
-                      className="w-10 h-10 shrink-0 rounded-lg hover:bg-[var(--surface-sunk)] text-[var(--ink-muted)] hover:text-[var(--ink)] flex items-center justify-center"
-                    >
-                      <Pencil className="w-3.5 h-3.5 shrink-0" />
-                    </button>
-                    <button
-                      onClick={() => deleteBlock(block)}
-                      aria-label="Delete block"
-                      className="w-10 h-10 shrink-0 rounded-lg hover:bg-rose-500/15 text-[var(--ink-muted)] hover:eb-danger flex items-center justify-center"
-                    >
-                      <Trash2 className="w-3.5 h-3.5 shrink-0" />
-                    </button>
                   </div>
-                </motion.div>
-              ))}
+                );
+              })}
               <p className="t-meta text-center pt-1">
                 Tap the box to cycle: pending → done → partial → skipped.
               </p>
