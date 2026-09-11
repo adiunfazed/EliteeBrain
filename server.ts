@@ -626,7 +626,25 @@ async function startServer() {
         if (failure === 'no_token') {
           return res.status(401).json({ error: 'Sign in first.' });
         }
-        return res.status(401).json({ error: 'Your session expired. Sign out and back in.' });
+        const code = String(lastVerifyFailure?.code || '');
+
+        // An expired token is normal and the client retries after a forced
+        // refresh, so this should rarely be seen at all.
+        if (code.includes('expired')) {
+          return res.status(401).json({ error: 'Session expired. Retrying…' });
+        }
+
+        // A revoked token means the account signed out elsewhere.
+        if (code.includes('revoked')) {
+          return res.status(401).json({ error: 'Signed out elsewhere. Sign in again.' });
+        }
+
+        // Everything else is a server-side mismatch — wrong project, bad
+        // credentials — which signing out will not fix.
+        console.error('Token rejected:', code);
+        return res.status(401).json({
+          error: `Could not verify your sign-in (${code || 'unknown'}). This is a server issue.`,
+        });
       }
 
       const { endpoint, keys, utcOffsetMinutes } = req.body || {};
@@ -674,7 +692,25 @@ async function startServer() {
         if (failure === 'no_token') {
           return res.status(401).json({ error: 'Sign in first.' });
         }
-        return res.status(401).json({ error: 'Your session expired. Sign out and back in.' });
+        const code = String(lastVerifyFailure?.code || '');
+
+        // An expired token is normal and the client retries after a forced
+        // refresh, so this should rarely be seen at all.
+        if (code.includes('expired')) {
+          return res.status(401).json({ error: 'Session expired. Retrying…' });
+        }
+
+        // A revoked token means the account signed out elsewhere.
+        if (code.includes('revoked')) {
+          return res.status(401).json({ error: 'Signed out elsewhere. Sign in again.' });
+        }
+
+        // Everything else is a server-side mismatch — wrong project, bad
+        // credentials — which signing out will not fix.
+        console.error('Token rejected:', code);
+        return res.status(401).json({
+          error: `Could not verify your sign-in (${code || 'unknown'}). This is a server issue.`,
+        });
       }
 
       const { endpoint } = req.body || {};
@@ -711,7 +747,25 @@ async function startServer() {
         if (failure === 'no_token') {
           return res.status(401).json({ error: 'Sign in first.' });
         }
-        return res.status(401).json({ error: 'Your session expired. Sign out and back in.' });
+        const code = String(lastVerifyFailure?.code || '');
+
+        // An expired token is normal and the client retries after a forced
+        // refresh, so this should rarely be seen at all.
+        if (code.includes('expired')) {
+          return res.status(401).json({ error: 'Session expired. Retrying…' });
+        }
+
+        // A revoked token means the account signed out elsewhere.
+        if (code.includes('revoked')) {
+          return res.status(401).json({ error: 'Signed out elsewhere. Sign in again.' });
+        }
+
+        // Everything else is a server-side mismatch — wrong project, bad
+        // credentials — which signing out will not fix.
+        console.error('Token rejected:', code);
+        return res.status(401).json({
+          error: `Could not verify your sign-in (${code || 'unknown'}). This is a server issue.`,
+        });
       }
 
       const sent = await sendToUser(verified.uid, {
@@ -838,7 +892,25 @@ async function startServer() {
         if (failure === 'no_token') {
           return res.status(401).json({ error: 'Sign in first.' });
         }
-        return res.status(401).json({ error: 'Your session expired. Sign out and back in.' });
+        const code = String(lastVerifyFailure?.code || '');
+
+        // An expired token is normal and the client retries after a forced
+        // refresh, so this should rarely be seen at all.
+        if (code.includes('expired')) {
+          return res.status(401).json({ error: 'Session expired. Retrying…' });
+        }
+
+        // A revoked token means the account signed out elsewhere.
+        if (code.includes('revoked')) {
+          return res.status(401).json({ error: 'Signed out elsewhere. Sign in again.' });
+        }
+
+        // Everything else is a server-side mismatch — wrong project, bad
+        // credentials — which signing out will not fix.
+        console.error('Token rejected:', code);
+        return res.status(401).json({
+          error: `Could not verify your sign-in (${code || 'unknown'}). This is a server issue.`,
+        });
       }
 
       const { getFirestore } = await import('firebase-admin/firestore');
@@ -895,7 +967,25 @@ async function startServer() {
         if (failure === 'no_token') {
           return res.status(401).json({ error: 'Sign in first.' });
         }
-        return res.status(401).json({ error: 'Your session expired. Sign out and back in.' });
+        const code = String(lastVerifyFailure?.code || '');
+
+        // An expired token is normal and the client retries after a forced
+        // refresh, so this should rarely be seen at all.
+        if (code.includes('expired')) {
+          return res.status(401).json({ error: 'Session expired. Retrying…' });
+        }
+
+        // A revoked token means the account signed out elsewhere.
+        if (code.includes('revoked')) {
+          return res.status(401).json({ error: 'Signed out elsewhere. Sign in again.' });
+        }
+
+        // Everything else is a server-side mismatch — wrong project, bad
+        // credentials — which signing out will not fix.
+        console.error('Token rejected:', code);
+        return res.status(401).json({
+          error: `Could not verify your sign-in (${code || 'unknown'}). This is a server issue.`,
+        });
       }
 
       // Confirmation phrase, so an accidental or forged request cannot wipe
@@ -1003,7 +1093,25 @@ async function startServer() {
         if (failure === 'no_token') {
           return res.status(401).json({ error: 'Sign in first.' });
         }
-        return res.status(401).json({ error: 'Your session expired. Sign out and back in.' });
+        const code = String(lastVerifyFailure?.code || '');
+
+        // An expired token is normal and the client retries after a forced
+        // refresh, so this should rarely be seen at all.
+        if (code.includes('expired')) {
+          return res.status(401).json({ error: 'Session expired. Retrying…' });
+        }
+
+        // A revoked token means the account signed out elsewhere.
+        if (code.includes('revoked')) {
+          return res.status(401).json({ error: 'Signed out elsewhere. Sign in again.' });
+        }
+
+        // Everything else is a server-side mismatch — wrong project, bad
+        // credentials — which signing out will not fix.
+        console.error('Token rejected:', code);
+        return res.status(401).json({
+          error: `Could not verify your sign-in (${code || 'unknown'}). This is a server issue.`,
+        });
       }
 
       if (!verified.isPro) {
@@ -1132,7 +1240,25 @@ async function startServer() {
         if (failure === 'no_token') {
           return res.status(401).json({ error: 'Sign in first.' });
         }
-        return res.status(401).json({ error: 'Your session expired. Sign out and back in.' });
+        const code = String(lastVerifyFailure?.code || '');
+
+        // An expired token is normal and the client retries after a forced
+        // refresh, so this should rarely be seen at all.
+        if (code.includes('expired')) {
+          return res.status(401).json({ error: 'Session expired. Retrying…' });
+        }
+
+        // A revoked token means the account signed out elsewhere.
+        if (code.includes('revoked')) {
+          return res.status(401).json({ error: 'Signed out elsewhere. Sign in again.' });
+        }
+
+        // Everything else is a server-side mismatch — wrong project, bad
+        // credentials — which signing out will not fix.
+        console.error('Token rejected:', code);
+        return res.status(401).json({
+          error: `Could not verify your sign-in (${code || 'unknown'}). This is a server issue.`,
+        });
       }
 
       const job = getJob(String(req.params.jobId), verified.uid);

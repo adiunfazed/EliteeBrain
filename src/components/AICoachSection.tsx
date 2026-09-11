@@ -150,7 +150,10 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
       // A 401 can be a token that expired between mint and arrival. Retry once
       // with a freshly forced token before reporting a failure.
       if (res.status === 401) {
-        const retryToken = await getIdToken();
+        // Force a refresh. Without the flag this returns the cached token
+        // that was just rejected, the equality guard below fails, and the
+        // retry never happens.
+        const retryToken = await getIdToken(true);
         if (retryToken && retryToken !== idToken) {
           const retry = await fetch('/api/coach', {
             method: 'POST',

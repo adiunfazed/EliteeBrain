@@ -45,6 +45,7 @@ import {
 } from '../lib/routine';
 import { todayISO } from '../lib/tasks';
 import { soundFx } from '../utils/audio';
+import { blockDisplay, BLOCK_DISPLAY_STYLE } from '../lib/blockTiming';
 import { ComposerSheet } from './ComposerSheet';
 import { AddButton } from './AddButton';
 import { RoutineComposer } from './RoutineComposer';
@@ -368,8 +369,22 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], habits = [], 
                 const meta = BLOCK_META[block.kind] || BLOCK_META.custom;
                 const days = block.weekdays && block.weekdays.length > 0 ? block.weekdays : null;
 
+                // Shared with Home, so a block reads the same on both screens.
+                const display = blockDisplay(state, block.startTime, block.endTime);
+                const dStyle = BLOCK_DISPLAY_STYLE[display];
+
                 return (
-                  <div key={block.id} className="rounded-xl eb-card p-4">
+                  <div
+                    key={block.id}
+                    className="rounded-xl eb-card p-4"
+                    style={{
+                      opacity: dStyle.opacity,
+                      borderColor:
+                        display === 'now'
+                          ? 'color-mix(in oklab, var(--signal) 45%, var(--rule))'
+                          : undefined,
+                    }}
+                  >
                     <div className="flex items-start gap-3">
                       {/* Time, fixed width so every name starts at the same x. */}
                       <span
@@ -385,14 +400,29 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], habits = [], 
                         <p
                           className="text-[15px] font-semibold leading-snug line-clamp-2"
                           style={{
-                            textDecoration: state === 'done' ? 'line-through' : undefined,
-                            color: state === 'done' ? 'var(--ink-dim)' : 'var(--ink)',
+                            // Strike-through means completed, never merely
+                            // elapsed — otherwise a missed block looks done.
+                            textDecoration: dStyle.strike ? 'line-through' : undefined,
+                            color: dStyle.strike ? 'var(--ink-dim)' : 'var(--ink)',
                           }}
                         >
                           {block.title}
                         </p>
-                        <p className="t-meta mt-0.5 truncate">
-                          {meta.label} · {blockDuration(block)} min
+                        <p className="t-meta mt-0.5 truncate flex items-center gap-1.5">
+                          <span>
+                            {meta.label} · {blockDuration(block)} min
+                          </span>
+                          {dStyle.label && (
+                            <span
+                              className="px-1.5 py-0.5 rounded shrink-0"
+                              style={{
+                                color: dStyle.color || 'var(--ink-dim)',
+                                background: `color-mix(in oklab, ${dStyle.color} 14%, transparent)`,
+                              }}
+                            >
+                              {dStyle.label}
+                            </span>
+                          )}
                         </p>
                       </div>
 

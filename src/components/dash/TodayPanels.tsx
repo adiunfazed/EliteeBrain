@@ -1,6 +1,7 @@
 import React from 'react';
 import { Check, Repeat, Clock, ChevronRight } from 'lucide-react';
 import { Task } from '../../types';
+import { blockDisplay, BLOCK_DISPLAY_STYLE } from '../../lib/blockTiming';
 
 /**
  * Content panels for the Home dashboard.
@@ -144,16 +145,6 @@ interface RoutinePanelProps {
   onOpenAll: () => void;
 }
 
-/** True once the block's end time has passed today. */
-function hasPassed(endTime?: string): boolean {
-  if (!endTime) return false;
-  const m = /^(\d{2}):(\d{2})$/.exec(endTime);
-  if (!m) return false;
-
-  const now = new Date();
-  return now.getHours() * 60 + now.getMinutes() > Number(m[1]) * 60 + Number(m[2]);
-}
-
 export const RoutinePanel: React.FC<RoutinePanelProps> = ({ blocks, onOpenAll }) => {
   const shown = blocks.slice(0, 5);
   const done = blocks.filter((b) => b.state === 'done').length;
@@ -172,18 +163,43 @@ export const RoutinePanel: React.FC<RoutinePanelProps> = ({ blocks, onOpenAll })
         <p className="t-sub py-2">Nothing scheduled today.</p>
       ) : (
         <div>
-          {shown.map((block) => (
-            <div
-              key={block.id}
-              className={`panel-row ${
-                block.state === 'done' || hasPassed(block.endTime) ? 'row-done' : ''
-              }`}
-            >
-              <Clock className="w-3.5 h-3.5 shrink-0" style={{ color: 'var(--ink-dim)' }} />
-              <span className="t-meta shrink-0 tabular-nums w-10">{block.startTime}</span>
-              <span className="row-label text-[14px] min-w-0 flex-1 truncate">{block.title}</span>
-            </div>
-          ))}
+          {shown.map((block) => {
+            const display = blockDisplay(
+              block.state as any,
+              block.startTime,
+              block.endTime
+            );
+            const style = BLOCK_DISPLAY_STYLE[display];
+
+            return (
+              <div
+                key={block.id}
+                className={`panel-row ${style.strike ? 'row-done' : ''}`}
+                style={{ opacity: style.opacity }}
+              >
+                <Clock
+                  className="w-3.5 h-3.5 shrink-0"
+                  style={{ color: style.color || 'var(--ink-dim)' }}
+                />
+                <span className="t-meta shrink-0 tabular-nums w-10">{block.startTime}</span>
+                <span className="row-label text-[14px] min-w-0 flex-1 truncate">
+                  {block.title}
+                </span>
+
+                {style.label && (
+                  <span
+                    className="t-meta shrink-0 px-1.5 py-0.5 rounded"
+                    style={{
+                      color: style.color || 'var(--ink-dim)',
+                      background: `color-mix(in oklab, ${style.color} 14%, transparent)`,
+                    }}
+                  >
+                    {style.label}
+                  </span>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

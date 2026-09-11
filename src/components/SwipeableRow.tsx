@@ -46,8 +46,8 @@ export const SwipeableRow: React.FC<Props> = ({
 
   // The backdrop deepens as the card travels, so the intent is visible before
   // the finger lifts.
-  const rightOpacity = useTransform(x, [0, THRESHOLD], [0.25, 1]);
-  const leftOpacity = useTransform(x, [-THRESHOLD, 0], [1, 0.25]);
+  const rightOpacity = useTransform(x, [0, 12, THRESHOLD], [0, 0.35, 1]);
+  const leftOpacity = useTransform(x, [-THRESHOLD, -12, 0], [1, 0.35, 0]);
   const rightScale = useTransform(x, [0, THRESHOLD], [0.8, 1]);
   const leftScale = useTransform(x, [-THRESHOLD, 0], [1, 0.8]);
 

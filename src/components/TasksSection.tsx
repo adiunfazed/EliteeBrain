@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence, Reorder } from 'motion/react';
-import { Pencil, GripVertical, CalendarClock, ChevronRight, ArrowUpDown, Target,
+import { Trash2, Pencil, GripVertical, CalendarClock, ChevronRight, ArrowUpDown, Target,
   Check,
   Plus,
   X,
@@ -625,6 +625,20 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                   <Pencil className="w-3.5 h-3.5 shrink-0" />
                 </button>
               )}
+
+              {/* Delete. Undoable for six seconds, so it needs no
+                  confirmation dialogue. */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDelete(task);
+                }}
+                aria-label="Delete task"
+                className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center"
+                style={{ color: 'var(--ink-dim)' }}
+              >
+                <Trash2 className="w-3.5 h-3.5 shrink-0" />
+              </button>
             </div>
           </div>
 
