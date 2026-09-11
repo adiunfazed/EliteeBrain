@@ -80,6 +80,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
   const [expandedHabit, setExpandedHabit] = useState<string | null>(null);
   const [showArchived, setShowArchived] = useState(false);
   const [openGoalActions, setOpenGoalActions] = useState<Record<string, boolean>>({});
+  const [showArchivedGoals, setShowArchivedGoals] = useState(false);
 
   useEffect(() => subscribeGoals(userId, setGoals), [userId]);
   useEffect(() => subscribeHabits(userId, setHabits), [userId]);
@@ -88,6 +89,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
 
   const today = todayISO();
   const activeGoals = useMemo(() => goals.filter((g) => g.status === 'active'), [goals]);
+  const archivedGoals = useMemo(() => goals.filter((g) => g.status === 'archived'), [goals]);
   const activeHabits = useMemo(
     () => habits.filter((h) => (showArchived ? true : h.status === 'active')),
     [habits, showArchived]
@@ -848,7 +850,13 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
             Rename
           </button>
           <button
-            onClick={() => patchGoal(userId, goal.id, { status: 'archived' })}
+            onClick={() => {
+              soundFx.playClick();
+              patchGoal(userId, goal.id, { status: 'archived' });
+              setGoals((prev) =>
+                prev.map((x) => (x.id === goal.id ? { ...x, status: 'archived' as const } : x))
+              );
+            }}
             className="eb-press text-[11px] font-semibold px-2.5 py-2 rounded-lg border border-[var(--rule)] text-[var(--ink-dim)] hover:eb-warn flex items-center gap-1.5"
           >
             <Archive className="w-3.5 h-3.5 shrink-0" />
@@ -1032,6 +1040,53 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
             />
           ) : (
             activeGoals.map((g) => <GoalCard key={g.id} goal={g} />)
+          )}
+
+          {/* Archived goals. Hidden until asked for, but reachable — an
+              archive with no way out is just a delete with extra steps. */}
+          {archivedGoals.length > 0 && (
+            <div className="pt-2">
+              <button
+                onClick={() => setShowArchivedGoals((v) => !v)}
+                className="btn-text flex items-center gap-1.5"
+              >
+                <Archive className="w-3.5 h-3.5 shrink-0" />
+                {showArchivedGoals
+                  ? 'Hide archived'
+                  : `Archived (${archivedGoals.length})`}
+              </button>
+
+              {showArchivedGoals && (
+                <div className="space-y-2 mt-3">
+                  {archivedGoals.map((g) => (
+                    <div
+                      key={g.id}
+                      className="rounded-xl px-4 py-3 flex items-center gap-3"
+                      style={{ background: 'var(--surface)', border: '1px solid var(--rule)' }}
+                    >
+                      <span className="text-[14px] min-w-0 flex-1 truncate text-[var(--ink-dim)]">
+                        {g.title}
+                      </span>
+
+                      <button
+                        onClick={() => {
+                          soundFx.playClick();
+                          patchGoal(userId, g.id, { status: 'active' });
+                          setGoals((prev) =>
+                            prev.map((x) =>
+                              x.id === g.id ? { ...x, status: 'active' as const } : x
+                            )
+                          );
+                        }}
+                        className="chip shrink-0"
+                      >
+                        Restore
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
         </div>
       )}

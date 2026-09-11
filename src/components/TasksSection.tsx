@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronRight, ArrowUpDown, Bell, Target,
+import { CalendarClock, ChevronRight, ArrowUpDown, Bell, Target,
   Check,
   Plus,
   Trash2,
@@ -458,13 +458,6 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                 </span>
               ) : null}
 
-              {(task.subtasks?.length || 0) > 0 && (
-                <span className="t-meta flex items-center gap-1">
-                  <ListChecks className="w-3.5 h-3.5 shrink-0" />
-                  {subtaskProgress(task).done}/{subtaskProgress(task).total}
-                </span>
-              )}
-
               {task.recurrence && <Repeat className="w-3.5 h-3.5 shrink-0 text-[var(--ink-dim)]" />}
 
               {(() => {
@@ -488,7 +481,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
               <p className="t-sub mt-2 leading-snug line-clamp-2">{task.notes}</p>
             )}
 
-            {(task.subtasks?.length || 0) > 0 && !task.completed && (
+            {(task.subtasks?.length || 0) > 0 && (
               <div className="mt-2">
                 <button
                   onClick={(e) => {
@@ -549,44 +542,15 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
               </div>
             )}
 
-            {!task.completed && (isOverdue || tab === 'today') && (
-              <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                {[
-                  { label: 'Today', value: shiftDate(0) },
-                  { label: 'Tomorrow', value: shiftDate(1) },
-                ].map((o) => (
-                  <button
-                    key={o.label}
-                    onClick={() => {
-                      // Only a push FORWARD counts as postponing. Pulling a
-                      // task earlier is the opposite behaviour.
-                      const pushed = !!task.dueDate && o.value > task.dueDate;
-                      patch(
-                        task,
-                        {
-                          dueDate: o.value,
-                          ...(pushed
-                            ? {
-                                postponeCount: (task.postponeCount || 0) + 1,
-                                lastPostponedAt: new Date().toISOString(),
-                              }
-                            : {}),
-                        },
-                        `Moved to ${o.label.toLowerCase()}.`
-                      );
-                    }}
-                    className="t-meta px-2 py-1 rounded-full border border-[var(--rule)] text-[var(--ink-dim)] hover:text-[var(--ink-muted)] hover:border-[var(--rule-strong)] transition-colors"
-                  >
-                    {o.label}
-                  </button>
-                ))}
+            {!task.completed && (
+              <div className="mt-3 space-y-2">
                 {onStartFocus && (
                   <button
                     onClick={() => {
                       soundFx.playClick();
                       onStartFocus(task);
                     }}
-                    className="w-full min-h-[42px] rounded-xl flex items-center justify-center gap-2 text-[14px] font-semibold transition-colors"
+                    className="w-full min-h-[44px] rounded-xl flex items-center justify-center gap-2 text-[14px] font-semibold whitespace-nowrap transition-colors"
                     style={{
                       background: 'color-mix(in oklab, var(--done) 14%, transparent)',
                       border: '1px solid color-mix(in oklab, var(--done) 40%, var(--rule))',
@@ -594,10 +558,36 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                     }}
                   >
                     <Timer className="w-4 h-4 shrink-0" />
-                    Start focus
-                    {task.estimatedMinutes ? (
-                      <span className="opacity-70">· {task.estimatedMinutes}m</span>
-                    ) : null}
+                    <span className="whitespace-nowrap">
+                      Start focus
+                      {task.estimatedMinutes ? ` · ${task.estimatedMinutes} min` : ''}
+                    </span>
+                  </button>
+                )}
+
+                {(isOverdue || tab === 'today') && (
+                  <button
+                    onClick={() => {
+                      const value = shiftDate(1);
+                      const pushed = !!task.dueDate && value > task.dueDate;
+                      patch(
+                        task,
+                        {
+                          dueDate: value,
+                          ...(pushed
+                            ? {
+                                postponeCount: (task.postponeCount || 0) + 1,
+                                lastPostponedAt: new Date().toISOString(),
+                              }
+                            : {}),
+                        },
+                        'Moved to tomorrow.'
+                      );
+                    }}
+                    className="btn-text flex items-center gap-1.5"
+                  >
+                    <CalendarClock className="w-3.5 h-3.5 shrink-0" />
+                    Move to tomorrow
                   </button>
                 )}
               </div>
