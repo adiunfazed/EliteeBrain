@@ -6,7 +6,7 @@ import path from 'path';
 import { GoogleGenAI } from '@google/genai';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
-import { initAdmin, isAdminAvailable, verifyUser, lastVerifyFailure } from './serverAuth';
+import { initAdmin, isAdminAvailable, verifyUser, lastVerifyFailure, initError } from './serverAuth';
 import { getLeaderboard, syncLeaderboardEntry } from './serverLeaderboard';
 import { buildCoachContext, describeContext } from './serverCoachContext';
 import { analyseImage, isAllowedMime, MAX_IMAGE_BYTES, VisionTool } from './serverVision';
@@ -502,7 +502,10 @@ async function startServer() {
    */
   app.get('/api/leaderboard', readLimiter, async (req, res) => {
     if (!isAdminAvailable()) {
-      return res.status(503).json({ error: 'Leaderboard temporarily unavailable.' });
+      console.error('Leaderboard unavailable: Firebase Admin did not initialise.');
+      return res.status(503).json({
+        error: 'Server is not connected to the database. Check FIREBASE_SERVICE_ACCOUNT.',
+      });
     }
     try {
       const idToken = (req.headers.authorization || '').replace(/^Bearer\s+/i, '') || undefined;
@@ -524,7 +527,10 @@ async function startServer() {
    */
   app.post('/api/leaderboard/sync', coachLimiter, async (req, res) => {
     if (!isAdminAvailable()) {
-      return res.status(503).json({ error: 'Leaderboard temporarily unavailable.' });
+      console.error('Leaderboard unavailable: Firebase Admin did not initialise.');
+      return res.status(503).json({
+        error: 'Server is not connected to the database. Check FIREBASE_SERVICE_ACCOUNT.',
+      });
     }
     try {
       const idToken = (req.headers.authorization || '').replace(/^Bearer\s+/i, '') || undefined;
@@ -600,7 +606,28 @@ async function startServer() {
     try {
       const idToken = (req.headers.authorization || '').replace(/^Bearer\s+/i, '') || undefined;
       const verified = await verifyUser(idToken);
-      if (!verified) return res.status(401).json({ error: 'Sign in first.' });
+      if (!verified) {
+        // Distinguish the causes: a missing token is the client's problem, a
+        // database failure is the server's, and conflating them made this
+        // undiagnosable.
+        const failure = lastVerifyFailure?.reason;
+        console.error('Auth failed:', failure, lastVerifyFailure?.code || '');
+
+        if (failure === 'db_unavailable') {
+          return res.status(503).json({
+            error: 'Signed in, but the server could not reach the database. Try again shortly.',
+          });
+        }
+        if (failure === 'admin_unavailable') {
+          return res.status(503).json({
+            error: 'Server is not connected to Firebase. Check FIREBASE_SERVICE_ACCOUNT.',
+          });
+        }
+        if (failure === 'no_token') {
+          return res.status(401).json({ error: 'Sign in first.' });
+        }
+        return res.status(401).json({ error: 'Your session expired. Sign out and back in.' });
+      }
 
       const { endpoint, keys, utcOffsetMinutes } = req.body || {};
       if (!endpoint || !keys?.p256dh || !keys?.auth) {
@@ -627,7 +654,28 @@ async function startServer() {
     try {
       const idToken = (req.headers.authorization || '').replace(/^Bearer\s+/i, '') || undefined;
       const verified = await verifyUser(idToken);
-      if (!verified) return res.status(401).json({ error: 'Sign in first.' });
+      if (!verified) {
+        // Distinguish the causes: a missing token is the client's problem, a
+        // database failure is the server's, and conflating them made this
+        // undiagnosable.
+        const failure = lastVerifyFailure?.reason;
+        console.error('Auth failed:', failure, lastVerifyFailure?.code || '');
+
+        if (failure === 'db_unavailable') {
+          return res.status(503).json({
+            error: 'Signed in, but the server could not reach the database. Try again shortly.',
+          });
+        }
+        if (failure === 'admin_unavailable') {
+          return res.status(503).json({
+            error: 'Server is not connected to Firebase. Check FIREBASE_SERVICE_ACCOUNT.',
+          });
+        }
+        if (failure === 'no_token') {
+          return res.status(401).json({ error: 'Sign in first.' });
+        }
+        return res.status(401).json({ error: 'Your session expired. Sign out and back in.' });
+      }
 
       const { endpoint } = req.body || {};
       if (endpoint) await removeSubscription(verified.uid, endpoint);
@@ -643,7 +691,28 @@ async function startServer() {
     try {
       const idToken = (req.headers.authorization || '').replace(/^Bearer\s+/i, '') || undefined;
       const verified = await verifyUser(idToken);
-      if (!verified) return res.status(401).json({ error: 'Sign in first.' });
+      if (!verified) {
+        // Distinguish the causes: a missing token is the client's problem, a
+        // database failure is the server's, and conflating them made this
+        // undiagnosable.
+        const failure = lastVerifyFailure?.reason;
+        console.error('Auth failed:', failure, lastVerifyFailure?.code || '');
+
+        if (failure === 'db_unavailable') {
+          return res.status(503).json({
+            error: 'Signed in, but the server could not reach the database. Try again shortly.',
+          });
+        }
+        if (failure === 'admin_unavailable') {
+          return res.status(503).json({
+            error: 'Server is not connected to Firebase. Check FIREBASE_SERVICE_ACCOUNT.',
+          });
+        }
+        if (failure === 'no_token') {
+          return res.status(401).json({ error: 'Sign in first.' });
+        }
+        return res.status(401).json({ error: 'Your session expired. Sign out and back in.' });
+      }
 
       const sent = await sendToUser(verified.uid, {
         title: 'EliteLife',
@@ -749,7 +818,28 @@ async function startServer() {
     try {
       const idToken = (req.headers.authorization || '').replace(/^Bearer\s+/i, '') || undefined;
       const verified = await verifyUser(idToken);
-      if (!verified) return res.status(401).json({ error: 'Sign in first.' });
+      if (!verified) {
+        // Distinguish the causes: a missing token is the client's problem, a
+        // database failure is the server's, and conflating them made this
+        // undiagnosable.
+        const failure = lastVerifyFailure?.reason;
+        console.error('Auth failed:', failure, lastVerifyFailure?.code || '');
+
+        if (failure === 'db_unavailable') {
+          return res.status(503).json({
+            error: 'Signed in, but the server could not reach the database. Try again shortly.',
+          });
+        }
+        if (failure === 'admin_unavailable') {
+          return res.status(503).json({
+            error: 'Server is not connected to Firebase. Check FIREBASE_SERVICE_ACCOUNT.',
+          });
+        }
+        if (failure === 'no_token') {
+          return res.status(401).json({ error: 'Sign in first.' });
+        }
+        return res.status(401).json({ error: 'Your session expired. Sign out and back in.' });
+      }
 
       const { getFirestore } = await import('firebase-admin/firestore');
       const snap = await getFirestore().collection('users').doc(verified.uid).get();
@@ -785,7 +875,28 @@ async function startServer() {
     try {
       const idToken = (req.headers.authorization || '').replace(/^Bearer\s+/i, '') || undefined;
       const verified = await verifyUser(idToken);
-      if (!verified) return res.status(401).json({ error: 'Sign in first.' });
+      if (!verified) {
+        // Distinguish the causes: a missing token is the client's problem, a
+        // database failure is the server's, and conflating them made this
+        // undiagnosable.
+        const failure = lastVerifyFailure?.reason;
+        console.error('Auth failed:', failure, lastVerifyFailure?.code || '');
+
+        if (failure === 'db_unavailable') {
+          return res.status(503).json({
+            error: 'Signed in, but the server could not reach the database. Try again shortly.',
+          });
+        }
+        if (failure === 'admin_unavailable') {
+          return res.status(503).json({
+            error: 'Server is not connected to Firebase. Check FIREBASE_SERVICE_ACCOUNT.',
+          });
+        }
+        if (failure === 'no_token') {
+          return res.status(401).json({ error: 'Sign in first.' });
+        }
+        return res.status(401).json({ error: 'Your session expired. Sign out and back in.' });
+      }
 
       // Confirmation phrase, so an accidental or forged request cannot wipe
       // an account on its own.
@@ -872,7 +983,28 @@ async function startServer() {
     try {
       const idToken = (req.headers.authorization || '').replace(/^Bearer\s+/i, '') || undefined;
       const verified = await verifyUser(idToken);
-      if (!verified) return res.status(401).json({ error: 'Sign in first.' });
+      if (!verified) {
+        // Distinguish the causes: a missing token is the client's problem, a
+        // database failure is the server's, and conflating them made this
+        // undiagnosable.
+        const failure = lastVerifyFailure?.reason;
+        console.error('Auth failed:', failure, lastVerifyFailure?.code || '');
+
+        if (failure === 'db_unavailable') {
+          return res.status(503).json({
+            error: 'Signed in, but the server could not reach the database. Try again shortly.',
+          });
+        }
+        if (failure === 'admin_unavailable') {
+          return res.status(503).json({
+            error: 'Server is not connected to Firebase. Check FIREBASE_SERVICE_ACCOUNT.',
+          });
+        }
+        if (failure === 'no_token') {
+          return res.status(401).json({ error: 'Sign in first.' });
+        }
+        return res.status(401).json({ error: 'Your session expired. Sign out and back in.' });
+      }
 
       if (!verified.isPro) {
         console.info('Vision blocked — not Pro:', verified.uid, verified.status);
@@ -980,7 +1112,28 @@ async function startServer() {
     try {
       const idToken = (req.headers.authorization || '').replace(/^Bearer\s+/i, '') || undefined;
       const verified = await verifyUser(idToken);
-      if (!verified) return res.status(401).json({ error: 'Sign in first.' });
+      if (!verified) {
+        // Distinguish the causes: a missing token is the client's problem, a
+        // database failure is the server's, and conflating them made this
+        // undiagnosable.
+        const failure = lastVerifyFailure?.reason;
+        console.error('Auth failed:', failure, lastVerifyFailure?.code || '');
+
+        if (failure === 'db_unavailable') {
+          return res.status(503).json({
+            error: 'Signed in, but the server could not reach the database. Try again shortly.',
+          });
+        }
+        if (failure === 'admin_unavailable') {
+          return res.status(503).json({
+            error: 'Server is not connected to Firebase. Check FIREBASE_SERVICE_ACCOUNT.',
+          });
+        }
+        if (failure === 'no_token') {
+          return res.status(401).json({ error: 'Sign in first.' });
+        }
+        return res.status(401).json({ error: 'Your session expired. Sign out and back in.' });
+      }
 
       const job = getJob(String(req.params.jobId), verified.uid);
       if (!job) return res.status(404).json({ error: 'That job has expired. Try again.' });
@@ -1080,6 +1233,51 @@ async function startServer() {
         : 'No model responded. See the errors below for the reason.',
       results,
     });
+  });
+
+  /**
+   * Auth diagnostic.
+   *
+   * Reports exactly why verification failed. "Sign in first" can mean a
+   * missing token, an unavailable Admin SDK, a Firestore permission problem,
+   * or an expired token — four different fixes behind one message.
+   */
+  app.get('/api/diag/auth', async (req, res) => {
+    const idToken = (req.headers.authorization || '').replace(/^Bearer\s+/i, '') || undefined;
+
+    const report: any = {
+      adminAvailable: isAdminAvailable(),
+      serviceAccountSet: !!process.env.FIREBASE_SERVICE_ACCOUNT,
+      serviceAccountLength: (process.env.FIREBASE_SERVICE_ACCOUNT || '').length,
+      initError,
+      tokenReceived: !!idToken,
+      tokenLength: idToken?.length ?? 0,
+    };
+
+    if (!idToken) {
+      report.verdict =
+        'No Authorization header reached the server. The client is not sending the token.';
+      return res.json(report);
+    }
+
+    try {
+      const verified = await verifyUser(idToken);
+      if (verified) {
+        report.verdict = 'Token is valid. Auth is working.';
+        report.uid = verified.uid;
+        report.isPro = verified.isPro;
+        report.status = verified.status;
+      } else {
+        report.verdict = 'Verification failed.';
+        report.failure = lastVerifyFailure;
+      }
+    } catch (err: any) {
+      report.verdict = 'Verification threw.';
+      report.error = String(err?.message || err).slice(0, 300);
+      report.failure = lastVerifyFailure;
+    }
+
+    res.json(report);
   });
 
   app.get('/api/health', (req, res) => {

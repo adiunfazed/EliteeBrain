@@ -28,9 +28,8 @@ export function initAdmin(): boolean {
 
   const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
   if (!raw) {
-    console.warn(
-      'FIREBASE_SERVICE_ACCOUNT is not set — server-side Pro verification is disabled.'
-    );
+    initError = 'FIREBASE_SERVICE_ACCOUNT is not set on this server.';
+    console.warn(initError);
     return false;
   }
 
@@ -51,12 +50,16 @@ export function initAdmin(): boolean {
     available = true;
     console.log('Firebase Admin initialised — server-side verification active.');
   } catch (err) {
-    console.error('Could not initialise Firebase Admin:', (err as Error).message);
+    initError = (err as Error).message;
+    console.error('Could not initialise Firebase Admin:', initError);
     available = false;
   }
 
   return available;
 }
+
+/** Why initialisation failed, for the diagnostic endpoint. */
+export let initError: string | null = null;
 
 export function isAdminAvailable(): boolean {
   return available;
