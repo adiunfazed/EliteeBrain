@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import { ArrowLeft, Crown, RefreshCw, AlertCircle, Trophy } from 'lucide-react';
+import { authedFetch } from '../lib/authedFetch';
 import { getIdToken } from '../lib/firebase';
 import { tierFor, tierLabel } from '../lib/tiers';
 import { RankEmblem } from './RankEmblem';
@@ -101,9 +102,7 @@ export const LeaderboardScreen: React.FC<Props> = ({ onBack }) => {
           }).catch(() => {});
         }
 
-        const res = await fetch(`/api/leaderboard?mode=${mode}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await authedFetch(`/api/leaderboard?mode=${mode}`);
         const data = await res.json();
 
         if (!res.ok) {

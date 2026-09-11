@@ -756,7 +756,14 @@ export type { User };
  * Current user's Firebase ID token, for authenticating server requests.
  * The SDK refreshes it automatically, so this is always current.
  */
-export async function getIdToken(): Promise<string | null> {
+/**
+ * The current user's ID token.
+ *
+ * @param forceRefresh Only for retrying a request the server rejected.
+ *   Forcing on every call hits Firebase's refresh rate limit, after which it
+ *   returns nothing and every authenticated request starts failing.
+ */
+export async function getIdToken(forceRefresh = false): Promise<string | null> {
   try {
     if (!auth) return null;
 
@@ -783,10 +790,10 @@ export async function getIdToken(): Promise<string | null> {
     }
 
     if (!user) return null;
-    // force=true: a cached token may be expired, or minted by the previous
-    // Firebase project before the migration. Refreshing guarantees a valid
-    // token for the project the server verifies against.
-    return await user.getIdToken(true);
+
+    // The SDK keeps the token fresh on its own and refreshes it before expiry,
+    // so the cached value is valid in the normal case and costs no network.
+    return await user.getIdToken(forceRefresh);
   } catch (err) {
     console.warn('Could not get ID token:', err);
     return null;

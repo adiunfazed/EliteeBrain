@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { ArrowLeft, Camera, Image as ImageIcon, RotateCcw, AlertTriangle } from 'lucide-react';
+import { authedFetch } from '../../lib/authedFetch';
 import { getIdToken } from '../../lib/firebase';
 import { soundFx } from '../../utils/audio';
 import { CoachTool } from './CoachTools';
@@ -71,9 +72,7 @@ async function pollJob(
     await new Promise((r) => setTimeout(r, 1000));
 
     try {
-      const res = await fetch(`/api/coach/vision/${jobId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await authedFetch(`/api/coach/vision/${jobId}`);
 
       if (!res.ok) {
         // A transient poll failure is not a job failure; keep waiting.
@@ -220,9 +219,9 @@ export const ImageToolScreen: React.FC<Props> = ({ tool, onBack }) => {
         return;
       }
 
-      const res = await fetch('/api/coach/vision', {
+      const res = await authedFetch('/api/coach/vision', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tool: tool.id, image: base64, mimeType: mime }),
       });
 

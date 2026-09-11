@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { ArrowLeft, Mic, Square, RotateCcw, AlertTriangle } from 'lucide-react';
+import { authedFetch } from '../../lib/authedFetch';
 import { getIdToken } from '../../lib/firebase';
 import { soundFx } from '../../utils/audio';
 
@@ -163,9 +164,9 @@ export const VoiceCoachScreen: React.FC<Props> = ({ onBack }) => {
         return;
       }
 
-      const res = await fetch('/api/coach', {
+      const res = await authedFetch('/api/coach', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userMessage:
             `I spoke on this prompt: "${prompt}"\n\n` +

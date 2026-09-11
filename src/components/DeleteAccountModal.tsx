@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { AlertTriangle, X, Download } from 'lucide-react';
+import { authedFetch } from '../lib/authedFetch';
 import { getIdToken, logoutUser } from '../lib/firebase';
 import { UserProfile } from '../types';
 
@@ -49,9 +50,9 @@ export const DeleteAccountModal: React.FC<Props> = ({ profile, onClose }) => {
         return;
       }
 
-      const res = await fetch('/api/account/delete', {
+      const res = await authedFetch('/api/account/delete', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ confirm: 'DELETE' }),
       });
 
