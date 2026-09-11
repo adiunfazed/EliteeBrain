@@ -137,7 +137,7 @@ export const HabitComposer: React.FC<Props> = ({ habit, goals, onSave, onCancel 
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="flex items-center justify-between gap-1.5 pt-4">
+            <div className="grid grid-cols-7 gap-1.5 pt-4">
               {DAYS.map((d, i) => (
                 <button
                   key={i}

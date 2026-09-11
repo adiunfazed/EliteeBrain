@@ -487,37 +487,21 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, height: 0, marginBottom: 0 }}
         transition={{ duration: 0.18 }}
-        className={`group eb-lift relative overflow-hidden rounded-2xl border ${
-          task.completed
-            ? 'bg-[#0B0E13] border-[#20252E]'
-            : highlight
-              ? 'bg-[#141A28] border-[color-mix(in_oklab,var(--signal)_40%,transparent)] '
-              : task.priority === 'critical' || task.priority === 'high'
-                ? 'bg-[#17121A] border-[var(--rule)] hover:border-rose-500/40 '
-                : task.category === 'fitness'
-                  ? 'bg-[#181408] border-[var(--rule)] hover:border-amber-500/40 '
-                  : task.category === 'personal'
-                    ? 'bg-[#0C1714] border-[var(--rule)] hover:border-emerald-500/40 '
-                    : task.category === 'work'
-                      ? 'bg-[#0B1620] border-[var(--rule)] hover:border-sky-500/40 '
-                      : 'bg-[#121722] border-[var(--rule)] hover:border-[color-mix(in_oklab,var(--signal)_40%,transparent)] '
-        }`}
+        className="group relative overflow-hidden rounded-2xl eb-card transition-colors"
       >
         {!task.completed && (
           <span
-            className={`absolute left-0 top-0 bottom-0 w-[3px] ${pri.bar} shadow-[0_0_10px_currentColor] opacity-90`}
+            className={`absolute left-0 top-0 bottom-0 w-[3px] ${pri.bar}`}
           />
         )}
-        <span className="pointer-events-none absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out bg-gradient-to-r from-transparent via-white/[0.035] to-transparent" />
-
-        <div className="p-3 pl-4 flex items-start gap-3">
+        <div className="p-4 pl-5 flex items-start gap-3.5">
           <button
             onClick={() => handleToggle(task)}
             aria-label={task.completed ? 'Mark as not done' : 'Mark as done'}
             className="shrink-0 w-10 h-10 -m-2 flex items-center justify-center"
           >
             <span
-              className={`w-[22px] h-[22px] rounded-lg border flex items-center justify-center transition-all ${
+              className={`w-[26px] h-[26px] rounded-full border-2 flex items-center justify-center transition-all ${
                 task.completed
                   ? 'bg-emerald-500 border-emerald-500 text-slate-950'
                   : 'border-[var(--rule-strong)] hover:border-emerald-500/60'
@@ -1130,6 +1114,11 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                 estimatedMinutes: fields.estimatedMinutes,
                 goalId: fields.goalId,
                 notes: fields.notes,
+                // These were being dropped: the composer collected them and
+                // the save ignored them, so subtasks never survived a reopen.
+                subtasks: fields.subtasks,
+                recurrence: fields.recurrence,
+                reminderMinutesBefore: fields.reminderMinutesBefore,
               });
               applyLocal((list) => [task, ...list]);
               await saveTask(userId, task);

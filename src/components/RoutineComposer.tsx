@@ -188,7 +188,7 @@ export const RoutineComposer: React.FC<Props> = ({
       </div>
 
       <p className="eb-label mt-5 mb-2">Which days</p>
-      <div className="flex items-center justify-between gap-1.5">
+      <div className="grid grid-cols-7 gap-1.5">
         {DAYS.map((d, i) => (
           <button
             key={i}

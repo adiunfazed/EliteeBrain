@@ -1667,3 +1667,55 @@ button, a[role='button'], [role='tab'] {
 .line-clamp-1 { -webkit-line-clamp: 1; }
 .line-clamp-2 { -webkit-line-clamp: 2; }
 .line-clamp-3 { -webkit-line-clamp: 3; }
+
+
+/* ==================================================================
+   Text must never break character-by-character
+
+   `overflow-wrap: anywhere` was applied globally earlier to stop long
+   URLs overflowing. On a narrow flex child it does the opposite of what
+   is wanted: it breaks ordinary words mid-syllable, producing "Comple /
+   te". Buttons and labels opt out explicitly.
+   ================================================================== */
+
+button,
+label,
+.chip,
+.btn-lg,
+.btn-quiet,
+.btn-text,
+.dot-toggle,
+.eb-label,
+.t-meta,
+[role='tab'] {
+  /* Break between words only, never inside one. */
+  overflow-wrap: normal;
+  word-break: keep-all;
+  hyphens: none;
+}
+
+/* Any flex child that holds text needs this, or it refuses to shrink and
+   forces its siblings to wrap instead. */
+button > span,
+.chip > span {
+  min-width: 0;
+}
+
+/* Long unbroken strings — pasted links, run-on titles — still need to
+   break somewhere, so they opt back in. */
+.break-anywhere {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+
+/* Day pickers: a grid cannot wrap, and the circles shrink to fit rather
+   than pushing onto a second row on a narrow phone. */
+.dot-toggle {
+  width: 100%;
+  max-width: 40px;
+  aspect-ratio: 1 / 1;
+  height: auto;
+  min-height: 34px;
+  margin: 0 auto;
+}

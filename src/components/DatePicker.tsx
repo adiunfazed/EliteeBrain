@@ -127,6 +127,7 @@ export const DatePicker: React.FC<Props> = ({ value, onChange, onClose }) => {
               onClick={() => onChange(cell)}
               className="relative aspect-square rounded-xl text-[14px] font-medium transition-colors flex items-center justify-center"
               style={{
+                minHeight: 38,
                 background: selected ? 'var(--signal)' : 'transparent',
                 color: selected
                   ? '#fff'

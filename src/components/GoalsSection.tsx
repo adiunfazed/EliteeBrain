@@ -424,7 +424,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
               {habit.cadence === 'selected_days' && (
                 <div>
                   <p className="eb-label mb-1.5">On these days</p>
-                  <div className="flex items-center justify-between gap-1.5">
+                  <div className="grid grid-cols-7 gap-1.5">
                     {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => {
                       const on = (habit.weekdays || []).includes(i);
                       return (
