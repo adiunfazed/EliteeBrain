@@ -1,26 +1,20 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence, Reorder, useDragControls } from 'motion/react';
-import { GripVertical, CalendarClock, ChevronRight, ArrowUpDown, Bell, Target,
+import { GripVertical, CalendarClock, ChevronRight, ArrowUpDown, Target,
   Check,
   Plus,
-  Trash2,
-  Calendar,
-  Pencil,
   X,
   ChevronsUp,
   Minus,
   ChevronDown,
   AlertTriangle,
-  Timer,
   Star,
-  Clock,
-  Battery,
   Search,
   Repeat,
   ListChecks,
 } from 'lucide-react';
 import type { Task, TaskCategory, TaskEnergy, TaskPriority } from '../types';
-import { addDays,
+import { 
   bucketTasks,
   makeTask,
   patchTask,
@@ -30,15 +24,11 @@ import { addDays,
   toggleTask,
   todayISO,
 } from '../lib/tasks';
-import { buildNextInSeries, describeRecurrence, searchTasks, subtaskProgress } from '../lib/recurrence';
+import { buildNextInSeries, searchTasks, subtaskProgress } from '../lib/recurrence';
 import {
-  CATEGORY_META,
-  DURATION_PRESETS,
-  ENERGY_META,
   MAX_PINNED,
   parseQuickEntry,
   priorityProgress,
-  rankTasks,
 } from '../lib/taskEngine';
 import { soundFx } from '../utils/audio';
 import { ComposerSheet } from './ComposerSheet';
@@ -65,31 +55,35 @@ type TabId = 'today' | 'overdue' | 'upcoming' | 'completed';
 
 const PRIORITY_STYLE: Record<
   TaskPriority,
-  { label: string; chip: string; icon: typeof ChevronsUp; bar: string }
+  { label: string; chip: string; icon: typeof ChevronsUp; bar: string; hex: string }
 > = {
   critical: {
     label: 'Critical',
     chip: 'text-rose-200 bg-rose-500/20 border-rose-500/40',
     icon: AlertTriangle,
     bar: 'bg-rose-400',
+    hex: '#FF5A6E',
   },
   high: {
     label: 'High',
     chip: 'eb-danger bg-rose-500/12 border-rose-500/25',
     icon: ChevronsUp,
     bar: 'bg-rose-500/80',
+    hex: '#FFB020',
   },
   normal: {
     label: 'Normal',
     chip: 'text-[var(--signal-ink)] bg-[var(--signal)]/12 border-[var(--signal)]/25',
     icon: Minus,
     bar: 'bg-[var(--signal)]',
+    hex: '#7C5CFF',
   },
   low: {
     label: 'Low',
     chip: 'text-slate-400 bg-slate-700/25 border-slate-600/30',
     icon: ChevronDown,
     bar: 'bg-slate-600',
+    hex: '#7E8899',
   },
 };
 
@@ -442,10 +436,29 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
     }
   };
 
+  /**
+   * A task as a compact list row.
+   *
+   * One horizontal line: icon, then title and a single metadata line, then the
+   * completion control. Everything else — notes, the full subtask list, focus,
+   * rescheduling — lives in the detail sheet or behind a gesture, because a
+   * list whose rows are 300px tall stops being a list.
+   */
   const renderCard = (task: Task, highlight = false) => {
     const pri = PRIORITY_STYLE[task.priority] || PRIORITY_STYLE.normal;
-    const PriIcon = pri.icon;
     const isOverdue = !!task.dueDate && task.dueDate < todayISO() && !task.completed;
+    const steps = subtaskProgress(task);
+    const expanded = openSubtasks[task.id] === true;
+
+    /** The single metadata line. Kept to what changes a decision. */
+    const meta = [
+      task.dueDate ? prettyDate(task.dueDate) : null,
+      task.dueTime || null,
+      task.estimatedMinutes ? `${task.estimatedMinutes}m` : null,
+      task.goalId ? goals.find((g) => g.id === task.goalId)?.title : null,
+    ]
+      .filter(Boolean)
+      .join(' · ');
 
     return (
       <SwipeableRow
@@ -472,89 +485,64 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
           );
         }}
       >
-      <motion.div
-        layout
-        style={
-          selected.has(task.id)
-            ? {
-                outline: '2px solid var(--signal)',
-                outlineOffset: -2,
-                borderRadius: 16,
-              }
-            : undefined
-        }
-        initial={{ opacity: 0, y: -6 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-        transition={{ duration: 0.18 }}
-        className="group relative overflow-hidden rounded-2xl eb-card transition-colors"
-      >
-        {!task.completed && (
-          <span
-            className={`absolute left-0 top-0 bottom-0 w-[3px] ${pri.bar}`}
-          />
-        )}
-        <div className="p-4 pl-5 flex items-start gap-3.5">
-          <button
-            onClick={() => handleToggle(task)}
-            aria-label={task.completed ? 'Mark as not done' : 'Mark as done'}
-            className="shrink-0 w-10 h-10 -m-2 flex items-center justify-center"
-          >
-            <span
-              className={`w-[26px] h-[26px] rounded-full border-2 flex items-center justify-center transition-all ${
-                task.completed
-                  ? 'bg-emerald-500 border-emerald-500 text-slate-950'
-                  : 'border-[var(--rule-strong)] hover:border-emerald-500/60'
-              }`}
-            >
-              <AnimatePresence>
-                {task.completed && (
-                  <motion.span
-                    initial={{ scale: 0, rotate: -25 }}
-                    animate={{ scale: 1, rotate: 0 }}
-                    exit={{ scale: 0 }}
-                    transition={{ type: 'spring', stiffness: 500, damping: 22 }}
-                  >
-                    <Check className="w-3.5 h-3.5 shrink-0 stroke-[3]" />
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </span>
-          </button>
+        <motion.div
+          layout
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+          transition={{ duration: 0.16 }}
+          className="relative overflow-hidden rounded-2xl eb-card"
+          style={
+            selected.has(task.id)
+              ? { outline: '2px solid var(--signal)', outlineOffset: -2 }
+              : highlight
+                ? { borderColor: 'color-mix(in oklab, var(--signal) 45%, var(--rule))' }
+                : undefined
+          }
+        >
+          {/* Priority as a left edge, so it costs no horizontal space. */}
+          {!task.completed && (
+            <span className={`absolute left-0 top-0 bottom-0 w-[3px] ${pri.bar}`} />
+          )}
 
-          <div className="flex-1 min-w-0">
-            {editingId === task.id ? (
-              <input
-                autoFocus
-                value={editingText}
-                onChange={(e) => setEditingText(e.target.value)}
-                onBlur={() => commitEdit(task)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') commitEdit(task);
-                  if (e.key === 'Escape') setEditingId(null);
-                }}
-                className="w-full bg-[var(--surface-sunk)] border border-[color-mix(in_oklab,var(--signal)_60%,transparent)] rounded-lg px-2 py-1 text-sm text-[var(--ink)] outline-none"
+          <div className="flex items-center gap-3 pl-4 pr-3 py-3">
+            {/* Category mark. Fixed width so every title starts at the same x. */}
+            <span
+              className="w-9 h-9 rounded-xl shrink-0 flex items-center justify-center"
+              style={{
+                background: task.completed
+                  ? 'var(--surface-sunk)'
+                  : `color-mix(in oklab, ${pri.hex} 16%, transparent)`,
+              }}
+            >
+              <pri.icon
+                className="w-4 h-4 shrink-0"
+                style={{ color: task.completed ? 'var(--ink-dim)' : pri.hex }}
               />
-            ) : (
-              <button
-                onClick={() => {
-                  if (selected.size > 0) {
-                    setSelected((prev) => {
-                      const next = new Set(prev);
-                      next.has(task.id) ? next.delete(task.id) : next.add(task.id);
-                      return next;
-                    });
-                    return;
-                  }
-                  setDetailId(task.id);
-                }}
-                onContextMenu={(e) => {
-                  // Long-press on mobile surfaces as a context menu event.
-                  e.preventDefault();
-                  soundFx.playClick();
-                  setSelected((prev) => new Set(prev).add(task.id));
-                }}
-                className={`text-left text-[15px] leading-snug break-words w-full line-clamp-2 ${
+            </span>
+
+            {/* Title and metadata take the remaining width. */}
+            <button
+              onClick={() => {
+                if (selected.size > 0) {
+                  setSelected((prev) => {
+                    const next = new Set(prev);
+                    next.has(task.id) ? next.delete(task.id) : next.add(task.id);
+                    return next;
+                  });
+                  return;
+                }
+                setDetailId(task.id);
+              }}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                soundFx.playClick();
+                setSelected((prev) => new Set(prev).add(task.id));
+              }}
+              className="flex-1 min-w-0 text-left"
+            >
+              <span
+                className={`block text-[15px] leading-snug line-clamp-1 ${
                   task.completed ? 'text-[var(--ink-dim)] line-through' : 'text-[var(--ink)]'
                 }`}
               >
@@ -562,209 +550,97 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                   <Star className="inline w-3 h-3 mb-0.5 mr-1 eb-warn fill-amber-400" />
                 )}
                 {task.title}
+              </span>
+
+              {meta && (
+                <span className={`t-meta block mt-0.5 truncate ${isOverdue ? 'eb-warn' : ''}`}>
+                  {meta}
+                </span>
+              )}
+            </button>
+
+            {/* Subtask count. Compact, and the only way in to the list. */}
+            {steps.total > 0 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpenSubtasks((prev) => ({ ...prev, [task.id]: !prev[task.id] }));
+                }}
+                className="shrink-0 flex items-center gap-1 px-2 py-1 rounded-lg t-meta"
+                style={{ background: 'var(--surface-sunk)' }}
+                aria-label="Show subtasks"
+              >
+                <ListChecks className="w-3.5 h-3.5 shrink-0" />
+                {steps.done}/{steps.total}
               </button>
             )}
 
-            <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-              {task.dueDate && (
-                <span className={`t-meta flex items-center gap-1 ${isOverdue ? 'eb-warn' : ''}`}>
-                  <Calendar className="w-3.5 h-3.5 shrink-0" />
-                  {prettyDate(task.dueDate)}
-                  {task.dueTime ? ` · ${task.dueTime}` : ''}
-                </span>
-              )}
-
-              {task.estimatedMinutes ? (
-                <span className="t-meta flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5 shrink-0" />
-                  {task.estimatedMinutes}m
-                </span>
-              ) : null}
-
-              {task.recurrence && <Repeat className="w-3.5 h-3.5 shrink-0 text-[var(--ink-dim)]" />}
-
-              {(() => {
-                const goal = task.goalId ? goals.find((g) => g.id === task.goalId) : null;
-                if (!goal) return null;
-                return (
-                  <span
-                    className="t-meta flex items-center gap-1 min-w-0"
-                    style={{ color: 'var(--signal-ink)' }}
-                  >
-                    <Target className="w-3.5 h-3.5 shrink-0" />
-                    <span className="truncate max-w-[120px]">{goal.title}</span>
-                  </span>
-                );
-              })()}
-            </div>
-
-            {/* Notes and steps, shown inline. Previously they existed but
-                nothing on the card indicated what they said. */}
-            {task.notes && !task.completed && (
-              <p className="t-sub mt-2 leading-snug line-clamp-2">{task.notes}</p>
+            {task.recurrence && (
+              <Repeat className="w-3.5 h-3.5 shrink-0 text-[var(--ink-dim)]" />
             )}
 
-            {(task.subtasks?.length || 0) > 0 && (
-              <div className="mt-2">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    // Undefined means open, so the first tap must close it.
-                    setOpenSubtasks((prev) => ({
-                      ...prev,
-                      [task.id]: prev[task.id] === false,
-                    }));
-                  }}
-                  className="flex items-center gap-1.5 t-meta"
-                >
-                  <ChevronRight
-                    className="w-3.5 h-3.5 shrink-0 transition-transform"
-                    style={{
-                      transform: openSubtasks[task.id] !== false ? 'rotate(90deg)' : undefined,
-                    }}
-                  />
-                  {subtaskProgress(task).done}/{subtaskProgress(task).total} subtasks
-                </button>
-
-                {openSubtasks[task.id] !== false && (
-                  <div
-                    className="mt-2 space-y-1.5 pl-2"
-                    style={{ borderLeft: '1px solid var(--rule)' }}
-                  >
-                    {task.subtasks!.map((st) => (
-                  <button
-                    key={st.id}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const next = (task.subtasks || []).map((x) =>
-                        x.id === st.id ? { ...x, done: !x.done } : x
-                      );
-                      applyLocal((list) =>
-                        list.map((t) => (t.id === task.id ? { ...t, subtasks: next } : t))
-                      );
-                      void patch(task, { subtasks: next });
-                    }}
-                        className="flex items-center gap-2.5 text-left w-full py-1 pl-2"
-                      >
-                        <span
-                          className="w-4 h-4 rounded shrink-0 flex items-center justify-center"
-                          style={{
-                            background: st.done ? 'var(--done)' : 'transparent',
-                            border: `1px solid ${st.done ? 'var(--done)' : 'var(--rule)'}`,
-                          }}
-                        >
-                          {st.done && <Check className="w-3 h-3 shrink-0 text-white" />}
-                        </span>
-                        <span
-                          className="text-[13px] min-w-0 flex-1"
-                          style={{
-                            textDecoration: st.done ? 'line-through' : undefined,
-                            color: st.done ? 'var(--ink-dim)' : 'var(--ink)',
-                          }}
-                        >
-                          {st.title}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {!task.completed && (
-              <div className="mt-3 space-y-2">
-                {onStartFocus && (
-                  <button
-                    onClick={() => {
-                      soundFx.playClick();
-                      onStartFocus(task);
-                    }}
-                    className="w-full min-h-[44px] px-4 rounded-xl flex items-center justify-center gap-2 text-[14px] font-semibold overflow-hidden transition-colors"
-                    style={{
-                      background: 'color-mix(in oklab, var(--done) 14%, transparent)',
-                      border: '1px solid color-mix(in oklab, var(--done) 40%, var(--rule))',
-                      color: 'var(--done)',
-                    }}
-                  >
-                    <Timer className="w-4 h-4 shrink-0" />
-                    <span className="truncate">Start focus</span>
-                    {task.estimatedMinutes ? (
-                      <span
-                        className="shrink-0 tabular-nums px-1.5 py-0.5 rounded-md text-[12px]"
-                        style={{
-                          background: 'color-mix(in oklab, var(--done) 18%, transparent)',
-                        }}
-                      >
-                        {task.estimatedMinutes}m
-                      </span>
-                    ) : null}
-                  </button>
-                )}
-
-                {(isOverdue || tab === 'today') && (
-                  <button
-                    onClick={() => {
-                      const value = shiftDate(1);
-                      const pushed = !!task.dueDate && value > task.dueDate;
-                      patch(
-                        task,
-                        {
-                          dueDate: value,
-                          ...(pushed
-                            ? {
-                                postponeCount: (task.postponeCount || 0) + 1,
-                                lastPostponedAt: new Date().toISOString(),
-                              }
-                            : {}),
-                        },
-                        'Moved to tomorrow.'
-                      );
-                    }}
-                    className="btn-text flex items-center gap-1.5"
-                  >
-                    <CalendarClock className="w-3.5 h-3.5 shrink-0" />
-                    Move to tomorrow
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-
-          <div className="flex items-center gap-0.5 shrink-0 opacity-70 sm:opacity-0 sm:group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
-            {!task.completed && (
-              <>
-                <button
-                  onClick={() => togglePin(task)}
-                  aria-label={task.pinned ? 'Unpin' : 'Pin as priority'}
-                  className="w-10 h-10 shrink-0 rounded-lg hover:bg-[var(--surface-sunk)] text-[var(--ink-muted)] hover:eb-warn flex items-center justify-center transition-colors"
-                >
-                  <Star
-                    className={`w-3.5 h-3.5 ${task.pinned ? 'fill-amber-400 eb-warn' : ''}`}
-                  />
-                </button>
-                <button
-                  onClick={() => {
-                    soundFx.playClick();
-                    setEditingTask(task);
-                    setComposerOpen(true);
-                  }}
-                  aria-label="Edit task"
-                  className="w-10 h-10 shrink-0 rounded-lg hover:bg-[var(--surface-sunk)] text-[var(--ink-muted)] hover:text-[var(--ink)] flex items-center justify-center transition-colors"
-                >
-                  <Pencil className="w-3.5 h-3.5 shrink-0" />
-                </button>
-              </>
-            )}
+            {/* Completion control on the right, as the reference has it. */}
             <button
-              onClick={() => handleDelete(task)}
-              aria-label="Delete task"
-              className="w-10 h-10 shrink-0 rounded-lg hover:bg-rose-500/15 text-[var(--ink-muted)] hover:eb-danger flex items-center justify-center transition-colors"
+              onClick={() => handleToggle(task)}
+              aria-label={task.completed ? 'Mark not done' : 'Mark done'}
+              className="shrink-0 w-10 h-10 flex items-center justify-center"
             >
-              <Trash2 className="w-3.5 h-3.5 shrink-0" />
+              <span
+                className={`w-[24px] h-[24px] rounded-full border-2 flex items-center justify-center transition-all ${
+                  task.completed
+                    ? 'bg-emerald-500 border-emerald-500 text-slate-950'
+                    : 'border-[var(--rule-strong)]'
+                }`}
+              >
+                {task.completed && <Check className="w-3.5 h-3.5 shrink-0 stroke-[3]" />}
+              </span>
             </button>
           </div>
-        </div>
-      </motion.div>
+
+          {/* Subtasks, only when asked for, and compact enough not to turn the
+              row back into a card. */}
+          {expanded && steps.total > 0 && (
+            <div
+              className="px-4 pb-3 space-y-1"
+              style={{ borderTop: '1px solid var(--rule)', paddingTop: 10 }}
+            >
+              {task.subtasks!.map((st) => (
+                <button
+                  key={st.id}
+                  onClick={() => {
+                    const next = (task.subtasks || []).map((x) =>
+                      x.id === st.id ? { ...x, done: !x.done } : x
+                    );
+                    applyLocal((list) =>
+                      list.map((t) => (t.id === task.id ? { ...t, subtasks: next } : t))
+                    );
+                    void patch(task, { subtasks: next });
+                  }}
+                  className="flex items-center gap-2.5 w-full text-left py-1"
+                >
+                  <span
+                    className="w-4 h-4 rounded shrink-0 flex items-center justify-center"
+                    style={{
+                      background: st.done ? 'var(--done)' : 'transparent',
+                      border: `1px solid ${st.done ? 'var(--done)' : 'var(--rule-strong)'}`,
+                    }}
+                  >
+                    {st.done && <Check className="w-2.5 h-2.5 shrink-0 text-white" />}
+                  </span>
+                  <span
+                    className="text-[13px] min-w-0 flex-1 truncate"
+                    style={{
+                      textDecoration: st.done ? 'line-through' : undefined,
+                      color: st.done ? 'var(--ink-dim)' : 'var(--ink)',
+                    }}
+                  >
+                    {st.title}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </motion.div>
       </SwipeableRow>
     );
   };

@@ -1,26 +1,20 @@
 import React, { useEffect, useMemo, useState , useRef} from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { MoreHorizontal, X, CalendarDays, Target, Repeat,
+import { X, CalendarDays, Target, Repeat,
   Plus,
   Flame,
   Check,
-  Timer,
   Archive,
-  TrendingUp,
   AlertTriangle,
   Pencil,
-  Trash2,
-  SlidersHorizontal,
 } from 'lucide-react';
 import type { Goal, Habit, HabitLog, Milestone, Task } from '../types';
 import {
-  archiveHabit,
   newGoal,
   newHabit,
   patchGoal,
   patchHabit,
   removeHabit,
-  removeGoal,
   saveGoal,
   saveHabit,
   setHabitValue,
@@ -28,17 +22,15 @@ import {
   subscribeHabitLogs,
   subscribeHabits,
 } from '../lib/goalStore';
-import { describeCadence, describeTarget, habitInsight, habitStats } from '../lib/habits';
+import { describeCadence, describeTarget, habitStats } from '../lib/habits';
 import {
-  GOAL_HEALTH_STYLE,
   daysRemaining,
-  goalHealth,
   goalProgress,
   overcommitmentWarning,
 } from '../lib/goalSystem';
 import { todayISO, newTaskId } from '../lib/tasks';
 import { GoalHistoryChart } from './GoalHistoryChart';
-import { snapshotGoal, snapshotsFor, subscribeGoalSnapshots } from '../lib/goalStore';
+import { snapshotGoal, subscribeGoalSnapshots } from '../lib/goalStore';
 import { soundFx } from '../utils/audio';
 import { offerUndo } from '../lib/undo';
 import { EmptyState } from './EmptyState';
@@ -64,7 +56,7 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
   const [goals, setGoals] = useState<Goal[]>([]);
   const [habits, setHabits] = useState<Habit[]>([]);
   const [logs, setLogs] = useState<HabitLog[]>([]);
-  const [snapshots, setSnapshots] = useState<any[]>([]);
+  const [, setSnapshots] = useState<any[]>([]);
   const pane: Pane = controlledPane ?? 'goals';
   const [goalDraft, setGoalDraft] = useState('');
   const goalInputRef = useRef<HTMLInputElement>(null);
@@ -272,621 +264,265 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
 
   /* ---------------- pieces ---------------- */
 
-  const HabitRow: React.FC<{ habit: Habit; compact?: boolean }> = ({ habit, compact }) => {
+  /**
+   * A habit as a compact card.
+   *
+   * Name and category on the top row, frequency under it, then seven day
+   * marks in a single grid row, then streak and actions. Editing, day
+   * selection and history live in their own sheets — inlining all of that is
+   * what made this four hundred lines and half a screen tall.
+   */
+  const HabitRow: React.FC<{ habit: Habit; compact?: boolean }> = ({ habit }) => {
     const stats = habitStats(habit, logs, today);
-    const pct = Math.min(1, stats.todayValue / stats.target);
-    const step = habit.metric === 'duration' ? 10 : 1;
-    const [msDraft, setMsDraft] = useState('');
+    const pct = Math.min(1, stats.todayValue / Math.max(1, stats.target));
+
+    /** The last seven days, oldest first, so the row reads left to right. */
+    const week = useMemo(() => {
+      const out: { iso: string; label: string; value: number; due: boolean }[] = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(`${today}T00:00:00`);
+        d.setDate(d.getDate() - i);
+        const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
+          d.getDate()
+        ).padStart(2, '0')}`;
+        const log = logs.find((l) => l.habitId === habit.id && l.date === iso);
+        const due =
+          habit.cadence === 'daily' ||
+          habit.cadence === 'weekly' ||
+          (habit.weekdays || []).includes(d.getDay());
+        out.push({
+          iso,
+          label: ['S', 'M', 'T', 'W', 'T', 'F', 'S'][d.getDay()],
+          value: log?.value || 0,
+          due,
+        });
+      }
+      return out;
+    }, [habit, logs, today]);
+
+    const target = Math.max(1, habit.targetValue || 1);
 
     return (
-      <div
-        className={`rounded-2xl border transition-colors ${
-          stats.completedToday
-            ? 'bg-emerald-500/[0.07] border-emerald-500/25'
-            : 'bg-[var(--ground)] border-[var(--rule)]'
-        }`}
-      >
-        <div className="p-3.5">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                {editingHabitId === habit.id ? (
-                  <input
-                    autoFocus
-                    value={editText}
-                    onChange={(e) => setEditText(e.target.value)}
-                    onBlur={() => commitHabitRename(habit)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') commitHabitRename(habit);
-                      if (e.key === 'Escape') setEditingHabitId(null);
-                    }}
-                    className="bg-[var(--surface-sunk)] border border-[color-mix(in_oklab,var(--signal)_60%,transparent)] rounded-lg px-2 py-1 text-sm text-[var(--ink)] outline-none min-w-0 flex-1"
-                  />
-                ) : (
-                  <span
-                    className={`text-sm font-bold break-words ${
-                      stats.completedToday ? 'eb-done' : 'text-[var(--ink)]'
-                    }`}
-                  >
-                    {habit.title}
-                  </span>
-                )}
-                {stats.currentStreak > 1 && (
-                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-orange-500/15 text-orange-300 border border-orange-500/30 flex items-center gap-1 shrink-0">
-                    <Flame className="w-3.5 h-3.5 shrink-0" />
-                    {stats.currentStreak}
-                  </span>
-                )}
-                {habit.status === 'archived' && (
-                  <span className="t-meta">Archived</span>
-                )}
-              </div>
-
-              <p className="t-meta mt-1">
-                {habit.metric === 'yes_no'
-                  ? describeCadence(habit)
-                  : `${stats.todayValue} / ${describeTarget(habit)} · ${describeCadence(habit)}`}
-                {!stats.scheduledToday && ' · not scheduled today'}
-              </p>
-
-              {/* Which goal this feeds. Without it, a habit is just a chore
-                  rather than something moving a goal forward. */}
-              {(() => {
-                const goal = habit.goalId ? goals.find((g) => g.id === habit.goalId) : null;
-                if (!goal) return null;
-                return (
-                  <p
-                    className="t-meta mt-1 flex items-center gap-1 min-w-0"
-                    style={{ color: 'var(--signal-ink)' }}
-                  >
-                    <Target className="w-3.5 h-3.5 shrink-0" />
-                    <span className="truncate">{goal.title}</span>
-                  </p>
-                );
-              })()}
-            </div>
-
-            {habit.metric === 'yes_no' ? (
-              <button
-                onClick={() => record(habit, stats.completedToday ? 0 : stats.target)}
-                aria-label={stats.completedToday ? 'Mark not done' : 'Mark done'}
-                className="shrink-0 w-11 h-11 flex items-center justify-center"
-              >
-                <span
-                  className={`w-7 h-7 rounded-xl border flex items-center justify-center transition-all ${
-                    stats.completedToday
-                      ? 'bg-emerald-500 border-emerald-500 text-slate-950'
-                      : 'border-[var(--rule-strong)] hover:border-emerald-500/60'
-                  }`}
-                >
-                  <AnimatePresence>
-                    {stats.completedToday && (
-                      <motion.span
-                        initial={{ scale: 0, rotate: -25 }}
-                        animate={{ scale: 1, rotate: 0 }}
-                        exit={{ scale: 0 }}
-                        transition={{ type: 'spring', stiffness: 500, damping: 22 }}
-                      >
-                        <Check className="w-4 h-4 shrink-0 stroke-[3]" />
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
-                </span>
-              </button>
-            ) : (
-              <div className="relative w-12 h-12 shrink-0">
-                <svg viewBox="0 0 40 40" className="w-full h-full -rotate-90">
-                  <circle cx="20" cy="20" r="17" fill="none" stroke="var(--surface-sunk)" strokeWidth="4" />
-                  <motion.circle
-                    cx="20"
-                    cy="20"
-                    r="17"
-                    fill="none"
-                    stroke={stats.completedToday ? '#10B981' : '#8B5CF6'}
-                    strokeWidth="4"
-                    strokeLinecap="round"
-                    strokeDasharray={2 * Math.PI * 17}
-                    initial={false}
-                    animate={{ strokeDashoffset: 2 * Math.PI * 17 * (1 - pct) }}
-                    transition={{ duration: 0.45, ease: 'easeOut' }}
-                  />
-                </svg>
-                <span className="absolute inset-0 flex items-center justify-center t-meta font-black text-[var(--ink)] tabular-nums">
-                  {Math.round(pct * 100)}%
-                </span>
-              </div>
-            )}
+      <div className="rounded-2xl eb-card p-4">
+        {/* Top row: name, then the completion control on the right. */}
+        <div className="flex items-start gap-3">
+          <div className="min-w-0 flex-1">
+            <p
+              className={`text-[15px] font-semibold leading-snug line-clamp-1 ${
+                habit.status === 'archived' ? 'text-[var(--ink-dim)]' : ''
+              }`}
+            >
+              {habit.title}
+            </p>
+            <p className="t-meta mt-0.5 truncate">
+              {describeCadence(habit)}
+              {habit.metric !== 'yes_no' ? ` · ${stats.todayValue}/${describeTarget(habit)}` : ''}
+            </p>
           </div>
 
-          {editingSchedule === habit.id && (
-            <div className="mt-3 p-3 rounded-xl eb-card-sunk space-y-3">
-              <div>
-                <p className="eb-label mb-1.5">How often</p>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  {([
-                    { id: 'daily' as const, label: 'Every day' },
-                    { id: 'weekly' as const, label: 'Weekly' },
-                    { id: 'selected_days' as const, label: 'Chosen days' },
-                  ]).map(({ id: c, label }) => (
-                    <button
-                      key={c}
-                      onClick={() => patchHabit(userId, habit.id, { cadence: c })}
-                      className={`eb-press text-[11px] font-semibold px-2.5 py-1.5 rounded-full border ${
-                        habit.cadence === c ? 'eb-chip-active' : 'text-[var(--ink-dim)] border-[#262C38]'
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {habit.cadence === 'selected_days' && (
-                <div>
-                  <p className="eb-label mb-1.5">On these days</p>
-                  <div className="grid grid-cols-7 gap-1.5">
-                    {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => {
-                      const on = (habit.weekdays || []).includes(i);
-                      return (
-                        <button
-                          key={i}
-                          onClick={() => {
-                            const cur = habit.weekdays || [];
-                            const next = on ? cur.filter((x) => x !== i) : [...cur, i].sort();
-                            patchHabit(userId, habit.id, { weekdays: next });
-                          }}
-                          className="shrink-0 w-9 h-9 rounded-full text-[12px] font-semibold transition-colors"
-                          style={{
-                            background: on
-                              ? 'var(--signal)'
-                              : 'transparent',
-                            border: `1px solid ${on ? 'var(--signal)' : 'var(--rule)'}`,
-                            color: on ? '#fff' : 'var(--ink-dim)',
-                          }}
-                        >
-                          {d}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {habit.metric !== 'yes_no' && (
-                <div>
-                  <p className="eb-label mb-1.5">Daily target</p>
-                  <input
-                    type="number"
-                    min={1}
-                    defaultValue={habit.targetValue || 1}
-                    onBlur={(e) => {
-                      const v = Math.max(1, Number(e.target.value) || 1);
-                      if (v !== habit.targetValue) patchHabit(userId, habit.id, { targetValue: v });
-                    }}
-                    className="w-24 bg-[var(--ground)] border border-[#262C38] rounded-lg px-2.5 py-2 text-xs text-[var(--ink)] outline-none"
-                  />
-                </div>
-              )}
-
-              {goals.filter((g) => g.status === 'active').length > 0 && (
-                <div>
-                  <p className="eb-label mb-1.5">Counts toward</p>
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <button
-                      onClick={() => patchHabit(userId, habit.id, { goalId: undefined })}
-                      className={`eb-press text-[11px] font-semibold px-2.5 py-1.5 rounded-full border ${
-                        !habit.goalId ? 'eb-chip-active' : 'text-[var(--ink-dim)] border-[#262C38]'
-                      }`}
-                    >
-                      Nothing
-                    </button>
-                    {goals
-                      .filter((g) => g.status === 'active')
-                      .map((g) => (
-                        <button
-                          key={g.id}
-                          onClick={() =>
-                            patchHabit(userId, habit.id, {
-                              goalId: habit.goalId === g.id ? undefined : g.id,
-                            })
-                          }
-                          className={`eb-press text-[11px] font-semibold px-2.5 py-1.5 rounded-full border max-w-full truncate ${
-                            habit.goalId === g.id ? 'eb-chip-active' : 'text-[var(--ink-dim)] border-[#262C38]'
-                          }`}
-                        >
-                          {g.title}
-                        </button>
-                      ))}
-                  </div>
-                </div>
-              )}
+          {habit.metric === 'yes_no' ? (
+            <button
+              onClick={() => record(habit, stats.completedToday ? 0 : stats.target)}
+              aria-label={stats.completedToday ? 'Mark not done' : 'Mark done'}
+              className="shrink-0 w-10 h-10 flex items-center justify-center"
+            >
+              <span
+                className={`w-[26px] h-[26px] rounded-full border-2 flex items-center justify-center transition-all ${
+                  stats.completedToday
+                    ? 'bg-emerald-500 border-emerald-500 text-slate-950'
+                    : 'border-[var(--rule-strong)]'
+                }`}
+              >
+                {stats.completedToday && <Check className="w-3.5 h-3.5 shrink-0 stroke-[3]" />}
+              </span>
+            </button>
+          ) : (
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                onClick={() => record(habit, Math.max(0, stats.todayValue - (habit.metric === 'duration' ? 10 : 1)))}
+                aria-label="Less"
+                className="w-8 h-8 rounded-lg flex items-center justify-center"
+                style={{ background: 'var(--surface-sunk)', color: 'var(--ink-dim)' }}
+              >
+                −
+              </button>
+              <span className="t-figure text-[15px] w-8 text-center">{stats.todayValue}</span>
+              <button
+                onClick={() => record(habit, stats.todayValue + (habit.metric === 'duration' ? 10 : 1))}
+                aria-label="More"
+                className="w-8 h-8 rounded-lg flex items-center justify-center"
+                style={{ background: 'var(--surface-sunk)', color: 'var(--ink-dim)' }}
+              >
+                +
+              </button>
             </div>
           )}
-
-          <div className="flex items-center gap-1.5 mt-2.5 flex-wrap">
-              <button
-                onClick={() => record(habit, stats.todayValue + step)}
-                className="text-[11px] font-semibold px-3 py-2 rounded-xl bg-[var(--surface-sunk)] hover:bg-[#20252E] border border-[var(--rule)] text-[var(--ink)]"
-              >
-                +{step}
-                {habit.metric === 'duration' ? ' min' : ''}
-              </button>
-              {stats.todayValue > 0 && (
-                <button
-                  onClick={() => record(habit, Math.max(0, stats.todayValue - step))}
-                  className="text-[11px] font-semibold px-3 py-2 rounded-xl bg-transparent border border-[var(--rule)] text-[var(--ink-dim)] hover:text-[var(--ink-muted)]"
-                >
-                  −{step}
-                </button>
-              )}
-              {habit.metric === 'duration' && onStartFocus && (
-                <button
-                  onClick={() => {
-                    soundFx.playClick();
-                    onStartFocus(
-                      habit.title,
-                      Math.max(5, stats.target - stats.todayValue),
-                      habit.id
-                    );
-                  }}
-                  className="eb-press text-[11px] font-semibold px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 eb-done hover:bg-emerald-500/20 flex items-center gap-1.5"
-                >
-                  <Timer className="w-3.5 h-3.5 shrink-0" />
-                  Start focus
-                </button>
-              )}
-            </div>
-
-          <div className="flex items-center gap-1.5 mt-2.5 flex-wrap">
-            <button
-              onClick={() => setExpandedHabit(expandedHabit === habit.id ? null : habit.id)}
-              className="eb-press t-meta hover:text-[var(--ink-muted)] px-2 py-1.5"
-            >
-              {expandedHabit === habit.id ? '− Hide history' : '+ History'}
-            </button>
-
-            <button
-              onClick={() => setEditingSchedule(editingSchedule === habit.id ? null : habit.id)}
-              aria-label="Change schedule"
-              title="Schedule and target"
-              className="eb-press w-9 h-9 rounded-lg text-[var(--ink-dim)] hover:text-[var(--ink)] hover:bg-[var(--surface-sunk)] flex items-center justify-center"
-            >
-              <SlidersHorizontal className="w-3.5 h-3.5 shrink-0" />
-            </button>
-            <button
-              onClick={() => {
-                setEditingHabitId(habit.id);
-                setEditText(habit.title);
-              }}
-              aria-label="Rename habit"
-              title="Rename"
-              className="eb-press ml-auto w-9 h-9 rounded-lg text-[var(--ink-dim)] hover:text-[var(--ink)] hover:bg-[var(--surface-sunk)] flex items-center justify-center"
-            >
-              <Pencil className="w-3.5 h-3.5 shrink-0" />
-            </button>
-            {habit.status === 'active' ? (
-              <button
-                onClick={() => archiveHabit(userId, habit.id)}
-                aria-label="Archive habit"
-                title="Archive (keeps history)"
-                className="eb-press w-9 h-9 rounded-lg text-[var(--ink-dim)] hover:eb-warn hover:bg-[var(--surface-sunk)] flex items-center justify-center"
-              >
-                <Archive className="w-3.5 h-3.5 shrink-0" />
-              </button>
-            ) : (
-              <button
-                onClick={() => patchHabit(userId, habit.id, { status: 'active' })}
-                className="eb-press text-[11px] font-semibold px-2.5 py-2 rounded-lg eb-done"
-              >
-                Restore
-              </button>
-            )}
-            <button
-              onClick={() => {
-                soundFx.playClick();
-                setHistoryHabit(habit);
-              }}
-              aria-label="View history"
-              title="History"
-              className="eb-press w-9 h-9 rounded-lg text-[var(--ink-dim)] hover:text-[var(--ink)] flex items-center justify-center"
-            >
-              <CalendarDays className="w-3.5 h-3.5 shrink-0" />
-            </button>
-
-            <button
-              onClick={() => {
-                soundFx.playClick();
-                setEditingHabit(habit);
-                setHabitComposerOpen(true);
-              }}
-              aria-label="Edit habit"
-              title="Edit"
-              className="eb-press w-9 h-9 rounded-lg text-[var(--ink-dim)] hover:text-[var(--ink)] flex items-center justify-center"
-            >
-              <Pencil className="w-3.5 h-3.5 shrink-0" />
-            </button>
-
-            <button
-              onClick={() => deleteHabitForever(habit)}
-              aria-label="Delete habit"
-              title="Delete permanently"
-              className="eb-press w-9 h-9 rounded-lg text-[var(--ink-dim)] hover:eb-danger hover:bg-rose-500/10 flex items-center justify-center"
-            >
-              <Trash2 className="w-3.5 h-3.5 shrink-0" />
-            </button>
-          </div>
         </div>
 
-        <AnimatePresence>
-          {expandedHabit === habit.id && !compact && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden"
-            >
-              <div className="px-3.5 pb-3.5 space-y-3">
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { label: 'Streak', value: stats.currentStreak },
-                    { label: 'Best', value: stats.bestStreak },
-                    { label: 'Done', value: stats.totalCompletions },
-                  ].map((s) => (
-                    <div
-                      key={s.label}
-                      className="eb-card-sunk p-2 text-center"
-                    >
-                      <p className="t-figure text-base">
-                        {s.value}
-                      </p>
-                      <p className="t-meta mt-1">{s.label}</p>
-                    </div>
-                  ))}
-                </div>
+        {/* Seven days in one grid row. A grid cannot wrap, so these never
+            stack vertically however narrow the screen gets. */}
+        <div className="grid grid-cols-7 gap-1.5 mt-3.5">
+          {week.map((d, i) => {
+            const met = d.value >= target;
+            const isToday = i === 6;
 
-                {/* Heatmap — 12 weeks */}
-                <div className="flex flex-wrap gap-[3px]">
-                  {stats.history.map((h) => (
-                    <span
-                      key={h.date}
-                      title={`${h.date}: ${h.value}`}
-                      className={`w-[9px] h-[9px] rounded-[2px] ${
-                        h.complete
-                          ? 'bg-emerald-500'
-                          : h.value > 0
-                            ? 'bg-emerald-500/40'
-                            : h.scheduled
-                              ? 'bg-[#20252E]'
-                              : 'bg-[#141820]'
-                      }`}
-                    />
-                  ))}
-                </div>
-
-                {habitInsight(habit, stats) && (
-                  <p className="t-meta">
-                    {habitInsight(habit, stats)}
-                  </p>
-                )}
-
-
+            return (
+              <div key={d.iso} className="flex flex-col items-center gap-1 min-w-0">
+                <span className="t-meta leading-none">{d.label}</span>
+                <span
+                  className="w-full rounded-full"
+                  style={{
+                    aspectRatio: '1 / 1',
+                    maxWidth: 28,
+                    background: met
+                      ? 'var(--done)'
+                      : d.due
+                        ? 'var(--surface-sunk)'
+                        : 'transparent',
+                    border: isToday
+                      ? '2px solid var(--signal)'
+                      : d.due && !met
+                        ? '1px solid var(--rule)'
+                        : '1px solid transparent',
+                  }}
+                />
               </div>
-            </motion.div>
+            );
+          })}
+        </div>
+
+        {/* Progress for counted habits, where the number alone is not enough. */}
+        {habit.metric !== 'yes_no' && (
+          <div
+            className="h-1 rounded-full overflow-hidden mt-3"
+            style={{ background: 'var(--surface-sunk)' }}
+          >
+            <div
+              className="h-full rounded-full transition-[width] duration-300"
+              style={{ width: `${pct * 100}%`, background: 'var(--done)' }}
+            />
+          </div>
+        )}
+
+        {/* Streak and actions on one line. */}
+        <div className="flex items-center gap-2 mt-3">
+          {stats.currentStreak > 0 && (
+            <span className="t-meta flex items-center gap-1 min-w-0">
+              <Flame className="w-3.5 h-3.5 shrink-0 eb-warn" />
+              {stats.currentStreak} day{stats.currentStreak === 1 ? '' : 's'}
+            </span>
           )}
-        </AnimatePresence>
+
+          <span className="flex-1" />
+
+          <button
+            onClick={() => {
+              soundFx.playClick();
+              setHistoryHabit(habit);
+            }}
+            aria-label="History"
+            className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+            style={{ color: 'var(--ink-dim)' }}
+          >
+            <CalendarDays className="w-4 h-4 shrink-0" />
+          </button>
+
+          <button
+            onClick={() => {
+              soundFx.playClick();
+              setEditingHabit(habit);
+              setHabitComposerOpen(true);
+            }}
+            aria-label="Edit habit"
+            className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+            style={{ color: 'var(--ink-dim)' }}
+          >
+            <Pencil className="w-4 h-4 shrink-0" />
+          </button>
+
+          <button
+            onClick={() =>
+              patchHabit(userId, habit.id, {
+                status: habit.status === 'active' ? 'archived' : 'active',
+              })
+            }
+            aria-label={habit.status === 'active' ? 'Archive' : 'Restore'}
+            className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+            style={{ color: 'var(--ink-dim)' }}
+          >
+            <Archive className="w-4 h-4 shrink-0" />
+          </button>
+        </div>
       </div>
     );
   };
 
+  /**
+   * A goal as a compact progress card.
+   *
+   * Title, progress, deadline and a way in. The milestone list, linked work
+   * and settings all live in the detail sheet, which is what keeps this a
+   * card you can scan rather than a screen you have to read.
+   */
   const GoalCard: React.FC<{ goal: Goal }> = ({ goal }) => {
     const progress = goalProgress(goal, habits, logs, today, tasks, routineBlocks, routineLogs);
-    const health = goalHealth(goal, progress, today);
     const left = daysRemaining(goal.deadline, today);
-    const [msDraft, setMsDraft] = useState('');
-    const linked = habits.filter((h) => h.goalId === goal.id);
+    const milestones = goal.milestones || [];
+    const doneMilestones = milestones.filter((m) => m.done).length;
 
     return (
-      <div className="eb-card p-4 space-y-3">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            {editingGoalId === goal.id ? (
-              <input
-                autoFocus
-                value={editText}
-                onChange={(e) => setEditText(e.target.value)}
-                onBlur={() => commitGoalRename(goal)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') commitGoalRename(goal);
-                  if (e.key === 'Escape') setEditingGoalId(null);
-                }}
-                className="w-full bg-[var(--surface-sunk)] border border-[color-mix(in_oklab,var(--signal)_60%,transparent)] rounded-lg px-2 py-1 text-sm text-[var(--ink)] outline-none"
-              />
-            ) : (
-              <button
-                onClick={() => {
-                  soundFx.playClick();
-                  setDetailGoal(goal);
-                }}
-                className="text-left w-full"
-              >
-                <h4 className="t-section break-words">{goal.title}</h4>
-                <span className="t-meta mt-1 block">Tap for milestones and linked work</span>
-              </button>
-            )}
-            <p className="t-meta mt-1">{progress.label}</p>
-          </div>
+      <button
+        onClick={() => {
+          soundFx.playClick();
+          setDetailGoal(goal);
+        }}
+        className="w-full text-left rounded-2xl eb-card p-4"
+      >
+        <div className="flex items-start gap-3">
           <span
-            className={`text-[11px] font-semibold px-2 py-1 rounded-full border shrink-0 ${GOAL_HEALTH_STYLE[health.health]}`}
+            className="w-9 h-9 rounded-xl shrink-0 flex items-center justify-center"
+            style={{ background: 'color-mix(in oklab, var(--signal) 16%, transparent)' }}
           >
-            {health.label}
+            <Target className="w-4 h-4 shrink-0" style={{ color: 'var(--signal-ink)' }} />
+          </span>
+
+          <div className="min-w-0 flex-1">
+            <p className="text-[15px] font-semibold leading-snug line-clamp-1">{goal.title}</p>
+            <p className="t-meta mt-0.5 truncate">
+              {milestones.length > 0
+                ? `${doneMilestones}/${milestones.length} milestones`
+                : 'No milestones yet'}
+              {left !== null
+                ? left > 0
+                  ? ` · ${left} days left`
+                  : left === 0
+                    ? ' · due today'
+                    : ` · ${Math.abs(left)} days over`
+                : ''}
+            </p>
+          </div>
+
+          <span
+            className="t-figure shrink-0"
+            style={{ fontSize: 20, color: 'var(--signal-ink)' }}
+          >
+            {progress.percent}%
           </span>
         </div>
 
-        <div className="h-1.5 w-full bg-[var(--surface-sunk)] rounded-full overflow-hidden">
-          <motion.div
-            className={`h-full rounded-full ${
-              health.health === 'at_risk'
-                ? 'bg-rose-500'
-                : health.health === 'needs_attention'
-                  ? 'bg-amber-500'
-                  : 'bg-emerald-500'
-            }`}
-            initial={false}
-            animate={{ width: `${progress.percent}%` }}
-            transition={{ duration: 0.5, ease: 'easeOut' }}
+        <div
+          className="h-1.5 rounded-full overflow-hidden mt-3"
+          style={{ background: 'var(--surface-sunk)' }}
+        >
+          <div
+            className="h-full rounded-full transition-[width] duration-500"
+            style={{
+              width: `${progress.percent}%`,
+              background: progress.percent >= 100 ? 'var(--done)' : 'var(--signal)',
+            }}
           />
         </div>
-
-        <p className="text-[12px] text-[var(--ink-dim)] leading-relaxed">{health.reason}</p>
-
-        {left !== null && left >= 0 && (
-          <p className="t-meta">
-            {left} day{left === 1 ? '' : 's'} remaining
-          </p>
-        )}
-
-
-        <GoalHistoryChart snapshots={snapshotsFor(snapshots, goal.id)} />
-
-        {(() => {
-          const blocks = routineBlocks.filter((b: any) => b.goalId === goal.id && b.active);
-          const goalTasks = tasks.filter((t) => t.goalId === goal.id);
-          const bits: string[] = [];
-          if (linked.length) bits.push(`${linked.length} habit${linked.length === 1 ? '' : 's'}`);
-          if (blocks.length) bits.push(`${blocks.length} routine block${blocks.length === 1 ? '' : 's'}`);
-          if (goalTasks.length) bits.push(`${goalTasks.length} task${goalTasks.length === 1 ? '' : 's'}`);
-          return bits.length > 0 ? (
-            <p className="t-meta flex items-center gap-1.5">
-              <TrendingUp className="w-3.5 h-3.5 shrink-0" />
-              {bits.join(' · ')} feeding this goal
-            </p>
-          ) : (
-            <p className="text-[12px] text-[var(--ink-dim)] leading-relaxed">
-              Nothing linked yet. Attach a routine block, habit or task and this goal moves when
-              you do the work.
-            </p>
-          );
-        })()}
-
-        {editingGoalSettings === goal.id && (
-          <div className="p-3 rounded-xl eb-card-sunk space-y-3">
-            <div>
-              <p className="eb-label mb-1.5">Deadline</p>
-              <div className="flex items-center gap-2">
-                <input
-                  type="date"
-                  defaultValue={goal.deadline || ''}
-                  onBlur={(e) =>
-                    patchGoal(userId, goal.id, { deadline: e.target.value || undefined })
-                  }
-                  className="bg-[var(--ground)] border border-[#262C38] rounded-lg px-2.5 py-2 text-xs text-[var(--ink)] outline-none"
-                />
-                {goal.deadline && (
-                  <button
-                    onClick={() => patchGoal(userId, goal.id, { deadline: undefined })}
-                    className="eb-press t-meta hover:eb-danger"
-                  >
-                    clear
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {(goal.metric === 'number' ||
-              goal.metric === 'count' ||
-              goal.metric === 'percentage') && (
-              <div>
-                <p className="eb-label mb-1.5">
-                  Target{goal.unit ? ` (${goal.unit})` : ''}
-                </p>
-                <input
-                  type="number"
-                  min={1}
-                  defaultValue={goal.targetValue || 1}
-                  onBlur={(e) => {
-                    const v = Math.max(1, Number(e.target.value) || 1);
-                    if (v !== goal.targetValue) patchGoal(userId, goal.id, { targetValue: v });
-                  }}
-                  className="w-28 bg-[var(--ground)] border border-[#262C38] rounded-lg px-2.5 py-2 text-xs text-[var(--ink)] outline-none"
-                />
-              </div>
-            )}
-
-            <p className="text-[12px] text-[var(--ink-muted)] leading-relaxed">
-              Changing the target recalculates progress from your linked work — it never
-              discards milestones or history.
-            </p>
-          </div>
-        )}
-
-        <div className="pt-1">
-          <button
-            onClick={() => setOpenGoalActions((prev) => ({ ...prev, [goal.id]: !prev[goal.id] }))}
-            className="btn-text flex items-center gap-1.5"
-          >
-            <MoreHorizontal className="w-3.5 h-3.5 shrink-0" />
-            {openGoalActions[goal.id] ? 'Hide options' : 'Options'}
-          </button>
-
-          {openGoalActions[goal.id] && (
-        <div className="flex items-center gap-2 pt-1 flex-wrap">
-          <button
-            onClick={() =>
-              setEditingGoalSettings(editingGoalSettings === goal.id ? null : goal.id)
-            }
-            className="eb-press text-[11px] font-semibold px-2.5 py-2 rounded-lg border border-[var(--rule)] text-[var(--ink-muted)] hover:text-[var(--ink)] flex items-center gap-1.5"
-          >
-            <SlidersHorizontal className="w-3.5 h-3.5 shrink-0" />
-            Settings
-          </button>
-          <button
-            onClick={() => {
-              setEditingGoalId(goal.id);
-              setEditText(goal.title);
-            }}
-            className="eb-press text-[11px] font-semibold px-2.5 py-2 rounded-lg border border-[var(--rule)] text-[var(--ink-muted)] hover:text-[var(--ink)] flex items-center gap-1.5"
-          >
-            <Pencil className="w-3.5 h-3.5 shrink-0" />
-            Rename
-          </button>
-          <button
-            onClick={() => {
-              soundFx.playClick();
-              patchGoal(userId, goal.id, { status: 'archived' });
-              setGoals((prev) =>
-                prev.map((x) => (x.id === goal.id ? { ...x, status: 'archived' as const } : x))
-              );
-            }}
-            className="eb-press text-[11px] font-semibold px-2.5 py-2 rounded-lg border border-[var(--rule)] text-[var(--ink-dim)] hover:eb-warn flex items-center gap-1.5"
-          >
-            <Archive className="w-3.5 h-3.5 shrink-0" />
-            Archive
-          </button>
-          <button
-            onClick={() => {
-              setGoals((prev) => prev.filter((g) => g.id !== goal.id));
-              removeGoal(userId, goal.id)
-                .then(() =>
-                  offerUndo('Goal deleted', async () => {
-                    setGoals((prev) => [goal, ...prev]);
-                    await saveGoal(userId, goal);
-                  })
-                )
-                .catch((e) => {
-                  console.error(e);
-                  // Restore on failure so the list reflects reality.
-                  setGoals((prev) => [goal, ...prev]);
-                });
-            }}
-            className="eb-press text-[11px] font-semibold px-2.5 py-2 rounded-lg border border-[var(--rule)] text-[var(--ink-dim)] hover:eb-danger flex items-center gap-1.5"
-          >
-            <Trash2 className="w-3.5 h-3.5 shrink-0" />
-            Delete
-          </button>
-        </div>
-          )}
-        </div>
-      </div>
+      </button>
     );
   };
 
