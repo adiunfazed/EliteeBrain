@@ -188,6 +188,12 @@ export interface Task {
   recurrence?: Recurrence;
   /** Minutes before dueTime to send a reminder. 0 means at the time itself. */
   reminderMinutesBefore?: number;
+  /**
+   * Manual position within its bucket. Sparse by design — new items get a
+   * value far from their neighbours so reordering rewrites one row rather
+   * than renumbering the whole list.
+   */
+  manualOrder?: number;
   /** Set once a reminder has been sent, so it fires once rather than repeatedly. */
   reminderSentAt?: string;
   /** Id of the recurring task this one was generated from. */

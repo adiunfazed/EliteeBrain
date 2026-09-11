@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, Reorder } from 'motion/react';
 import { CalendarClock, ChevronRight, ArrowUpDown, Bell, Target,
   Check,
   Plus,
@@ -43,6 +43,8 @@ import {
 import { soundFx } from '../utils/audio';
 import { ComposerSheet } from './ComposerSheet';
 import { AddButton } from './AddButton';
+import { SwipeableRow } from './SwipeableRow';
+import { byManualOrder, positionFor, needsRebalance, rebalance } from '../lib/ordering';
 import { TaskComposer } from './TaskComposer';
 import { TaskDetailSheet } from './TaskDetailSheet';
 import { StuckTaskCard } from './StuckTaskCard';
@@ -137,6 +139,12 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
   const [sortBy, setSortBy] = useState<'date' | 'priority' | 'quick'>('date');
   const [composerOpen, setComposerOpen] = useState(false);
   const [openSubtasks, setOpenSubtasks] = useState<Record<string, boolean>>({});
+  /** Ids picked for a bulk action. */
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  /** Which task is currently liftable, set by a long press. */
+  const [dragging, setDragging] = useState<string | null>(null);
+  /** Live order during a drag, before it is committed. */
+  const [dragOrder, setDragOrder] = useState<Task[] | null>(null);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [stuckDismissed, setStuckDismissed] = useState<string | null>(null);
@@ -190,7 +198,21 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
 
   const visible = useMemo(() => {
     let base = tab === 'overdue' ? overdue : buckets[tab];
-    const found = searchTasks(base, search);
+    let found = searchTasks(base, search);
+
+    // Also match tasks by the goal they belong to, so searching a goal name
+    // finds the work attached to it.
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      const matchingGoalIds = new Set(
+        goals.filter((g) => g.title.toLowerCase().includes(q)).map((g) => g.id)
+      );
+      if (matchingGoalIds.size > 0) {
+        const byGoal = base.filter((t) => t.goalId && matchingGoalIds.has(t.goalId));
+        const seen = new Set(found.map((t) => t.id));
+        found = [...found, ...byGoal.filter((t) => !seen.has(t.id))];
+      }
+    }
 
     // Sorting is applied last, so it never fights the search or time filter.
     const PRIORITY_ORDER = { critical: 0, high: 1, normal: 2, low: 3 } as const;
@@ -209,8 +231,11 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
       );
     }
 
-    return found;
-  }, [buckets, overdue, tab, search, sortBy]);
+    // Manual order applies only to the default sort. Under an explicit sort
+    // the user has asked for a specific ordering, and honouring drags too
+    // would leave the two fighting each other.
+    return byManualOrder(found, () => 0);
+  }, [buckets, overdue, tab, search, sortBy, goals]);
 
   const detailTask = useMemo(
     () => tasks.find((t) => t.id === detailId) || null,
@@ -351,15 +376,99 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
   const pct = progress.total > 0 ? progress.done / progress.total : 0;
   const dayComplete = progress.total > 0 && progress.done === progress.total;
 
+  /**
+   * Persist a drag.
+   *
+   * Writes only the moved task: its neighbours keep their positions, so a
+   * reorder costs one write rather than one per row.
+   */
+  const commitReorder = async (moved: Task) => {
+    setDragging(null);
+    const next = dragOrder;
+    setDragOrder(null);
+    if (!next) return;
+
+    const index = next.findIndex((t) => t.id === moved.id);
+    if (index < 0) return;
+
+    const order = positionFor(
+      next.filter((t) => t.id !== moved.id),
+      index
+    );
+
+    applyLocal((list) =>
+      list.map((t) => (t.id === moved.id ? { ...t, manualOrder: order } : t))
+    );
+
+    try {
+      await patchTask(userId, moved.id, { manualOrder: order });
+
+      // Gaps halve with each midpoint drop and eventually collide, which
+      // would silently break ordering. Renumbering is many writes, so it runs
+      // only when the gaps have actually collapsed.
+      const current = byManualOrder(
+        next.map((t) => (t.id === moved.id ? { ...t, manualOrder: order } : t)),
+        () => 0
+      );
+
+      if (needsRebalance(current)) {
+        const spaced = rebalance(current);
+        applyLocal((list) =>
+          list.map((t) => {
+            const hit = spaced.find((s) => s.item.id === t.id);
+            return hit ? { ...t, manualOrder: hit.manualOrder } : t;
+          })
+        );
+        await Promise.all(
+          spaced.map((s) => patchTask(userId, s.item.id, { manualOrder: s.manualOrder }))
+        );
+      }
+    } catch (err) {
+      console.error('Could not save the new order:', err);
+    }
+  };
+
   const renderCard = (task: Task, highlight = false) => {
     const pri = PRIORITY_STYLE[task.priority] || PRIORITY_STYLE.normal;
     const PriIcon = pri.icon;
     const isOverdue = !!task.dueDate && task.dueDate < todayISO() && !task.completed;
 
     return (
-      <motion.div
+      <SwipeableRow
         key={task.id}
+        disabled={task.completed || selected.size > 0}
+        rightAction="complete"
+        leftAction="reschedule"
+        onSwipeRight={() => handleToggle(task)}
+        onSwipeLeft={() => {
+          const value = shiftDate(1);
+          const pushed = !!task.dueDate && value > task.dueDate;
+          patch(
+            task,
+            {
+              dueDate: value,
+              ...(pushed
+                ? {
+                    postponeCount: (task.postponeCount || 0) + 1,
+                    lastPostponedAt: new Date().toISOString(),
+                  }
+                : {}),
+            },
+            'Moved to tomorrow.'
+          );
+        }}
+      >
+      <motion.div
         layout
+        style={
+          selected.has(task.id)
+            ? {
+                outline: '2px solid var(--signal)',
+                outlineOffset: -2,
+                borderRadius: 16,
+              }
+            : undefined
+        }
         initial={{ opacity: 0, y: -6 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, height: 0, marginBottom: 0 }}
@@ -430,7 +539,23 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
               />
             ) : (
               <button
-                onClick={() => setDetailId(task.id)}
+                onClick={() => {
+                  if (selected.size > 0) {
+                    setSelected((prev) => {
+                      const next = new Set(prev);
+                      next.has(task.id) ? next.delete(task.id) : next.add(task.id);
+                      return next;
+                    });
+                    return;
+                  }
+                  setDetailId(task.id);
+                }}
+                onContextMenu={(e) => {
+                  // Long-press on mobile surfaces as a context menu event.
+                  e.preventDefault();
+                  soundFx.playClick();
+                  setSelected((prev) => new Set(prev).add(task.id));
+                }}
                 className={`text-left text-sm leading-snug break-words w-full ${
                   task.completed ? 'text-[var(--ink-dim)] line-through' : 'text-[var(--ink)]'
                 }`}
@@ -629,6 +754,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
           </div>
         </div>
       </motion.div>
+      </SwipeableRow>
     );
   };
 
@@ -709,7 +835,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
               searchRef.current?.blur();
             }
           }}
-          placeholder="Search tasks"
+          placeholder="Search tasks and goals"
           className="flex-1 min-w-0 bg-transparent text-[14px] text-[var(--ink)] placeholder:text-[var(--ink-dim)] outline-none border-0 p-0"
         />
 
@@ -724,6 +850,55 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
           </button>
         )}
       </div>
+
+      {/* Bulk actions. Appears only once something is selected, so it costs
+          nothing when unused. */}
+      {selected.size > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-2xl p-3 flex items-center gap-2.5 flex-wrap"
+          style={{
+            background: 'color-mix(in oklab, var(--signal) 14%, var(--surface))',
+            border: '1px solid color-mix(in oklab, var(--signal) 40%, var(--rule))',
+          }}
+        >
+          <span className="text-[14px] font-semibold min-w-0 flex-1">
+            {selected.size} selected
+          </span>
+
+          <button
+            onClick={async () => {
+              soundFx.playSuccess();
+              const picked = tasks.filter((t) => selected.has(t.id) && !t.completed);
+              setSelected(new Set());
+              for (const t of picked) await handleToggle(t);
+            }}
+            className="chip shrink-0"
+          >
+            <Check className="w-3.5 h-3.5 shrink-0" />
+            Complete
+          </button>
+
+          <button
+            onClick={async () => {
+              const value = shiftDate(1);
+              const picked = tasks.filter((t) => selected.has(t.id));
+              setSelected(new Set());
+              for (const t of picked) await patch(t, { dueDate: value });
+              pushToast(`Moved ${picked.length} to tomorrow.`);
+            }}
+            className="chip shrink-0"
+          >
+            <CalendarClock className="w-3.5 h-3.5 shrink-0" />
+            Tomorrow
+          </button>
+
+          <button onClick={() => setSelected(new Set())} className="chip shrink-0">
+            Cancel
+          </button>
+        </motion.div>
+      )}
 
       {/* Sort. A single cycling control rather than three chips competing
           with the tabs above them. */}
@@ -814,9 +989,51 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                 Everything else
               </p>
             )}
-          <AnimatePresence initial={false}>
-            {visible.filter((t) => !t.pinned).map((t) => renderCard(t))}
-          </AnimatePresence>
+          {/* Drag to reorder, but only under the default sort and when not
+              selecting — otherwise two interactions compete for the gesture. */}
+          {sortBy === 'date' && selected.size === 0 ? (
+            <Reorder.Group
+              axis="y"
+              values={visible.filter((t) => !t.pinned)}
+              onReorder={(next) => setDragOrder(next)}
+              className="space-y-2"
+            >
+              {(dragOrder ?? visible.filter((t) => !t.pinned)).map((t) => (
+                <Reorder.Item
+                  key={t.id}
+                  value={t}
+                  // Long-press to lift, so a normal scroll is never mistaken
+                  // for a drag on a touch screen.
+                  dragListener={dragging === t.id}
+                  onDragEnd={() => commitReorder(t)}
+                  whileDrag={{ scale: 1.02, zIndex: 30 }}
+                  className="relative"
+                >
+                  <div
+                    onPointerDown={(e) => {
+                      const timer = window.setTimeout(() => {
+                        soundFx.playClick();
+                        setDragging(t.id);
+                      }, 320);
+                      const clear = () => {
+                        window.clearTimeout(timer);
+                        window.removeEventListener('pointerup', clear);
+                        window.removeEventListener('pointermove', clear);
+                      };
+                      window.addEventListener('pointerup', clear);
+                      window.addEventListener('pointermove', clear);
+                    }}
+                  >
+                    {renderCard(t)}
+                  </div>
+                </Reorder.Item>
+              ))}
+            </Reorder.Group>
+          ) : (
+            <AnimatePresence initial={false}>
+              {visible.filter((t) => !t.pinned).map((t) => renderCard(t))}
+            </AnimatePresence>
+          )}
         </div>
       )}
 

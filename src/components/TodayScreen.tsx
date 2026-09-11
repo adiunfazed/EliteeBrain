@@ -327,6 +327,20 @@ export const TodayScreen: React.FC<Props> = ({
         )}
       </header>
 
+      {/* One-line summary, so the first thing on screen answers "how much is
+          left" without reading three sections. */}
+      {(() => {
+        const left = todayTasks.length + openHabits.length;
+        if (left === 0) return null;
+        return (
+          <p className="t-sub mt-1">
+            {left} {left === 1 ? 'thing' : 'things'} left today
+            {todayTasks.length > 0 ? ` · ${todayTasks.length} tasks` : ''}
+            {openHabits.length > 0 ? ` · ${openHabits.length} habits` : ''}
+          </p>
+        );
+      })()}
+
       {/* ---------------- Daily quest ---------------- */}
       <section className="sec enter enter-1">
         <DailyQuestCard
