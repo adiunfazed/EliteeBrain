@@ -22,8 +22,15 @@ export const RankProgress: React.FC<Props> = ({ careerXp, pending = false }) => 
   const progress = tierProgress(careerXp);
   const toGo = next ? next.min - careerXp : 0;
 
-  if (pending) {
-    return <div className="rounded-xl h-[132px] animate-pulse" style={{ background: 'var(--surface-sunk)' }} />;
+  // Only hold back when there is genuinely nothing to show. With any XP at
+  // all, the local figure is displayed and corrected when the server answers.
+  if (pending && careerXp <= 0) {
+    return (
+      <div
+        className="rounded-xl h-[132px] animate-pulse"
+        style={{ background: 'var(--surface-sunk)' }}
+      />
+    );
   }
 
   return (

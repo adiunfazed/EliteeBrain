@@ -459,7 +459,7 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
                 : 'Pro subscription required for AI Coach chat...'
             }
             disabled={!profile.isProUser || isTyping}
-            className="flex-1 min-w-0 px-4 py-3 bg-[#0D1117] border border-[var(--rule)] text-white font-mono text-xs rounded-xl focus:border-[var(--signal)] focus:outline-none disabled:opacity-50"
+            className="flex-1 min-w-0 px-4 py-3 bg-[var(--surface)] border border-[var(--rule)] text-white font-mono text-xs rounded-xl focus:border-[var(--signal)] focus:outline-none disabled:opacity-50"
           />
 
           <button
@@ -473,7 +473,7 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
 
         {/* Non-Pro overlay if applicable */}
         {!profile.isProUser && (
-          <div className="absolute inset-x-0 bottom-0 top-36 bg-[#0D1117]/85 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-20 space-y-3">
+          <div className="absolute inset-x-0 bottom-0 top-36 bg-[var(--surface)]/85 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-20 space-y-3">
             <div className="w-12 h-12 shrink-0 rounded-xl bg-amber-500/20 border border-amber-500/40 eb-warn flex items-center justify-center">
               <Lock className="w-6 h-6 shrink-0" />
             </div>

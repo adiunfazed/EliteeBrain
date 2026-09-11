@@ -261,7 +261,7 @@ export const Game2048: React.FC<{ profile: UserProfile, onProfileUpdate?: (p: Us
       </div>
 
       <div 
-        className="w-full aspect-square bg-[#0D1117] border border-[var(--rule)] rounded-xl p-2 relative overflow-hidden shadow-none touch-none"
+        className="w-full aspect-square bg-[var(--surface)] border border-[var(--rule)] rounded-xl p-2 relative overflow-hidden shadow-none touch-none"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >

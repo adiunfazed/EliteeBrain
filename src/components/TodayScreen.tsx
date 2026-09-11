@@ -5,7 +5,6 @@ import type { Habit, HabitLog, RoutineBlock, RoutineLog, SleepLog, Task } from '
 import { setHabitValue, setRoutineState } from '../lib/goalStore';
 import { addDays, patchTask, todayISO } from '../lib/tasks';
 import { DailyQuestCard } from './DailyQuestCard';
-import { XpPanel, StreakPanel, FocusPanel } from './dash/StatPanels';
 import { ActionsPanel, HabitsPanel, RoutinePanel } from './dash/TodayPanels';
 import { praiseFor } from '../lib/praise';
 import { reviewToday, suggestNextActions } from '../lib/nextAction';
@@ -427,21 +426,6 @@ export const TodayScreen: React.FC<Props> = ({
         </section>
       )}
 
-      {/* ---------------- Progress ---------------- */}
-      <section className="sec">
-        <div className="dash">
-          <XpPanel careerXp={careerXp ?? 0} pending={careerXp === undefined} />
-
-          <StreakPanel days={streakDays ?? 0} />
-
-          <FocusPanel
-            minutesToday={focusMinutesToday ?? 0}
-            suggestion={todayTasks[0]?.title ?? null}
-            onStart={() => onStartFocus?.(todayTasks[0])}
-          />
-        </div>
-      </section>
-
       {/* ---------------- End of day ---------------- */}
       {dayIsOver && (
         <section className="sec enter enter-1">
@@ -552,6 +536,7 @@ export const TodayScreen: React.FC<Props> = ({
               id: d.block.id,
               title: d.block.title,
               startTime: d.block.startTime,
+              endTime: d.block.endTime,
               state: d.state,
             }))}
             onOpenAll={() => onGo('routine')}

@@ -140,8 +140,18 @@ export const HabitsPanel: React.FC<HabitsPanelProps> = ({
 };
 
 interface RoutinePanelProps {
-  blocks: { id: string; title: string; startTime: string; state: string }[];
+  blocks: { id: string; title: string; startTime: string; endTime?: string; state: string }[];
   onOpenAll: () => void;
+}
+
+/** True once the block's end time has passed today. */
+function hasPassed(endTime?: string): boolean {
+  if (!endTime) return false;
+  const m = /^(\d{2}):(\d{2})$/.exec(endTime);
+  if (!m) return false;
+
+  const now = new Date();
+  return now.getHours() * 60 + now.getMinutes() > Number(m[1]) * 60 + Number(m[2]);
 }
 
 export const RoutinePanel: React.FC<RoutinePanelProps> = ({ blocks, onOpenAll }) => {
@@ -165,7 +175,9 @@ export const RoutinePanel: React.FC<RoutinePanelProps> = ({ blocks, onOpenAll })
           {shown.map((block) => (
             <div
               key={block.id}
-              className={`panel-row ${block.state === 'done' ? 'row-done' : ''}`}
+              className={`panel-row ${
+                block.state === 'done' || hasPassed(block.endTime) ? 'row-done' : ''
+              }`}
             >
               <Clock className="w-3.5 h-3.5 shrink-0" style={{ color: 'var(--ink-dim)' }} />
               <span className="t-meta shrink-0 tabular-nums w-10">{block.startTime}</span>

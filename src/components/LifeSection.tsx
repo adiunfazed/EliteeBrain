@@ -210,7 +210,7 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], habits = [], 
     pending: 'border-[var(--rule)] bg-[var(--ground)]',
     done: 'border-emerald-500/30 bg-emerald-500/[0.07]',
     partial: 'border-amber-500/30 bg-amber-500/[0.07]',
-    skipped: 'border-[#20252E] bg-[#0B0E13] opacity-60',
+    skipped: 'border-[#20252E] bg-[var(--surface)] opacity-60',
   };
 
   return (

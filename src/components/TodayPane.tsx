@@ -240,7 +240,7 @@ export const TodayPane: React.FC<Props> = ({
                     : state === 'partial'
                       ? 'bg-amber-500/[0.09] border-amber-500/30'
                       : state === 'skipped'
-                        ? 'bg-[#0B0E13] border-[#20252E] opacity-55'
+                        ? 'bg-[var(--surface)] border-[#20252E] opacity-55'
                         : 'eb-tint bg-[#14171F] border-[#262C38]'
                 }`}
               >

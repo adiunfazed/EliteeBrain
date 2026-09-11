@@ -176,7 +176,7 @@ export const FocusSection: React.FC<Props> = ({ userId, incomingTask, onConsumeI
         className={`relative overflow-hidden rounded-xl p-6 sm:p-10 text-center border transition-colors ${
           paused
             ? 'bg-[#12141A] border-[var(--rule)]'
-            : 'bg-[#0C1714] border-emerald-500/25 shadow-[0_0_50px_-20px_rgba(16,185,129,0.5)]'
+            : 'bg-[var(--surface)] border-emerald-500/25 shadow-[0_0_50px_-20px_rgba(16,185,129,0.5)]'
         }`}
       >
         <p className="eb-label">
@@ -331,7 +331,7 @@ export const FocusSection: React.FC<Props> = ({ userId, incomingTask, onConsumeI
         )}
       </AnimatePresence>
 
-      <div className="relative overflow-hidden bg-[#121722] border border-[var(--rule)] rounded-xl p-4 space-y-4">
+      <div className="relative overflow-hidden bg-[var(--surface)] border border-[var(--rule)] rounded-xl p-4 space-y-4">
         <div>
           <p className="eb-label mb-2">
             What are you working on?

@@ -490,7 +490,7 @@ export const Dashboard: React.FC<Props> = ({
                 setActiveSection('progress');
                 setMoreDrawer('rank');
               }}
-              careerXp={serverStats.authoritative ? unifiedXp : undefined}
+              careerXp={unifiedXp}
               streakDays={derivedStreak}
               focusMinutesToday={Math.round((focusToday.seconds || 0) / 60)}
               questReady={!currentUser || isHydrated}
@@ -936,7 +936,7 @@ export const Dashboard: React.FC<Props> = ({
               <div>
                 <span className="eb-label block">Total XP</span>
                 <span className="t-figure block mt-1.5" style={{ fontSize: 22 }}>
-                  {serverStats.authoritative ? unifiedXp.toLocaleString('en-IN') : '—'}
+                  {unifiedXp.toLocaleString('en-IN')}
                 </span>
                 <span className="t-meta block mt-1">earned</span>
               </div>
@@ -1044,7 +1044,7 @@ export const Dashboard: React.FC<Props> = ({
       )}
 
       {/* PERSISTENT BOTTOM NAVIGATION BAR (Fixed at bottom of screen, sleek & compact) */}
-      <div className="fixed bottom-0 inset-x-0 z-40 bg-[#0D1117]/95 backdrop-blur-2xl px-1.5 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] overflow-visible"
+      <div className="fixed bottom-0 inset-x-0 z-40 bg-[var(--surface)]/95 backdrop-blur-2xl px-1.5 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] overflow-visible"
           style={{
             borderTop: '1px solid color-mix(in oklab, var(--signal) 40%, var(--rule))',
             boxShadow: '0 -1px 14px -6px color-mix(in oklab, var(--signal) 55%, transparent)',

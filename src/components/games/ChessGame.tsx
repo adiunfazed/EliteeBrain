@@ -1462,7 +1462,7 @@ export const ChessGame: React.FC<{
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
-                  className="absolute inset-0 z-30 bg-[#0D1117]/94 backdrop-blur-md rounded-xl flex flex-col items-center justify-center p-6 text-center"
+                  className="absolute inset-0 z-30 bg-[var(--surface)]/94 backdrop-blur-md rounded-xl flex flex-col items-center justify-center p-6 text-center"
                 >
                   <div
                     className={`p-5 rounded-xl mb-4 ${

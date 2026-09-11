@@ -322,7 +322,7 @@ export const AchievementsGalleryModal: React.FC<Props> = ({ isOpen, profile, onC
 
                   {/* PROMINENT REQUIREMENT BOX (What it is for) */}
                   <div className="mt-2 pt-2.5 border-t border-[#2D3748]/70">
-                    <div className="p-2.5 bg-[#0D1117] border border-[#2B3545] rounded-xl flex items-center justify-between gap-2 text-xs font-mono">
+                    <div className="p-2.5 bg-[var(--surface)] border border-[#2B3545] rounded-xl flex items-center justify-between gap-2 text-xs font-mono">
                       <div className="flex items-center gap-2 overflow-hidden">
                         {isUnlocked ? (
                           <CheckCircle2 className="w-4 h-4 eb-done shrink-0" />
@@ -379,7 +379,7 @@ export const AchievementsGalleryModal: React.FC<Props> = ({ isOpen, profile, onC
                     {activeBadgeDetail.description}
                   </p>
 
-                  <div className="p-3.5 bg-[#0D1117] border border-[#2B3545] rounded-xl text-xs font-mono text-[#A0AEC0] mb-5 text-left">
+                  <div className="p-3.5 bg-[var(--surface)] border border-[#2B3545] rounded-xl text-xs font-mono text-[#A0AEC0] mb-5 text-left">
                     <strong className="eb-warn block mb-1 uppercase tracking-wider text-[10px]">
                       Unlock Requirement:
                     </strong>
