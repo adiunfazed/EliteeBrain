@@ -1050,7 +1050,11 @@ export const Dashboard: React.FC<Props> = ({
           }}>
         <div
           className="max-w-md mx-auto grid gap-0.5"
-          style={{ gridTemplateColumns: `repeat(${navItems.length}, minmax(0, 1fr))` }}
+          style={{
+            // The centre column is wider because Arena sits in it. Equal
+            // columns left the button overlapping the tabs either side.
+            gridTemplateColumns: '1fr 1fr 1.5fr 1fr 1fr',
+          }}
         >
           {navItems.map((item) => {
             const IconComp = item.icon;
@@ -1071,35 +1075,37 @@ export const Dashboard: React.FC<Props> = ({
                   aria-label="Arena"
                 >
                   <span
-                    className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center gap-2 transition-transform whitespace-nowrap"
+                    className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center justify-start pt-2 gap-0.5 transition-transform whitespace-nowrap"
                     style={{
                       // An angular plate rather than a pill: straight edges
                       // suit crossed blades, and a pill reads as a create
                       // button, which this is not.
-                      width: 108,
-                      height: 42,
-                      bottom: 16,
-                      borderRadius: 10,
+                      width: 84,
+                      height: 52,
+                      bottom: 12,
+                      // Shield: square shoulders tapering to a point, which
+                      // suits the swords and reads as a crest.
+                      clipPath: 'polygon(0% 0%, 100% 0%, 100% 62%, 50% 100%, 0% 62%)',
+                      borderRadius: 4,
                       background:
                         'linear-gradient(160deg, color-mix(in oklab, var(--signal) 45%, var(--surface)), color-mix(in oklab, var(--signal) 14%, var(--surface)))',
-                      border: `1.5px solid ${
-                        isActive ? 'var(--signal)' : 'color-mix(in oklab, var(--signal) 55%, var(--rule))'
-                      }`,
-                      boxShadow: isActive
-                        ? '0 1px 0 0 rgba(255,255,255,0.16) inset, 0 0 0 4px color-mix(in oklab, var(--signal) 14%, transparent), 0 8px 22px -6px color-mix(in oklab, var(--signal) 75%, transparent)'
-                        : '0 1px 0 0 rgba(255,255,255,0.12) inset, 0 6px 18px -8px color-mix(in oklab, var(--signal) 60%, transparent)',
-                      transform: isActive ? 'translateY(-1px)' : undefined,
+                      // A clipped element cannot carry a border, so the edge
+                      // is drawn as a filter glow instead.
+                      filter: isActive
+                        ? 'drop-shadow(0 0 6px color-mix(in oklab, var(--signal) 85%, transparent))'
+                        : 'drop-shadow(0 3px 8px color-mix(in oklab, var(--signal) 55%, transparent))',
+                      transform: isActive ? 'translateY(-2px)' : undefined,
                     }}
                   >
                     <Swords
-                      className="w-[17px] h-[17px] shrink-0"
+                      className="w-[19px] h-[19px] shrink-0"
                       strokeWidth={2.4}
                       style={{ color: '#fff' }}
                     />
 
                     <span
-                      className="text-[12.5px] font-extrabold uppercase whitespace-nowrap"
-                      style={{ color: '#fff', letterSpacing: '0.06em' }}
+                      className="text-[10.5px] font-extrabold uppercase whitespace-nowrap leading-none"
+                      style={{ color: '#fff', letterSpacing: '0.08em' }}
                     >
                       Arena
                     </span>
@@ -1122,11 +1128,16 @@ export const Dashboard: React.FC<Props> = ({
                     : 'text-[var(--ink-muted)] hover:text-white'
                 }`}
               >
-                {/* Active Glow Pill */}
+                {/* Active mark. A short bar rather than a filled pill: a pill
+                    on the tab beside Arena read as two competing blocks. */}
                 {isActive && (
                   <motion.div
                     layoutId="activeBottomTabGlow"
-                    className="absolute inset-0 bg-[color-mix(in_oklab,var(--signal)_15%,transparent)] border border-[color-mix(in_oklab,var(--signal)_40%,transparent)] rounded-lg -z-10 shadow-xs"
+                    className="absolute top-0 left-1/2 -translate-x-1/2 h-[3px] w-7 rounded-full"
+                    style={{
+                      background: 'var(--signal)',
+                      boxShadow: '0 0 8px 0 color-mix(in oklab, var(--signal) 70%, transparent)',
+                    }}
                     transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                   />
                 )}

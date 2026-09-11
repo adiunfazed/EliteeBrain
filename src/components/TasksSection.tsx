@@ -120,7 +120,6 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
   const [tasks, setTasks] = useState<Task[]>([]);
   const [tab, setTab] = useState<TabId>('today');
   const [draft, setDraft] = useState('');
-  const [expanded, setExpanded] = useState(false);
   const [draftPriority] = useState<TaskPriority>('normal');
   const [draftCategory, setDraftCategory] = useState<TaskCategory | undefined>();
   const [draftEnergy, setDraftEnergy] = useState<TaskEnergy | undefined>();
@@ -506,121 +505,127 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
             <span className={`absolute left-0 top-0 bottom-0 w-[3px] ${pri.bar}`} />
           )}
 
-          <div
-            className="flex items-center gap-3 pl-4 pr-3 py-3"
-            onContextMenu={(e) => {
-              e.preventDefault();
-              soundFx.playClick();
-              setSelected((prev) => new Set(prev).add(task.id));
-            }}
-          >
-            {/* Category mark. Fixed width so every title starts at the same x. */}
-            <span
-              className="w-9 h-9 rounded-xl shrink-0 flex items-center justify-center"
-              style={{
-                background: task.completed
-                  ? 'var(--surface-sunk)'
-                  : `color-mix(in oklab, ${pri.hex} 16%, transparent)`,
+          <div className="pl-4 pr-3 py-3">
+            {/* Title first, across the full width. Previously it shared a row
+                with five other elements and was the only one that could
+                shrink, so it always lost. */}
+            <div
+              className="flex items-start gap-3"
+              onContextMenu={(e) => {
+                e.preventDefault();
+                soundFx.playClick();
+                setSelected((prev) => new Set(prev).add(task.id));
               }}
             >
-              {(() => {
-                const name = iconNameFor(task.iconId);
-                const Chosen = name ? (Icons as any)[name] : null;
-                const Icon = Chosen || pri.icon;
-                return (
-                  <Icon
-                    className="w-4 h-4 shrink-0"
-                    style={{ color: task.completed ? 'var(--ink-dim)' : pri.hex }}
-                  />
-                );
-              })()}
-            </span>
-
-            {/* Title and metadata take the remaining width. */}
-            <button
-              onClick={() => {
-                if (selected.size > 0) {
-                  setSelected((prev) => {
-                    const next = new Set(prev);
-                    next.has(task.id) ? next.delete(task.id) : next.add(task.id);
-                    return next;
-                  });
-                  return;
-                }
-                setDetailId(task.id);
-              }}
-              className="flex-1 min-w-0 text-left"
-            >
-              <span
-                className={`block text-[15px] leading-snug line-clamp-2 ${
-                  task.completed ? 'text-[var(--ink-dim)] line-through' : 'text-[var(--ink)]'
-                }`}
-              >
-                {task.pinned && !task.completed && (
-                  <Star className="inline w-3 h-3 mb-0.5 mr-1 eb-warn fill-amber-400" />
-                )}
-                {task.title}
-              </span>
-
-              <span className="flex items-center gap-2 mt-0.5">
-                {meta && (
-                  <span className={`t-meta truncate ${isOverdue ? 'eb-warn' : ''}`}>{meta}</span>
-                )}
-
-                {steps.total > 0 && (
-                  <span
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setOpenSubtasks((prev) => ({ ...prev, [task.id]: !prev[task.id] }));
-                    }}
-                    className="t-meta flex items-center gap-1 shrink-0"
-                    style={{ color: 'var(--signal-ink)' }}
-                  >
-                    <ListChecks className="w-3.5 h-3.5 shrink-0" />
-                    {steps.done}/{steps.total}
-                  </span>
-                )}
-
-                {task.recurrence && (
-                  <Repeat className="w-3.5 h-3.5 shrink-0" style={{ color: 'var(--ink-dim)' }} />
-                )}
-              </span>
-            </button>
-
-            {/* Edit. Opens the full composer, so the name, date and everything
-                else can be changed. */}
-            {!task.completed && (
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  soundFx.playClick();
-                  setEditingTask(task);
-                  setComposerOpen(true);
+                onClick={() => {
+                  if (selected.size > 0) {
+                    setSelected((prev) => {
+                      const next = new Set(prev);
+                      next.has(task.id) ? next.delete(task.id) : next.add(task.id);
+                      return next;
+                    });
+                    return;
+                  }
+                  setDetailId(task.id);
                 }}
-                aria-label="Edit task"
-                className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center"
-                style={{ color: 'var(--ink-dim)' }}
+                className="flex-1 min-w-0 text-left"
               >
-                <Pencil className="w-3.5 h-3.5 shrink-0" />
+                <span
+                  className={`block text-[15px] leading-snug line-clamp-2 ${
+                    task.completed ? 'text-[var(--ink-dim)] line-through' : 'text-[var(--ink)]'
+                  }`}
+                >
+                  {task.pinned && !task.completed && (
+                    <Star className="inline w-3 h-3 mb-0.5 mr-1 eb-warn fill-amber-400" />
+                  )}
+                  {task.title}
+                </span>
               </button>
-            )}
 
-            {/* Completion control on the right, as the reference has it. */}
-            <button
-              onClick={() => handleToggle(task)}
-              aria-label={task.completed ? 'Mark not done' : 'Mark done'}
-              className="shrink-0 w-10 h-10 flex items-center justify-center"
-            >
-              <span
-                className={`w-[24px] h-[24px] rounded-full border-2 flex items-center justify-center transition-all ${
-                  task.completed
-                    ? 'bg-emerald-500 border-emerald-500 text-slate-950 glow-done'
-                    : 'border-[var(--rule-strong)]'
-                }`}
+              {/* Completion stays top-right, aligned with the first line. */}
+              <button
+                onClick={() => handleToggle(task)}
+                aria-label={task.completed ? 'Mark not done' : 'Mark done'}
+                className="shrink-0 w-7 h-7 flex items-center justify-center -mt-0.5"
               >
-                {task.completed && <Check className="w-3.5 h-3.5 shrink-0 stroke-[3]" />}
+                <span
+                  className={`w-[24px] h-[24px] rounded-full border-2 flex items-center justify-center transition-all ${
+                    task.completed
+                      ? 'bg-emerald-500 border-emerald-500 text-slate-950 glow-done'
+                      : 'border-[var(--rule-strong)]'
+                  }`}
+                >
+                  {task.completed && <Check className="w-3.5 h-3.5 shrink-0 stroke-[3]" />}
+                </span>
+              </button>
+            </div>
+
+            {/* Second line: icon, metadata, actions. */}
+            <div className="flex items-center gap-2 mt-2">
+              <span
+                className="w-6 h-6 rounded-lg shrink-0 flex items-center justify-center"
+                style={{
+                  background: task.completed
+                    ? 'var(--surface-sunk)'
+                    : `color-mix(in oklab, ${pri.hex} 18%, transparent)`,
+                }}
+              >
+                {(() => {
+                  const name = iconNameFor(task.iconId);
+                  const Chosen = name ? (Icons as any)[name] : null;
+                  const Icon = Chosen || pri.icon;
+                  return (
+                    <Icon
+                      className="w-3.5 h-3.5 shrink-0"
+                      style={{ color: task.completed ? 'var(--ink-dim)' : pri.hex }}
+                    />
+                  );
+                })()}
               </span>
-            </button>
+
+              {meta && (
+                <span className={`t-meta truncate min-w-0 ${isOverdue ? 'eb-warn' : ''}`}>
+                  {meta}
+                </span>
+              )}
+
+              {steps.total > 0 && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setOpenSubtasks((prev) => ({ ...prev, [task.id]: !prev[task.id] }));
+                  }}
+                  className="t-meta flex items-center gap-1 shrink-0"
+                  style={{ color: 'var(--signal-ink)' }}
+                >
+                  <ListChecks className="w-3.5 h-3.5 shrink-0" />
+                  {steps.done}/{steps.total}
+                </button>
+              )}
+
+              {task.recurrence && (
+                <Repeat className="w-3.5 h-3.5 shrink-0" style={{ color: 'var(--ink-dim)' }} />
+              )}
+
+              <span className="flex-1" />
+
+              {!task.completed && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    soundFx.playClick();
+                    setEditingTask(task);
+                    setComposerOpen(true);
+                  }}
+                  aria-label="Edit task"
+                  className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center"
+                  style={{ color: 'var(--ink-dim)' }}
+                >
+                  <Pencil className="w-3.5 h-3.5 shrink-0" />
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Subtasks, only when asked for, and compact enough not to turn the
