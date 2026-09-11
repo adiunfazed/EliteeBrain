@@ -7,7 +7,9 @@ import { ModuleCard } from './ModuleCard';
 import { AchievementsDashboardSection } from './AchievementsDashboardSection';
 import { LeaderboardScreen } from './LeaderboardScreen';
 import { ShareCard } from './ShareCard';
-import { InsightsSection } from './InsightsSection';
+import { RankProgress } from './RankProgress';
+import { RankEmblem } from './RankEmblem';
+import { tierFor } from '../lib/tiers';
 import { LevelUpToast } from './LevelUpToast';
 import { CoachTools, COACH_TOOLS, CoachToolId } from './coach/CoachTools';
 import { ImageToolScreen } from './coach/ImageToolScreen';
@@ -64,7 +66,7 @@ import {
   ChevronRight,
   Medal,
   Share2,
-  Lightbulb,
+  Swords,
   ArrowLeft,
   Trophy,
   Brain,
@@ -95,6 +97,13 @@ export type DashboardSection =
   | 'games'
   | 'hub'
   | 'progress';
+
+/** 1st, 2nd, 3rd — reads better than a bare number for a placing. */
+function ordinal(n: number): string {
+  const s = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
 
 export const Dashboard: React.FC<Props> = ({
   profile,
@@ -350,6 +359,14 @@ export const Dashboard: React.FC<Props> = ({
       badge: openTaskCount > 0 ? `${openTaskCount}` : '',
     },
     {
+      id: 'progress' as DashboardSection,
+      label: 'More',
+      shortLabel: 'ARENA',
+      icon: TrendingUp,
+      activeColor: 'text-sky-400 bg-sky-500/15 border-sky-500/40',
+      badge: '',
+    },
+    {
       id: 'exercises' as DashboardSection,
       label: 'Train',
       shortLabel: t('nav.train'),
@@ -364,18 +381,10 @@ export const Dashboard: React.FC<Props> = ({
       icon: Bot,
       activeColor: 'eb-chip-active',
     },
-    {
-      id: 'progress' as DashboardSection,
-      label: 'More',
-      shortLabel: t('nav.more'),
-      icon: TrendingUp,
-      activeColor: 'text-sky-400 bg-sky-500/15 border-sky-500/40',
-      badge: '',
-    },
   ];
 
   return (
-    <div className="eb-page pb-[calc(4.5rem+env(safe-area-inset-bottom))] font-sans select-none relative">
+    <div className="eb-page pb-[calc(5.25rem+env(safe-area-inset-bottom))] font-sans select-none relative">
       
       {/* Prominent Non-Logged-In Guest Sync Banner */}
       {!currentUser && (
@@ -895,142 +904,117 @@ export const Dashboard: React.FC<Props> = ({
 
         {activeSection === 'progress' && !showLeaderboard && (
           <motion.div
-            key="section-progress"
-            initial={{ opacity: 0, y: 15, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -15, scale: 0.98 }}
-            transition={{ duration: 0.25 }}
+            key="section-arena"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.22 }}
+            className="space-y-4"
           >
-            <ProGate
-              profile={profile}
-              feature="Progress"
-              blurb="Your rank, momentum, weekly review and full history."
-              onOpenPro={onOpenProModal}
-            >
-              <button
-                onClick={() => {
-                  soundFx.playClick();
-                  setShowShare(true);
-                }}
-                className="w-full text-left rounded-2xl border border-[var(--rule)] p-4 mb-3 flex items-center gap-4 transition-transform active:scale-[0.99]"
-              >
-                <span className="w-11 h-11 rounded-xl shrink-0 flex items-center justify-center bg-[var(--surface-sunk)]">
-                  <Share2 className="w-5 h-5 shrink-0 text-[var(--signal-ink)]" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="t-section block">Share your week</span>
-                  <span className="t-sub block mt-0.5">Streak, tasks and XP as an image</span>
-                </span>
-                <ChevronRight className="w-5 h-5 shrink-0 text-[var(--ink-dim)]" />
-              </button>
+            <div>
+              <h1 className="t-display">Arena</h1>
+              <p className="t-sub mt-1.5">Where you stand.</p>
+            </div>
 
-              {/* Leaderboard is a destination, not a drawer — given its own
-                  card so it does not read as one more collapsible row. */}
-              <button
-                onClick={() => {
-                  soundFx.playClick();
-                  setShowLeaderboard(true);
-                }}
-                className="w-full text-left rounded-2xl border p-4 mb-4 flex items-center gap-4 transition-transform active:scale-[0.99]"
-                style={{
-                  background:
-                    'linear-gradient(135deg, color-mix(in oklab, var(--signal) 16%, var(--surface)), var(--surface))',
-                  borderColor: 'color-mix(in oklab, var(--signal) 42%, var(--rule))',
-                  boxShadow:
-                    '0 1px 0 0 rgba(255,255,255,0.07) inset, 0 14px 34px -20px color-mix(in oklab, var(--signal) 90%, transparent)',
-                }}
-              >
-                <span
-                  className="w-12 h-12 rounded-2xl shrink-0 flex items-center justify-center"
-                  style={{ background: 'color-mix(in oklab, var(--signal) 24%, transparent)' }}
-                >
-                  <Medal className="w-6 h-6 shrink-0 text-[var(--signal-ink)]" />
+            {/* Rank and progress to the next tier. */}
+            <RankProgress
+              careerXp={unifiedXp}
+              pending={!serverStats.authoritative}
+            />
+
+            {/* Streak, XP and badges as one strip rather than three cards. */}
+            <div className="stat-strip grid-cols-3">
+              <div>
+                <span className="eb-label block">Streak</span>
+                <span className="t-figure block mt-1.5" style={{ fontSize: 22, color: '#FFB020' }}>
+                  {derivedStreak}
                 </span>
-                <span className="min-w-0 flex-1">
-                  <span className="t-section block">Leaderboard</span>
-                  <span className="t-sub block mt-0.5">
-                    See where you stand against everyone
-                  </span>
+                <span className="t-meta block mt-1">
+                  {derivedStreak === 1 ? 'day' : 'days'}
                 </span>
-                <ChevronRight className="w-5 h-5 shrink-0 text-[var(--signal-ink)]" />
-              </button>
-
-              <div className="panel">
-                {/* Menu. Tapping a row opens that area; tapping again closes
-                    it, so only one thing is ever on screen. */}
-                {([
-                  { id: 'rank', label: 'Your rank', hint: 'Tier, XP, streak and badges', icon: Trophy },
-                  { id: 'insights', label: 'Patterns', hint: 'What your own data shows', icon: Lightbulb },
-                  { id: 'review', label: 'This week', hint: 'What went well and what slipped', icon: CalendarCheck },
-                  { id: 'records', label: 'Personal records', hint: 'Best scores across training', icon: BarChart2 },
-                  { id: 'badges', label: 'Achievements', hint: 'Milestones you have unlocked', icon: Award },
-                  { id: 'stats', label: 'Detailed analysis', hint: 'Consistency and planned vs done', icon: Activity },
-                ] as const).map(({ id, label, hint, icon: Icon }) => {
-                  const open = moreDrawer === id;
-                  return (
-                    <div key={id} className="border-b border-[var(--rule)] last:border-b-0">
-                      <button
-                        onClick={() => {
-                          soundFx.playClick();
-                          setMoreDrawer(open ? null : id);
-                        }}
-                        className="w-full flex items-center gap-4 py-4 text-left"
-                      >
-                        <span className="w-10 h-10 rounded-xl bg-[var(--surface-sunk)] flex items-center justify-center shrink-0">
-                          <Icon className="w-4 h-4 shrink-0 text-[var(--signal-ink)]" />
-                        </span>
-                        <span className="min-w-0 flex-1">
-                          <span className="t-section block truncate">{label}</span>
-                          <span className="t-sub block truncate">{hint}</span>
-                        </span>
-                        <ChevronDown
-                          className={`w-4 h-4 text-[var(--ink-muted)] shrink-0 transition-transform ${
-                            open ? 'rotate-180' : ''
-                          }`}
-                        />
-                      </button>
-
-                      {open && (
-                        <div className="pb-6 anim-in">
-                          {id === 'insights' && <InsightsSection input={momentumInput} />}
-
-                          {id === 'rank' && (
-                            <RankProgressionSection
-                              profile={profile}
-                              derivedStreak={derivedStreak}
-                              statsPending={!serverStats.authoritative}
-                              lifeXp={unifiedXp}
-                              onLaunchModule={onLaunchModule}
-                              onOpenBadgesGallery={onOpenBadgesGallery}
-                            />
-                          )}
-                          {id === 'review' && (
-                            <WeeklyReviewSection input={momentumInput} onGo={goToPane} />
-                          )}
-                          {id === 'records' && (
-                            <ProgressSection profile={profile} userId={currentUser?.uid || null} />
-                          )}
-                          {id === 'badges' && (
-                            <AchievementsDashboardSection
-                              profile={profile}
-                              onOpenGallery={onOpenBadgesGallery || (() => {})}
-                            />
-                          )}
-                          {id === 'stats' && (
-                            <div className="space-y-4">
-                              <AttributesRadar input={momentumInput} />
-                              <ConsistencyCalendar input={momentumInput} />
-                              <MomentumChart input={momentumInput} />
-                              <RealityVsPlan input={momentumInput} onGo={goToPane} />
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
               </div>
-            </ProGate>
+
+              <div>
+                <span className="eb-label block">Total XP</span>
+                <span className="t-figure block mt-1.5" style={{ fontSize: 22 }}>
+                  {serverStats.authoritative ? unifiedXp.toLocaleString('en-IN') : '—'}
+                </span>
+                <span className="t-meta block mt-1">earned</span>
+              </div>
+
+              <button
+                onClick={() => {
+                  soundFx.playClick();
+                  onOpenBadgesGallery?.();
+                }}
+                className="text-left"
+              >
+                <span className="eb-label block">Badges</span>
+                <span
+                  className="t-figure block mt-1.5"
+                  style={{ fontSize: 22, color: 'var(--signal-ink)' }}
+                >
+                  {(profile.unlockedAchievements || []).length}
+                </span>
+                <span className="t-meta block mt-1">unlocked</span>
+              </button>
+            </div>
+
+            {/* Leaderboard — the reason this section exists. */}
+            <button
+              onClick={() => {
+                soundFx.playClick();
+                setShowLeaderboard(true);
+              }}
+              className="w-full text-left rounded-2xl p-4 flex items-center gap-4"
+              style={{
+                background:
+                  'linear-gradient(150deg, color-mix(in oklab, var(--signal) 20%, var(--surface)), var(--surface))',
+                border: '1px solid color-mix(in oklab, var(--signal) 45%, var(--rule))',
+                boxShadow: '0 1px 0 0 rgba(255,255,255,0.07) inset',
+              }}
+            >
+              <span
+                className="w-12 h-12 rounded-2xl shrink-0 flex items-center justify-center"
+                style={{ background: 'color-mix(in oklab, var(--signal) 22%, transparent)' }}
+              >
+                <Trophy className="w-6 h-6 shrink-0" style={{ color: 'var(--signal-ink)' }} />
+              </span>
+
+              <span className="min-w-0 flex-1">
+                <span className="t-section block">Leaderboard</span>
+                <span className="t-meta block mt-0.5">
+                  {serverStats.rank
+                    ? `You are ${ordinal(serverStats.rank)} of ${serverStats.totalMembers}`
+                    : 'See where you stand'}
+                </span>
+              </span>
+
+              <ChevronRight className="w-5 h-5 shrink-0" style={{ color: 'var(--signal-ink)' }} />
+            </button>
+
+            {/* Share, at the bottom as asked. */}
+            <button
+              onClick={() => {
+                soundFx.playClick();
+                setShowShare(true);
+              }}
+              className="w-full text-left rounded-2xl eb-card p-4 flex items-center gap-4"
+            >
+              <span
+                className="w-11 h-11 rounded-xl shrink-0 flex items-center justify-center"
+                style={{ background: 'var(--surface-sunk)' }}
+              >
+                <Share2 className="w-5 h-5 shrink-0" style={{ color: 'var(--ink-dim)' }} />
+              </span>
+
+              <span className="min-w-0 flex-1">
+                <span className="t-section block">Share your week</span>
+                <span className="t-meta block mt-0.5">Streak, tasks and XP as an image</span>
+              </span>
+
+              <ChevronRight className="w-5 h-5 shrink-0" style={{ color: 'var(--ink-dim)' }} />
+            </button>
           </motion.div>
         )}
 
@@ -1061,7 +1045,7 @@ export const Dashboard: React.FC<Props> = ({
       )}
 
       {/* PERSISTENT BOTTOM NAVIGATION BAR (Fixed at bottom of screen, sleek & compact) */}
-      <div className="fixed bottom-0 inset-x-0 z-40 bg-[#0D1117]/95 backdrop-blur-2xl border-t border-[var(--rule)] px-1.5 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] shadow-none">
+      <div className="fixed bottom-0 inset-x-0 z-40 bg-[#0D1117]/95 backdrop-blur-2xl border-t border-[var(--rule)] px-1.5 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] overflow-visible">
         <div
           className="max-w-md mx-auto grid gap-0.5"
           style={{ gridTemplateColumns: `repeat(${navItems.length}, minmax(0, 1fr))` }}
@@ -1069,6 +1053,57 @@ export const Dashboard: React.FC<Props> = ({
           {navItems.map((item) => {
             const IconComp = item.icon;
             const isActive = activeSection === item.id;
+
+            // The centre tab is raised and carries the rank crest.
+            if (item.id === 'progress') {
+              const tier = tierFor(unifiedXp);
+
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    soundFx.playClick();
+                    setActiveSection(item.id);
+                  }}
+                  data-active={isActive}
+                  className="relative flex flex-col items-center justify-end cursor-pointer min-h-[46px]"
+                  aria-label="Arena"
+                >
+                  <span
+                    className="absolute left-1/2 -translate-x-1/2 rounded-full flex items-center justify-center transition-transform"
+                    style={{
+                      width: 52,
+                      height: 52,
+                      // Lifted above the bar, which is what makes it read as
+                      // the centrepiece rather than one tab of five.
+                      bottom: 20,
+                      background:
+                        'linear-gradient(160deg, color-mix(in oklab, var(--signal) 40%, var(--surface)), var(--surface))',
+                      border: `2px solid ${
+                        isActive ? 'var(--signal)' : 'color-mix(in oklab, var(--signal) 45%, var(--rule))'
+                      }`,
+                      boxShadow: isActive
+                        ? '0 0 0 4px color-mix(in oklab, var(--signal) 16%, transparent), 0 8px 22px -6px color-mix(in oklab, var(--signal) 70%, transparent)'
+                        : '0 6px 18px -8px color-mix(in oklab, var(--signal) 55%, transparent)',
+                      transform: isActive ? 'scale(1.04)' : undefined,
+                    }}
+                  >
+                    {serverStats.authoritative ? (
+                      <RankEmblem tier={tier} size={30} />
+                    ) : (
+                      <Swords className="w-5 h-5 shrink-0" style={{ color: 'var(--signal-ink)' }} />
+                    )}
+                  </span>
+
+                  <span
+                    className="t-meta tracking-tight font-black uppercase"
+                    style={{ color: isActive ? 'var(--ink)' : 'var(--ink-muted)' }}
+                  >
+                    Arena
+                  </span>
+                </button>
+              );
+            }
 
             return (
               <button
