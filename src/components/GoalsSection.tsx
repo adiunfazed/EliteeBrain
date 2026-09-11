@@ -742,10 +742,10 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
           onClose={() => setDetailGoal(null)}
         >
           <GoalDetail
-            goal={detailGoal}
+            goal={goals.find((g) => g.id === detailGoal.id) || detailGoal}
             percent={
               goalProgress(
-                detailGoal,
+                goals.find((g) => g.id === detailGoal.id) || detailGoal,
                 habits,
                 logs,
                 today,
@@ -757,7 +757,9 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
             tasks={tasks}
             habits={habits}
             blocks={routineBlocks}
-            onToggleMilestone={(msId) => toggleMilestone(detailGoal, msId)}
+            onToggleMilestone={(msId) =>
+              toggleMilestone(goals.find((g) => g.id === detailGoal.id) || detailGoal, msId)
+            }
           />
           <button onClick={() => setDetailGoal(null)} className="btn-quiet w-full mt-6">
             Close

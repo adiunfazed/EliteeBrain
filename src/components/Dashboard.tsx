@@ -1074,6 +1074,22 @@ export const Dashboard: React.FC<Props> = ({
                   className="relative flex items-end justify-center cursor-pointer min-h-[46px]"
                   aria-label="Arena"
                 >
+                  {/* Glow beneath the point. The shield tapers to almost
+                      nothing at the bottom, so it casts no light on its own. */}
+                  <span
+                    className="absolute left-1/2 -translate-x-1/2 pointer-events-none transition-opacity"
+                    style={{
+                      width: 84,
+                      height: 26,
+                      bottom: 2,
+                      borderRadius: '50%',
+                      background:
+                        'radial-gradient(ellipse at center, rgba(124,92,255,0.55), rgba(124,92,255,0) 70%)',
+                      filter: 'blur(6px)',
+                      opacity: isActive ? 1 : 0.55,
+                    }}
+                  />
+
                   <span
                     className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center justify-start pt-2 gap-0.5 transition-transform whitespace-nowrap"
                     style={{
@@ -1090,10 +1106,11 @@ export const Dashboard: React.FC<Props> = ({
                       background:
                         'linear-gradient(160deg, color-mix(in oklab, var(--signal) 45%, var(--surface)), color-mix(in oklab, var(--signal) 14%, var(--surface)))',
                       // A clipped element cannot carry a border, so the edge
-                      // is drawn as a filter glow instead.
+                      // is drawn as a filter glow. Concrete rgba rather than
+                      // color-mix, which is not reliable inside drop-shadow.
                       filter: isActive
-                        ? 'drop-shadow(0 0 6px color-mix(in oklab, var(--signal) 85%, transparent))'
-                        : 'drop-shadow(0 3px 8px color-mix(in oklab, var(--signal) 55%, transparent))',
+                        ? 'drop-shadow(0 0 7px rgba(124, 92, 255, 0.95)) drop-shadow(0 0 18px rgba(124, 92, 255, 0.55))'
+                        : 'drop-shadow(0 2px 6px rgba(124, 92, 255, 0.5))',
                       transform: isActive ? 'translateY(-2px)' : undefined,
                     }}
                   >
