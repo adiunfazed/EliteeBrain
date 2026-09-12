@@ -24,7 +24,7 @@ interface Props {
 const DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
 const KINDS: { id: BlockKind; label: string; color: string }[] = [
-  { id: 'study', label: 'Study', color: '#7C5CFF' },
+  { id: 'study', label: 'Study', color: '#7A63E0' },
   { id: 'work', label: 'Work', color: '#5B8DEF' },
   { id: 'exercise', label: 'Exercise', color: '#00C2A8' },
   { id: 'meal', label: 'Meal', color: '#FFB020' },

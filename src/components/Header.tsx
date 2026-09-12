@@ -141,7 +141,7 @@ export const Header: React.FC<Props> = ({
             title="Scientific Methodology Citations"
             className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--surface-sunk)] hover:bg-[#212631] border border-[var(--rule)] text-[var(--ink-muted)] hover:text-[var(--ink)] text-xs font-mono rounded-xl transition-all cursor-pointer active:scale-95"
           >
-            <HelpCircle className="w-3.5 h-3.5 shrink-0 text-[#8B5CF6]" />
+            <HelpCircle className="w-3.5 h-3.5 shrink-0 text-[#7E63DC]" />
             <span>Science Methods</span>
           </button>
 
@@ -413,7 +413,7 @@ export const Header: React.FC<Props> = ({
                 }}
                 className="flex items-center justify-center gap-2 px-3 py-2 bg-[var(--surface-sunk)] border border-[var(--rule)] text-[var(--ink)] text-xs font-mono rounded-xl active:bg-[#212631]"
               >
-                <HelpCircle className="w-4 h-4 shrink-0 text-[#8B5CF6]" />
+                <HelpCircle className="w-4 h-4 shrink-0 text-[#7E63DC]" />
                 <span>Methods</span>
               </button>
 
@@ -510,7 +510,7 @@ export const Header: React.FC<Props> = ({
               <div className="bg-[var(--surface-sunk)] border border-[var(--rule)] p-2.5 rounded-xl space-y-2">
                 <div className="flex items-center justify-between text-xs text-[var(--ink-muted)]">
                   <span className="flex items-center gap-1.5 font-bold text-slate-200">
-                    <UserIcon className="w-3.5 h-3.5 shrink-0 text-[#8B5CF6]" />
+                    <UserIcon className="w-3.5 h-3.5 shrink-0 text-[#7E63DC]" />
                     <span>User Profile Name</span>
                   </span>
                   

@@ -54,7 +54,7 @@ export const SettingsModal: React.FC<Props> = ({
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 shrink-0 text-[#8B5CF6]" />
+            <ShieldCheck className="w-5 h-5 shrink-0 text-[#7E63DC]" />
             <h3 className="text-lg font-bold text-slate-100">Protocol & Account Settings</h3>
           </div>
           <button
@@ -74,7 +74,7 @@ export const SettingsModal: React.FC<Props> = ({
           <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <UserIcon className="w-4 h-4 shrink-0 text-[#8B5CF6]" />
+                <UserIcon className="w-4 h-4 shrink-0 text-[#7E63DC]" />
                 <span className="font-bold text-slate-200">Athlete Display Name</span>
               </div>
               {currentUser && (
@@ -114,7 +114,7 @@ export const SettingsModal: React.FC<Props> = ({
           <div className="flex items-center justify-between p-4 rounded-xl bg-slate-950/80 border border-slate-800">
             <div className="flex items-center gap-3">
               {profile.soundEnabled ? (
-                <Volume2 className="w-5 h-5 shrink-0 text-[#8B5CF6]" />
+                <Volume2 className="w-5 h-5 shrink-0 text-[#7E63DC]" />
               ) : (
                 <VolumeX className="w-5 h-5 shrink-0 text-slate-500" />
               )}
@@ -132,7 +132,7 @@ export const SettingsModal: React.FC<Props> = ({
               }}
               className={`px-3 py-1.5 rounded-xl font-bold cursor-pointer transition-all ${
                 profile.soundEnabled
-                  ? 'bg-[color-mix(in_oklab,var(--signal)_20%,transparent)] text-[#8B5CF6] border border-[color-mix(in_oklab,var(--signal)_40%,transparent)]'
+                  ? 'bg-[color-mix(in_oklab,var(--signal)_20%,transparent)] text-[#7E63DC] border border-[color-mix(in_oklab,var(--signal)_40%,transparent)]'
                   : 'bg-slate-800 text-slate-500'
               }`}
             >

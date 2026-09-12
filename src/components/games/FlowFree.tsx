@@ -24,7 +24,7 @@ const COLORS = [
   '#3B82F6', // Blue
   '#10B981', // Green
   '#F59E0B', // Yellow/Orange
-  '#8B5CF6', // Purple
+  '#7E63DC', // Purple
   '#06B6D4', // Cyan
   '#EC4899', // Pink
   '#84CC16', // Lime

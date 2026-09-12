@@ -17,7 +17,7 @@ export const SummaryModal: React.FC<Props> = ({ result, onClose }) => {
         particleCount: 80,
         spread: 70,
         origin: { y: 0.6 },
-        colors: ['#8B5CF6', '#A78BFA', '#10B981', '#F59E0B'],
+        colors: ['#7E63DC', '#AC9BEE', '#10B981', '#F59E0B'],
       });
     } else {
       soundFx.playSuccess();
@@ -64,7 +64,7 @@ export const SummaryModal: React.FC<Props> = ({ result, onClose }) => {
         
         <div className="text-center mb-6">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-[color-mix(in_oklab,var(--signal)_15%,transparent)] border border-[var(--signal)]/30 mb-3 shadow-inner">
-            <Trophy className="w-8 h-8 shrink-0 text-[#8B5CF6]" />
+            <Trophy className="w-8 h-8 shrink-0 text-[#7E63DC]" />
           </div>
           <h2 className="text-2xl font-black text-[var(--ink)] tracking-tight">
             Session Completed
@@ -83,7 +83,7 @@ export const SummaryModal: React.FC<Props> = ({ result, onClose }) => {
         <div className="grid grid-cols-3 gap-3 mb-6 text-center">
           <div className="bg-[var(--ground)] border border-[var(--rule)] p-3 rounded-xl">
             <span className="text-[10px] uppercase font-bold text-[var(--ink-muted)]">Accuracy</span>
-            <div className="text-xl font-black text-[#8B5CF6] mt-0.5">{result.accuracy}%</div>
+            <div className="text-xl font-black text-[#7E63DC] mt-0.5">{result.accuracy}%</div>
           </div>
           <div className="bg-[var(--ground)] border border-[var(--rule)] p-3 rounded-xl">
             <span className="text-[10px] uppercase font-bold text-[var(--ink-muted)]">Score</span>
@@ -114,7 +114,7 @@ export const SummaryModal: React.FC<Props> = ({ result, onClose }) => {
 
         {/* Adaptive Explanation */}
         <div className="flex items-start gap-2.5 p-3 rounded-xl bg-[var(--ground)] border border-[var(--rule)] text-xs text-[var(--ink-muted)] mb-6">
-          <Sparkles className="w-4 h-4 text-[#8B5CF6] shrink-0 mt-0.5" />
+          <Sparkles className="w-4 h-4 text-[#7E63DC] shrink-0 mt-0.5" />
           <p className="leading-relaxed">
             {result.levelChange === 'up'
               ? 'Excellent cognitive precision! Next session will introduce higher target complexity.'

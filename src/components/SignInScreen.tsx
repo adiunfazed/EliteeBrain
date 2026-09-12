@@ -204,7 +204,7 @@ export const SignInScreen: React.FC<Props> = ({ onSignInSuccess, onContinueAsGue
                 <span>Instant 1-click Google authentication</span>
               </div>
               <div className="flex items-center gap-2.5 text-xs text-[var(--ink)] font-medium">
-                <ShieldCheck className="w-4 h-4 text-[#8B5CF6] shrink-0" />
+                <ShieldCheck className="w-4 h-4 text-[#7E63DC] shrink-0" />
                 <span>Encrypted cloud profile storage & score matrix</span>
               </div>
               <div className="flex items-center gap-2.5 text-xs text-[var(--ink)] font-medium">
@@ -221,7 +221,7 @@ export const SignInScreen: React.FC<Props> = ({ onSignInSuccess, onContinueAsGue
             >
               {loading ? (
                 <>
-                  <Loader2 className="w-5 h-5 shrink-0 text-[#8B5CF6] animate-spin" />
+                  <Loader2 className="w-5 h-5 shrink-0 text-[#7E63DC] animate-spin" />
                   <span>Connecting Account...</span>
                 </>
               ) : (
@@ -255,7 +255,7 @@ export const SignInScreen: React.FC<Props> = ({ onSignInSuccess, onContinueAsGue
                 soundFx.playClick();
                 window.open(window.location.href, '_blank');
               }}
-              className="w-full text-center text-xs font-semibold text-[#8B5CF6] hover:underline py-2 cursor-pointer underline-offset-4 mt-2"
+              className="w-full text-center text-xs font-semibold text-[#7E63DC] hover:underline py-2 cursor-pointer underline-offset-4 mt-2"
             >
               Pop-up blocked? Open in New Tab for 1-Click Google Login ↗
             </button>
@@ -275,7 +275,7 @@ export const SignInScreen: React.FC<Props> = ({ onSignInSuccess, onContinueAsGue
                 }}
                 className={`text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer ${
                   emailMode === 'signup'
-                    ? 'bg-[color-mix(in_oklab,var(--signal)_20%,transparent)] text-[#8B5CF6] border border-[color-mix(in_oklab,var(--signal)_40%,transparent)]'
+                    ? 'bg-[color-mix(in_oklab,var(--signal)_20%,transparent)] text-[#7E63DC] border border-[color-mix(in_oklab,var(--signal)_40%,transparent)]'
                     : 'text-[var(--ink-muted)] hover:text-[var(--ink)]'
                 }`}
               >
@@ -291,7 +291,7 @@ export const SignInScreen: React.FC<Props> = ({ onSignInSuccess, onContinueAsGue
                 }}
                 className={`text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer ${
                   emailMode === 'signin'
-                    ? 'bg-[color-mix(in_oklab,var(--signal)_20%,transparent)] text-[#8B5CF6] border border-[color-mix(in_oklab,var(--signal)_40%,transparent)]'
+                    ? 'bg-[color-mix(in_oklab,var(--signal)_20%,transparent)] text-[#7E63DC] border border-[color-mix(in_oklab,var(--signal)_40%,transparent)]'
                     : 'text-[var(--ink-muted)] hover:text-[var(--ink)]'
                 }`}
               >
@@ -414,7 +414,7 @@ export const SignInScreen: React.FC<Props> = ({ onSignInSuccess, onContinueAsGue
           className="w-full py-3 px-4 rounded-xl text-xs font-bold text-[var(--ink)] bg-[var(--ground)] hover:bg-[var(--ground)]/80 border border-[var(--rule)] cursor-pointer transition-all active:scale-95 flex items-center justify-center gap-2"
         >
           <span>Continue as Guest (Offline Mode)</span>
-          <ArrowRight className="w-4 h-4 shrink-0 text-[#8B5CF6]" />
+          <ArrowRight className="w-4 h-4 shrink-0 text-[#7E63DC]" />
         </button>
 
       </div>

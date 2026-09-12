@@ -70,6 +70,8 @@ export interface VerifiedUser {
   email?: string;
   isPro: boolean;
   status: 'lifetime' | 'subscription' | 'trial' | 'expired' | 'free';
+  /** True when the profile could not be read, so Pro status is unverified. */
+  entitlementUnknown?: boolean;
 }
 
 /**
@@ -148,9 +150,17 @@ export async function verifyUser(idToken?: string): Promise<VerifiedUser | null>
         dbErr?.message || dbErr
       );
       lastVerifyFailure = { reason: 'db_unavailable', code: dbCode };
-      // The user is authenticated; we simply cannot read their entitlement.
-      // Report that honestly rather than blaming their sign-in.
-      throw new Error('ENTITLEMENT_LOOKUP_FAILED');
+
+      // Authenticated, entitlement unreadable. Anything not gated on Pro —
+      // the leaderboard above all — must still work, so return the user
+      // rather than rejecting a valid sign-in over a database fault.
+      return {
+        uid: decoded.uid,
+        email: decoded.email,
+        isPro: false,
+        status: 'free' as const,
+        entitlementUnknown: true,
+      };
     }
 
     // Delegates to the shared reader, which handles profileData stored as an
@@ -205,6 +215,13 @@ export async function verifyUser(idToken?: string): Promise<VerifiedUser | null>
     // project mismatch all need different fixes.
     // Normalise here: Firebase returns strings, but some transports surface a
     // numeric code, and callers were doing string operations on it.
+    // The inner Firestore handler already recorded db_unavailable and threw
+    // this sentinel purely to unwind. Overwriting it here lost the real
+    // reason and reported a database fault as a bad sign-in.
+    if (err?.message === 'ENTITLEMENT_LOOKUP_FAILED') {
+      return null;
+    }
+
     const rawCode = err?.errorInfo?.code ?? err?.code ?? 'unknown';
     const code = String(rawCode);
     lastVerifyFailure = { reason: 'verify_failed', code };

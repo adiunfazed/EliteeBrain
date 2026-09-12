@@ -22,7 +22,7 @@ export const COACH_TOOLS: CoachTool[] = [
     name: 'Chat with Coach',
     blurb: 'Ask anything. It knows your tasks, habits, routine and goals.',
     icon: MessageSquare,
-    accent: '#7C5CFF',
+    accent: '#7A63E0',
   },
   {
     id: 'food',
@@ -53,7 +53,7 @@ export const COACH_TOOLS: CoachTool[] = [
     name: 'Voice coach',
     blurb: 'Speak on a prompt and get rated on clarity, structure and delivery.',
     icon: Mic,
-    accent: '#A78BFA',
+    accent: '#AC9BEE',
     needs: 'microphone',
   },
 ];

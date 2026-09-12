@@ -33,8 +33,8 @@ export const SKILL_GROUPS: Record<
   reasoning: {
     label: 'Reasoning & Speed',
     blurb: 'Spot patterns, switch between rules, and work through problems quickly.',
-    tint: 'text-[#A78BFA]',
-    accent: 'bg-[#8B5CF6]/15 border-[#8B5CF6]/30',
+    tint: 'text-[#AC9BEE]',
+    accent: 'bg-[#7E63DC]/15 border-[#7E63DC]/30',
   },
   language: {
     label: 'Speaking & Language',

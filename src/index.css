@@ -35,11 +35,11 @@
   /* A stronger rule for hover and emphasis. */
   --rule-strong: #B8C2D0;
 
-  --signal: #7C5CFF;
-  --signal-ink: #5B3FD6;
+  --signal: #7A63E0;
+  --signal-ink: #5A45BC;
 
   --dom-memory: #E11D48;
-  --dom-focus: #8B5CF6;
+  --dom-focus: #7E63DC;
   --dom-reason: #10B981;
   --dom-speed: #F59E0B;
 }
@@ -61,11 +61,16 @@
   --rule-strong: #342C45;
 
   /* 10% — accent. Used sparingly: one primary action per view. */
-  --signal: #7C5CFF;
-  --signal-ink: #B9A6FF;
+  /* Softer than #7A63E0: same violet family, less saturation, a touch
+     warmer. The old value sat near maximum blue, which glares on an OLED
+     panel — especially with a phone's warm reading mode on. */
+  --signal: #7A63E0;
+  /* Text and icons on dark need to stay legible, so this is lightened
+     rather than dimmed. */
+  --signal-ink: #AC9BEE;
 
   --dom-memory: #F43F5E;
-  --dom-focus: #8B5CF6;
+  --dom-focus: #7E63DC;
   --dom-reason: #34D399;
   --dom-speed: #FBBF24;
 }
@@ -238,13 +243,13 @@
 
 /* --- Primary action: solid brand fill with a lift and a matching glow. --- */
 .eb-btn-primary {
-  background: linear-gradient(180deg, #9F6BFF 0%, #8B5CF6 100%);
+  background: linear-gradient(180deg, #9F6BFF 0%, #7E63DC 100%);
   color: #fff;
   border: 1px solid rgba(196, 181, 253, 0.35);
   box-shadow: 0 6px 18px -6px rgba(139, 92, 246, 0.7), inset 0 1px 0 rgba(255,255,255,0.18);
   transition: transform 0.16s cubic-bezier(0.22,1,0.36,1), box-shadow 0.2s ease, filter 0.2s ease;
 }
-.eb-btn-primary:hover { filter: brightness(1.08); box-shadow: 0 10px 26px -8px rgba(139,92,246,0.85), inset 0 1px 0 rgba(255,255,255,0.22); transform: translateY(-1px); }
+.eb-btn-primary:hover { filter: brightness(1.08); box-shadow: 0 10px 26px -8px rgba(126,99,220,0.85), inset 0 1px 0 rgba(255,255,255,0.22); transform: translateY(-1px); }
 .eb-btn-primary:active { transform: translateY(0) scale(0.985); }
 .eb-btn-primary:disabled { filter: grayscale(0.4); opacity: 0.45; box-shadow: none; transform: none; }
 
@@ -262,8 +267,8 @@
 .eb-chip-active {
   background: rgba(139, 92, 246, 0.16);
   border-color: rgba(139, 92, 246, 0.5);
-  color: #C4B5FD;
-  box-shadow: 0 0 18px -6px rgba(139, 92, 246, 0.85), inset 0 0 0 1px rgba(139,92,246,0.12);
+  color: #C6B9F0;
+  box-shadow: 0 0 18px -6px rgba(139, 92, 246, 0.85), inset 0 0 0 1px rgba(126,99,220,0.12);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -378,7 +383,7 @@
 }
 
 /* --- Solid tiles. Flat so several can coexist without competing. --- */
-.eb-tile-violet { background: #7C5CFF; color: #fff; }
+.eb-tile-violet { background: #7A63E0; color: #fff; }
 .eb-tile-coral  { background: #FF6B57; color: #fff; }
 .eb-tile-amber  { background: #FFB020; color: #1A1205; }
 .eb-tile-teal   { background: #00C2A8; color: #04231F; }
@@ -506,9 +511,9 @@
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(900px 520px at 12% -8%, rgba(124, 92, 255, 0.10), transparent 60%),
+    radial-gradient(900px 520px at 12% -8%, rgba(122, 99, 224, 0.10), transparent 60%),
     radial-gradient(760px 480px at 92% 8%, rgba(0, 194, 168, 0.055), transparent 62%),
-    radial-gradient(680px 420px at 50% 108%, rgba(124, 92, 255, 0.06), transparent 60%);
+    radial-gradient(680px 420px at 50% 108%, rgba(122, 99, 224, 0.06), transparent 60%);
 }
 
 /* Fine grid, barely visible — gives large empty areas some structure. */
@@ -1454,8 +1459,8 @@ button, a[role='button'], [role='tab'] {
   border: none;
   /* A slight gradient and an inset highlight read as a physical control;
      a flat fill reads as a coloured rectangle. */
-  background: linear-gradient(160deg, #8F73FF, var(--signal));
-  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.2) inset;
+  background: linear-gradient(160deg, #8172D8, var(--signal));
+  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.14) inset;
   transition: transform 160ms ease, filter 160ms ease;
 }
 
@@ -1732,14 +1737,14 @@ button > span,
 
 .dark .glow-done {
   box-shadow:
-    0 0 0 3px color-mix(in oklab, var(--done) 18%, transparent),
-    0 0 12px -1px color-mix(in oklab, var(--done) 60%, transparent);
+    0 0 0 2px color-mix(in oklab, var(--done) 12%, transparent),
+    0 0 8px -2px color-mix(in oklab, var(--done) 40%, transparent);
 }
 
 .dark .glow-today {
   box-shadow:
-    0 0 0 3px color-mix(in oklab, var(--signal) 16%, transparent),
-    0 0 10px -1px color-mix(in oklab, var(--signal) 55%, transparent);
+    0 0 0 2px color-mix(in oklab, var(--signal) 11%, transparent),
+    0 0 7px -2px color-mix(in oklab, var(--signal) 35%, transparent);
 }
 
 /* The tick lands with a small pulse rather than simply appearing. */
@@ -1758,8 +1763,8 @@ button > span,
    the habit was due and not done, which is the information that matters. */
 .dark .glow-missed {
   box-shadow:
-    0 0 0 3px color-mix(in oklab, var(--danger) 14%, transparent),
-    0 0 10px -2px color-mix(in oklab, var(--danger) 50%, transparent);
+    0 0 0 2px color-mix(in oklab, var(--danger) 10%, transparent),
+    0 0 7px -3px color-mix(in oklab, var(--danger) 32%, transparent);
 }
 
 

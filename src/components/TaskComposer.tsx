@@ -29,7 +29,7 @@ interface Props {
 
 const PRIORITIES: { id: TaskPriority; label: string; color: string }[] = [
   { id: 'low', label: 'Low', color: '#7E8899' },
-  { id: 'normal', label: 'Normal', color: '#7C5CFF' },
+  { id: 'normal', label: 'Normal', color: '#7A63E0' },
   { id: 'high', label: 'High', color: '#FFB020' },
   { id: 'critical', label: 'Critical', color: '#FF5A6E' },
 ];

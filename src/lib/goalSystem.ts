@@ -239,5 +239,5 @@ export const GOAL_HEALTH_STYLE: Record<GoalHealth, string> = {
   on_track: 'text-emerald-300 bg-emerald-500/12 border-emerald-500/30',
   needs_attention: 'text-amber-300 bg-amber-500/12 border-amber-500/30',
   at_risk: 'text-rose-300 bg-rose-500/12 border-rose-500/30',
-  done: 'text-[#A78BFA] bg-[#8B5CF6]/12 border-[#8B5CF6]/30',
+  done: 'text-[#AC9BEE] bg-[#7E63DC]/12 border-[#7E63DC]/30',
 };

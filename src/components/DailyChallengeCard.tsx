@@ -101,7 +101,7 @@ export const DailyChallengeCard: React.FC<Props> = ({ profile, onLaunchModule })
               soundFx.playClick();
               onLaunchModule(challenge.moduleId);
             }}
-            className="mt-3 t-meta text-[var(--signal-ink)] hover:text-[#C4B5FD] flex items-center gap-1 transition-colors"
+            className="mt-3 t-meta text-[var(--signal-ink)] hover:text-[#C6B9F0] flex items-center gap-1 transition-colors"
           >
             Try again
             <ChevronRight className="w-3.5 h-3.5 shrink-0" />

@@ -1114,6 +1114,12 @@ async function startServer() {
         });
       }
 
+      if (verified.entitlementUnknown) {
+        return res.status(503).json({
+          error: 'Could not check your subscription just now. Try again in a moment.',
+        });
+      }
+
       if (!verified.isPro) {
         console.info('Vision blocked — not Pro:', verified.uid, verified.status);
         return res.status(403).json({
@@ -1389,10 +1395,13 @@ async function startServer() {
     try {
       const verified = await verifyUser(idToken);
       if (verified) {
-        report.verdict = 'Token is valid. Auth is working.';
+        report.verdict = verified.entitlementUnknown
+          ? 'Token is valid, but the Firestore profile read FAILED. See dbFailure.'
+          : 'Token is valid. Auth is working.';
         report.uid = verified.uid;
         report.isPro = verified.isPro;
         report.status = verified.status;
+        if (verified.entitlementUnknown) report.dbFailure = lastVerifyFailure;
       } else {
         report.verdict = 'Verification failed.';
         report.failure = lastVerifyFailure;
@@ -1402,6 +1411,97 @@ async function startServer() {
       report.error = String(err?.message || err).slice(0, 300);
       report.failure = lastVerifyFailure;
     }
+
+    res.json(report);
+  });
+
+  /**
+   * One check covering all three systems.
+   *
+   * Diagnosing these separately meant three requests and a guess about which
+   * layer had failed. This reports each one and says plainly what is wrong,
+   * so a future failure is a one-line answer rather than another round of
+   * back and forth.
+   */
+  app.get('/api/diag/all', async (req, res) => {
+    const report: any = { checkedAt: new Date().toISOString() };
+
+    // 1. Firebase Admin — everything else depends on it.
+    report.firebase = {
+      adminInitialised: isAdminAvailable(),
+      serviceAccountSet: !!process.env.FIREBASE_SERVICE_ACCOUNT,
+      initError,
+    };
+
+    // 2. Firestore — the leaderboard and entitlement both read it.
+    if (isAdminAvailable()) {
+      try {
+        const snap = await getFirestore().collection('users').limit(1).get();
+        report.firestore = { reachable: true, sampleSize: snap.size };
+      } catch (err: any) {
+        report.firestore = {
+          reachable: false,
+          code: String(err?.code || err?.errorInfo?.code || 'unknown'),
+          message: String(err?.message || err).slice(0, 200),
+        };
+      }
+    } else {
+      report.firestore = { reachable: false, reason: 'Admin not initialised' };
+    }
+
+    // 3. Gemini — the coach and every vision tool.
+    const client = makeGeminiClient();
+    if (!client) {
+      report.gemini = { configured: false, reason: 'GEMINI_API_KEY not set' };
+    } else {
+      const TINY =
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+      const models = ['gemini-3.5-flash-lite', 'gemini-3.6-flash', 'gemini-flash-latest'];
+      const working: string[] = [];
+      const failures: any[] = [];
+
+      for (const model of models) {
+        try {
+          const r = await client.models.generateContent({
+            model,
+            contents: [
+              {
+                role: 'user',
+                parts: [
+                  { inlineData: { mimeType: 'image/png', data: TINY } },
+                  { text: 'Reply with: ok' },
+                ],
+              },
+            ],
+          });
+          if (r?.text) working.push(model);
+        } catch (err: any) {
+          failures.push({ model, error: String(err?.message || err).slice(0, 160) });
+        }
+      }
+
+      report.gemini = { configured: true, workingModels: working, failures };
+    }
+
+    // A plain-language summary, since the detail above only helps if you
+    // already know what to look for.
+    const problems: string[] = [];
+    if (!report.firebase.adminInitialised) {
+      problems.push('Firebase Admin did not start — check FIREBASE_SERVICE_ACCOUNT.');
+    }
+    if (!report.firestore.reachable) {
+      problems.push(`Firestore unreachable (${report.firestore.code || report.firestore.reason}).`);
+    }
+    if (report.gemini.configured && report.gemini.workingModels.length === 0) {
+      problems.push('No Gemini model responded — they may have been retired again.');
+    }
+    if (!report.gemini.configured) {
+      problems.push('GEMINI_API_KEY is not set — Coach tools cannot work.');
+    }
+
+    report.verdict = problems.length === 0
+      ? 'All three systems are healthy: auth, leaderboard and Coach should work.'
+      : problems.join(' ');
 
     res.json(report);
   });

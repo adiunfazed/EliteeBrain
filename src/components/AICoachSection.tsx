@@ -341,7 +341,7 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
               <div
                 className={`max-w-[82%] sm:max-w-[72%] px-4 py-3 text-sm leading-relaxed break-words ${
                   msg.sender === 'user'
-                    ? 'bg-[var(--signal)] text-white rounded-xl rounded-br-md shadow-[0_4px_14px_-6px_rgba(139,92,246,0.8)]'
+                    ? 'bg-[var(--signal)] text-white rounded-xl rounded-br-md shadow-[0_4px_14px_-6px_rgba(126,99,220,0.8)]'
                     : 'bg-[var(--surface-sunk)] border border-[var(--rule)] text-[#E7EAEE] rounded-xl rounded-bl-md whitespace-pre-line'
                 }`}
               >
@@ -376,7 +376,7 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
                 {[0, 1, 2].map((i) => (
                   <motion.span
                     key={i}
-                    className="w-1.5 h-1.5 shrink-0 rounded-full bg-[#A78BFA]"
+                    className="w-1.5 h-1.5 shrink-0 rounded-full bg-[#AC9BEE]"
                     animate={{ opacity: [0.25, 1, 0.25], y: [0, -2, 0] }}
                     transition={{ duration: 1.1, repeat: Infinity, delay: i * 0.16 }}
                   />
@@ -398,7 +398,7 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
               <div className="grid grid-cols-2 gap-2 pt-3 mt-1 border-t border-[var(--rule)]">
                 {COACH_ACTIONS.map((action, i) => {
                   const Icon = iconFor(action.icon);
-                  const hues = ['#7C5CFF', '#FF6B57', '#00C2A8', '#FFB020', '#4C9AFF', '#A78BFA', '#FF8FA3', '#5BE9B9'];
+                  const hues = ['#7A63E0', '#FF6B57', '#00C2A8', '#FFB020', '#4C9AFF', '#AC9BEE', '#FF8FA3', '#5BE9B9'];
                   const hue = hues[i % hues.length];
                   return (
                     <button

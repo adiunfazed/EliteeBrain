@@ -79,7 +79,7 @@ const PRIORITY_STYLE: Record<
     chip: 'text-[var(--signal-ink)] bg-[var(--signal)]/12 border-[var(--signal)]/25',
     icon: Minus,
     bar: 'bg-[var(--signal)]',
-    hex: '#7C5CFF',
+    hex: '#7A63E0',
   },
   low: {
     label: 'Low',
@@ -1069,7 +1069,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                     t.undo!();
                     setToasts((list) => list.filter((x) => x.id !== t.id));
                   }}
-                  className="t-meta font-black text-[var(--signal-ink)] hover:text-[#C4B5FD] shrink-0"
+                  className="t-meta font-black text-[var(--signal-ink)] hover:text-[#C6B9F0] shrink-0"
                 >
                   UNDO
                 </button>

@@ -276,11 +276,11 @@ export const ChessGame: React.FC<{
               'radial-gradient(circle, transparent 62%, rgba(255, 107, 87, 0.40) 62%, rgba(255, 107, 87, 0.40) 78%, transparent 78%)',
           }
         : {
-            background: 'radial-gradient(circle, rgba(124, 92, 255, 0.35) 26%, transparent 26%)',
+            background: 'radial-gradient(circle, rgba(122, 99, 224, 0.35) 26%, transparent 26%)',
           };
     }
 
-    next[square] = { background: 'rgba(124, 92, 255, 0.22)' };
+    next[square] = { background: 'rgba(122, 99, 224, 0.22)' };
     setOptionSquares(next);
   };
 
@@ -900,7 +900,7 @@ export const ChessGame: React.FC<{
           }
         : {
             background:
-              'radial-gradient(circle, rgba(124, 92, 255, 0.75) 26%, transparent 26%)',
+              'radial-gradient(circle, rgba(122, 99, 224, 0.75) 26%, transparent 26%)',
           };
 
       // Promotions and castling are worth distinguishing — they are easy to
@@ -918,7 +918,7 @@ export const ChessGame: React.FC<{
       }
     });
 
-    newSquares[square] = { background: 'rgba(124, 92, 255, 0.32)' };
+    newSquares[square] = { background: 'rgba(122, 99, 224, 0.32)' };
     setOptionSquares(newSquares);
   };
 
@@ -1092,8 +1092,8 @@ export const ChessGame: React.FC<{
     // The queued premove, so it is obvious one is waiting.
     ...(premove
       ? {
-          [premove.from]: { backgroundColor: 'rgba(124, 92, 255, 0.30)' },
-          [premove.to]: { backgroundColor: 'rgba(124, 92, 255, 0.42)' },
+          [premove.from]: { backgroundColor: 'rgba(122, 99, 224, 0.30)' },
+          [premove.to]: { backgroundColor: 'rgba(122, 99, 224, 0.42)' },
         }
       : {}),
     ...(lastMove

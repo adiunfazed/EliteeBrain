@@ -129,7 +129,7 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
         </button>
 
         {/* Icon Header */}
-        <div className="w-14 h-14 shrink-0 mx-auto mb-3 rounded-xl bg-[color-mix(in_oklab,var(--signal)_15%,transparent)] border border-[var(--signal)]/30 flex items-center justify-center text-[#8B5CF6] shadow-lg">
+        <div className="w-14 h-14 shrink-0 mx-auto mb-3 rounded-xl bg-[color-mix(in_oklab,var(--signal)_15%,transparent)] border border-[var(--signal)]/30 flex items-center justify-center text-[#7E63DC] shadow-lg">
           <Cloud className="w-7 h-7 shrink-0" />
         </div>
 
@@ -200,7 +200,7 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
                 <span>Instant 1-click Google authentication</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-[var(--ink)]">
-                <ShieldCheck className="w-4 h-4 text-[#8B5CF6] shrink-0" />
+                <ShieldCheck className="w-4 h-4 text-[#7E63DC] shrink-0" />
                 <span>Encrypted cloud profile storage via Firebase</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-[var(--ink)]">
@@ -217,7 +217,7 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
             >
               {loading ? (
                 <>
-                  <Loader2 className="w-5 h-5 shrink-0 text-[#8B5CF6] animate-spin" />
+                  <Loader2 className="w-5 h-5 shrink-0 text-[#7E63DC] animate-spin" />
                   <span>Connecting Google Account...</span>
                 </>
               ) : (
@@ -251,7 +251,7 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
                 soundFx.playClick();
                 window.open(window.location.href, '_blank');
               }}
-              className="w-full text-center text-xs font-semibold text-[#8B5CF6] hover:underline py-1.5 cursor-pointer underline-offset-4 mb-2"
+              className="w-full text-center text-xs font-semibold text-[#7E63DC] hover:underline py-1.5 cursor-pointer underline-offset-4 mb-2"
             >
               Pop-up blocked? Open in New Tab for 1-Click Google Login ↗
             </button>
@@ -271,7 +271,7 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
                 }}
                 className={`text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer ${
                   emailMode === 'signup'
-                    ? 'bg-[color-mix(in_oklab,var(--signal)_20%,transparent)] text-[#8B5CF6] border border-[color-mix(in_oklab,var(--signal)_40%,transparent)]'
+                    ? 'bg-[color-mix(in_oklab,var(--signal)_20%,transparent)] text-[#7E63DC] border border-[color-mix(in_oklab,var(--signal)_40%,transparent)]'
                     : 'text-[var(--ink-muted)] hover:text-[var(--ink)]'
                 }`}
               >
@@ -287,7 +287,7 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
                 }}
                 className={`text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer ${
                   emailMode === 'signin'
-                    ? 'bg-[color-mix(in_oklab,var(--signal)_20%,transparent)] text-[#8B5CF6] border border-[color-mix(in_oklab,var(--signal)_40%,transparent)]'
+                    ? 'bg-[color-mix(in_oklab,var(--signal)_20%,transparent)] text-[#7E63DC] border border-[color-mix(in_oklab,var(--signal)_40%,transparent)]'
                     : 'text-[var(--ink-muted)] hover:text-[var(--ink)]'
                 }`}
               >

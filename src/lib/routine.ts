@@ -13,7 +13,7 @@ export const BLOCK_META: Record<
   RoutineBlock['kind'],
   { label: string; tint: string; bar: string }
 > = {
-  study: { label: 'Study', tint: 'text-[#A78BFA] bg-[#8B5CF6]/12 border-[#8B5CF6]/30', bar: 'bg-[#8B5CF6]' },
+  study: { label: 'Study', tint: 'text-[#AC9BEE] bg-[#7E63DC]/12 border-[#7E63DC]/30', bar: 'bg-[#7E63DC]' },
   work: { label: 'Work', tint: 'text-sky-300 bg-sky-500/12 border-sky-500/30', bar: 'bg-sky-500' },
   exercise: { label: 'Exercise', tint: 'text-amber-300 bg-amber-500/12 border-amber-500/30', bar: 'bg-amber-500' },
   sleep: { label: 'Sleep', tint: 'text-indigo-300 bg-indigo-500/12 border-indigo-500/30', bar: 'bg-indigo-500' },

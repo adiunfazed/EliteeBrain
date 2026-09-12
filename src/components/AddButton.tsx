@@ -26,7 +26,7 @@ export const AddButton: React.FC<Props> = ({ label, onClick }) => (
     style={{
       bottom: 'calc(5.25rem + env(safe-area-inset-bottom))',
       minHeight: 52,
-      background: 'linear-gradient(160deg, #8F73FF, var(--signal))',
+      background: 'linear-gradient(160deg, #8A74E6, var(--signal))',
       boxShadow:
         '0 1px 0 0 rgba(255,255,255,0.22) inset, 0 12px 28px -10px color-mix(in oklab, var(--signal) 85%, transparent)',
     }}

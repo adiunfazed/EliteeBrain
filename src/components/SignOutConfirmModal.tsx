@@ -69,7 +69,7 @@ export const SignOutConfirmModal: React.FC<Props> = ({
           <X className="w-4 h-4 shrink-0" />
         </button>
 
-        <span className="text-[10px] uppercase font-mono font-bold tracking-widest px-3 py-0.5 rounded-full bg-[color-mix(in_oklab,var(--signal)_10%,transparent)] text-[#8B5CF6] border border-[var(--signal)]/30 inline-block mb-3">
+        <span className="text-[10px] uppercase font-mono font-bold tracking-widest px-3 py-0.5 rounded-full bg-[color-mix(in_oklab,var(--signal)_10%,transparent)] text-[#7E63DC] border border-[var(--signal)]/30 inline-block mb-3">
           ACCOUNT MANAGEMENT
         </span>
 
@@ -79,7 +79,7 @@ export const SignOutConfirmModal: React.FC<Props> = ({
             <img
               src={user.photoURL}
               alt="Profile"
-              className="w-20 h-20 shrink-0 rounded-full border-2 border-[var(--signal)] shadow-lg shadow-[#8B5CF6]/20 object-cover"
+              className="w-20 h-20 shrink-0 rounded-full border-2 border-[var(--signal)] shadow-lg shadow-[#7E63DC]/20 object-cover"
             />
           ) : (
             <div className="w-20 h-20 shrink-0 rounded-full bg-[var(--signal)] text-white font-black text-2xl flex items-center justify-center border-2 border-[var(--signal)]">
@@ -100,7 +100,7 @@ export const SignOutConfirmModal: React.FC<Props> = ({
         <div className="bg-slate-950/90 border border-slate-800 rounded-xl p-3 mb-4 space-y-2 text-left">
           <div className="flex items-center justify-between text-xs font-mono text-slate-300">
             <span className="flex items-center gap-1.5 font-bold">
-              <UserIcon className="w-3.5 h-3.5 shrink-0 text-[#8B5CF6]" />
+              <UserIcon className="w-3.5 h-3.5 shrink-0 text-[#7E63DC]" />
               <span>Display Name</span>
             </span>
             <div className="flex items-center gap-2">
@@ -118,7 +118,7 @@ export const SignOutConfirmModal: React.FC<Props> = ({
                 }}
                 className="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 t-meta cursor-pointer transition-all flex items-center gap-1"
               >
-                <Edit2 className="w-3.5 h-3.5 shrink-0 text-[#8B5CF6]" />
+                <Edit2 className="w-3.5 h-3.5 shrink-0 text-[#7E63DC]" />
                 <span>{isEditing ? 'Cancel' : 'Edit Name'}</span>
               </button>
             </div>
@@ -151,9 +151,9 @@ export const SignOutConfirmModal: React.FC<Props> = ({
 
         {/* Status Box */}
         <div className="bg-slate-950/80 rounded-xl border border-[var(--signal)]/20 p-3.5 mb-5 text-left flex items-start gap-3">
-          <ShieldCheck className="w-5 h-5 text-[#8B5CF6] shrink-0 mt-0.5" />
+          <ShieldCheck className="w-5 h-5 text-[#7E63DC] shrink-0 mt-0.5" />
           <div className="text-xs">
-            <span className="font-bold text-[#8B5CF6] block mb-0.5">Google Cloud Sync Active</span>
+            <span className="font-bold text-[#7E63DC] block mb-0.5">Google Cloud Sync Active</span>
             <span className="text-slate-400">
               Your 30-day cognitive protocol progress is linked and backed up safely under this account.
             </span>
@@ -167,7 +167,7 @@ export const SignOutConfirmModal: React.FC<Props> = ({
               soundFx.playClick();
               onClose();
             }}
-            className="w-full py-3 px-4 rounded-xl bg-[var(--signal)] hover:bg-[#4B5ACD] text-white font-black text-xs uppercase tracking-wider cursor-pointer shadow-lg shadow-[#8B5CF6]/20 transition-all active:scale-95"
+            className="w-full py-3 px-4 rounded-xl bg-[var(--signal)] hover:bg-[#4B5ACD] text-white font-black text-xs uppercase tracking-wider cursor-pointer shadow-lg shadow-[#7E63DC]/20 transition-all active:scale-95"
           >
             Close Account Manager
           </button>

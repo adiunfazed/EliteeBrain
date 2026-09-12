@@ -64,7 +64,7 @@ export const SplashScreen: React.FC<Props> = ({ onFinish, ready = false }) => {
             animate={{ x: 0, y: 0, opacity: 1, rotate: 0 }}
             transition={{ type: 'spring', stiffness: 180, damping: 18, delay: 0.1 }}
             className="font-display font-extrabold leading-none"
-            style={{ fontSize: 62, color: '#A78BFA', letterSpacing: '-0.04em' }}
+            style={{ fontSize: 62, color: '#AC9BEE', letterSpacing: '-0.04em' }}
           >
             L
           </motion.span>
@@ -91,7 +91,7 @@ export const SplashScreen: React.FC<Props> = ({ onFinish, ready = false }) => {
           className="font-display font-extrabold tracking-tight"
           style={{ fontSize: 21, marginTop: 4 }}
         >
-          Elite<span style={{ color: '#A78BFA' }}>Life</span>
+          Elite<span style={{ color: '#AC9BEE' }}>Life</span>
         </motion.p>
 
         <motion.p
@@ -99,7 +99,7 @@ export const SplashScreen: React.FC<Props> = ({ onFinish, ready = false }) => {
           animate={{ y: 0, opacity: 0.85 }}
           transition={{ delay: 0.75, duration: 0.4 }}
           className="t-sub"
-          style={{ color: '#C4B5FD' }}
+          style={{ color: '#C6B9F0' }}
         >
           Plan. Execute. Improve.
         </motion.p>
@@ -128,12 +128,12 @@ export const SplashScreen: React.FC<Props> = ({ onFinish, ready = false }) => {
               initial={{ width: '0%' }}
               animate={{ width: '100%' }}
               transition={{ duration: 2.1, ease: [0.4, 0, 0.2, 1] }}
-              className="h-full bg-gradient-to-r from-[#8B5CF6] to-[#A78BFA]"
+              className="h-full bg-gradient-to-r from-[#7E63DC] to-[#AC9BEE]"
             />
           </div>
           <div className="flex items-center justify-between text-[11px] text-[var(--ink-muted)]">
             <span className="flex items-center gap-1.5">
-              <Activity className="w-3.5 h-3.5 shrink-0 text-[#8B5CF6] animate-pulse" />
+              <Activity className="w-3.5 h-3.5 shrink-0 text-[#7E63DC] animate-pulse" />
               <span>Initializing Protocol...</span>
             </span>
             <span className="text-[var(--signal-ink)] font-bold font-mono">READY</span>
@@ -148,7 +148,7 @@ export const SplashScreen: React.FC<Props> = ({ onFinish, ready = false }) => {
         transition={{ delay: 0.8 }}
         className="absolute bottom-6 font-mono text-[10px] text-[var(--ink-muted)] uppercase tracking-widest flex items-center gap-1.5"
       >
-        <Sparkles className="w-3.5 h-3.5 shrink-0 text-[#8B5CF6]" />
+        <Sparkles className="w-3.5 h-3.5 shrink-0 text-[#7E63DC]" />
         <span>Tap anywhere to skip</span>
       </motion.div>
     </motion.div>

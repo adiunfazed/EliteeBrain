@@ -18,7 +18,7 @@ export const PRIORITY_WEIGHT: Record<TaskPriority, number> = {
 };
 
 export const CATEGORY_META: Record<TaskCategory, { label: string; tint: string }> = {
-  study: { label: 'Study', tint: 'text-[#A78BFA] bg-[#8B5CF6]/12 border-[#8B5CF6]/25' },
+  study: { label: 'Study', tint: 'text-[#AC9BEE] bg-[#7E63DC]/12 border-[#7E63DC]/25' },
   work: { label: 'Work', tint: 'text-sky-300 bg-sky-500/12 border-sky-500/25' },
   personal: { label: 'Personal', tint: 'text-emerald-300 bg-emerald-500/12 border-emerald-500/25' },
   fitness: { label: 'Fitness', tint: 'text-amber-300 bg-amber-500/12 border-amber-500/25' },

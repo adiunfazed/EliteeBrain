@@ -55,8 +55,8 @@ export const ShareCard: React.FC<Props> = ({
 
     // Accent wash
     const glow = ctx.createRadialGradient(W * 0.2, H * 0.15, 0, W * 0.2, H * 0.15, W * 0.7);
-    glow.addColorStop(0, 'rgba(124, 92, 255, 0.30)');
-    glow.addColorStop(1, 'rgba(124, 92, 255, 0)');
+    glow.addColorStop(0, 'rgba(122, 99, 224, 0.30)');
+    glow.addColorStop(1, 'rgba(122, 99, 224, 0)');
     ctx.fillStyle = glow;
     ctx.fillRect(0, 0, W, H);
 

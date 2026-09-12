@@ -33,7 +33,7 @@ export const ModuleCard: React.FC<Props> = ({ config, state, isProUser, index = 
       case 'Binary':
         return <Binary className="w-5 h-5 shrink-0 text-rose-500 dark:eb-danger" />;
       case 'Zap':
-        return <Zap className="w-5 h-5 shrink-0 text-indigo-500 dark:text-[#8B5CF6]" />;
+        return <Zap className="w-5 h-5 shrink-0 text-indigo-500 dark:text-[#7E63DC]" />;
       case 'Layers':
         return <Layers className="w-5 h-5 shrink-0 text-emerald-500 dark:eb-done" />;
       case 'Compass':
@@ -53,7 +53,7 @@ export const ModuleCard: React.FC<Props> = ({ config, state, isProUser, index = 
       case 'Calculator':
         return <Calculator className="w-5 h-5 shrink-0 text-violet-500 dark:text-[var(--signal-ink)]" />;
       default:
-        return <Brain className="w-5 h-5 shrink-0 text-[#8B5CF6]" />;
+        return <Brain className="w-5 h-5 shrink-0 text-[#7E63DC]" />;
     }
   };
 

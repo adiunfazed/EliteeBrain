@@ -771,7 +771,7 @@ export const Dashboard: React.FC<Props> = ({
 
             <div className="grid grid-cols-4 gap-1 p-1 rounded-xl bg-[var(--surface-sunk)] border border-[var(--rule)]">
               {([
-                { id: 'tasks' as const, label: t('plan.tasks'), icon: CheckSquare, accent: '#7C5CFF' },
+                { id: 'tasks' as const, label: t('plan.tasks'), icon: CheckSquare, accent: '#7A63E0' },
                 { id: 'habits' as const, label: t('plan.habits'), icon: Repeat, accent: '#00C2A8' },
                 { id: 'routine' as const, label: t('plan.routine'), icon: Clock, accent: '#7FD4E8' },
                 { id: 'goals' as const, label: t('plan.goals'), icon: Target, accent: '#FFB020' },
@@ -1047,7 +1047,7 @@ export const Dashboard: React.FC<Props> = ({
       <div className="fixed bottom-0 inset-x-0 z-40 bg-[var(--surface)]/95 backdrop-blur-2xl px-1.5 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] overflow-visible"
           style={{
             borderTop: '1px solid color-mix(in oklab, var(--signal) 40%, var(--rule))',
-            boxShadow: '0 -1px 14px -6px color-mix(in oklab, var(--signal) 55%, transparent)',
+            boxShadow: '0 -1px 12px -8px color-mix(in oklab, var(--signal) 35%, transparent)',
           }}>
         <div
           className="max-w-md mx-auto grid gap-0.5"
@@ -1085,7 +1085,7 @@ export const Dashboard: React.FC<Props> = ({
                       bottom: -6,
                       borderRadius: '50%',
                       background:
-                        'radial-gradient(ellipse at center, rgba(139,92,246,0.85), rgba(139,92,246,0.25) 45%, rgba(139,92,246,0) 72%)',
+                        'radial-gradient(ellipse at center, rgba(126,99,220,0.5), rgba(126,99,220,0.15) 45%, rgba(126,99,220,0) 72%)',
                       filter: 'blur(10px)',
                       opacity: isActive ? 1 : 0.7,
                       // Above the bar's own background, which is 95% opaque
@@ -1113,8 +1113,8 @@ export const Dashboard: React.FC<Props> = ({
                       // is drawn as a filter glow. Concrete rgba rather than
                       // color-mix, which is not reliable inside drop-shadow.
                       filter: isActive
-                        ? 'drop-shadow(0 0 8px rgba(167,139,250,1)) drop-shadow(0 0 22px rgba(139,92,246,0.8))'
-                        : 'drop-shadow(0 0 5px rgba(167,139,250,0.7)) drop-shadow(0 3px 12px rgba(139,92,246,0.6))',
+                        ? 'drop-shadow(0 0 6px rgba(172,155,238,0.75)) drop-shadow(0 0 16px rgba(126,99,220,0.5))'
+                        : 'drop-shadow(0 0 4px rgba(172,155,238,0.45)) drop-shadow(0 3px 10px rgba(126,99,220,0.4))',
                       zIndex: 1,
                       transform: isActive ? 'translateY(-2px)' : undefined,
                     }}

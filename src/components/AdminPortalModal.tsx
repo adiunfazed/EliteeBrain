@@ -503,13 +503,13 @@ export const AdminPortalModal: React.FC<Props> = ({
         {/* Top Header */}
         <div className="flex items-center justify-between pb-4 border-b border-[var(--rule)] shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 shrink-0 rounded-xl bg-[color-mix(in_oklab,var(--signal)_20%,transparent)] border border-[color-mix(in_oklab,var(--signal)_40%,transparent)] flex items-center justify-center text-[#8B5CF6]">
+            <div className="w-10 h-10 shrink-0 rounded-xl bg-[color-mix(in_oklab,var(--signal)_20%,transparent)] border border-[color-mix(in_oklab,var(--signal)_40%,transparent)] flex items-center justify-center text-[#7E63DC]">
               <Shield className="w-5 h-5 shrink-0" />
             </div>
             <div>
               <h2 className="text-lg font-black text-[var(--ink)] flex items-center gap-2">
                 <span>Cloud Admin & User Management Portal</span>
-                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[color-mix(in_oklab,var(--signal)_20%,transparent)] text-[#8B5CF6] border border-[color-mix(in_oklab,var(--signal)_40%,transparent)]">
+                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[color-mix(in_oklab,var(--signal)_20%,transparent)] text-[#7E63DC] border border-[color-mix(in_oklab,var(--signal)_40%,transparent)]">
                   ADMIN ONLY
                 </span>
               </h2>
@@ -741,8 +741,8 @@ export const AdminPortalModal: React.FC<Props> = ({
               ))}
             </div>
           ) : (
-            <div className="text-xs font-bold text-[#8B5CF6] font-mono flex items-center gap-2">
-              <Mail className="w-4 h-4 shrink-0 text-[#8B5CF6]" />
+            <div className="text-xs font-bold text-[#7E63DC] font-mono flex items-center gap-2">
+              <Mail className="w-4 h-4 shrink-0 text-[#7E63DC]" />
               <span>Total Registered Accounts: {registeredUsers.length}</span>
             </div>
           )}
@@ -812,7 +812,7 @@ export const AdminPortalModal: React.FC<Props> = ({
 
                       <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--ink-muted)] font-mono">
                         <span>
-                          Plan: <strong className="text-[#8B5CF6]">{req.plan.toUpperCase()}</strong> (₹{req.amountINR})
+                          Plan: <strong className="text-[#7E63DC]">{req.plan.toUpperCase()}</strong> (₹{req.amountINR})
                         </span>
                         <span>•</span>
                         <span className="bg-[var(--surface-sunk)] px-2 py-0.5 rounded-md border border-[var(--rule)] eb-warn font-bold">
@@ -880,7 +880,7 @@ export const AdminPortalModal: React.FC<Props> = ({
                       {u.photoURL ? (
                         <img src={u.photoURL} alt={u.displayName} className="w-9 h-9 rounded-full border border-[color-mix(in_oklab,var(--signal)_40%,transparent)] object-cover shrink-0" />
                       ) : (
-                        <div className="w-9 h-9 rounded-full bg-[color-mix(in_oklab,var(--signal)_20%,transparent)] border border-[color-mix(in_oklab,var(--signal)_40%,transparent)] text-[#8B5CF6] font-bold text-xs flex items-center justify-center shrink-0">
+                        <div className="w-9 h-9 rounded-full bg-[color-mix(in_oklab,var(--signal)_20%,transparent)] border border-[color-mix(in_oklab,var(--signal)_40%,transparent)] text-[#7E63DC] font-bold text-xs flex items-center justify-center shrink-0">
                           {u.displayName ? u.displayName[0].toUpperCase() : 'U'}
                         </div>
                       )}
@@ -912,7 +912,7 @@ export const AdminPortalModal: React.FC<Props> = ({
                             );
                           })()}
                         </div>
-                        <div className="t-meta text-[#8B5CF6] mt-0.5 break-all">{u.email}</div>
+                        <div className="t-meta text-[#7E63DC] mt-0.5 break-all">{u.email}</div>
                         <div className="text-[10px] text-[var(--ink-muted)] font-mono mt-0.5">
                           Registered: {new Date(u.createdAt).toLocaleDateString()} • Last Active: {new Date(u.lastLoginAt).toLocaleTimeString()}
                         </div>

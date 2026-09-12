@@ -43,7 +43,7 @@ export const TEMPLATES: Template[] = [
     name: 'Exam preparation',
     who: 'JEE, NEET, UPSC, boards — any long study campaign',
     icon: 'GraduationCap',
-    accent: '#7C5CFF',
+    accent: '#7A63E0',
     goal: {
       title: 'Clear my exam',
       milestones: ['Finish the syllabus once', 'Complete 10 mock tests', 'Revise every weak topic'],

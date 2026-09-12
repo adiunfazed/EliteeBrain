@@ -337,7 +337,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
             <div className="flex items-center gap-1.5 mt-2 flex-wrap">
               {([
                 { id: 'low' as const, label: 'Low', color: 'var(--ink-muted)' },
-                { id: 'normal' as const, label: 'Normal', color: '#7C5CFF' },
+                { id: 'normal' as const, label: 'Normal', color: '#7A63E0' },
                 { id: 'high' as const, label: 'High', color: '#FFB020' },
                 { id: 'critical' as const, label: 'Critical', color: '#FF6B57' },
               ]).map(({ id, label, color }) => (

@@ -79,7 +79,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
               <button
                 onClick={this.handleClearCache}
-                className="w-full h-11 bg-[var(--surface-sunk)] hover:bg-[#1E232D] border border-[var(--rule)] text-[#C4B5FD] font-mono text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
+                className="w-full h-11 bg-[var(--surface-sunk)] hover:bg-[#1E232D] border border-[var(--rule)] text-[#C6B9F0] font-mono text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
               >
                 <Trash2 className="w-4 h-4 shrink-0 eb-warn" />
                 <span>Reset Cache & Restore Default</span>

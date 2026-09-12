@@ -30,10 +30,10 @@ interface Props {
  */
 /** One colour per block kind, so a block looks the same everywhere. */
 /** Matching hexes for the tile classes, used to tint incomplete habits. */
-const TILE_HEX = ['#7C5CFF', '#FF6B57', '#FFB020', '#00C2A8', 'var(--ink-muted)'];
+const TILE_HEX = ['#7A63E0', '#FF6B57', '#FFB020', '#00C2A8', 'var(--ink-muted)'];
 
 const BLOCK_TINT: Record<string, string> = {
-  study: '#7C5CFF',
+  study: '#7A63E0',
   work: '#4C9AFF',
   exercise: '#FFB020',
   sleep: '#6C7BFF',
@@ -169,7 +169,7 @@ export const TodayPane: React.FC<Props> = ({
               cy="22"
               r="19"
               fill="none"
-              stroke={pct >= 1 ? '#10B981' : '#8B5CF6'}
+              stroke={pct >= 1 ? '#10B981' : '#7E63DC'}
               strokeWidth="4"
               strokeLinecap="round"
               strokeDasharray={2 * Math.PI * 19}
