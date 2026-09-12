@@ -142,14 +142,7 @@ export interface VisionResult {
  * the account's tier or gets renamed — which is indistinguishable from a
  * broken feature. Falling through keeps the tool working.
  */
-const VISION_MODELS = [
-  'gemini-3.5-flash-lite',
-  'gemini-3.6-flash',
-  // An alias Google repoints as models change, so it cannot go stale the way
-  // a pinned version does. Last resort rather than first choice, since an
-  // alias can shift behaviour without notice.
-  'gemini-flash-latest',
-];
+import { usableVisionModels, forgetDiscoveredModels } from './serverModelPicker';
 
 export async function analyseImage(
   ai: any,
@@ -160,9 +153,14 @@ export async function analyseImage(
   const prompt = PROMPTS[tool];
   if (!prompt) throw new Error('Unknown tool');
 
-  let lastError: any = null;
+  // Ask the API which models exist rather than assuming. A retirement then
+  // resolves itself on the next refresh instead of breaking the feature.
+  const models = await usableVisionModels(ai);
 
-  for (const model of VISION_MODELS) {
+  let lastError: any = null;
+  let sawRetirement = false;
+
+  for (const model of models) {
     // Three attempts per model with backoff. Overload is momentary and
     // clears in a second or two, so waiting beats failing.
     for (let attempt = 0; attempt < 3; attempt++) {
@@ -181,10 +179,10 @@ export async function analyseImage(
         // move straight to the next one — and say so loudly, because a silent
         // retirement is exactly what made this take several rounds to find.
         if (status === 404) {
-          console.error(
-            `MODEL RETIRED: ${model} returned 404. Update VISION_MODELS in serverVision.ts. ` +
-              `Detail: ${String(err?.message || '').slice(0, 200)}`
-          );
+          // The discovered list is stale. Note it and rediscover after this
+          // request, so the next one uses current names without a deploy.
+          sawRetirement = true;
+          console.warn(`Model ${model} is gone (404). Will rediscover.`);
           break;
         }
 
@@ -196,6 +194,10 @@ export async function analyseImage(
       }
     }
   }
+
+  // A retirement invalidates the cached list, so the next request discovers
+  // the replacements rather than failing the same way.
+  if (sawRetirement) forgetDiscoveredModels();
 
   // Overload is worth naming plainly: the user has done nothing wrong and
   // simply needs to try again shortly.

@@ -2,6 +2,7 @@ import { cert, getApps, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 import { readField, resolveEntitlement, toMillis } from './serverEntitlement';
+import { getEntitlement } from './serverEntitlementCache';
 
 /**
  * Server-side identity and entitlement verification.
@@ -131,84 +132,31 @@ export async function verifyUser(idToken?: string): Promise<VerifiedUser | null>
     // Identity check. If this succeeds the user is genuinely signed in.
     const decoded = await getAuth().verifyIdToken(idToken);
 
-    // Entitlement lookup. Separated deliberately: a Firestore permission or
-    // API-enablement problem here is NOT the user's fault, and previously it
-    // surfaced as "could not verify your sign-in" even though the sign-in was
-    // perfectly valid.
-    let data: any = null;
-    try {
+    // Entitlement, via a five-minute cache.
+    //
+    // Reading Firestore on every request made a database hiccup break
+    // authentication itself: the coach, leaderboard and rank all failed
+    // together over a lookup that only decides Pro status. The token already
+    // proves identity, so this is now at most one read per user per window,
+    // and a failed read serves the last known value rather than locking
+    // anyone out.
+    const ent = await getEntitlement(decoded.uid, async () => {
       const snap = await getFirestore().collection('users').doc(decoded.uid).get();
-      data = snap.exists ? snap.data() : null;
-    } catch (dbErr: any) {
-      const dbCode = String(dbErr?.code ?? dbErr?.errorInfo?.code ?? '');
-      console.error(
-        'Firestore read failed for uid',
-        decoded.uid,
-        '| code:',
-        dbCode,
-        '|',
-        dbErr?.message || dbErr
-      );
-      lastVerifyFailure = { reason: 'db_unavailable', code: dbCode };
+      return snap.exists ? snap.data() : null;
+    });
 
-      // Authenticated, entitlement unreadable. Anything not gated on Pro —
-      // the leaderboard above all — must still work, so return the user
-      // rather than rejecting a valid sign-in over a database fault.
-      return {
-        uid: decoded.uid,
-        email: decoded.email,
-        isPro: false,
-        status: 'free' as const,
-        entitlementUnknown: true,
-      };
+    if (ent.degraded) {
+      lastVerifyFailure = { reason: 'db_unavailable', code: 'entitlement_read_failed' };
     }
 
-    // Delegates to the shared reader, which handles profileData stored as an
-    // object OR a JSON string, and dates as ISO/epoch/Timestamp. Reading only
-    // one shape is why trial users were refused the coach.
-    let { isPro, status } = resolveEntitlement(data);
-
-    // Self-heal. A trial started on one device may exist inside profileData
-    // while the top-level fields were never written — a partial sync, an
-    // interrupted write, an older client. The evidence is there; the document
-    // shape is just wrong. Repair it rather than refusing a paying user.
-    if (!isPro) {
-      const repaired = repairEntitlement(data);
-      if (repaired) {
-        try {
-          await getFirestore().collection('users').doc(decoded.uid).set(repaired, { merge: true });
-          console.info('Repaired entitlement fields for', decoded.uid, JSON.stringify(repaired));
-          const after = resolveEntitlement({ ...data, ...repaired });
-          isPro = after.isPro;
-          status = after.status;
-        } catch (repairErr: any) {
-          console.warn('Could not repair entitlement:', repairErr?.message);
-        }
-      }
-    }
-
-    if (!isPro) {
-      // Log every field consulted, so a report of "it says buy Pro" can be
-      // resolved from the logs instead of another round of guessing.
-      console.info(
-        'Coach denied for',
-        decoded.uid,
-        JSON.stringify({
-          status,
-          top: {
-            lifetimePro: data?.lifetimePro ?? null,
-            trialStartedAt: data?.trialStartedAt ?? null,
-            trialEverStarted: data?.trialEverStarted ?? null,
-            proPlanType: data?.proPlanType ?? null,
-            isProUser: data?.isProUser ?? null,
-          },
-          profileDataType: typeof data?.profileData,
-          hasProfileData: !!data?.profileData,
-        })
-      );
-    }
-
-    return { uid: decoded.uid, email: decoded.email, isPro, status };
+    return {
+      uid: decoded.uid,
+      email: decoded.email,
+      isPro: ent.isPro,
+      status: ent.status as any,
+      // Only unknown when there was no cached value to fall back on.
+      entitlementUnknown: ent.degraded && !ent.fromCache,
+    };
   } catch (err: any) {
     // Firebase error codes are specific: auth/id-token-expired,
     // auth/argument-error (malformed), auth/id-token-revoked, and

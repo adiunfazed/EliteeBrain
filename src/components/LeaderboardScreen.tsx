@@ -107,7 +107,7 @@ export const LeaderboardScreen: React.FC<Props> = ({ onBack }) => {
 
         if (!res.ok) {
           setStatus('error');
-          setError(data?.error || 'Leaderboard temporarily unavailable.');
+          setError(data?.note || data?.error || 'Leaderboard temporarily unavailable.');
           return;
         }
 

@@ -10,6 +10,7 @@ import { initAdmin, isAdminAvailable, verifyUser, lastVerifyFailure, initError }
 import { getLeaderboard, syncLeaderboardEntry } from './serverLeaderboard';
 import { buildCoachContext, describeContext } from './serverCoachContext';
 import { analyseImage, isAllowedMime, MAX_IMAGE_BYTES, VisionTool } from './serverVision';
+import { usableVisionModels } from './serverModelPicker';
 import { enqueue } from './serverQueue';
 import { createJob, getJob, markRunning, markDone, markFailed } from './serverJobs';
 
@@ -169,7 +170,9 @@ How to talk:
         try {
           response = await withTimeout(
             ai.models.generateContent({
-              model: 'gemini-3.6-flash',
+              // Discovered rather than pinned, so a retirement resolves
+              // itself instead of silently dropping to the Groq fallback.
+              model: (await usableVisionModels(ai))[0] || 'gemini-flash-latest',
               contents,
               config: { systemInstruction: systemPrompt, temperature: 0.7 },
             }),
@@ -517,7 +520,18 @@ async function startServer() {
       res.json(page);
     } catch (err: any) {
       console.error('Leaderboard read failed:', err?.message || err);
-      res.status(500).json({ error: 'Leaderboard temporarily unavailable.' });
+
+      // Degrade rather than fail. An empty board that explains itself keeps
+      // the screen usable; a 500 leaves the user staring at an error about a
+      // problem they cannot act on.
+      res.json({
+        entries: [],
+        yourEntry: null,
+        yourRank: null,
+        totalMembers: 0,
+        degraded: true,
+        note: 'Standings are temporarily unavailable. Your XP is still being recorded.',
+      });
     }
   });
 
@@ -1456,7 +1470,8 @@ async function startServer() {
     } else {
       const TINY =
         'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
-      const models = ['gemini-3.5-flash-lite', 'gemini-3.6-flash', 'gemini-flash-latest'];
+      // Discovered, so the check reflects what the app will actually use.
+      const models = (await usableVisionModels(client)).slice(0, 3);
       const working: string[] = [];
       const failures: any[] = [];
 
