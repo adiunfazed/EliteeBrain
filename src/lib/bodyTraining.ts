@@ -1,0 +1,150 @@
+/**
+ * Body training.
+ *
+ * Equipment-free exercises with beginner-safe targets. Progress is recorded
+ * manually rather than detected by camera: rep detection from a phone camera
+ * is unreliable enough that a miscount would undermine trust in every number
+ * the app shows.
+ */
+
+export type ExerciseId =
+  | 'pushups'
+  | 'squats'
+  | 'lunges'
+  | 'plank'
+  | 'glute-bridge'
+  | 'calf-raises';
+
+export type Difficulty = 'easy' | 'moderate' | 'hard';
+
+export interface Exercise {
+  id: ExerciseId;
+  name: string;
+  /** What to do, in one or two plain sentences. */
+  how: string;
+  /** What to watch for, so form does not degrade. */
+  cue: string;
+  /** 'reps' counts repetitions; 'hold' counts seconds. */
+  metric: 'reps' | 'hold';
+  /** Beginner-safe targets per set. */
+  targets: Record<Difficulty, number>;
+  /** Seconds of rest between sets. */
+  restSeconds: number;
+  icon: string;
+}
+
+export const EXERCISES: Exercise[] = [
+  {
+    id: 'pushups',
+    name: 'Push-ups',
+    how: 'Hands under your shoulders, body in a straight line. Lower until your chest is near the floor, then press back up.',
+    cue: 'Keep your hips level — let them sag and your lower back takes the load.',
+    metric: 'reps',
+    // Deliberately low. Someone who finds the first session easy will add
+    // sets; someone who finds it hard is far more likely to stop entirely.
+    targets: { easy: 5, moderate: 10, hard: 15 },
+    restSeconds: 60,
+    icon: 'ArrowDownUp',
+  },
+  {
+    id: 'squats',
+    name: 'Squats',
+    how: 'Feet shoulder-width apart. Sit back as if reaching for a chair, then drive up through your heels.',
+    cue: 'Knees track over your toes, never collapsing inward.',
+    metric: 'reps',
+    targets: { easy: 8, moderate: 15, hard: 25 },
+    restSeconds: 60,
+    icon: 'MoveVertical',
+  },
+  {
+    id: 'lunges',
+    name: 'Lunges',
+    how: 'Step forward and lower until both knees are near ninety degrees. Push back to standing and alternate legs.',
+    cue: 'Keep your torso upright; leaning forward shifts the work off the legs.',
+    metric: 'reps',
+    targets: { easy: 6, moderate: 12, hard: 20 },
+    restSeconds: 60,
+    icon: 'Footprints',
+  },
+  {
+    id: 'plank',
+    name: 'Plank',
+    how: 'Forearms under your shoulders, body straight from head to heels. Hold.',
+    cue: 'Stop when your hips drop. A shorter clean hold beats a long sagging one.',
+    metric: 'hold',
+    targets: { easy: 20, moderate: 40, hard: 60 },
+    restSeconds: 45,
+    icon: 'Minus',
+  },
+  {
+    id: 'glute-bridge',
+    name: 'Glute bridge',
+    how: 'Lie on your back, knees bent, feet flat. Lift your hips until your body forms a straight line, then lower.',
+    cue: 'Squeeze at the top rather than arching your back to go higher.',
+    metric: 'reps',
+    targets: { easy: 10, moderate: 15, hard: 25 },
+    restSeconds: 45,
+    icon: 'ChevronsUp',
+  },
+  {
+    id: 'calf-raises',
+    name: 'Calf raises',
+    how: 'Stand tall, rise onto the balls of your feet, pause, then lower under control.',
+    cue: 'Lower slowly — dropping down wastes most of the effort.',
+    metric: 'reps',
+    targets: { easy: 12, moderate: 20, hard: 30 },
+    restSeconds: 30,
+    icon: 'ArrowUp',
+  },
+];
+
+export function exerciseById(id: string): Exercise | null {
+  return EXERCISES.find((e) => e.id === id) || null;
+}
+
+export const DIFFICULTY_LABEL: Record<Difficulty, string> = {
+  easy: 'Easy',
+  moderate: 'Moderate',
+  hard: 'Hard',
+};
+
+/** One exercise within a planned workout. */
+export interface WorkoutItem {
+  exerciseId: ExerciseId;
+  sets: number;
+  /** Reps, or seconds for a hold. */
+  target: number;
+  difficulty: Difficulty;
+}
+
+/** users/{uid}/workouts/{id} */
+export interface WorkoutSession {
+  id: string;
+  date: string;
+  items: WorkoutItem[];
+  /** Sets actually completed, keyed by exercise id. */
+  completed: Record<string, number>;
+  startedAt: string;
+  finishedAt?: string;
+  xpAwarded: number;
+}
+
+/**
+ * XP for a finished workout.
+ *
+ * Scaled by sets completed rather than reps, so an easy setting is not worth
+ * less than a hard one for the same effort of showing up. Capped, because
+ * the point is consistency and grinding sets for XP is a poor habit to build.
+ */
+export function workoutXp(session: WorkoutSession): number {
+  const sets = Object.values(session.completed || {}).reduce((n, v) => n + v, 0);
+  return Math.min(60, sets * 5);
+}
+
+/** A sensible default workout for someone who has not built one. */
+export function defaultWorkout(difficulty: Difficulty = 'easy'): WorkoutItem[] {
+  return (['squats', 'pushups', 'glute-bridge', 'plank'] as ExerciseId[]).map((id) => {
+    const ex = exerciseById(id)!;
+    return { exerciseId: id, sets: 2, target: ex.targets[difficulty], difficulty };
+  });
+}

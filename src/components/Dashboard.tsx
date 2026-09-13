@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile, ModuleId, Task } from '../types';
 import { MODULE_METADATA } from '../utils/storage';
@@ -16,6 +16,9 @@ import { t } from '../lib/i18n';
 import { RankProgressionSection } from './RankProgressionSection';
 import { AICoachSection } from './AICoachSection';
 import { GamesSection } from './GamesSection';
+const BodyTrainingSection = lazy(() =>
+  import('./body/BodyTrainingSection').then((m) => ({ default: m.BodyTrainingSection }))
+);
 import { TasksSection } from './TasksSection';
 import { FocusSection } from './FocusSection';
 import { GoalsSection } from './GoalsSection';
@@ -52,7 +55,7 @@ import { completedTodayCount as tasksDoneToday } from '../lib/tasks';
 import { subscribeTasks, bucketTasks } from '../lib/tasks';
 import { soundFx } from '../utils/audio';
 import { User, signInWithGoogle } from '../lib/firebase';
-import {
+import { Dumbbell, Gamepad2,
   Cloud,
   LogIn,
   Bot,
@@ -121,7 +124,7 @@ export const Dashboard: React.FC<Props> = ({
   const [focusHandoff, setFocusHandoff] = useState<Task | null>(null);
   const [lifePane, setLifePane] = useState<'routine' | 'week' | 'sleep' | undefined>();
   const [showDeepStats, setShowDeepStats] = useState(false);
-  const [trainTab, setTrainTab] = useState<'modules' | 'games'>('modules');
+  const [trainTab, setTrainTab] = useState<'modules' | 'body' | 'games'>('modules');
   const [trainFilter, setTrainFilter] = useState<string | null>(null);
   const [moreDrawer, setMoreDrawer] = useState<string | null>('rank');
   const [showLeaderboard, setShowLeaderboard] = useState(false);
@@ -551,30 +554,63 @@ export const Dashboard: React.FC<Props> = ({
             transition={{ duration: 0.25 }}
             className="space-y-6"
           >
-            <div className="flex items-center gap-2">
+            <div>
+              <h1 className="t-display">Train</h1>
+              <p className="t-sub mt-1.5">Train your mind. Train your body. Stay sharp.</p>
+            </div>
+
+            <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-[var(--surface-sunk)] border border-[var(--rule)]">
               {([
-                { id: 'modules' as const, label: 'Training' },
-                { id: 'games' as const, label: 'Games' },
-              ]).map(({ id, label }) => (
-                <button
-                  key={id}
-                  onClick={() => {
-                    soundFx.playClick();
-                    setTrainTab(id);
-                  }}
-                  className={`flex-1 min-h-[46px] rounded-xl text-sm font-semibold border transition-colors ${
-                    trainTab === id
-                      ? 'eb-chip-active'
-                      : 'text-[var(--ink-muted)] border-[var(--rule)] hover:text-[var(--ink)]'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
+                { id: 'modules' as const, label: 'Mind', icon: Brain },
+                { id: 'body' as const, label: 'Body', icon: Dumbbell },
+                { id: 'games' as const, label: 'Games', icon: Gamepad2 },
+              ]).map(({ id, label, icon: Icon }) => {
+                const active = trainTab === id;
+                return (
+                  <button
+                    key={id}
+                    onClick={() => {
+                      soundFx.playClick();
+                      setTrainTab(id);
+                    }}
+                    className="relative min-h-[38px] rounded-lg flex items-center justify-center gap-1.5 px-2 transition-colors"
+                    style={
+                      active
+                        ? {
+                            background: 'var(--surface)',
+                            border: '1px solid color-mix(in oklab, var(--signal) 45%, var(--rule))',
+                            boxShadow: '0 1px 0 0 rgba(255,255,255,0.05) inset',
+                          }
+                        : undefined
+                    }
+                  >
+                    <Icon
+                      className="w-[15px] h-[15px] shrink-0"
+                      strokeWidth={active ? 2.4 : 1.9}
+                      style={{ color: active ? 'var(--signal-ink)' : 'var(--ink-dim)' }}
+                    />
+                    <span
+                      className="text-[12.5px] leading-none whitespace-nowrap"
+                      style={{
+                        color: active ? 'var(--ink)' : 'var(--ink-dim)',
+                        fontWeight: active ? 600 : 500,
+                      }}
+                    >
+                      {label}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
 
             {trainTab === 'games' && (
               <GamesSection profile={profile} onProfileUpdate={onProfileUpdate} />
+            )}
+
+            {trainTab === 'body' && (
+              <Suspense fallback={<div className="h-40 rounded-xl animate-pulse" style={{ background: 'var(--surface-sunk)' }} />}>
+                <BodyTrainingSection userId={currentUser?.uid || null} />
+              </Suspense>
             )}
 
             {trainTab === 'modules' && (

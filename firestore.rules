@@ -67,6 +67,20 @@ service cloud.firestore {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
     }
 
+    // --- Body training and alarms. Private: when someone wakes up and what
+    //     they can physically do are not for other accounts to read. ---
+    match /users/{userId}/workouts/{workoutId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    match /users/{userId}/alarms/{alarmId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    match /users/{userId}/alarmLogs/{logId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+    }
+
     // --- Routine and sleep. Strictly private, same as everything else. ---
     match /users/{userId}/routineBlocks/{blockId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
