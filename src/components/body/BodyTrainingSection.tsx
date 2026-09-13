@@ -1,8 +1,16 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Dumbbell } from 'lucide-react';
 import { ExerciseLibrary } from './ExerciseLibrary';
-import { ExerciseRunner } from './ExerciseRunner';
-import { Exercise, Difficulty, WorkoutSession, workoutXp } from '../../lib/bodyTraining';
+import { ExerciseRunner, SetResult } from './ExerciseRunner';
+import { WorkoutConfig, WorkoutConfigValue } from './WorkoutConfig';
+import { WorkoutHistory } from './WorkoutHistory';
+import { WakeChallengeSection } from '../wake/WakeChallengeSection';
+import {
+  Exercise,
+  Difficulty,
+  WorkoutSession,
+  workoutXp,
+} from '../../lib/bodyTraining';
 import { subscribeWorkouts, saveWorkout } from '../../lib/trainingStore';
 import { todayISO } from '../../lib/tasks';
 import { soundFx } from '../../utils/audio';
@@ -12,19 +20,33 @@ interface Props {
   userId: string | null;
 }
 
+type View = 'library' | 'config' | 'running';
+
 /**
  * Body training.
  *
- * Deliberately small: a library, a runner and a record of what was done.
- * Programmes, progression curves and volume tracking are what turn a simple
- * habit into something people abandon in week two.
+ * Library → configure → run → complete. XP is awarded exactly once per
+ * session id, which matters because the alternative — awarding on a render
+ * or a retry — inflates numbers that the whole progression system depends on.
  */
 export const BodyTrainingSection: React.FC<Props> = ({ userId }) => {
   const { awardXp } = useXp();
+
   const [difficulty, setDifficulty] = useState<Difficulty>('easy');
-  const [active, setActive] = useState<Exercise | null>(null);
+  const [view, setView] = useState<View>('library');
+  const [selected, setSelected] = useState<Exercise | null>(null);
+  const [config, setConfig] = useState<WorkoutConfigValue | null>(null);
   const [sessions, setSessions] = useState<WorkoutSession[]>([]);
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  /**
+   * Session ids already rewarded.
+   *
+   * A ref rather than state: it must not reset on a re-render, and it must be
+   * checked synchronously before awarding, or a double invocation slips
+   * through between renders.
+   */
+  const awarded = useRef<Set<string>>(new Set());
 
   useEffect(() => subscribeWorkouts(userId, setSessions), [userId]);
 
@@ -39,34 +61,43 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId }) => {
     return { sessions: todays.length, sets };
   }, [sessions, today]);
 
-  const handleComplete = async (exercise: Exercise, setsDone: number) => {
-    setActive(null);
-    if (setsDone <= 0) return;
+  const handleComplete = async (exercise: Exercise, results: SetResult[]) => {
+    setView('library');
+    setSelected(null);
+
+    // Only sets that genuinely met their target count toward anything.
+    const valid = results.filter((r) => r.value >= r.target);
+    if (valid.length === 0) return;
+
+    const sessionId = `w_${Date.now()}`;
 
     const session: WorkoutSession = {
-      id: `w_${Date.now()}`,
+      id: sessionId,
       date: today,
       items: [
         {
           exerciseId: exercise.id,
-          sets: setsDone,
-          target: exercise.targets[difficulty],
+          sets: valid.length,
+          target: config?.target ?? exercise.targets[difficulty],
           difficulty,
         },
       ],
-      completed: { [exercise.id]: setsDone },
-      startedAt: new Date().toISOString(),
+      completed: { [exercise.id]: valid.length },
+      startedAt: new Date(Date.now() - 60000).toISOString(),
       finishedAt: new Date().toISOString(),
       xpAwarded: 0,
     };
 
     session.xpAwarded = workoutXp(session);
 
-    // Shown immediately; the write follows. A failed save must not make it
-    // look as though the work never happened.
     setSessions((prev) => [session, ...prev]);
     soundFx.playSuccess();
-    awardXp(session.xpAwarded, `${exercise.name} workout`);
+
+    // Guarded so a repeated call, a retry or a re-render cannot award twice.
+    if (!awarded.current.has(sessionId) && session.xpAwarded > 0) {
+      awarded.current.add(sessionId);
+      awardXp(session.xpAwarded, `${exercise.name} workout`);
+    }
 
     try {
       await saveWorkout(userId, session);
@@ -92,7 +123,7 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId }) => {
         </div>
       </div>
 
-      {todayStats.sets > 0 && (
+      {todayStats.sets > 0 && view === 'library' && (
         <div className="panel-sm">
           <div className="panel-head">
             <span className="panel-title">Today</span>
@@ -106,18 +137,58 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId }) => {
 
       {saveError && <p className="t-meta eb-warn">{saveError}</p>}
 
-      <ExerciseLibrary
-        difficulty={difficulty}
-        onDifficultyChange={setDifficulty}
-        onStart={setActive}
-      />
+      {view === 'library' && (
+        <>
+          <WakeChallengeSection userId={userId} />
 
-      {active && (
+          <div className="h-px" style={{ background: 'var(--rule)' }} />
+
+          <ExerciseLibrary
+            difficulty={difficulty}
+            onDifficultyChange={setDifficulty}
+            onStart={(ex) => {
+              setSelected(ex);
+              setConfig({
+                sets: 3,
+                target: ex.targets[difficulty],
+                restSeconds: ex.restSeconds,
+              });
+              setView('config');
+            }}
+          />
+
+          <div className="h-px" style={{ background: 'var(--rule)' }} />
+
+          <WorkoutHistory sessions={sessions} />
+        </>
+      )}
+
+      {view === 'config' && selected && config && (
+        <WorkoutConfig
+          exercise={selected}
+          initial={config}
+          onCancel={() => {
+            setView('library');
+            setSelected(null);
+          }}
+          onStart={(next) => {
+            setConfig(next);
+            setView('running');
+          }}
+        />
+      )}
+
+      {view === 'running' && selected && config && (
         <ExerciseRunner
-          exercise={active}
-          difficulty={difficulty}
-          onClose={() => setActive(null)}
-          onComplete={(setsDone) => handleComplete(active, setsDone)}
+          exercise={selected}
+          sets={config.sets}
+          target={config.target}
+          restSeconds={config.restSeconds}
+          onClose={() => {
+            setView('library');
+            setSelected(null);
+          }}
+          onComplete={(results) => handleComplete(selected, results)}
         />
       )}
     </div>

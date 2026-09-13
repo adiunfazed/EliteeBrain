@@ -1,72 +1,80 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { X, Plus, Minus, Check, Camera, CameraOff } from 'lucide-react';
-import { Exercise, Difficulty } from '../../lib/bodyTraining';
-import { createRepCounter, loadDetector, RepExercise } from '../../lib/repCounter';
+import { X, Plus, Minus, Check, Pause, Play } from 'lucide-react';
+import { Exercise } from '../../lib/bodyTraining';
+import { PoseExerciseId } from '../../lib/pose/repEngine';
+import { CameraView } from './CameraView';
 import { soundFx } from '../../utils/audio';
+
+export interface SetResult {
+  /** Reps achieved, or seconds held. */
+  value: number;
+  target: number;
+}
 
 interface Props {
   exercise: Exercise;
-  difficulty: Difficulty;
+  sets: number;
+  target: number;
+  restSeconds: number;
   onClose: () => void;
-  onComplete: (setsDone: number) => void;
+  /** Only fires when every set has genuinely been completed. */
+  onComplete: (results: SetResult[]) => void;
 }
 
 type Phase = 'ready' | 'working' | 'resting' | 'done';
 
 /**
- * Running a single exercise.
+ * Running one exercise for a number of sets.
  *
- * Counting is manual by default and the camera is opt-in. A counter that
- * miscounts is worse than no counter, so the tap control is always present
- * even while the camera is running.
+ * A set cannot be completed below its target. The previous version allowed
+ * "Set done" at zero reps, which meant XP could be collected for nothing —
+ * the single most damaging thing a training app can get wrong, because every
+ * number after it becomes meaningless.
  */
 export const ExerciseRunner: React.FC<Props> = ({
   exercise,
-  difficulty,
+  sets,
+  target,
+  restSeconds,
   onClose,
   onComplete,
 }) => {
-  const target = exercise.targets[difficulty];
+  const isHold = exercise.metric === 'hold';
 
   const [phase, setPhase] = useState<Phase>('ready');
-  const [setsDone, setSetsDone] = useState(0);
-  const [reps, setReps] = useState(0);
+  const [setIndex, setSetIndex] = useState(0);
+  const [results, setResults] = useState<SetResult[]>([]);
+  const [value, setValue] = useState(0);
   const [restLeft, setRestLeft] = useState(0);
-  const [heldSeconds, setHeldSeconds] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const [manual, setManual] = useState(false);
 
-  const [cameraOn, setCameraOn] = useState(false);
-  const [cameraState, setCameraState] = useState<'idle' | 'loading' | 'live' | 'error'>('idle');
-  const [cameraError, setCameraError] = useState<string | null>(null);
+  /** Reps counted by the camera, so manual taps can be added on top. */
+  const cameraBase = useRef(0);
+  const manualExtra = useRef(0);
 
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const rafRef = useRef<number | null>(null);
-  const counterRef = useRef<ReturnType<typeof createRepCounter> | null>(null);
-  const detectorRef = useRef<any>(null);
-
-  /** Hold exercises count seconds rather than reps. */
+  /** Hold exercises count seconds. */
   useEffect(() => {
-    if (phase !== 'working' || exercise.metric !== 'hold') return;
+    if (phase !== 'working' || !isHold || paused) return;
 
     const id = window.setInterval(() => {
-      setHeldSeconds((s) => {
-        if (s + 1 >= target) {
+      setValue((v) => {
+        const next = v + 1;
+        if (next >= target) {
           soundFx.playSuccess();
-          finishSet();
-          return 0;
+          window.setTimeout(() => completeSet(next), 0);
         }
-        return s + 1;
+        return next;
       });
     }, 1000);
 
     return () => window.clearInterval(id);
-    // finishSet is stable for the life of this screen.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, exercise.metric, target]);
+  }, [phase, isHold, paused, target]);
 
-  /** Rest countdown between sets. */
+  /** Rest countdown. */
   useEffect(() => {
-    if (phase !== 'resting') return;
+    if (phase !== 'resting' || paused) return;
 
     const id = window.setInterval(() => {
       setRestLeft((s) => {
@@ -80,106 +88,29 @@ export const ExerciseRunner: React.FC<Props> = ({
     }, 1000);
 
     return () => window.clearInterval(id);
-  }, [phase]);
+  }, [phase, paused]);
 
-  /** Release the camera on unmount — a live stream keeps the light on. */
-  useEffect(() => {
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      streamRef.current?.getTracks().forEach((t) => t.stop());
-    };
-  }, []);
+  const completeSet = (achieved: number) => {
+    const next = [...results, { value: achieved, target }];
+    setResults(next);
+    setValue(0);
+    cameraBase.current = 0;
+    manualExtra.current = 0;
 
-  const finishSet = () => {
-    const next = setsDone + 1;
-    setSetsDone(next);
-    setReps(0);
-    setHeldSeconds(0);
-    counterRef.current?.reset();
-
-    // Three sets is a reasonable session; more is the user's choice via
-    // another round rather than an endless default.
-    if (next >= 3) {
+    if (next.length >= sets) {
       setPhase('done');
       soundFx.playSuccess();
       return;
     }
 
-    setRestLeft(exercise.restSeconds);
+    setSetIndex((i) => i + 1);
+    setRestLeft(restSeconds);
     setPhase('resting');
   };
 
-  const startCamera = async () => {
-    setCameraState('loading');
-    setCameraError(null);
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
-        audio: false,
-      });
-
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
-
-      // Several megabytes, so this is where the wait happens.
-      detectorRef.current = await loadDetector();
-      counterRef.current = createRepCounter(exercise.id as RepExercise);
-
-      setCameraState('live');
-      setCameraOn(true);
-      loop();
-    } catch (err: any) {
-      console.error('Camera failed:', err);
-      streamRef.current?.getTracks().forEach((t) => t.stop());
-
-      setCameraState('error');
-      setCameraError(
-        err?.name === 'NotAllowedError'
-          ? 'Camera permission was declined. Counting by tap still works.'
-          : 'Could not start the camera. Counting by tap still works.'
-      );
-    }
-  };
-
-  const stopCamera = () => {
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    streamRef.current?.getTracks().forEach((t) => t.stop());
-    streamRef.current = null;
-    setCameraOn(false);
-    setCameraState('idle');
-  };
-
-  const loop = () => {
-    const run = async () => {
-      if (!detectorRef.current || !videoRef.current || videoRef.current.readyState < 2) {
-        rafRef.current = requestAnimationFrame(run);
-        return;
-      }
-
-      try {
-        const poses = await detectorRef.current.estimatePoses(videoRef.current);
-        if (poses?.[0]?.keypoints && counterRef.current) {
-          const state = counterRef.current.push(poses[0].keypoints);
-          setReps((prev) => {
-            if (state.count > prev) soundFx.playClick();
-            return state.count;
-          });
-        }
-      } catch {
-        /* a dropped frame is not worth stopping the session for */
-      }
-
-      rafRef.current = requestAnimationFrame(run);
-    };
-
-    rafRef.current = requestAnimationFrame(run);
-  };
-
-  const progress = exercise.metric === 'hold' ? heldSeconds / target : reps / target;
+  // The gate that makes the numbers mean something.
+  const targetReached = value >= target;
+  const progress = Math.min(1, value / Math.max(1, target));
 
   return (
     <div className="fixed inset-0 z-[95] bg-[var(--ground)] flex flex-col">
@@ -188,20 +119,22 @@ export const ExerciseRunner: React.FC<Props> = ({
           <X className="w-4 h-4 shrink-0" />
         </button>
         <p className="t-section min-w-0 flex-1 truncate">{exercise.name}</p>
-        <span className="t-meta shrink-0">Set {Math.min(setsDone + 1, 3)} of 3</span>
+        <span className="t-meta shrink-0 tabular-nums">
+          Set {Math.min(setIndex + 1, sets)} / {sets}
+        </span>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-5">
+      <div className="flex-1 overflow-y-auto p-4">
         {phase === 'ready' && (
-          <div className="max-w-sm mx-auto text-center">
+          <div className="max-w-md mx-auto text-center">
             <p className="t-sub leading-relaxed">{exercise.how}</p>
             <p className="t-meta mt-3 leading-relaxed">{exercise.cue}</p>
 
             <p className="t-figure mt-7" style={{ fontSize: 40 }}>
-              {target}
+              {sets} × {target}
             </p>
             <p className="t-meta mt-1">
-              {exercise.metric === 'hold' ? 'seconds per set' : 'reps per set'}
+              {isHold ? 'seconds per set' : 'reps per set'} · {restSeconds}s rest
             </p>
 
             <button onClick={() => setPhase('working')} className="btn-lg w-full mt-7">
@@ -214,121 +147,113 @@ export const ExerciseRunner: React.FC<Props> = ({
         )}
 
         {phase === 'working' && (
-          <div className="max-w-sm mx-auto text-center">
-            {cameraOn && (
-              <div
-                className="relative rounded-xl overflow-hidden mb-5"
-                style={{ border: '1px solid var(--rule)' }}
-              >
-                <video
-                  ref={videoRef}
-                  playsInline
-                  muted
-                  className="w-full"
-                  style={{ transform: 'scaleX(-1)', maxHeight: 220, objectFit: 'cover' }}
-                />
-                <span
-                  className="absolute top-2 left-2 t-meta px-2 py-0.5 rounded"
-                  style={{ background: 'rgba(0,0,0,0.6)', color: '#fff' }}
-                >
-                  Counting
-                </span>
-              </div>
+          <div className="max-w-md mx-auto">
+            {/* Camera, unless the user chose manual or it failed. */}
+            {!isHold && !manual && (
+              <CameraView
+                exercise={exercise.id as PoseExerciseId}
+                onRep={(count) => {
+                  cameraBase.current = count;
+                  setValue(count + manualExtra.current);
+                }}
+                onManualMode={() => setManual(true)}
+              />
             )}
 
-            <p className="t-figure" style={{ fontSize: 64, lineHeight: 1 }}>
-              {exercise.metric === 'hold' ? target - heldSeconds : reps}
-            </p>
-            <p className="t-meta mt-2">
-              {exercise.metric === 'hold' ? 'seconds left' : `of ${target} reps`}
-            </p>
+            <div className="text-center mt-5">
+              <p className="t-figure" style={{ fontSize: 68, lineHeight: 1 }}>
+                {isHold ? Math.max(0, target - value) : value}
+              </p>
+              <p className="t-meta mt-2">
+                {isHold ? 'seconds left' : `of ${target} reps`}
+              </p>
+            </div>
 
             <div
-              className="h-1.5 rounded-full overflow-hidden mt-5"
+              className="h-2 rounded-full overflow-hidden mt-4"
               style={{ background: 'var(--surface-sunk)' }}
             >
               <div
                 className="h-full rounded-full transition-[width] duration-300"
                 style={{
-                  width: `${Math.min(100, progress * 100)}%`,
-                  background: 'var(--done)',
+                  width: `${progress * 100}%`,
+                  background: targetReached ? 'var(--done)' : 'var(--signal)',
                 }}
               />
             </div>
 
-            {exercise.metric === 'reps' && (
-              <>
-                <div className="flex items-center justify-center gap-3 mt-7">
-                  <button
-                    onClick={() => {
-                      counterRef.current?.adjust(-1);
-                      setReps((r) => Math.max(0, r - 1));
-                    }}
-                    aria-label="One fewer"
-                    className="w-12 h-12 rounded-xl flex items-center justify-center"
-                    style={{ background: 'var(--surface)', border: '1px solid var(--rule)' }}
-                  >
-                    <Minus className="w-5 h-5 shrink-0" />
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      soundFx.playClick();
-                      counterRef.current?.adjust(1);
-                      setReps((r) => r + 1);
-                    }}
-                    className="flex-1 h-14 rounded-xl text-[15px] font-semibold"
-                    style={{
-                      background: 'color-mix(in oklab, var(--signal) 20%, transparent)',
-                      border: '1px solid color-mix(in oklab, var(--signal) 45%, var(--rule))',
-                      color: 'var(--signal-ink)',
-                    }}
-                  >
-                    <Plus className="w-5 h-5 shrink-0 inline mr-1.5" />
-                    Count one
-                  </button>
-                </div>
-
-                {/* Camera is opt-in and never replaces the tap control. */}
+            {!isHold && (
+              <div className="flex items-center gap-3 mt-6">
                 <button
-                  onClick={cameraOn ? stopCamera : startCamera}
-                  disabled={cameraState === 'loading'}
-                  className="btn-text mt-4 flex items-center gap-1.5 mx-auto"
+                  onClick={() => {
+                    manualExtra.current = Math.max(
+                      -cameraBase.current,
+                      manualExtra.current - 1
+                    );
+                    setValue(Math.max(0, cameraBase.current + manualExtra.current));
+                  }}
+                  aria-label="One fewer"
+                  className="w-14 h-14 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: 'var(--surface)', border: '1px solid var(--rule)' }}
                 >
-                  {cameraOn ? (
-                    <CameraOff className="w-3.5 h-3.5 shrink-0" />
-                  ) : (
-                    <Camera className="w-3.5 h-3.5 shrink-0" />
-                  )}
-                  {cameraState === 'loading'
-                    ? 'Starting camera…'
-                    : cameraOn
-                      ? 'Turn off camera'
-                      : 'Count with camera'}
+                  <Minus className="w-5 h-5 shrink-0" />
                 </button>
 
-                {cameraError && <p className="t-meta eb-warn mt-2">{cameraError}</p>}
-
-                {!cameraOn && cameraState === 'idle' && (
-                  <p className="t-meta mt-2">Runs on your phone. Nothing is uploaded.</p>
-                )}
-              </>
+                <button
+                  onClick={() => {
+                    soundFx.playClick();
+                    manualExtra.current += 1;
+                    setValue(cameraBase.current + manualExtra.current);
+                  }}
+                  className="flex-1 h-14 rounded-xl text-[15px] font-semibold flex items-center justify-center gap-2"
+                  style={{
+                    background: 'color-mix(in oklab, var(--signal) 20%, transparent)',
+                    border: '1px solid color-mix(in oklab, var(--signal) 45%, var(--rule))',
+                    color: 'var(--signal-ink)',
+                  }}
+                >
+                  <Plus className="w-5 h-5 shrink-0" />
+                  Count one
+                </button>
+              </div>
             )}
 
-            <button onClick={finishSet} className="btn-quiet w-full mt-5">
-              <Check className="w-4 h-4 shrink-0 inline mr-1.5" />
-              Set done
-            </button>
+            <div className="flex items-center gap-2 mt-4">
+              <button
+                onClick={() => setPaused((p) => !p)}
+                className="btn-quiet shrink-0"
+                aria-label={paused ? 'Resume' : 'Pause'}
+              >
+                {paused ? (
+                  <Play className="w-4 h-4 shrink-0" />
+                ) : (
+                  <Pause className="w-4 h-4 shrink-0" />
+                )}
+              </button>
+
+              {/* Disabled until the target is genuinely met. */}
+              <button
+                onClick={() => completeSet(value)}
+                disabled={!targetReached}
+                className="btn-lg flex-1"
+                style={!targetReached ? { opacity: 0.4 } : undefined}
+              >
+                <Check className="w-4 h-4 shrink-0 inline mr-1.5" />
+                {targetReached ? 'Set done' : `${Math.max(0, target - value)} to go`}
+              </button>
+            </div>
           </div>
         )}
 
         {phase === 'resting' && (
-          <div className="max-w-sm mx-auto text-center pt-10">
+          <div className="max-w-md mx-auto text-center pt-10">
             <p className="t-meta">Rest</p>
-            <p className="t-figure mt-2" style={{ fontSize: 64, lineHeight: 1 }}>
+            <p className="t-figure mt-2" style={{ fontSize: 68, lineHeight: 1 }}>
               {restLeft}
             </p>
-            <p className="t-meta mt-2">seconds</p>
+            <p className="t-meta mt-2">
+              seconds · set {setIndex + 1} of {sets} next
+            </p>
 
             <button onClick={() => setPhase('working')} className="btn-quiet w-full mt-8">
               Skip rest
@@ -337,20 +262,15 @@ export const ExerciseRunner: React.FC<Props> = ({
         )}
 
         {phase === 'done' && (
-          <div className="max-w-sm mx-auto text-center pt-10">
+          <div className="max-w-md mx-auto text-center pt-10">
             <Check className="w-12 h-12 shrink-0 mx-auto" style={{ color: 'var(--done)' }} />
-            <p className="t-title mt-4">Done</p>
+            <p className="t-title mt-4">Exercise complete</p>
             <p className="t-sub mt-2">
-              {setsDone} sets of {exercise.name.toLowerCase()}.
+              {results.length} sets · {results.reduce((n, r) => n + r.value, 0)}{' '}
+              {isHold ? 'seconds' : 'reps'} total
             </p>
 
-            <button
-              onClick={() => {
-                stopCamera();
-                onComplete(setsDone);
-              }}
-              className="btn-lg w-full mt-8"
-            >
+            <button onClick={() => onComplete(results)} className="btn-lg w-full mt-8">
               Finish
             </button>
           </div>

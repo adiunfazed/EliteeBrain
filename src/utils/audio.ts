@@ -77,6 +77,62 @@ class SoundEngine {
     }
   }
 
+  /**
+   * A repeating alarm tone.
+   *
+   * Returns a handle with stop(), because the caller owns the lifetime —
+   * the sound must continue until the challenge is completed, skipped or
+   * the emergency stop is used.
+   */
+  public startAlarm(variant = 'chime'): { stop: () => void } {
+    this.initCtx();
+    const ctx = this.ctx;
+    // No audio context means no sound, but the alarm screen must still work —
+    // the visual challenge is the substantive part.
+    if (!ctx) return { stop: () => {} };
+
+    // Distinct pitch per variant, so different alarms are distinguishable.
+    const base = variant === 'pulse' ? 520 : variant === 'rise' ? 660 : 880;
+    let stopped = false;
+    let timer: number | null = null;
+
+    const beep = () => {
+      if (stopped || !ctx) return;
+
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(base, ctx.currentTime);
+      // Rising variant sweeps upward, which is harder to sleep through.
+      if (variant === 'rise') {
+        osc.frequency.linearRampToValueAtTime(base * 1.5, ctx.currentTime + 0.5);
+      }
+
+      // Eased in and out: an abrupt square edge is unpleasant rather than
+      // merely attention-getting.
+      gain.gain.setValueAtTime(0, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.22, ctx.currentTime + 0.05);
+      gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.5);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.55);
+
+      timer = window.setTimeout(beep, 900);
+    };
+
+    beep();
+
+    return {
+      stop: () => {
+        stopped = true;
+        if (timer) window.clearTimeout(timer);
+      },
+    };
+  }
+
   // Correct answer chime (dual harmonic)
   public playSuccess() {
     if (!this.isEnabled) return;
