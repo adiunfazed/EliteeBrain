@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { X, Plus, Minus, Check, Pause, Play } from 'lucide-react';
+import { X, Plus, Minus, Check } from 'lucide-react';
 import { Exercise } from '../../lib/bodyTraining';
 import { PoseExerciseId } from '../../lib/pose/repEngine';
 import { CameraView } from './CameraView';
@@ -21,7 +21,7 @@ interface Props {
   onComplete: (results: SetResult[]) => void;
 }
 
-type Phase = 'ready' | 'working' | 'resting' | 'done';
+type Phase = 'working' | 'resting' | 'done';
 
 /**
  * Running one exercise for a number of sets.
@@ -41,12 +41,13 @@ export const ExerciseRunner: React.FC<Props> = ({
 }) => {
   const isHold = exercise.metric === 'hold';
 
-  const [phase, setPhase] = useState<Phase>('ready');
+  // Starts working immediately: the configuration screen before this one
+  // already served as the ready state.
+  const [phase, setPhase] = useState<Phase>('working');
   const [setIndex, setSetIndex] = useState(0);
   const [results, setResults] = useState<SetResult[]>([]);
   const [value, setValue] = useState(0);
   const [restLeft, setRestLeft] = useState(0);
-  const [paused, setPaused] = useState(false);
   const [manual, setManual] = useState(false);
 
   /** Reps counted by the camera, so manual taps can be added on top. */
@@ -55,7 +56,7 @@ export const ExerciseRunner: React.FC<Props> = ({
 
   /** Hold exercises count seconds. */
   useEffect(() => {
-    if (phase !== 'working' || !isHold || paused) return;
+    if (phase !== 'working' || !isHold) return;
 
     const id = window.setInterval(() => {
       setValue((v) => {
@@ -70,11 +71,11 @@ export const ExerciseRunner: React.FC<Props> = ({
 
     return () => window.clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, isHold, paused, target]);
+  }, [phase, isHold, target]);
 
   /** Rest countdown. */
   useEffect(() => {
-    if (phase !== 'resting' || paused) return;
+    if (phase !== 'resting') return;
 
     const id = window.setInterval(() => {
       setRestLeft((s) => {
@@ -88,7 +89,7 @@ export const ExerciseRunner: React.FC<Props> = ({
     }, 1000);
 
     return () => window.clearInterval(id);
-  }, [phase, paused]);
+  }, [phase]);
 
   const completeSet = (achieved: number) => {
     const next = [...results, { value: achieved, target }];
@@ -125,27 +126,6 @@ export const ExerciseRunner: React.FC<Props> = ({
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">
-        {phase === 'ready' && (
-          <div className="max-w-md mx-auto text-center">
-            <p className="t-sub leading-relaxed">{exercise.how}</p>
-            <p className="t-meta mt-3 leading-relaxed">{exercise.cue}</p>
-
-            <p className="t-figure mt-7" style={{ fontSize: 40 }}>
-              {sets} × {target}
-            </p>
-            <p className="t-meta mt-1">
-              {isHold ? 'seconds per set' : 'reps per set'} · {restSeconds}s rest
-            </p>
-
-            <button onClick={() => setPhase('working')} className="btn-lg w-full mt-7">
-              Start
-            </button>
-            <button onClick={onClose} className="btn-text mt-3">
-              Not now
-            </button>
-          </div>
-        )}
-
         {phase === 'working' && (
           <div className="max-w-md mx-auto">
             {/* Camera, unless the user chose manual or it failed. */}
@@ -219,17 +199,6 @@ export const ExerciseRunner: React.FC<Props> = ({
             )}
 
             <div className="flex items-center gap-2 mt-4">
-              <button
-                onClick={() => setPaused((p) => !p)}
-                className="btn-quiet shrink-0"
-                aria-label={paused ? 'Resume' : 'Pause'}
-              >
-                {paused ? (
-                  <Play className="w-4 h-4 shrink-0" />
-                ) : (
-                  <Pause className="w-4 h-4 shrink-0" />
-                )}
-              </button>
 
               {/* Disabled until the target is genuinely met. */}
               <button

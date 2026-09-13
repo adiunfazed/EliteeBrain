@@ -103,7 +103,7 @@ export const WorkoutHistory: React.FC<Props> = ({ sessions }) => {
 
       <div className="panel-sm">
         <div className="panel-head">
-          <span className="panel-title">Recent</span>
+          <span className="panel-title">Recent workouts</span>
         </div>
 
         {sessions.slice(0, 8).map((s) => {
@@ -113,6 +113,17 @@ export const WorkoutHistory: React.FC<Props> = ({ sessions }) => {
             .join(', ');
 
           const sets = Object.values(s.completed || {}).reduce((n, v) => n + v, 0);
+
+          // "3 × 12 reps" says what was done; "3 sets" leaves out the part
+          // that makes one session harder than another.
+          const detail = (s.items || [])
+            .map((i) => {
+              const ex = exerciseById(i.exerciseId);
+              if (!ex) return null;
+              return `${i.sets} × ${i.target}${ex.metric === 'hold' ? 's' : ''}`;
+            })
+            .filter(Boolean)
+            .join(' · ');
           const duration =
             s.finishedAt && s.startedAt
               ? Math.max(
@@ -130,8 +141,9 @@ export const WorkoutHistory: React.FC<Props> = ({ sessions }) => {
 
               <span className="min-w-0 flex-1">
                 <span className="block text-[14px] truncate">{names || 'Workout'}</span>
-                <span className="t-meta block mt-0.5">
-                  {prettyDate(s.date)} · {sets} {sets === 1 ? 'set' : 'sets'}
+                <span className="t-meta block mt-0.5 truncate">
+                  {detail || `${sets} ${sets === 1 ? 'set' : 'sets'}`} ·{' '}
+                  {prettyDate(s.date)}
                   {duration ? ` · ${duration} min` : ''}
                 </span>
               </span>

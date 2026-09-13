@@ -36,6 +36,7 @@ export const CameraView: React.FC<Props> = ({ exercise, onRep, onManualMode }) =
   const [stage, setStage] = useState<Stage>('idle');
   const [status, setStatus] = useState<TrackingStatus>('no-body');
   const [confidence, setConfidence] = useState(0);
+  const [reason, setReason] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -147,6 +148,7 @@ export const CameraView: React.FC<Props> = ({ exercise, onRep, onManualMode }) =
 
       setStatus(reading.status);
       setConfidence(reading.confidence);
+      setReason(reading.reason ?? null);
 
       if (reading.count !== lastCountRef.current) {
         lastCountRef.current = reading.count;
@@ -256,7 +258,7 @@ export const CameraView: React.FC<Props> = ({ exercise, onRep, onManualMode }) =
           }}
         >
           <Camera className="w-5 h-5 shrink-0" />
-          Start camera
+          Count reps with camera
         </button>
       )}
 
@@ -290,6 +292,13 @@ export const CameraView: React.FC<Props> = ({ exercise, onRep, onManualMode }) =
             </button>
           </div>
         </div>
+      )}
+
+      {/* The actual problem, not just that there is one. */}
+      {stage === 'live' && reason && status !== 'tracking' && (
+        <p className="t-meta mt-2.5 leading-relaxed" style={{ color: 'var(--warn)' }}>
+          {reason}
+        </p>
       )}
 
       {stage === 'live' && (

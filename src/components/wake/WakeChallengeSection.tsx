@@ -229,7 +229,7 @@ export const WakeChallengeSection: React.FC<Props> = ({ userId }) => {
                         void patchAlarm(userId, alarm.id, { enabled: !alarm.enabled });
                       }}
                       aria-label={alarm.enabled ? 'Disable alarm' : 'Enable alarm'}
-                      className="shrink-0 w-11 h-6 rounded-full relative transition-colors"
+                      className="shrink-0 w-9 h-5 rounded-full relative transition-colors"
                       style={{
                         background: alarm.enabled
                           ? 'var(--done)'
@@ -238,8 +238,8 @@ export const WakeChallengeSection: React.FC<Props> = ({ userId }) => {
                       }}
                     >
                       <span
-                        className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white transition-[left]"
-                        style={{ left: alarm.enabled ? 22 : 3 }}
+                        className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-white transition-[left] shadow-sm"
+                        style={{ left: alarm.enabled ? 18 : 2 }}
                       />
                     </button>
                   </div>
@@ -304,7 +304,7 @@ export const WakeChallengeSection: React.FC<Props> = ({ userId }) => {
       {history.length > 0 && (
         <div className="panel-sm">
           <div className="panel-head">
-            <span className="panel-title">Recent</span>
+            <span className="panel-title">Alarm history</span>
           </div>
 
           {history.map((log) => (
@@ -314,8 +314,15 @@ export const WakeChallengeSection: React.FC<Props> = ({ userId }) => {
               ) : (
                 <X className="w-3.5 h-3.5 shrink-0" style={{ color: 'var(--ink-dim)' }} />
               )}
-              <span className="t-meta min-w-0 flex-1 truncate">
-                {log.date} · {log.outcome}
+              <span className="min-w-0 flex-1">
+                <span className="block text-[13px] truncate">
+                  {challengeById(alarms.find((a) => a.id === log.alarmId)?.challenge || '')
+                    ?.name || 'Challenge'}
+                </span>
+                <span className="t-meta block mt-0.5">
+                  {log.date} · {log.outcome}
+                  {log.tookSeconds ? ` · ${log.tookSeconds}s` : ''}
+                </span>
               </span>
               {log.xpAwarded > 0 && (
                 <span className="t-meta shrink-0" style={{ color: 'var(--signal-ink)' }}>

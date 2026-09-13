@@ -31,6 +31,16 @@ interface ExerciseDefinition {
   left: number[];
   right: number[];
   /**
+   * Landmarks that prove a body is present for THIS exercise.
+   *
+   * Whole-torso presence is wrong for a lower-body exercise filmed from the
+   * knees down: the movement is perfectly readable, but demanding shoulders
+   * refuses to count it.
+   */
+  presence: number[];
+  /** Shown when tracking fails, naming the likely cause. */
+  framingHint: string;
+  /**
    * The measured angle, given the three landmarks of the chosen side.
    * Returns degrees.
    */
@@ -50,6 +60,8 @@ const DEFINITIONS: Record<PoseExerciseId, ExerciseDefinition> = {
   pushups: {
     left: [LM.leftShoulder, LM.leftElbow, LM.leftWrist],
     right: [LM.rightShoulder, LM.rightElbow, LM.rightWrist],
+    presence: [LM.leftShoulder, LM.rightShoulder, LM.leftElbow, LM.rightElbow],
+    framingHint: 'Place the phone to your side so an arm is visible from shoulder to wrist.',
     measure: (lm, s) => angleAt(lm[s[0]], lm[s[1]], lm[s[2]]),
     downAngle: 100,
     upAngle: 155,
@@ -61,6 +73,8 @@ const DEFINITIONS: Record<PoseExerciseId, ExerciseDefinition> = {
   squats: {
     left: [LM.leftHip, LM.leftKnee, LM.leftAnkle],
     right: [LM.rightHip, LM.rightKnee, LM.rightAnkle],
+    presence: [LM.leftHip, LM.rightHip, LM.leftKnee, LM.rightKnee],
+    framingHint: 'Step back so your hips and knees are both in frame.',
     measure: (lm, s) => angleAt(lm[s[0]], lm[s[1]], lm[s[2]]),
     downAngle: 110,
     upAngle: 160,
@@ -73,6 +87,8 @@ const DEFINITIONS: Record<PoseExerciseId, ExerciseDefinition> = {
   lunges: {
     left: [LM.leftHip, LM.leftKnee, LM.leftAnkle],
     right: [LM.rightHip, LM.rightKnee, LM.rightAnkle],
+    presence: [LM.leftHip, LM.rightHip, LM.leftKnee, LM.rightKnee],
+    framingHint: 'Turn side-on to the camera so the front knee is visible.',
     measure: (lm, s) => angleAt(lm[s[0]], lm[s[1]], lm[s[2]]),
     downAngle: 120,
     upAngle: 160,
@@ -85,6 +101,8 @@ const DEFINITIONS: Record<PoseExerciseId, ExerciseDefinition> = {
   'glute-bridge': {
     left: [LM.leftShoulder, LM.leftHip, LM.leftKnee],
     right: [LM.rightShoulder, LM.rightHip, LM.rightKnee],
+    presence: [LM.leftHip, LM.rightHip, LM.leftKnee, LM.rightKnee],
+    framingHint: 'Put the phone on the floor to your side, level with your hips.',
     measure: (lm, s) => angleAt(lm[s[0]], lm[s[1]], lm[s[2]]),
     downAngle: 125,
     upAngle: 160,
@@ -95,8 +113,12 @@ const DEFINITIONS: Record<PoseExerciseId, ExerciseDefinition> = {
   // Ankle travel is too small for a reliable angle, so this one uses the
   // vertical rise of the heel above the foot instead.
   'calf-raises': {
+    // Feet only. Demanding the torso made this unusable when the phone sits
+    // on the floor, which is exactly where it has to be to see the heels.
     left: [LM.leftHeel, LM.leftFootIndex, LM.leftAnkle],
     right: [LM.rightHeel, LM.rightFootIndex, LM.rightAnkle],
+    presence: [LM.leftAnkle, LM.rightAnkle],
+    framingHint: 'Point the camera at your feet from the side, about a metre away.',
     measure: (lm, s) => {
       // Expressed as an angle-like number so one state machine serves all
       // exercises: larger means the heel is down, smaller means raised.
@@ -112,6 +134,15 @@ const DEFINITIONS: Record<PoseExerciseId, ExerciseDefinition> = {
   },
 };
 
+/** Frames a threshold must hold before the phase changes. */
+const HOLD_FRAMES = 2;
+
+/** Minimum angular travel for a rep to be considered real. */
+const MIN_TRAVEL_DEGREES = 25;
+
+/** Minimum time spent at the bottom, in milliseconds. */
+const MIN_BOTTOM_MS = 200;
+
 /** Exercises measured by a raised position rather than a bent one. */
 const INVERTED: PoseExerciseId[] = ['glute-bridge'];
 
@@ -124,6 +155,8 @@ export interface RepReading {
   angle: number;
   /** Where in the cycle the body is. */
   phase: 'top' | 'bottom';
+  /** Plain-language cause when tracking is not working. */
+  reason?: string;
 }
 
 /**
@@ -141,6 +174,12 @@ export function createRepEngine(exercise: PoseExerciseId) {
   let lastRepAt = 0;
   /** Frames spent below the confidence floor, used to report lost tracking. */
   let lowFrames = 0;
+  /** Consecutive frames a threshold has been satisfied. */
+  let heldFrames = 0;
+  /** When the bottom of the current rep was reached. */
+  let bottomAt = 0;
+  /** The extreme angle reached during the current rep. */
+  let deepest = 180;
   /** Small rolling window, so one bad frame cannot flip the phase. */
   const window: number[] = [];
 
@@ -149,21 +188,31 @@ export function createRepEngine(exercise: PoseExerciseId) {
     push(landmarks: Landmark[] | null, now = Date.now()): RepReading {
       if (!landmarks || landmarks.length < 33) {
         lowFrames++;
-        return { count, status: 'no-body', confidence: 0, angle: 180, phase };
+        return {
+          count,
+          status: 'no-body',
+          confidence: 0,
+          angle: 180,
+          phase,
+          reason: 'No body found. Step back so more of you is in frame.',
+        };
       }
 
       const side = betterSide(landmarks, def.left, def.right);
 
-      // Whole-body presence, separate from the exercise-specific joints: a
-      // person half out of frame should be told to move, not that their form
-      // is poor.
-      const bodyConfidence = confidenceOf(landmarks, [
-        LM.leftShoulder, LM.rightShoulder, LM.leftHip, LM.rightHip,
-      ]);
+      // Presence measured against what THIS exercise needs.
+      const bodyConfidence = confidenceOf(landmarks, def.presence);
 
       if (bodyConfidence < 0.4) {
         lowFrames++;
-        return { count, status: 'partial', confidence: bodyConfidence, angle: 180, phase };
+        return {
+          count,
+          status: 'partial',
+          confidence: bodyConfidence,
+          angle: 180,
+          phase,
+          reason: def.framingHint,
+        };
       }
 
       if (side.confidence < def.minConfidence) {
@@ -176,6 +225,9 @@ export function createRepEngine(exercise: PoseExerciseId) {
           confidence: side.confidence,
           angle: 180,
           phase,
+          // Presence is fine but the tracked joints are unclear, which is
+          // almost always the angle rather than the distance.
+          reason: 'The tracked joints are partly hidden. Turn more side-on to the camera.',
         };
       }
 
@@ -191,25 +243,51 @@ export function createRepEngine(exercise: PoseExerciseId) {
       const atBottom = inverted ? angle >= def.upAngle : angle <= def.downAngle;
       const atTop = inverted ? angle <= def.downAngle : angle >= def.upAngle;
 
+      // A threshold must be held for consecutive frames before the phase
+      // changes. One stray frame at the boundary was enough to register a
+      // rep that never happened.
       if (phase === 'top' && atBottom) {
-        phase = 'bottom';
-      } else if (phase === 'bottom' && atTop) {
-        // Debounce: a full cycle faster than this is a tracking artefact
-        // rather than a repetition anyone actually performed.
-        if (now - lastRepAt >= def.minRepMs) {
-          count++;
-          lastRepAt = now;
+        heldFrames++;
+        if (heldFrames >= HOLD_FRAMES) {
+          phase = 'bottom';
+          heldFrames = 0;
+          bottomAt = now;
+          deepest = angle;
         }
-        phase = 'top';
+      } else if (phase === 'bottom' && atTop) {
+        heldFrames++;
+        if (heldFrames >= HOLD_FRAMES) {
+          const elapsed = now - lastRepAt;
+          // How far the body actually travelled this cycle, which separates a
+          // genuine rep from a small movement that happened to cross a line.
+          const travelled = inverted
+            ? Math.abs(deepest - def.downAngle)
+            : Math.abs(def.upAngle - deepest);
+
+          const deepEnough = travelled >= MIN_TRAVEL_DEGREES;
+          const slowEnough = elapsed >= def.minRepMs;
+          // A bottom position held for a plausible moment. Passing straight
+          // through in two frames is a tracking glitch, not a repetition.
+          const realPause = now - bottomAt >= MIN_BOTTOM_MS;
+
+          if (deepEnough && slowEnough && realPause) {
+            count++;
+            lastRepAt = now;
+          }
+
+          phase = 'top';
+          heldFrames = 0;
+        }
+      } else {
+        // Moved away from the threshold before it was confirmed.
+        heldFrames = 0;
+        if (phase === 'bottom') {
+          // Track the extreme actually reached while down.
+          deepest = inverted ? Math.max(deepest, angle) : Math.min(deepest, angle);
+        }
       }
 
-      return {
-        count,
-        status: 'tracking',
-        confidence: side.confidence,
-        angle,
-        phase,
-      };
+      return { count, status: 'tracking', confidence: side.confidence, angle, phase };
     },
 
     /** Manual correction, for the cases detection cannot cover. */
@@ -222,6 +300,9 @@ export function createRepEngine(exercise: PoseExerciseId) {
       count = 0;
       phase = 'top';
       lastRepAt = 0;
+      heldFrames = 0;
+      bottomAt = 0;
+      deepest = 180;
       window.length = 0;
     },
 
