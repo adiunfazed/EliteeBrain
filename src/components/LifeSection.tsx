@@ -723,6 +723,11 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], habits = [], 
             <RoutineComposer
               block={editingBlock}
               defaultWeekday={composerDay}
+              onDelete={(b) => {
+                setBlockComposerOpen(false);
+                setEditingBlock(null);
+                void deleteBlock(b);
+              }}
               habits={habits}
               goals={goals.map((g) => ({ id: g.id, title: g.title }))}
               onCancel={() => {

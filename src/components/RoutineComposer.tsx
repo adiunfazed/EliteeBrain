@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronDown, Repeat, Target } from 'lucide-react';
+import { Trash2, ChevronDown, Repeat, Target } from 'lucide-react';
 import { RoutineBlock, BlockKind, Habit } from '../types';
 import { soundFx } from '../utils/audio';
 
 interface Props {
   /** Weekday tapped in the week view, pre-selected for a new block. */
   defaultWeekday?: number | null;
+  /** Present when editing, so a block can be removed from the same sheet. */
+  onDelete?: (block: any) => void;
   block?: RoutineBlock | null;
   habits: Habit[];
   goals: { id: string; title: string }[];
@@ -59,6 +61,7 @@ function durationOf(start: string, end: string): number {
 export const RoutineComposer: React.FC<Props> = ({
   block,
   defaultWeekday,
+  onDelete,
   habits,
   goals,
   onSave,
@@ -292,7 +295,23 @@ export const RoutineComposer: React.FC<Props> = ({
         )}
       </AnimatePresence>
 
-      <div className="flex items-center gap-2.5 mt-6">
+      {/* Delete lives with the other edit actions, so a block can be removed
+          from wherever it was opened. */}
+      {block && onDelete && (
+        <button
+          onClick={() => onDelete(block)}
+          className="w-full min-h-[42px] rounded-xl mt-6 flex items-center justify-center gap-2 text-[14px] font-semibold"
+          style={{
+            border: '1px solid color-mix(in oklab, var(--danger) 35%, var(--rule))',
+            color: 'var(--danger)',
+          }}
+        >
+          <Trash2 className="w-4 h-4 shrink-0" />
+          Delete this block
+        </button>
+      )}
+
+      <div className="flex items-center gap-2.5 mt-3">
         <button onClick={onCancel} className="btn-quiet flex-1">
           Cancel
         </button>

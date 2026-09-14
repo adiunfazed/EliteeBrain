@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Activity, Sparkles } from 'lucide-react';
+import { Activity } from 'lucide-react';
 
 interface Props {
   /** True once auth has resolved and critical data is warm. */
@@ -142,15 +142,6 @@ export const SplashScreen: React.FC<Props> = ({ onFinish, ready = false }) => {
       </motion.div>
 
       {/* Footer Hint */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 0.4 }}
-        transition={{ delay: 0.8 }}
-        className="absolute bottom-6 font-mono text-[10px] text-[var(--ink-muted)] uppercase tracking-widest flex items-center gap-1.5"
-      >
-        <Sparkles className="w-3.5 h-3.5 shrink-0 text-[#7E63DC]" />
-        <span>Tap anywhere to skip</span>
-      </motion.div>
     </motion.div>
   );
 };

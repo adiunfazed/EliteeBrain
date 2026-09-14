@@ -4,111 +4,102 @@ import { Tier } from '../lib/tiers';
 interface Props {
   tier: Tier;
   size?: number;
-  /** Dims the emblem for tiers not yet reached. */
-  locked?: boolean;
 }
 
 /**
  * Rank emblem.
  *
- * A crest silhouette rather than a coloured rectangle with text in it. Drawn
- * as SVG so it stays sharp at any size and each tier can carry its own
- * geometry — the shape changes with rank, not just the colour, so tiers are
- * distinguishable at a glance and even in monochrome.
+ * Each tier has its own silhouette rather than one shield in six colours —
+ * the shape should be recognisable before the colour registers, and a
+ * progression you can see at a glance is the point of having ranks.
  *
- * Deliberately restrained: clean geometry and a single accent, no bevels,
- * gloss or drop shadows. It should read as prestigious, not arcade.
+ * The geometry grows in complexity with the tier: a blunt wedge at the
+ * bottom, a layered crown at the top.
  */
 
-/** Crest outline per base tier. Higher tiers gain points and complexity. */
-const SHAPES: Record<string, string> = {
-  // Bronze — a plain shield.
-  BRONZE: 'M50 6 L88 20 V52 Q88 80 50 94 Q12 80 12 52 V20 Z',
-  // Silver — shield with a notched top.
-  SILVER: 'M50 6 L68 14 L50 20 L32 14 Z M50 22 L88 32 V56 Q88 82 50 94 Q12 82 12 56 V32 Z',
-  // Gold — angular crest with shoulders.
-  GOLD: 'M50 4 L90 18 L86 30 V54 Q86 80 50 95 Q14 80 14 54 V30 L10 18 Z',
-  // Platinum — faceted, with a pointed base.
-  PLATINUM: 'M50 4 L92 20 L84 34 V56 Q84 78 50 96 Q16 78 16 56 V34 L8 20 Z M50 14 L28 24 L50 32 L72 24 Z',
-  // Diamond — a rhombus set within the crest.
-  DIAMOND: 'M50 3 L93 20 L84 36 V56 Q84 79 50 97 Q16 79 16 56 V36 L7 20 Z M50 26 L66 44 L50 62 L34 44 Z',
-  // Elite — the most articulated silhouette.
-  ELITE: 'M50 2 L96 18 L86 34 V54 Q86 80 50 98 Q14 80 14 54 V34 L4 18 Z M50 20 L36 34 L50 40 L64 34 Z M50 48 L62 60 L50 74 L38 60 Z',
-};
+/** Base tiers in ascending order, so a shape maps to a name not a position. */
+const BASE_ORDER = ['DRIFTER', 'SEEKER', 'BUILDER', 'FORGED', 'RELENTLESS', 'SOVEREIGN'];
 
-export const RankEmblem: React.FC<Props> = ({ tier, size = 40, locked = false }) => {
-  const path = SHAPES[tier.base] || SHAPES.BRONZE;
-  const id = `rank-${tier.base}-${tier.step}`.toLowerCase();
+/** Outline per tier, drawn in a 100×100 box. */
+const SHAPES: string[] = [
+  // Drifter: a plain wedge — unformed.
+  'M50 8 L86 32 L86 70 L50 92 L14 70 L14 32 Z',
+  // Seeker: a pointed compass rose.
+  'M50 6 L64 34 L94 50 L64 66 L50 94 L36 66 L6 50 L36 34 Z',
+  // Builder: a stepped block, squared off.
+  'M22 20 L78 20 L78 44 L88 44 L88 78 L62 78 L62 58 L38 58 L38 78 L12 78 L12 44 L22 44 Z',
+  // Forged: a struck anvil form.
+  'M50 6 L78 22 L92 50 L78 78 L50 94 L22 78 L8 50 L22 22 Z M50 24 L34 50 L50 76 L66 50 Z',
+  // Relentless: interlocking chevrons.
+  'M50 4 L92 28 L92 50 L50 26 L8 50 L8 28 Z M50 40 L92 64 L92 86 L50 62 L8 86 L8 64 Z',
+  // Sovereign: a crown.
+  'M14 74 L14 34 L30 50 L50 18 L70 50 L86 34 L86 74 Z',
+];
+
+export const RankEmblem: React.FC<Props> = ({ tier, size = 24 }) => {
+  const id = React.useId();
+  const shape = SHAPES[BASE_ORDER.indexOf(tier.base)] ?? SHAPES[0];
 
   return (
     <svg
-      viewBox="0 0 100 100"
       width={size}
       height={size}
-      role="img"
-      aria-label={`${tier.base} ${tier.step}`}
-      style={{ opacity: locked ? 0.28 : 1, flexShrink: 0 }}
+      viewBox="0 0 100 100"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
     >
       <defs>
-        {/* Deeper fill than before: a faint wash read as an empty outline at
-            the sizes these actually render. */}
-        {/* Near-solid at the top so the crest reads as metal rather than a
-            dark silhouette, easing to the tier colour at the base. */}
-        <linearGradient id={`${id}-fill`} x1="0" y1="0" x2="0.3" y2="1">
-          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.55" />
-          <stop offset="18%" stopColor={tier.color} stopOpacity="1" />
-          <stop offset="70%" stopColor={tier.color} stopOpacity="0.88" />
-          <stop offset="100%" stopColor={tier.color} stopOpacity="0.72" />
+        {/* Bright at the top easing to the tier colour, so the form reads as
+            metal catching light rather than a flat silhouette. */}
+        <linearGradient id={`${id}-fill`} x1="0.2" y1="0" x2="0.6" y2="1">
+          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.85" />
+          <stop offset="30%" stopColor={tier.color} stopOpacity="1" />
+          <stop offset="100%" stopColor={tier.color} stopOpacity="0.7" />
         </linearGradient>
 
-        {/* Rim light along the top edge, which is what gives a badge the
-            impression of being struck rather than drawn. */}
-        {/* Rim light only. The previous version laid black over the lower
-            half, which is what made the emblem look mostly dark. */}
         <linearGradient id={`${id}-rim`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.45" />
-          <stop offset="40%" stopColor="#ffffff" stopOpacity="0.04" />
+          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.7" />
+          <stop offset="55%" stopColor="#ffffff" stopOpacity="0.1" />
           <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
         </linearGradient>
-
-        <clipPath id={`${id}-clip`}>
-          <path d={path} />
-        </clipPath>
       </defs>
 
-      <path d={path} fill={`url(#${id}-fill)`} />
-
-      {/* Inner shading, clipped to the crest so it never spills. */}
-      <g clipPath={`url(#${id}-clip)`}>
-        <rect x="0" y="0" width="100" height="100" fill={`url(#${id}-rim)`} />
-        {/* A diagonal sheen — one band, not a full gloss. */}
-        <path d="M-10 36 L110 -4 L110 18 L-10 58 Z" fill="#ffffff" opacity="0.14" />
-      </g>
-
       <path
-        d={path}
-        fill="none"
+        d={shape}
+        fill={`url(#${id}-fill)`}
+        fillRule="evenodd"
         stroke="#ffffff"
-        strokeOpacity="0.5"
-        strokeWidth="2.5"
+        strokeOpacity="0.55"
+        strokeWidth="3"
         strokeLinejoin="round"
       />
 
-      {/* Step marks — one to three, so Bronze 1 and Bronze 3 differ without
-          needing a numeral crammed inside the crest. Filled and outlined so
-          they hold up against the deeper background. */}
-      {Array.from({ length: tier.step }).map((_, i) => (
-        <circle
-          key={i}
-          cx={50 + (i - (tier.step - 1) / 2) * 14}
-          cy={tier.base === 'BRONZE' ? 64 : 77}
-          r="4.2"
-          fill="#ffffff"
-          fillOpacity="0.96"
-          stroke="rgba(0,0,0,0.28)"
-          strokeWidth="1"
-        />
-      ))}
+      {/* Rim light along the upper edge. */}
+      <path
+        d={shape}
+        fill="none"
+        fillRule="evenodd"
+        stroke={`url(#${id}-rim)`}
+        strokeWidth="5"
+        strokeLinejoin="round"
+      />
+
+      {/* Step pips: how far through the tier, so two people at the same rank
+          are still distinguishable. */}
+      {(tier.step ?? 0) > 0 &&
+        Array.from({ length: 3 }).map((_, i) => (
+          <circle
+            key={i}
+            cx={34 + i * 16}
+            cy={94}
+            r={5}
+            fill={i < (tier.step ?? 0) ? '#ffffff' : 'transparent'}
+            stroke="#ffffff"
+            strokeOpacity={i < (tier.step ?? 0) ? 1 : 0.35}
+            strokeWidth="2"
+          />
+        ))}
     </svg>
   );
 };

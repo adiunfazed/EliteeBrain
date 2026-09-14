@@ -18,12 +18,12 @@ export interface Tier {
 }
 
 const BASES: { name: string; min: number; color: string }[] = [
-  { name: 'BRONZE', min: 0, color: '#C97B3C' },
-  { name: 'SILVER', min: 1500, color: '#A8B4C4' },
-  { name: 'GOLD', min: 3000, color: '#E8A33D' },
-  { name: 'PLATINUM', min: 7000, color: '#7FD4E8' },
-  { name: 'DIAMOND', min: 13000, color: '#7C9CFF' },
-  { name: 'ELITE', min: 25000, color: '#B98BFF' },
+  { name: 'DRIFTER', min: 0, color: '#8A7F72' },
+  { name: 'SEEKER', min: 1500, color: '#4FB8A8' },
+  { name: 'BUILDER', min: 3000, color: '#E8A33D' },
+  { name: 'FORGED', min: 7000, color: '#E86F5C' },
+  { name: 'RELENTLESS', min: 13000, color: '#5B8DEF' },
+  { name: 'SOVEREIGN', min: 25000, color: '#B98BFF' },
 ];
 
 const ROMAN = ['I', 'II', 'III'];

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import * as Icons from 'lucide-react';
-import { Plus, Pencil, Trash2, Check, X, ChevronLeft } from 'lucide-react';
+import { Plus, Pencil, Trash2, Check, X, ChevronLeft, Clock } from 'lucide-react';
 import { AlarmComposer } from './AlarmComposer';
 import { AlarmRingScreen } from './AlarmRingScreen';
 import {
@@ -175,6 +175,32 @@ export const WakeChallengeSection: React.FC<Props> = ({
             <Plus className="w-4 h-4 shrink-0" />
           </button>
         )}
+      </div>
+
+      {/* Why this is not live yet, stated plainly. A browser cannot wake a
+          sleeping phone: the OS defers or drops background delivery, and iOS
+          restricts it further. Shipping it anyway would mean failing at 6am,
+          which is the worst possible time to discover a limitation. */}
+      <div
+        className="rounded-xl p-4"
+        style={{
+          background: 'color-mix(in oklab, var(--warn) 10%, var(--surface))',
+          border: '1px solid color-mix(in oklab, var(--warn) 35%, var(--rule))',
+        }}
+      >
+        <p className="text-[15px] font-bold flex items-center gap-2">
+          <Clock className="w-4 h-4 shrink-0 eb-warn" />
+          Coming with the Android app
+        </p>
+        <p className="t-sub mt-2 leading-relaxed">
+          A web browser cannot reliably ring an alarm once your phone is asleep — the
+          system delays or drops the notification. Rather than have it fail when you
+          actually need it, Wake Challenge ships with the Android app, where it can use
+          a real system alarm.
+        </p>
+        <p className="t-meta mt-2.5">
+          Everything else in Body Training works now.
+        </p>
       </div>
 
       {/* Free users get the upgrade path and nothing else. The alarm UI is

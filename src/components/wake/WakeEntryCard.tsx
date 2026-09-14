@@ -51,15 +51,22 @@ export const WakeEntryCard: React.FC<Props> = ({
     </span>
 
     <span className="min-w-0 flex-1">
-      <span className="block text-[16px] font-bold leading-tight">Wake Challenge</span>
-      <span className="t-meta block mt-1 truncate">
-        {!isPro
-          ? 'Earn your way out of bed — a Pro feature'
-          : alarmCount === 0
-            ? 'No alarms yet. Set your first one.'
-            : nextTime
-              ? `${alarmCount} ${alarmCount === 1 ? 'alarm' : 'alarms'} · next at ${nextTime}`
-              : `${alarmCount} ${alarmCount === 1 ? 'alarm' : 'alarms'} · all off`}
+      <span className="flex items-center gap-2">
+        <span className="text-[16px] font-bold leading-tight">Wake Challenge</span>
+        <span
+          className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded shrink-0"
+          style={{
+            background: 'color-mix(in oklab, var(--warn) 22%, transparent)',
+            color: 'var(--warn)',
+            letterSpacing: '0.06em',
+          }}
+        >
+          Coming soon
+        </span>
+      </span>
+
+      <span className="t-meta block mt-1 leading-relaxed">
+        Alarms that need a challenge before they stop. Arriving with the Android app.
       </span>
     </span>
 

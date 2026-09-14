@@ -160,15 +160,8 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId, profile, onUpgrad
 
       {view === 'library' && (
         <>
-          <WakeEntryCard
-            alarmCount={alarms.length}
-            nextTime={nextAlarmTime}
-            isPro={entitlement.isPro}
-            onOpen={() => setView('wake')}
-          />
-
-          {/* Exercises: its own headed block, so it is clearly a different
-              thing from the alarm section above. */}
+          {/* Exercises first: they work today, and they are the reason to
+              open this tab. Wake Challenge sits below until it ships. */}
           <div className="pt-1">
             <div className="flex items-center gap-2.5 mb-3">
               <span
@@ -211,6 +204,13 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId, profile, onUpgrad
 
             <WorkoutHistory sessions={sessions} />
           </div>
+
+          <WakeEntryCard
+            alarmCount={alarms.length}
+            nextTime={nextAlarmTime}
+            isPro={entitlement.isPro}
+            onOpen={() => setView('wake')}
+          />
         </>
       )}
 
