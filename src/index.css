@@ -47,18 +47,20 @@
 .dark {
   /* 60% — base. Near-black canvas with a faint purple cast in the
      surfaces, so panels read as dark violet rather than grey. */
-  --ground: #08070C;
-  --surface: #100E17;
-  --surface-sunk: #17141F;
+  --ground: #07060B;
+  /* A clearer step up from the ground, so a card reads as a surface rather
+     than a slightly different shade of the page. */
+  --surface: #191325;
+  --surface-sunk: #241C36;
 
   /* 30% — secondary. Text, rules, and structure. */
   --ink: #F4F2F8;
   --ink-muted: #9C96AD;
-  --ink-dim: #7D7790;
+  --ink-dim: #8B849E;
   /* Thin and low contrast, as the brief asks — visible as an edge, never
      as a line competing with the content. */
-  --rule: #241F30;
-  --rule-strong: #342C45;
+  --rule: #2E2740;
+  --rule-strong: #423857;
 
   /* 10% — accent. Used sparingly: one primary action per view. */
   /* Softer than #7A63E0: same violet family, less saturation, a touch

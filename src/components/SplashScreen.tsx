@@ -8,6 +8,22 @@ interface Props {
   onFinish?: () => void;
 }
 
+/**
+ * Logo letterforms.
+ *
+ * Paste the `d` attribute of the E and the L from the logo SVG here and the
+ * splash animates the real letterforms instead of typed characters. Both must
+ * come from the same artboard so they stay aligned; LOGO_VIEWBOX is that
+ * artboard's size.
+ *
+ * Left empty, the splash falls back to text — which is what it does today.
+ */
+const LOGO_E = '';
+const LOGO_L = '';
+const LOGO_VIEWBOX = { w: 100, h: 100 };
+/** Rendered size = viewBox × this. Tune once the real paths are in. */
+const LOGO_SCALE = 0.72;
+
 export const SplashScreen: React.FC<Props> = ({ onFinish, ready = false }) => {
   useEffect(() => {
     // A brief floor so the logo does not flash on a fast load, and a ceiling
@@ -53,20 +69,50 @@ export const SplashScreen: React.FC<Props> = ({ onFinish, ready = false }) => {
             initial={{ x: -90, opacity: 0, rotate: -14 }}
             animate={{ x: 0, opacity: 1, rotate: 0 }}
             transition={{ type: 'spring', stiffness: 180, damping: 18, delay: 0.1 }}
-            className="font-display font-extrabold leading-none"
-            style={{ fontSize: 62, color: '#FFFFFF', letterSpacing: '-0.04em' }}
+            className="flex items-center"
           >
-            E
+            {LOGO_E ? (
+              <svg
+                width={LOGO_VIEWBOX.w * LOGO_SCALE}
+                height={LOGO_VIEWBOX.h * LOGO_SCALE}
+                viewBox={`0 0 ${LOGO_VIEWBOX.w} ${LOGO_VIEWBOX.h}`}
+                aria-hidden="true"
+              >
+                <path d={LOGO_E} fill="#FFFFFF" />
+              </svg>
+            ) : (
+              <span
+                className="font-display font-extrabold leading-none"
+                style={{ fontSize: 62, color: '#FFFFFF', letterSpacing: '-0.04em' }}
+              >
+                E
+              </span>
+            )}
           </motion.span>
 
           <motion.span
             initial={{ x: 90, y: 60, opacity: 0, rotate: 14 }}
             animate={{ x: 0, y: 0, opacity: 1, rotate: 0 }}
             transition={{ type: 'spring', stiffness: 180, damping: 18, delay: 0.1 }}
-            className="font-display font-extrabold leading-none"
-            style={{ fontSize: 62, color: '#AC9BEE', letterSpacing: '-0.04em' }}
+            className="flex items-center"
           >
-            L
+            {LOGO_L ? (
+              <svg
+                width={LOGO_VIEWBOX.w * LOGO_SCALE}
+                height={LOGO_VIEWBOX.h * LOGO_SCALE}
+                viewBox={`0 0 ${LOGO_VIEWBOX.w} ${LOGO_VIEWBOX.h}`}
+                aria-hidden="true"
+              >
+                <path d={LOGO_L} fill="#AC9BEE" />
+              </svg>
+            ) : (
+              <span
+                className="font-display font-extrabold leading-none"
+                style={{ fontSize: 62, color: '#AC9BEE', letterSpacing: '-0.04em' }}
+              >
+                L
+              </span>
+            )}
           </motion.span>
 
           {/* Light sweep across the letters as they land. */}

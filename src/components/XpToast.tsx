@@ -40,7 +40,7 @@ export const XpProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     <XpContext.Provider value={value}>
       {children}
 
-      <div className="fixed left-1/2 -translate-x-1/2 bottom-28 z-[75] flex flex-col items-center gap-2 pointer-events-none">
+      <div className="fixed left-1/2 -translate-x-1/2 bottom-28 z-[75] flex flex-col items-center gap-2 pointer-events-none w-max max-w-[calc(100vw-2rem)]">
         <AnimatePresence>
           {events.map((e) => (
             <motion.div
@@ -49,11 +49,13 @@ export const XpProvider: React.FC<{ children: React.ReactNode }> = ({ children }
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -20, scale: 0.95 }}
               transition={{ type: 'spring', stiffness: 400, damping: 26 }}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[var(--signal)] text-white shadow-[0_4px_0_0_rgba(0,0,0,0.4)]"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--signal)] text-white whitespace-nowrap shadow-[0_4px_0_0_rgba(0,0,0,0.4)]"
             >
               <Zap className="w-3.5 h-3.5 shrink-0" />
-              <span className="text-sm font-mono font-black tabular-nums">+{e.amount}</span>
-              <span className="t-meta opacity-85">{e.label}</span>
+              <span className="text-[15px] font-extrabold tabular-nums shrink-0 whitespace-nowrap">
+                +{e.amount} XP
+              </span>
+              <span className="text-[12px] opacity-85 truncate max-w-[160px]">{e.label}</span>
             </motion.div>
           ))}
         </AnimatePresence>
