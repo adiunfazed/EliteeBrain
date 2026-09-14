@@ -310,53 +310,6 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], habits = [], 
 
           <AddButton label="Add block" onClick={() => setBlockComposerOpen(true)} />
 
-          <ComposerSheet
-            open={blockComposerOpen}
-            title={editingBlock ? 'Edit block' : 'New routine block'}
-            onClose={() => {
-              setBlockComposerOpen(false);
-              setEditingBlock(null);
-            }}
-          >
-            <RoutineComposer
-              block={editingBlock}
-              defaultWeekday={composerDay}
-              habits={habits}
-              goals={goals.map((g) => ({ id: g.id, title: g.title }))}
-              onCancel={() => {
-                setBlockComposerOpen(false);
-                setEditingBlock(null);
-                setComposerDay(null);
-              }}
-              onSave={async (fields) => {
-                if (editingBlock) {
-                  const updated = {
-                    ...editingBlock,
-                    ...fields,
-                    updatedAt: new Date().toISOString(),
-                  };
-                  setBlocks((prev) => prev.map((b) => (b.id === updated.id ? updated : b)));
-                  await saveRoutineBlock(userId, updated);
-                } else {
-                  const created = newRoutineBlock(
-                    fields.title,
-                    fields.kind,
-                    fields.startTime,
-                    fields.endTime
-                  );
-                  Object.assign(created, {
-                    weekdays: fields.weekdays,
-                    habitId: fields.habitId,
-                    goalId: fields.goalId,
-                  });
-                  setBlocks((prev) => [...prev, created]);
-                  await saveRoutineBlock(userId, created);
-                }
-                setBlockComposerOpen(false);
-                setEditingBlock(null);
-              }}
-            />
-          </ComposerSheet>
 
           {/* Timeline */}
           {day.length === 0 ? (
@@ -755,6 +708,57 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], habits = [], 
           )}
         </div>
       )}
+
+      {/* Outside every pane: it lived inside the day view, so the week
+          view's edit and add buttons opened a sheet that was never
+          rendered — which is why they appeared to do nothing. */}
+          <ComposerSheet
+            open={blockComposerOpen}
+            title={editingBlock ? 'Edit block' : 'New routine block'}
+            onClose={() => {
+              setBlockComposerOpen(false);
+              setEditingBlock(null);
+            }}
+          >
+            <RoutineComposer
+              block={editingBlock}
+              defaultWeekday={composerDay}
+              habits={habits}
+              goals={goals.map((g) => ({ id: g.id, title: g.title }))}
+              onCancel={() => {
+                setBlockComposerOpen(false);
+                setEditingBlock(null);
+                setComposerDay(null);
+              }}
+              onSave={async (fields) => {
+                if (editingBlock) {
+                  const updated = {
+                    ...editingBlock,
+                    ...fields,
+                    updatedAt: new Date().toISOString(),
+                  };
+                  setBlocks((prev) => prev.map((b) => (b.id === updated.id ? updated : b)));
+                  await saveRoutineBlock(userId, updated);
+                } else {
+                  const created = newRoutineBlock(
+                    fields.title,
+                    fields.kind,
+                    fields.startTime,
+                    fields.endTime
+                  );
+                  Object.assign(created, {
+                    weekdays: fields.weekdays,
+                    habitId: fields.habitId,
+                    goalId: fields.goalId,
+                  });
+                  setBlocks((prev) => [...prev, created]);
+                  await saveRoutineBlock(userId, created);
+                }
+                setBlockComposerOpen(false);
+                setEditingBlock(null);
+              }}
+            />
+          </ComposerSheet>
     </div>
   );
 };

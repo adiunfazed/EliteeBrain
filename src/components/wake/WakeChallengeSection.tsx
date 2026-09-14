@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import * as Icons from 'lucide-react';
-import { AlarmClock, Plus, Pencil, Trash2, Check, X } from 'lucide-react';
+import { Plus, Pencil, Trash2, Check, X, ChevronLeft } from 'lucide-react';
 import { AlarmComposer } from './AlarmComposer';
 import { AlarmRingScreen } from './AlarmRingScreen';
 import {
@@ -25,6 +25,8 @@ import { SetupChecklist } from './SetupChecklist';
 
 interface Props {
   userId: string | null;
+  /** Present when shown as a full screen rather than inline. */
+  onBack?: () => void;
   /** From the app's existing entitlement, not a local guess. */
   isPro?: boolean;
   entitlementStatus?: string;
@@ -62,6 +64,7 @@ function untilText(alarm: Alarm): string | null {
  */
 export const WakeChallengeSection: React.FC<Props> = ({
   userId,
+  onBack,
   isPro = false,
   entitlementStatus,
   onUpgrade,
@@ -145,43 +148,33 @@ export const WakeChallengeSection: React.FC<Props> = ({
 
   return (
     <div className="space-y-4">
-      <div
-        className="rounded-xl p-4"
-        style={{
-          // Bolder than the cards below so the section reads as a distinct
-          // block rather than the first item in a list.
-          background: 'color-mix(in oklab, var(--signal) 20%, var(--surface-sunk))',
-          border: '1px solid color-mix(in oklab, var(--signal) 50%, var(--rule))',
-          boxShadow: '0 1px 0 0 rgba(255,255,255,0.06) inset',
-        }}
-      >
-        <div className="flex items-start gap-3">
-          <span
-            className="w-9 h-9 rounded-lg shrink-0 flex items-center justify-center"
-            style={{ background: 'var(--signal)' }}
-          >
-            <AlarmClock className="w-[18px] h-[18px] shrink-0" style={{ color: '#fff' }} />
-          </span>
+      {/* Screen header. Back on the left, add on the right — the same shape
+          as every other full screen in the app. */}
+      <div className="flex items-center gap-3">
+        {onBack && (
+          <button onClick={onBack} aria-label="Back" className="icon-btn shrink-0">
+            <ChevronLeft className="w-4 h-4 shrink-0" />
+          </button>
+        )}
 
-          <div className="min-w-0 flex-1">
-            <h2 className="t-section">Wake Challenge</h2>
-            <p className="t-meta mt-0.5">Earn your way out of bed.</p>
-          </div>
-
-          {isPro && (
-            <button
-              onClick={() => {
-                soundFx.playClick();
-                setEditing(null);
-                setComposerOpen(true);
-              }}
-              aria-label="New alarm"
-              className="icon-btn shrink-0"
-            >
-              <Plus className="w-4 h-4 shrink-0" />
-            </button>
-          )}
+        <div className="min-w-0 flex-1">
+          <h1 className="t-title">Wake Challenge</h1>
+          <p className="t-meta mt-0.5">Earn your way out of bed.</p>
         </div>
+
+        {isPro && (
+          <button
+            onClick={() => {
+              soundFx.playClick();
+              setEditing(null);
+              setComposerOpen(true);
+            }}
+            aria-label="New alarm"
+            className="icon-btn shrink-0"
+          >
+            <Plus className="w-4 h-4 shrink-0" />
+          </button>
+        )}
       </div>
 
       {/* Free users get the upgrade path and nothing else. The alarm UI is
@@ -242,12 +235,12 @@ export const WakeChallengeSection: React.FC<Props> = ({
                   style={{ opacity: alarm.enabled ? 1 : 0.5 }}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="t-figure tabular-nums shrink-0" style={{ fontSize: 24 }}>
+                    <span className="t-figure tabular-nums shrink-0" style={{ fontSize: 26, fontWeight: 800 }}>
                       {alarm.time}
                     </span>
 
                     <div className="min-w-0 flex-1">
-                      <p className="text-[14px] font-semibold truncate">{alarm.label}</p>
+                      <p className="text-[15px] font-bold truncate">{alarm.label}</p>
                       <p className="t-meta mt-0.5 flex items-center gap-1 truncate">
                         <Icon className="w-3 h-3 shrink-0" />
                         {spec?.name}

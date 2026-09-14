@@ -5,13 +5,14 @@ import { ExerciseRunner, SetResult } from './ExerciseRunner';
 import { WorkoutConfig, WorkoutConfigValue } from './WorkoutConfig';
 import { WorkoutHistory } from './WorkoutHistory';
 import { WakeChallengeSection } from '../wake/WakeChallengeSection';
+import { WakeEntryCard } from '../wake/WakeEntryCard';
 import {
   Exercise,
   Difficulty,
   WorkoutSession,
   workoutXp,
 } from '../../lib/bodyTraining';
-import { subscribeWorkouts, saveWorkout } from '../../lib/trainingStore';
+import { subscribeWorkouts, saveWorkout, subscribeAlarms } from '../../lib/trainingStore';
 import { todayISO } from '../../lib/tasks';
 import { soundFx } from '../../utils/audio';
 import { useXp } from '../XpToast';
@@ -24,7 +25,7 @@ interface Props {
   onUpgrade?: () => void;
 }
 
-type View = 'library' | 'config' | 'running';
+type View = 'library' | 'config' | 'running' | 'wake';
 
 /**
  * Body training.
@@ -56,6 +57,17 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId, profile, onUpgrad
   const awarded = useRef<Set<string>>(new Set());
 
   useEffect(() => subscribeWorkouts(userId, setSessions), [userId]);
+
+  // Read only for the entry card's summary line. The full screen subscribes
+  // separately for the list it manages.
+  const [alarms, setAlarms] = useState<any[]>([]);
+  useEffect(() => subscribeAlarms(userId, setAlarms), [userId]);
+
+  const nextAlarmTime = useMemo(() => {
+    const enabled = alarms.filter((a) => a.enabled);
+    if (enabled.length === 0) return null;
+    return enabled.map((a) => a.time).sort()[0];
+  }, [alarms]);
 
   const today = todayISO();
 
@@ -117,18 +129,20 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId, profile, onUpgrad
 
   return (
     <div className="space-y-4">
-      <div className="flex items-start gap-3">
-        <span
-          className="w-9 h-9 rounded-lg shrink-0 flex items-center justify-center"
-          style={{ background: 'color-mix(in oklab, var(--signal) 16%, transparent)' }}
-        >
-          <Dumbbell className="w-4 h-4 shrink-0" style={{ color: 'var(--signal-ink)' }} />
-        </span>
-        <div className="min-w-0 flex-1">
-          <h2 className="t-section">Body training</h2>
-          <p className="t-meta mt-0.5">Simple movement. Consistent progress.</p>
+      {view !== 'wake' && (
+        <div className="flex items-start gap-3">
+          <span
+            className="w-9 h-9 rounded-lg shrink-0 flex items-center justify-center"
+            style={{ background: 'color-mix(in oklab, var(--signal) 16%, transparent)' }}
+          >
+            <Dumbbell className="w-4 h-4 shrink-0" style={{ color: 'var(--signal-ink)' }} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <h2 className="t-section">Body training</h2>
+            <p className="t-meta mt-0.5">Simple movement. Consistent progress.</p>
+          </div>
         </div>
-      </div>
+      )}
 
       {todayStats.sets > 0 && view === 'library' && (
         <div className="panel-sm">
@@ -146,11 +160,11 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId, profile, onUpgrad
 
       {view === 'library' && (
         <>
-          <WakeChallengeSection
-            userId={userId}
+          <WakeEntryCard
+            alarmCount={alarms.length}
+            nextTime={nextAlarmTime}
             isPro={entitlement.isPro}
-            entitlementStatus={entitlement.status}
-            onUpgrade={onUpgrade}
+            onOpen={() => setView('wake')}
           />
 
           {/* Exercises: its own headed block, so it is clearly a different
@@ -198,6 +212,16 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId, profile, onUpgrad
             <WorkoutHistory sessions={sessions} />
           </div>
         </>
+      )}
+
+      {view === 'wake' && (
+        <WakeChallengeSection
+          userId={userId}
+          isPro={entitlement.isPro}
+          entitlementStatus={entitlement.status}
+          onUpgrade={onUpgrade}
+          onBack={() => setView('library')}
+        />
       )}
 
       {view === 'config' && selected && config && (

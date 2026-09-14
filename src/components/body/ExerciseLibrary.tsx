@@ -82,7 +82,7 @@ export const ExerciseLibrary: React.FC<Props> = ({
             </span>
 
             <span className="min-w-0 flex-1">
-              <span className="block text-[15px] font-semibold leading-snug">{ex.name}</span>
+              <span className="block text-[15px] font-bold leading-snug">{ex.name}</span>
               <span className="t-meta block mt-0.5 truncate">
                 {target} {ex.metric === 'hold' ? 'seconds' : 'reps'} · {ex.restSeconds}s rest
               </span>

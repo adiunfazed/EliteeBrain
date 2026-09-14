@@ -140,7 +140,7 @@ export const WorkoutHistory: React.FC<Props> = ({ sessions }) => {
               <Check className="w-3.5 h-3.5 shrink-0" style={{ color: 'var(--done)' }} />
 
               <span className="min-w-0 flex-1">
-                <span className="block text-[14px] truncate">{names || 'Workout'}</span>
+                <span className="block text-[14px] font-semibold truncate">{names || 'Workout'}</span>
                 <span className="t-meta block mt-0.5 truncate">
                   {detail || `${sets} ${sets === 1 ? 'set' : 'sets'}`} ·{' '}
                   {prettyDate(s.date)}
