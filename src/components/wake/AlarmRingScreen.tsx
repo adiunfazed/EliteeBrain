@@ -1,13 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import * as Icons from 'lucide-react';
-import { Plus, AlertTriangle } from 'lucide-react';
+import { Plus, AlertTriangle, Camera } from 'lucide-react';
 import {
   Alarm,
   challengeById,
   SKIP_LOCKOUT_SECONDS,
   } from '../../lib/wakeChallenge';
 import { soundFx } from '../../utils/audio';
+import { startAlarmSound } from '../../lib/alarmSounds';
+import { CameraView } from '../body/CameraView';
+import { PoseExerciseId } from '../../lib/pose/repEngine';
 
 interface Props {
   alarm: Alarm;
@@ -37,11 +40,17 @@ export const AlarmRingScreen: React.FC<Props> = ({ alarm, onResolved }) => {
   const spec = challengeById(alarm.challenge);
   const target = spec ? spec.targets[alarm.difficulty] : 10;
 
-  const [progress, setProgress] = useState(0);
+  // Camera and manual counts are tracked apart so a tap can correct the
+  // camera without discarding what it already counted.
+  const [cameraReps, setCameraReps] = useState(0);
+  const [manualReps, setManualReps] = useState(0);
+  const [cameraOn, setCameraOn] = useState(false);
+  const progress = cameraReps + manualReps;
   const [elapsed, setElapsed] = useState(0);
   const [confirmingSkip, setConfirmingSkip] = useState(false);
   const [problem, setProblem] = useState(makeProblem);
   const [answer, setAnswer] = useState('');
+  const [solved, setSolved] = useState(0);
   const [sequence, setSequence] = useState<number[]>([]);
   const [entered, setEntered] = useState<number[]>([]);
 
@@ -58,8 +67,23 @@ export const AlarmRingScreen: React.FC<Props> = ({ alarm, onResolved }) => {
 
   /** The alarm sound runs until the challenge resolves. */
   useEffect(() => {
-    audioRef.current = soundFx.startAlarm?.(alarm.sound) || null;
-    return () => audioRef.current?.stop();
+    let cancelled = false;
+
+    void startAlarmSound(alarm.sound, () => soundFx.startAlarm(alarm.sound)).then(
+      (handle) => {
+        // The screen may have closed while the audio was loading.
+        if (cancelled) {
+          handle.stop();
+          return;
+        }
+        audioRef.current = handle;
+      }
+    );
+
+    return () => {
+      cancelled = true;
+      audioRef.current?.stop();
+    };
   }, [alarm.sound]);
 
   /** Build a pattern for the tap challenge. */
@@ -78,10 +102,10 @@ export const AlarmRingScreen: React.FC<Props> = ({ alarm, onResolved }) => {
   };
 
   const bump = () => {
-    const next = progress + 1;
-    setProgress(next);
+    const next = manualReps + 1;
+    setManualReps(next);
     soundFx.playClick();
-    if (next >= target) resolve('completed');
+    if (cameraReps + next >= target) resolve('completed');
   };
 
   const Icon = spec ? (Icons as any)[spec.icon] || Icons.Dumbbell : Icons.Dumbbell;
@@ -123,9 +147,34 @@ export const AlarmRingScreen: React.FC<Props> = ({ alarm, onResolved }) => {
             </p>
             <p className="t-meta mt-2">{spec?.unit}</p>
 
+            {/* Camera is opt-in and requested only here — never during alarm
+                setup, which is a different moment entirely. Manual counting
+                stays available because a phone propped badly at 6am is
+                exactly when detection struggles. */}
+            {cameraOn ? (
+              <div className="w-full max-w-[320px] mt-5">
+                <CameraView
+                  exercise={alarm.challenge as PoseExerciseId}
+                  onRep={(count) => {
+                    setCameraReps(count);
+                    if (count + manualReps >= target) resolve('completed');
+                  }}
+                  onManualMode={() => setCameraOn(false)}
+                />
+              </div>
+            ) : (
+              <button
+                onClick={() => setCameraOn(true)}
+                className="btn-text mt-4 flex items-center gap-1.5 mx-auto"
+              >
+                <Camera className="w-3.5 h-3.5 shrink-0" />
+                Count with camera
+              </button>
+            )}
+
             <button
               onClick={bump}
-              className="w-full max-w-[280px] h-16 rounded-xl mt-8 text-[16px] font-semibold flex items-center justify-center gap-2"
+              className="w-full max-w-[280px] h-16 rounded-xl mt-5 text-[16px] font-semibold flex items-center justify-center gap-2"
               style={{
                 background: 'color-mix(in oklab, var(--signal) 22%, transparent)',
                 border: '1px solid color-mix(in oklab, var(--signal) 50%, var(--rule))',
@@ -161,7 +210,7 @@ export const AlarmRingScreen: React.FC<Props> = ({ alarm, onResolved }) => {
         {alarm.challenge === 'mental' && (
           <>
             <p className="t-meta mt-5">
-              {progress} of {target} solved
+              {solved} of {target} solved
             </p>
             <p className="t-figure mt-3" style={{ fontSize: 42 }}>
               {problem.question}
@@ -175,8 +224,8 @@ export const AlarmRingScreen: React.FC<Props> = ({ alarm, onResolved }) => {
                 const v = e.target.value.replace(/\D/g, '');
                 setAnswer(v);
                 if (Number(v) === problem.answer) {
-                  const next = progress + 1;
-                  setProgress(next);
+                  const next = solved + 1;
+                  setSolved(next);
                   setAnswer('');
                   soundFx.playClick();
                   if (next >= target) resolve('completed');

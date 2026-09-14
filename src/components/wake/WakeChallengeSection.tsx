@@ -21,9 +21,14 @@ import {
 } from '../../lib/trainingStore';
 import { soundFx } from '../../utils/audio';
 import { useXp } from '../XpToast';
+import { SetupChecklist } from './SetupChecklist';
 
 interface Props {
   userId: string | null;
+  /** From the app's existing entitlement, not a local guess. */
+  isPro?: boolean;
+  entitlementStatus?: string;
+  onUpgrade?: () => void;
 }
 
 const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
@@ -55,7 +60,12 @@ function untilText(alarm: Alarm): string | null {
  * honest about that rather than appearing to work and then failing silently
  * at 6am, which is the worst possible time to discover a limitation.
  */
-export const WakeChallengeSection: React.FC<Props> = ({ userId }) => {
+export const WakeChallengeSection: React.FC<Props> = ({
+  userId,
+  isPro = false,
+  entitlementStatus,
+  onUpgrade,
+}) => {
   const { awardXp } = useXp();
 
   const [alarms, setAlarms] = useState<Alarm[]>([]);
@@ -64,6 +74,7 @@ export const WakeChallengeSection: React.FC<Props> = ({ userId }) => {
   const [editing, setEditing] = useState<Alarm | null>(null);
   const [ringing, setRinging] = useState<Alarm | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [setupReady, setSetupReady] = useState(false);
 
   useEffect(() => subscribeAlarms(userId, setAlarms), [userId]);
   useEffect(() => subscribeAlarmLogs(userId, setLogs), [userId]);
@@ -137,17 +148,19 @@ export const WakeChallengeSection: React.FC<Props> = ({ userId }) => {
       <div
         className="rounded-xl p-4"
         style={{
-          background:
-            'linear-gradient(150deg, color-mix(in oklab, var(--signal) 16%, var(--surface)), var(--surface))',
-          border: '1px solid color-mix(in oklab, var(--signal) 42%, var(--rule))',
+          // Bolder than the cards below so the section reads as a distinct
+          // block rather than the first item in a list.
+          background: 'color-mix(in oklab, var(--signal) 20%, var(--surface-sunk))',
+          border: '1px solid color-mix(in oklab, var(--signal) 50%, var(--rule))',
+          boxShadow: '0 1px 0 0 rgba(255,255,255,0.06) inset',
         }}
       >
         <div className="flex items-start gap-3">
           <span
             className="w-9 h-9 rounded-lg shrink-0 flex items-center justify-center"
-            style={{ background: 'color-mix(in oklab, var(--signal) 22%, transparent)' }}
+            style={{ background: 'var(--signal)' }}
           >
-            <AlarmClock className="w-4 h-4 shrink-0" style={{ color: 'var(--signal-ink)' }} />
+            <AlarmClock className="w-[18px] h-[18px] shrink-0" style={{ color: '#fff' }} />
           </span>
 
           <div className="min-w-0 flex-1">
@@ -155,23 +168,48 @@ export const WakeChallengeSection: React.FC<Props> = ({ userId }) => {
             <p className="t-meta mt-0.5">Earn your way out of bed.</p>
           </div>
 
-          <button
-            onClick={() => {
-              soundFx.playClick();
-              setEditing(null);
-              setComposerOpen(true);
-            }}
-            aria-label="New alarm"
-            className="icon-btn shrink-0"
-          >
-            <Plus className="w-4 h-4 shrink-0" />
-          </button>
+          {isPro && (
+            <button
+              onClick={() => {
+                soundFx.playClick();
+                setEditing(null);
+                setComposerOpen(true);
+              }}
+              aria-label="New alarm"
+              className="icon-btn shrink-0"
+            >
+              <Plus className="w-4 h-4 shrink-0" />
+            </button>
+          )}
         </div>
       </div>
 
-      {error && <p className="t-meta eb-warn">{error}</p>}
+      {/* Free users get the upgrade path and nothing else. The alarm UI is
+          not merely hidden — the server refuses these calls regardless. */}
+      {!isPro ? (
+        <div className="panel-sm text-center py-6">
+          <p className="t-section">Pro feature</p>
+          <p className="t-sub mt-2 leading-relaxed">
+            {entitlementStatus === 'expired'
+              ? 'Your Pro access has ended. Reactivate to use Wake Challenge again — your alarms are still saved.'
+              : 'Wake Challenge alarms are part of Pro. Your free month includes them.'}
+          </p>
+          <button onClick={onUpgrade} className="btn-lg mt-5">
+            {entitlementStatus === 'expired' ? 'Reactivate Pro' : 'See Pro'}
+          </button>
+        </div>
+      ) : (
+        <>
+          {/* Stays until every required step genuinely passes. */}
+          {!setupReady && (
+            <SetupChecklist userId={userId} onReady={() => setSetupReady(true)} />
+          )}
 
-      {alarms.length === 0 ? (
+          {error && <p className="t-meta eb-warn">{error}</p>}
+        </>
+      )}
+
+      {isPro && (alarms.length === 0 ? (
         <div className="panel-sm text-center py-6">
           <p className="t-sub">No alarms yet.</p>
           <p className="t-meta mt-1.5 leading-relaxed">
@@ -299,9 +337,9 @@ export const WakeChallengeSection: React.FC<Props> = ({ userId }) => {
               );
             })}
         </div>
-      )}
+      ))}
 
-      {history.length > 0 && (
+      {isPro && history.length > 0 && (
         <div className="panel-sm">
           <div className="panel-head">
             <span className="panel-title">Alarm history</span>

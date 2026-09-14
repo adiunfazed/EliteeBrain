@@ -22,6 +22,20 @@ import App from './App.tsx';
 import { ErrorBoundary } from './components/ErrorBoundary.tsx';
 import './index.css';
 
+// Captured at startup: the browser fires this once, well before the setup
+// checklist exists, and the saved event is the only way to show the prompt
+// later from a user action.
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    (window as any).__eliteInstallPrompt = e;
+  });
+
+  window.addEventListener('appinstalled', () => {
+    (window as any).__eliteInstallPrompt = null;
+  });
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>

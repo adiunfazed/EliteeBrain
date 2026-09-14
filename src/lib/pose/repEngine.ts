@@ -53,6 +53,16 @@ interface ExerciseDefinition {
   minConfidence: number;
   /** Shortest believable rep, in milliseconds. Anything faster is noise. */
   minRepMs: number;
+  /**
+   * Optional shape check.
+   *
+   * Some exercises share a measured angle — a squat and a lunge both bend the
+   * knee through the same range — so the angle alone cannot tell them apart.
+   * This rejects a movement that is the right depth but the wrong shape.
+   */
+  formCheck?: (lm: Landmark[]) => boolean;
+  /** Shown when the form check rejects the movement. */
+  formHint?: string;
 }
 
 const DEFINITIONS: Record<PoseExerciseId, ExerciseDefinition> = {
@@ -66,7 +76,7 @@ const DEFINITIONS: Record<PoseExerciseId, ExerciseDefinition> = {
     downAngle: 100,
     upAngle: 155,
     minConfidence: 0.6,
-    minRepMs: 700,
+    minRepMs: 550,
   },
 
   // Knee angle. 90 is a deep squat; 160 is standing.
@@ -75,11 +85,18 @@ const DEFINITIONS: Record<PoseExerciseId, ExerciseDefinition> = {
     right: [LM.rightHip, LM.rightKnee, LM.rightAnkle],
     presence: [LM.leftHip, LM.rightHip, LM.leftKnee, LM.rightKnee],
     framingHint: 'Step back so your hips and knees are both in frame.',
+    // The mirror of the lunge check: a squat should be symmetric.
+    formCheck: (lm) => {
+      const leftKnee = angleAt(lm[LM.leftHip], lm[LM.leftKnee], lm[LM.leftAnkle]);
+      const rightKnee = angleAt(lm[LM.rightHip], lm[LM.rightKnee], lm[LM.rightAnkle]);
+      return Math.abs(leftKnee - rightKnee) < 30;
+    },
+    formHint: 'One leg is much lower than the other. Keep both knees level for a squat.',
     measure: (lm, s) => angleAt(lm[s[0]], lm[s[1]], lm[s[2]]),
     downAngle: 110,
     upAngle: 160,
     minConfidence: 0.6,
-    minRepMs: 800,
+    minRepMs: 600,
   },
 
   // Front knee, same joints as a squat but a shallower bottom, since a lunge
@@ -89,11 +106,35 @@ const DEFINITIONS: Record<PoseExerciseId, ExerciseDefinition> = {
     right: [LM.rightHip, LM.rightKnee, LM.rightAnkle],
     presence: [LM.leftHip, LM.rightHip, LM.leftKnee, LM.rightKnee],
     framingHint: 'Turn side-on to the camera so the front knee is visible.',
+    // A lunge splits the feet and bends one knee far more than the other. A
+    // squat keeps them level and symmetric, which is why squats were being
+    // counted as lunges.
+    formCheck: (lm) => {
+      const la = lm[LM.leftAnkle];
+      const ra = lm[LM.rightAnkle];
+      if (!la || !ra) return false;
+
+      const leftKnee = angleAt(lm[LM.leftHip], lm[LM.leftKnee], lm[LM.leftAnkle]);
+      const rightKnee = angleAt(lm[LM.rightHip], lm[LM.rightKnee], lm[LM.rightAnkle]);
+
+      // One leg clearly more bent than the other.
+      const asymmetric = Math.abs(leftKnee - rightKnee) > 15;
+
+      // Feet split rather than side by side. Measured against hip width so it
+      // holds at any distance from the camera.
+      const hipWidth = Math.abs(lm[LM.leftHip].x - lm[LM.rightHip].x) || 0.1;
+      const split =
+        Math.abs(la.x - ra.x) > hipWidth * 1.4 ||
+        Math.abs(la.y - ra.y) > hipWidth * 0.8;
+
+      return asymmetric || split;
+    },
+    formHint: 'That looked like a squat. Step one foot forward for a lunge.',
     measure: (lm, s) => angleAt(lm[s[0]], lm[s[1]], lm[s[2]]),
     downAngle: 120,
     upAngle: 160,
     minConfidence: 0.55,
-    minRepMs: 900,
+    minRepMs: 650,
   },
 
   // Hip angle: bent lying flat, straight at the top of the bridge. The
@@ -107,7 +148,7 @@ const DEFINITIONS: Record<PoseExerciseId, ExerciseDefinition> = {
     downAngle: 125,
     upAngle: 160,
     minConfidence: 0.55,
-    minRepMs: 800,
+    minRepMs: 600,
   },
 
   // Ankle travel is too small for a reliable angle, so this one uses the
@@ -130,7 +171,7 @@ const DEFINITIONS: Record<PoseExerciseId, ExerciseDefinition> = {
     downAngle: 120,
     upAngle: 145,
     minConfidence: 0.5,
-    minRepMs: 600,
+    minRepMs: 450,
   },
 };
 
@@ -171,6 +212,13 @@ export function createRepEngine(exercise: PoseExerciseId) {
 
   let count = 0;
   let phase: 'top' | 'bottom' = 'top';
+  /**
+   * Whether the starting position has been seen.
+   *
+   * Until it has, the body may already be at the bottom, and treating that
+   * as the top of a rep produces a phantom count on the first movement.
+   */
+  let calibrated = false;
   let lastRepAt = 0;
   /** Frames spent below the confidence floor, used to report lost tracking. */
   let lowFrames = 0;
@@ -180,6 +228,8 @@ export function createRepEngine(exercise: PoseExerciseId) {
   let bottomAt = 0;
   /** The extreme angle reached during the current rep. */
   let deepest = 180;
+  /** Whether the bottom of the current rep had the right shape. */
+  let bottomFormOk = true;
   /** Small rolling window, so one bad frame cannot flip the phase. */
   const window: number[] = [];
 
@@ -243,6 +293,23 @@ export function createRepEngine(exercise: PoseExerciseId) {
       const atBottom = inverted ? angle >= def.upAngle : angle <= def.downAngle;
       const atTop = inverted ? angle <= def.downAngle : angle >= def.upAngle;
 
+      // Wait for a clean top position before counting anything.
+      if (!calibrated) {
+        if (atTop) {
+          calibrated = true;
+          phase = 'top';
+          heldFrames = 0;
+        }
+        return {
+          count,
+          status: 'tracking',
+          confidence: side.confidence,
+          angle,
+          phase,
+          reason: 'Get into the starting position to begin.',
+        };
+      }
+
       // A threshold must be held for consecutive frames before the phase
       // changes. One stray frame at the boundary was enough to register a
       // rep that never happened.
@@ -253,6 +320,9 @@ export function createRepEngine(exercise: PoseExerciseId) {
           heldFrames = 0;
           bottomAt = now;
           deepest = angle;
+          // Judged here, at the deepest point, where a lunge and a squat
+          // actually look different.
+          bottomFormOk = !def.formCheck || def.formCheck(landmarks);
         }
       } else if (phase === 'bottom' && atTop) {
         heldFrames++;
@@ -266,17 +336,32 @@ export function createRepEngine(exercise: PoseExerciseId) {
 
           const deepEnough = travelled >= MIN_TRAVEL_DEGREES;
           const slowEnough = elapsed >= def.minRepMs;
+          // Right depth, wrong exercise: rejected rather than counted.
+          const rightShape = !def.formCheck || bottomFormOk;
           // A bottom position held for a plausible moment. Passing straight
           // through in two frames is a tracking glitch, not a repetition.
           const realPause = now - bottomAt >= MIN_BOTTOM_MS;
 
-          if (deepEnough && slowEnough && realPause) {
+          if (deepEnough && slowEnough && realPause && rightShape) {
             count++;
             lastRepAt = now;
           }
 
+          const rejectedForShape = deepEnough && slowEnough && realPause && !rightShape;
+
           phase = 'top';
           heldFrames = 0;
+
+          if (rejectedForShape) {
+            return {
+              count,
+              status: 'tracking',
+              confidence: side.confidence,
+              angle,
+              phase,
+              reason: def.formHint,
+            };
+          }
         }
       } else {
         // Moved away from the threshold before it was confirmed.
@@ -299,6 +384,7 @@ export function createRepEngine(exercise: PoseExerciseId) {
     reset(): void {
       count = 0;
       phase = 'top';
+      calibrated = false;
       lastRepAt = 0;
       heldFrames = 0;
       bottomAt = 0;

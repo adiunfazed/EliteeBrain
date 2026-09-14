@@ -4,6 +4,16 @@ import { ChevronRight } from 'lucide-react';
 import { EXERCISES, Exercise, Difficulty, DIFFICULTY_LABEL } from '../../lib/bodyTraining';
 import { soundFx } from '../../utils/audio';
 
+/** A tint per exercise, so six rows are scannable rather than identical. */
+const TINTS: Record<string, string> = {
+  pushups: '#7A63E0',
+  squats: '#00C2A8',
+  lunges: '#FFB020',
+  plank: '#5BA9F5',
+  'glute-bridge': '#E86FA8',
+  'calf-raises': '#8FD14F',
+};
+
 interface Props {
   difficulty: Difficulty;
   onDifficultyChange: (d: Difficulty) => void;
@@ -58,10 +68,17 @@ export const ExerciseLibrary: React.FC<Props> = ({
             className="w-full text-left rounded-xl eb-card p-3 flex items-center gap-3"
           >
             <span
-              className="w-9 h-9 rounded-lg shrink-0 flex items-center justify-center"
-              style={{ background: 'color-mix(in oklab, var(--signal) 16%, transparent)' }}
+              className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center"
+              style={{
+                background: `color-mix(in oklab, ${TINTS[ex.id] || 'var(--signal)'} 20%, var(--surface-sunk))`,
+                border: `1px solid color-mix(in oklab, ${TINTS[ex.id] || 'var(--signal)'} 35%, transparent)`,
+              }}
             >
-              <Icon className="w-4 h-4 shrink-0" style={{ color: 'var(--signal-ink)' }} />
+              <Icon
+                className="w-[18px] h-[18px] shrink-0"
+                strokeWidth={2.2}
+                style={{ color: TINTS[ex.id] || 'var(--signal-ink)' }}
+              />
             </span>
 
             <span className="min-w-0 flex-1">

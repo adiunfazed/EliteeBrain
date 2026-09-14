@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'motion/react';
-import { Sun,
+import { Plus, Sun,
   Check,
   Trash2,
   Moon,
@@ -73,6 +73,8 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], habits = [], 
   const [sleep, setSleep] = useState<SleepLog[]>([]);
   const [pane, setPane] = useState<Pane>(initialPane || 'routine');
   const [blockComposerOpen, setBlockComposerOpen] = useState(false);
+  /** Weekday tapped in the week view, so a new block lands on the right day. */
+  const [composerDay, setComposerDay] = useState<number | null>(null);
   const [editingBlock, setEditingBlock] = useState<RoutineBlock | null>(null);
 
   // useState only reads its initial value on first mount, so a later request
@@ -318,11 +320,13 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], habits = [], 
           >
             <RoutineComposer
               block={editingBlock}
+              defaultWeekday={composerDay}
               habits={habits}
               goals={goals.map((g) => ({ id: g.id, title: g.title }))}
               onCancel={() => {
                 setBlockComposerOpen(false);
                 setEditingBlock(null);
+                setComposerDay(null);
               }}
               onSave={async (fields) => {
                 if (editingBlock) {
@@ -573,9 +577,14 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], habits = [], 
                 ) : (
                   <div>
                     {dayBlocks.map(({ block, state }, i) => (
-                      <div
+                      <button
                         key={block.id}
-                        className="flex items-center gap-3 px-4 py-2.5"
+                        onClick={() => {
+                          soundFx.playClick();
+                          setEditingBlock(block);
+                          setBlockComposerOpen(true);
+                        }}
+                        className="w-full text-left flex items-center gap-3 px-4 py-2.5"
                         style={{
                           borderTop: i === 0 ? 'none' : '1px solid var(--rule)',
                           opacity: state === 'skipped' ? 0.45 : 1,
@@ -609,10 +618,30 @@ export const LifeSection: React.FC<Props> = ({ userId, goals = [], habits = [], 
                         >
                           {block.title}
                         </span>
-                      </div>
+
+                        <Pencil
+                          className="w-3.5 h-3.5 shrink-0"
+                          style={{ color: 'var(--ink-dim)' }}
+                        />
+                      </button>
                     ))}
                   </div>
                 )}
+
+                {/* Add to this specific day, whichever day it is. */}
+                <button
+                  onClick={() => {
+                    soundFx.playClick();
+                    setComposerDay(d.getDay());
+                    setEditingBlock(null);
+                    setBlockComposerOpen(true);
+                  }}
+                  className="w-full flex items-center gap-2 px-4 py-2.5 t-meta"
+                  style={{ borderTop: '1px solid var(--rule)' }}
+                >
+                  <Plus className="w-3.5 h-3.5 shrink-0" />
+                  Add to {d.toLocaleDateString(undefined, { weekday: 'long' })}
+                </button>
               </div>
             );
           })}

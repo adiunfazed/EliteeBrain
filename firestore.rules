@@ -81,6 +81,15 @@ service cloud.firestore {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
     }
 
+    // Delivery records, written only by the server through the Admin SDK,
+    // which bypasses these rules. Readable so the client can tell an alarm
+    // already fired; never writable, since deleting one would let the same
+    // alarm ring repeatedly.
+    match /users/{userId}/alarmSends/{sendId} {
+      allow read: if isSignedIn() && request.auth.uid == userId;
+      allow write: if false;
+    }
+
     // --- Routine and sleep. Strictly private, same as everything else. ---
     match /users/{userId}/routineBlocks/{blockId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;

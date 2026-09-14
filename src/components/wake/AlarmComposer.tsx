@@ -1,6 +1,13 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as Icons from 'lucide-react';
-import { Check } from 'lucide-react';
+import { Check, Play, Volume2, Music, Upload, X } from 'lucide-react';
+import {
+  CustomSound,
+  listCustomSounds,
+  saveCustomSound,
+  deleteCustomSound,
+  startAlarmSound,
+} from '../../lib/alarmSounds';
 import { ComposerSheet } from '../ComposerSheet';
 import { Alarm, CHALLENGES, ChallengeType, validateAlarm } from '../../lib/wakeChallenge';
 import { Difficulty, DIFFICULTY_LABEL } from '../../lib/bodyTraining';
@@ -35,6 +42,71 @@ export const AlarmComposer: React.FC<Props> = ({ open, alarm, onClose, onSave })
   const [difficulty, setDifficulty] = useState<Difficulty>(alarm?.difficulty || 'easy');
   const [sound, setSound] = useState(alarm?.sound || 'chime');
   const [error, setError] = useState<string | null>(null);
+  const [previewing, setPreviewing] = useState<string | null>(null);
+  const previewRef = useRef<{ stop: () => void } | null>(null);
+
+  const stopPreview = () => {
+    previewRef.current?.stop();
+    previewRef.current = null;
+    setPreviewing(null);
+  };
+
+  /** Play five seconds, then stop on its own. */
+  const preview = (id: string) => {
+    previewRef.current?.stop();
+    previewRef.current = soundFx.startAlarm(id);
+    setPreviewing(id);
+
+    window.setTimeout(() => {
+      previewRef.current?.stop();
+      previewRef.current = null;
+      setPreviewing(null);
+    }, 5000);
+  };
+
+  // A preview left running after the sheet closes would be alarming in the
+  // literal sense.
+  useEffect(() => () => previewRef.current?.stop(), []);
+
+  /** Sounds the user has added on this device. */
+  const [customSounds, setCustomSounds] = useState<CustomSound[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [soundError, setSoundError] = useState<string | null>(null);
+
+  useEffect(() => {
+    void listCustomSounds().then(setCustomSounds);
+  }, []);
+
+  const addCustom = async (file: File) => {
+    setUploading(true);
+    setSoundError(null);
+
+    try {
+      const meta = await saveCustomSound(file);
+      setCustomSounds((prev) => [...prev, meta]);
+      setSound(meta.id);
+      void previewCustom(meta.id);
+    } catch (err: any) {
+      setSoundError(err?.message || 'Could not add that file.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removeCustom = async (id: string) => {
+    await deleteCustomSound(id);
+    setCustomSounds((prev) => prev.filter((c) => c.id !== id));
+    // Falling back keeps the alarm audible rather than pointing at nothing.
+    if (sound === id) setSound('chime');
+  };
+
+  const previewCustom = async (id: string) => {
+    previewRef.current?.stop();
+    const handle = await startAlarmSound(id, () => soundFx.startAlarm('chime'));
+    previewRef.current = handle;
+    setPreviewing(id);
+    window.setTimeout(() => stopPreview(), 5000);
+  };
 
   const submit = () => {
     const next: Alarm = {
@@ -152,17 +224,82 @@ export const AlarmComposer: React.FC<Props> = ({ open, alarm, onClose, onSave })
 
       <p className="eb-label mt-5 mb-2">Sound</p>
       <div className="flex items-center gap-2 flex-wrap">
-        {SOUNDS.map((s) => (
+        {SOUNDS.map((entry) => (
           <button
-            key={s.id}
-            onClick={() => setSound(s.id)}
-            className="chip"
-            data-active={sound === s.id}
+            key={entry.id}
+            onClick={() => {
+              setSound(entry.id);
+              if (previewing === entry.id) {
+                stopPreview();
+              } else {
+                preview(entry.id);
+              }
+            }}
+            className="chip flex items-center gap-1.5"
+            data-active={sound === entry.id}
           >
-            {s.label}
+            {previewing === entry.id ? (
+              <Volume2 className="w-3.5 h-3.5 shrink-0" />
+            ) : (
+              <Play className="w-3 h-3 shrink-0" />
+            )}
+            {entry.label}
           </button>
         ))}
       </div>
+
+      {/* Custom sounds, stored on this device. */}
+      {customSounds.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap mt-2">
+          {customSounds.map((c) => (
+            <span key={c.id} className="flex items-center">
+              <button
+                onClick={() => {
+                  setSound(c.id);
+                  if (previewing === c.id) stopPreview();
+                  else void previewCustom(c.id);
+                }}
+                className="chip flex items-center gap-1.5"
+                data-active={sound === c.id}
+              >
+                {previewing === c.id ? (
+                  <Volume2 className="w-3.5 h-3.5 shrink-0" />
+                ) : (
+                  <Music className="w-3 h-3 shrink-0" />
+                )}
+                <span className="truncate max-w-[110px]">{c.name}</span>
+              </button>
+
+              <button
+                onClick={() => void removeCustom(c.id)}
+                aria-label={`Delete ${c.name}`}
+                className="w-7 h-7 flex items-center justify-center shrink-0"
+                style={{ color: 'var(--ink-dim)' }}
+              >
+                <X className="w-3.5 h-3.5 shrink-0" />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+
+      <label className="btn-text mt-2 inline-flex items-center gap-1.5 cursor-pointer">
+        <Upload className="w-3.5 h-3.5 shrink-0" />
+        {uploading ? 'Adding…' : 'Add your own sound'}
+        <input
+          type="file"
+          accept="audio/*"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            // Cleared so the same file can be chosen again after a failure.
+            e.target.value = '';
+            if (file) void addCustom(file);
+          }}
+        />
+      </label>
+
+      {soundError && <p className="t-meta eb-warn mt-2">{soundError}</p>}
 
       <p className="eb-label mt-5 mb-2">Name</p>
       <input

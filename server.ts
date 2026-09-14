@@ -1,6 +1,6 @@
 import compression from 'compression';
 import express from 'express';
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import helmet from 'helmet';
 import path from 'path';
 import { GoogleGenAI } from '@google/genai';
@@ -11,6 +11,7 @@ import { getLeaderboard, syncLeaderboardEntry } from './serverLeaderboard';
 import { buildCoachContext, describeContext } from './serverCoachContext';
 import { analyseImage, isAllowedMime, MAX_IMAGE_BYTES, VisionTool } from './serverVision';
 import { usableVisionModels } from './serverModelPicker';
+import { runDueAlarms } from './serverAlarms';
 import { enqueue } from './serverQueue';
 import { createJob, getJob, markRunning, markDone, markFailed } from './serverJobs';
 
@@ -426,7 +427,11 @@ async function startServer() {
   const keyByUser = (req: any): string => {
     const auth = String(req.headers?.authorization || '');
     if (auth.length > 40) return `u:${auth.slice(-32)}`;
-    return `ip:${req.ip}`;
+
+    // Normalised rather than raw: an IPv6 user is typically given an entire
+    // /64, so keying on the full address let one person bypass the limit
+    // simply by using a different address from their own allocation.
+    return `ip:${ipKeyGenerator(req.ip || '')}`;
   };
 
   /** Reads: generous, but bounded. */
@@ -804,6 +809,18 @@ async function startServer() {
       return res.status(404).json({ error: 'Not found' });
     }
     if (!isAdminAvailable()) return res.status(503).json({ error: 'Unavailable.' });
+
+    // Alarms first: a wake-up that arrives late is worth less than one that
+    // arrives on time, and the daily digest can wait a second.
+    try {
+      const alarmResult = await runDueAlarms();
+      if (alarmResult.sent > 0) {
+        console.info(`Wake alarms sent: ${alarmResult.sent} of ${alarmResult.checked} checked`);
+      }
+    } catch (err: any) {
+      // A failure here must not prevent the rest of the daily run.
+      console.error('Alarm run failed:', err?.message || err);
+    }
 
     try {
       const result = await runScheduledReminders();
@@ -1519,6 +1536,182 @@ async function startServer() {
       : problems.join(' ');
 
     res.json(report);
+  });
+
+  /**
+   * Wake Challenge alarms.
+   *
+   * Every operation re-checks entitlement server-side. A free user editing
+   * `isPro` in devtools changes nothing here, which is the point — the client
+   * boolean is a display hint, never an authorisation.
+   */
+  const requireProUser = async (req: any, res: any) => {
+    const idToken = (req.headers.authorization || '').replace(/^Bearer\s+/i, '') || undefined;
+    const verified = await verifyUser(idToken);
+
+    if (!verified) {
+      res.status(401).json({ error: 'Sign in first.' });
+      return null;
+    }
+
+    // A failed entitlement read must not silently downgrade a paying user to
+    // free, so it is reported as a temporary fault instead.
+    if (verified.entitlementUnknown) {
+      res.status(503).json({
+        error: 'Could not check your subscription just now. Try again in a moment.',
+      });
+      return null;
+    }
+
+    if (!verified.isPro) {
+      res.status(403).json({
+        error:
+          verified.status === 'expired'
+            ? 'Your Pro access has ended. Reactivate to use Wake Challenge.'
+            : 'Wake Challenge is a Pro feature.',
+        status: verified.status,
+      });
+      return null;
+    }
+
+    return verified;
+  };
+
+  /** List the caller's alarms. Ownership comes from the token, never the body. */
+  app.get('/api/alarms', readLimiter, async (req, res) => {
+    const user = await requireProUser(req, res);
+    if (!user) return;
+
+    try {
+      const snap = await getFirestore()
+        .collection('users')
+        .doc(user.uid)
+        .collection('alarms')
+        .get();
+
+      res.json({ alarms: snap.docs.map((d) => d.data()) });
+    } catch (err: any) {
+      console.error('Alarm list failed:', err?.message || err);
+      res.status(503).json({ error: 'Could not load your alarms.' });
+    }
+  });
+
+  /** Create or update. The uid is taken from the verified token. */
+  app.post('/api/alarms', writeLimiter, async (req, res) => {
+    const user = await requireProUser(req, res);
+    if (!user) return;
+
+    const { alarm } = req.body || {};
+    if (!alarm?.id || !/^\d{1,2}:\d{2}$/.test(alarm.time || '')) {
+      return res.status(400).json({ error: 'Invalid alarm.' });
+    }
+
+    try {
+      const record = {
+        id: String(alarm.id).slice(0, 64),
+        uid: user.uid,
+        time: alarm.time,
+        // Captured per alarm so it still fires correctly after travel.
+        timezone: String(alarm.timezone || 'UTC').slice(0, 64),
+        label: String(alarm.label || 'Wake up').slice(0, 60),
+        weekdays: Array.isArray(alarm.weekdays)
+          ? alarm.weekdays.filter((d: any) => Number.isInteger(d) && d >= 0 && d <= 6)
+          : [],
+        enabled: alarm.enabled !== false,
+        challenge: String(alarm.challenge || 'squats').slice(0, 32),
+        difficulty: String(alarm.difficulty || 'easy').slice(0, 16),
+        sound: String(alarm.sound || 'chime').slice(0, 32),
+        createdAt: alarm.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      await getFirestore()
+        .collection('users')
+        .doc(user.uid)
+        .collection('alarms')
+        .doc(record.id)
+        .set(record, { merge: true });
+
+      res.json({ ok: true, alarm: record });
+    } catch (err: any) {
+      console.error('Alarm save failed:', err?.message || err);
+      res.status(503).json({ error: 'Could not save that alarm.' });
+    }
+  });
+
+  app.delete('/api/alarms/:id', writeLimiter, async (req, res) => {
+    const user = await requireProUser(req, res);
+    if (!user) return;
+
+    try {
+      // Scoped to the caller's own collection, so an id from another account
+      // simply does not exist here.
+      await getFirestore()
+        .collection('users')
+        .doc(user.uid)
+        .collection('alarms')
+        .doc(String(req.params.id))
+        .delete();
+
+      res.json({ ok: true });
+    } catch (err: any) {
+      console.error('Alarm delete failed:', err?.message || err);
+      res.status(503).json({ error: 'Could not delete that alarm.' });
+    }
+  });
+
+  /**
+   * Record a completed Wake Challenge.
+   *
+   * XP is decided here, not by the client, and keyed by alarm and local date
+   * so a retry, a refresh or a duplicate notification cannot award twice.
+   */
+  app.post('/api/alarms/:id/complete', writeLimiter, async (req, res) => {
+    const user = await requireProUser(req, res);
+    if (!user) return;
+
+    const { outcome, date, tookSeconds } = req.body || {};
+    if (!['completed', 'skipped', 'dismissed'].includes(outcome)) {
+      return res.status(400).json({ error: 'Invalid outcome.' });
+    }
+
+    const dateKey = /^\d{4}-\d{2}-\d{2}$/.test(date || '')
+      ? date
+      : new Date().toISOString().slice(0, 10);
+
+    const logId = `${String(req.params.id)}__${dateKey}`;
+
+    try {
+      const ref = getFirestore()
+        .collection('users')
+        .doc(user.uid)
+        .collection('alarmLogs')
+        .doc(logId);
+
+      const existing = await ref.get();
+      if (existing.exists) {
+        // Already recorded. Reporting the stored value rather than an error
+        // keeps a retry harmless.
+        return res.json({ ok: true, duplicate: true, xpAwarded: existing.data()?.xpAwarded ?? 0 });
+      }
+
+      const xpAwarded = outcome === 'completed' ? 30 : 0;
+
+      await ref.set({
+        id: logId,
+        alarmId: String(req.params.id),
+        date: dateKey,
+        firedAt: new Date().toISOString(),
+        outcome,
+        tookSeconds: Number(tookSeconds) || 0,
+        xpAwarded,
+      });
+
+      res.json({ ok: true, duplicate: false, xpAwarded });
+    } catch (err: any) {
+      console.error('Alarm completion failed:', err?.message || err);
+      res.status(503).json({ error: 'Could not record that.' });
+    }
   });
 
   app.get('/api/health', (req, res) => {

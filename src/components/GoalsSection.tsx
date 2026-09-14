@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState , useRef} from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, CalendarDays, Target, Repeat,
+import { Trash2, X, CalendarDays, Target, Repeat,
   Plus,
   Flame,
   Check,
@@ -458,6 +458,18 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
             style={{ color: 'var(--ink-dim)' }}
           >
             <Archive className="w-4 h-4 shrink-0" />
+          </button>
+
+          <button
+            onClick={() => {
+              soundFx.playClick();
+              deleteHabitForever(habit);
+            }}
+            aria-label="Delete habit"
+            className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+            style={{ color: 'var(--ink-dim)' }}
+          >
+            <Trash2 className="w-4 h-4 shrink-0" />
           </button>
         </div>
       </div>

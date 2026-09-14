@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Dumbbell } from 'lucide-react';
+import { Dumbbell, History } from 'lucide-react';
 import { ExerciseLibrary } from './ExerciseLibrary';
 import { ExerciseRunner, SetResult } from './ExerciseRunner';
 import { WorkoutConfig, WorkoutConfigValue } from './WorkoutConfig';
@@ -15,9 +15,13 @@ import { subscribeWorkouts, saveWorkout } from '../../lib/trainingStore';
 import { todayISO } from '../../lib/tasks';
 import { soundFx } from '../../utils/audio';
 import { useXp } from '../XpToast';
+import { resolveEntitlement } from '../../lib/entitlement';
 
 interface Props {
   userId: string | null;
+  /** The user's profile, for the shared entitlement check. */
+  profile?: any;
+  onUpgrade?: () => void;
 }
 
 type View = 'library' | 'config' | 'running';
@@ -29,7 +33,10 @@ type View = 'library' | 'config' | 'running';
  * session id, which matters because the alternative — awarding on a render
  * or a retry — inflates numbers that the whole progression system depends on.
  */
-export const BodyTrainingSection: React.FC<Props> = ({ userId }) => {
+export const BodyTrainingSection: React.FC<Props> = ({ userId, profile, onUpgrade }) => {
+  // Display only. The server re-checks on every alarm call, so editing this
+  // in devtools reveals the UI and nothing more.
+  const entitlement = useMemo(() => resolveEntitlement(profile || {}), [profile]);
   const { awardXp } = useXp();
 
   const [difficulty, setDifficulty] = useState<Difficulty>('easy');
@@ -139,9 +146,26 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId }) => {
 
       {view === 'library' && (
         <>
-          <WakeChallengeSection userId={userId} />
+          <WakeChallengeSection
+            userId={userId}
+            isPro={entitlement.isPro}
+            entitlementStatus={entitlement.status}
+            onUpgrade={onUpgrade}
+          />
 
-          <div className="h-px" style={{ background: 'var(--rule)' }} />
+          {/* Exercises: its own headed block, so it is clearly a different
+              thing from the alarm section above. */}
+          <div className="pt-1">
+            <div className="flex items-center gap-2.5 mb-3">
+              <span
+                className="w-7 h-7 rounded-lg shrink-0 flex items-center justify-center"
+                style={{ background: 'var(--surface-sunk)' }}
+              >
+                <Dumbbell className="w-3.5 h-3.5 shrink-0" style={{ color: 'var(--ink-dim)' }} />
+              </span>
+              <span className="panel-title">Exercises</span>
+              <span className="flex-1 h-px" style={{ background: 'var(--rule)' }} />
+            </div>
 
           <ExerciseLibrary
             difficulty={difficulty}
@@ -157,9 +181,22 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId }) => {
             }}
           />
 
-          <div className="h-px" style={{ background: 'var(--rule)' }} />
+          </div>
 
-          <WorkoutHistory sessions={sessions} />
+          <div className="pt-1">
+            <div className="flex items-center gap-2.5 mb-3">
+              <span
+                className="w-7 h-7 rounded-lg shrink-0 flex items-center justify-center"
+                style={{ background: 'var(--surface-sunk)' }}
+              >
+                <History className="w-3.5 h-3.5 shrink-0" style={{ color: 'var(--ink-dim)' }} />
+              </span>
+              <span className="panel-title">Your history</span>
+              <span className="flex-1 h-px" style={{ background: 'var(--rule)' }} />
+            </div>
+
+            <WorkoutHistory sessions={sessions} />
+          </div>
         </>
       )}
 

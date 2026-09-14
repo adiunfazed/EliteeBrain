@@ -5,6 +5,8 @@ import { RoutineBlock, BlockKind, Habit } from '../types';
 import { soundFx } from '../utils/audio';
 
 interface Props {
+  /** Weekday tapped in the week view, pre-selected for a new block. */
+  defaultWeekday?: number | null;
   block?: RoutineBlock | null;
   habits: Habit[];
   goals: { id: string; title: string }[];
@@ -56,6 +58,7 @@ function durationOf(start: string, end: string): number {
  */
 export const RoutineComposer: React.FC<Props> = ({
   block,
+  defaultWeekday,
   habits,
   goals,
   onSave,
@@ -67,7 +70,9 @@ export const RoutineComposer: React.FC<Props> = ({
   const [minutes, setMinutes] = useState(() =>
     block ? durationOf(block.startTime, block.endTime) : 60
   );
-  const [weekdays, setWeekdays] = useState<number[]>(block?.weekdays || []);
+  const [weekdays, setWeekdays] = useState<number[]>(
+    block?.weekdays || (defaultWeekday !== null && defaultWeekday !== undefined ? [defaultWeekday] : [])
+  );
   const [habitId, setHabitId] = useState<string | undefined>(block?.habitId);
   const [goalId, setGoalId] = useState<string | undefined>(block?.goalId);
   const [reminderMinutes, setReminderMinutes] = useState<number | undefined>(

@@ -609,7 +609,11 @@ export const Dashboard: React.FC<Props> = ({
 
             {trainTab === 'body' && (
               <Suspense fallback={<div className="h-40 rounded-xl animate-pulse" style={{ background: 'var(--surface-sunk)' }} />}>
-                <BodyTrainingSection userId={currentUser?.uid || null} />
+                <BodyTrainingSection
+                  userId={currentUser?.uid || null}
+                  profile={profile}
+                  onUpgrade={onOpenProModal}
+                />
               </Suspense>
             )}
 
