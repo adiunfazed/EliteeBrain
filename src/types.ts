@@ -122,6 +122,8 @@ export interface UserProfile {
 }
 
 export interface CoachChatMessage {
+  /** Data URL of a photo sent with this message, for showing it in the thread. */
+  imagePreview?: string;
   id: string;
   sender: 'user' | 'coach';
   text: string;

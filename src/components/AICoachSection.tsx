@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile, CoachChatMessage } from '../types';
 import { soundFx } from '../utils/audio';
-import { Send, Sparkles, Bot, User as UserIcon, RefreshCw, Crown, Lock, ArrowRight, Zap, Lightbulb, CalendarCheck, LifeBuoy, TrendingUp, Target, Repeat, Flag, Scale, Brain, Plus } from 'lucide-react';
+import { Camera, X, Send, Sparkles, Bot, User as UserIcon, RefreshCw, Crown, Lock, ArrowRight, Zap, Lightbulb, CalendarCheck, LifeBuoy, TrendingUp, Target, Repeat, Flag, Scale, Brain, Plus } from 'lucide-react';
+import { shrinkImage, ShrunkImage } from '../lib/shrinkImage';
 import { getIdToken } from '../lib/firebase';
 import { pushEntitlement } from '../lib/sync';
 import {
@@ -27,6 +28,24 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
   onOpenProModal,
 }) => {
   const [chatInput, setChatInput] = useState('');
+
+  /** A photo waiting to be sent with the next message. */
+  const [pendingImage, setPendingImage] = useState<ShrunkImage | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
+
+  const attachImage = async (file: File) => {
+    setImageError(null);
+    try {
+      setPendingImage(await shrinkImage(file));
+    } catch (err: any) {
+      setImageError(err?.message || 'Could not use that image.');
+    }
+  };
+
+  const clearImage = () => {
+    setPendingImage(null);
+    setImageError(null);
+  };
   const [messages, setMessages] = useState<CoachChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -102,8 +121,12 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
   }, [messages, isTyping]);
 
   const handleSendMessage = async (textToSend?: string) => {
-    const query = (textToSend || chatInput).trim();
-    if (!query || isTyping) return;
+    const sentImage = pendingImage;
+    const query =
+      (textToSend || chatInput).trim() ||
+      (sentImage ? 'What can you tell me about this?' : '');
+
+    if ((!query && !sentImage) || isTyping) return;
 
     if (!profile.isProUser) {
       onOpenProModal();
@@ -111,12 +134,16 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
     }
 
     setChatInput('');
+    setPendingImage(null);
     soundFx.playClick();
 
     const userMsg: CoachChatMessage = {
       id: `user_${Date.now()}`,
       sender: 'user',
       text: query,
+      // Kept on the message so the thread still makes sense when scrolled
+      // back to — a reply about a photo is meaningless without it.
+      imagePreview: sentImage?.preview,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
@@ -142,6 +169,9 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
           userMessage: query,
           history: messages.slice(-10),
           mode: 'chat',
+          ...(sentImage
+            ? { image: { data: sentImage.base64, mimeType: sentImage.mimeType } }
+            : {}),
         }),
       });
 
@@ -166,6 +196,9 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
               userMessage: query,
               history: messages.slice(-10),
               mode: 'chat',
+              ...(sentImage
+                ? { image: { data: sentImage.base64, mimeType: sentImage.mimeType } }
+                : {}),
             }),
           });
           data = await retry.json();
@@ -345,6 +378,15 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
                     : 'bg-[var(--surface-sunk)] border border-[var(--rule)] text-[#E7EAEE] rounded-xl rounded-bl-md whitespace-pre-line'
                 }`}
               >
+                {msg.imagePreview && (
+                  <img
+                    src={msg.imagePreview}
+                    alt="Photo you sent"
+                    className="w-full rounded-lg mb-2"
+                    style={{ maxHeight: 220, objectFit: 'cover' }}
+                  />
+                )}
+
                 {msg.text}
                 <span
                   className={`block t-meta mt-1.5 ${
@@ -449,8 +491,64 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
           </div>
         )}
 
+        {/* Attached photo, shown before sending so the wrong picture can be
+            removed rather than discovered in the reply. */}
+        {pendingImage && (
+          <div className="flex items-center gap-2.5 pt-2">
+            <img
+              src={pendingImage.preview}
+              alt=""
+              className="w-12 h-12 rounded-lg object-cover shrink-0"
+              style={{ border: '1px solid var(--rule)' }}
+            />
+            <span className="t-meta min-w-0 flex-1 truncate">
+              Photo attached. Ask what you want to know about it.
+            </span>
+            <button
+              onClick={clearImage}
+              aria-label="Remove photo"
+              className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+              style={{ color: 'var(--ink-dim)' }}
+            >
+              <X className="w-4 h-4 shrink-0" />
+            </button>
+          </div>
+        )}
+
+        {imageError && <p className="t-meta eb-warn pt-2">{imageError}</p>}
+
         {/* Chat Input Field */}
         <div className="flex items-center gap-2 pt-2">
+          {/* Camera and gallery in one control: the OS picker already offers
+              both, so a second button would duplicate it. */}
+          <label
+            className={`p-3 rounded-xl shrink-0 flex items-center justify-center transition-colors ${
+              !profile.isProUser || isTyping
+                ? 'opacity-40 cursor-not-allowed'
+                : 'cursor-pointer'
+            }`}
+            style={{
+              background: pendingImage ? 'var(--signal)' : 'var(--surface)',
+              border: `1px solid ${pendingImage ? 'var(--signal)' : 'var(--rule)'}`,
+              color: pendingImage ? '#fff' : 'var(--ink-dim)',
+            }}
+            aria-label="Attach a photo"
+          >
+            <Camera className="w-4 h-4 shrink-0" />
+            <input
+              type="file"
+              accept="image/*"
+              disabled={!profile.isProUser || isTyping}
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                // Cleared so the same file can be picked again after an error.
+                e.target.value = '';
+                if (file) void attachImage(file);
+              }}
+            />
+          </label>
+
           <input
             type="text"
             value={chatInput}
@@ -458,7 +556,9 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
             onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
             placeholder={
               profile.isProUser
-                ? 'Ask your AI Coach anything...'
+                ? pendingImage
+                  ? 'What do you want to know about this photo?'
+                  : 'Ask your AI Coach anything...'
                 : 'Pro subscription required for AI Coach chat...'
             }
             disabled={!profile.isProUser || isTyping}
@@ -467,7 +567,9 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
 
           <button
             onClick={() => handleSendMessage()}
-            disabled={!profile.isProUser || isTyping || !chatInput.trim()}
+            disabled={
+              !profile.isProUser || isTyping || (!chatInput.trim() && !pendingImage)
+            }
             className="p-3 bg-[var(--signal)] hover:bg-[var(--signal)]/90 disabled:opacity-40 text-white rounded-xl cursor-pointer transition-all active:scale-95 shrink-0"
           >
             <Send className="w-4 h-4 shrink-0" />

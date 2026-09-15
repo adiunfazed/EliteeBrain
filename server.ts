@@ -100,7 +100,9 @@ async function generateCoachReply(
   userMessage: string,
   mode: string,
   history?: any[],
-  context: any = null
+  context: any = null,
+  /** Optional photo, as base64 without the data-URL prefix. */
+  image?: { data: string; mimeType: string } | null
 ): Promise<string> {
   const groqKey = process.env.GROQ_API_KEY;
   const grokKey = process.env.GROK_API_KEY || process.env.XAI_API_KEY;
@@ -158,9 +160,14 @@ How to talk:
           });
         }
       }
+      // The image goes before the text: the model reads parts in order, and
+      // seeing the picture first produces answers about what is actually
+      // there rather than a generic response with the photo as an aside.
       contents.push({
         role: 'user',
-        parts: [{ text: prompt }],
+        parts: image
+          ? [{ inlineData: { mimeType: image.mimeType, data: image.data } }, { text: prompt }]
+          : [{ text: prompt }],
       });
 
       // Retry transient failures. Rate limits and 503s are common on free
@@ -205,7 +212,8 @@ How to talk:
   }
 
   // 2. Fall back to Groq (groq.com) — free tier, no card, very fast.
-  if (groqKey) {
+  // Text-only providers are skipped when a photo is attached.
+  if (groqKey && !image) {
     let modelIndex = 0;
     while (modelIndex < GROQ_MODELS.length) {
     const model = process.env.GROQ_MODEL || GROQ_MODELS[modelIndex];
@@ -262,7 +270,7 @@ How to talk:
   }
 
   // 3. Fall back to Grok (xAI) if a key is configured. Note: paid, no free tier.
-  if (grokKey) {
+  if (grokKey && !image) {
     try {
       const messages: any[] = [{ role: 'system', content: systemPrompt }];
       if (Array.isArray(history) && history.length > 0) {
@@ -305,6 +313,11 @@ How to talk:
   if (lastProviderError) {
     throw new Error(lastProviderError);
   }
+  // With an image and no vision provider, say so rather than answering blind.
+  if (image && !geminiKey) {
+    return 'Photo questions need the vision service, which is not available right now. Ask me in words and I can still help.';
+  }
+
   if (!geminiKey && !groqKey && !grokKey) {
     throw new Error(
       'No AI provider is configured. Set GEMINI_API_KEY or GROQ_API_KEY in Render.'
@@ -1721,7 +1734,7 @@ async function startServer() {
   // AI Cognitive Coach Endpoint
   app.post('/api/coach', coachLimiter, async (req, res) => {
     try {
-      const { userProfile, userMessage, mode, history } = req.body;
+      const { userProfile, userMessage, mode, history, image } = req.body;
 
       // Access is decided by a verified Firebase ID token, never by what the
       // browser claims. Posting {"userProfile":{"isProUser":true}} does nothing.
@@ -1775,7 +1788,39 @@ async function startServer() {
       // Context is read from the database, not from the request. The client
       // cannot invent a history for the coach to react to.
       const context = await buildCoachContext(verified.uid);
-      const reply = await generateCoachReply(userProfile, userMessage, mode, history, context);
+      // Validated before it reaches the model: an oversized or wrong-typed
+      // payload should fail here with a clear reason, not deep inside the
+      // provider call.
+      let photo: { data: string; mimeType: string } | null = null;
+
+      if (image?.data) {
+        const mimeType = String(image.mimeType || 'image/jpeg');
+
+        if (!isAllowedMime(mimeType)) {
+          return res.status(400).json({
+            error: 'That image format is not supported. Use a JPEG, PNG or WebP.',
+          });
+        }
+
+        // Base64 inflates by about a third, so the decoded size is what counts.
+        const bytes = Math.floor((String(image.data).length * 3) / 4);
+        if (bytes > MAX_IMAGE_BYTES) {
+          return res.status(413).json({
+            error: 'That photo is too large. Try a smaller one.',
+          });
+        }
+
+        photo = { data: String(image.data), mimeType };
+      }
+
+      const reply = await generateCoachReply(
+        userProfile,
+        userMessage,
+        mode,
+        history,
+        context,
+        photo
+      );
       res.json({ reply });
     } catch (err: any) {
       const detail = err?.message || String(err);
