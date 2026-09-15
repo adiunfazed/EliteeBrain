@@ -2,8 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile, CoachChatMessage } from '../types';
 import { soundFx } from '../utils/audio';
-import { Camera, X, Send, Sparkles, Bot, User as UserIcon, RefreshCw, Crown, Lock, ArrowRight, Zap, Lightbulb, CalendarCheck, LifeBuoy, TrendingUp, Target, Repeat, Flag, Scale, Brain, Plus } from 'lucide-react';
+import { Image as ImageIcon, Camera, X, Send, Sparkles, Bot, User as UserIcon, RefreshCw, Crown, Lock, ArrowRight, Zap, Lightbulb, CalendarCheck, LifeBuoy, TrendingUp, Target, Repeat, Flag, Scale, Brain, Plus } from 'lucide-react';
 import { shrinkImage, ShrunkImage } from '../lib/shrinkImage';
+import { PhotoCapture } from './coach/PhotoCapture';
 import { getIdToken } from '../lib/firebase';
 import { pushEntitlement } from '../lib/sync';
 import {
@@ -32,6 +33,9 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
   /** A photo waiting to be sent with the next message. */
   const [pendingImage, setPendingImage] = useState<ShrunkImage | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
+  const [sourceOpen, setSourceOpen] = useState(false);
+  const [captureOpen, setCaptureOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const attachImage = async (file: File) => {
     setImageError(null);
@@ -521,12 +525,10 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
         <div className="flex items-center gap-2 pt-2">
           {/* Camera and gallery in one control: the OS picker already offers
               both, so a second button would duplicate it. */}
-          <label
-            className={`p-3 rounded-xl shrink-0 flex items-center justify-center transition-colors ${
-              !profile.isProUser || isTyping
-                ? 'opacity-40 cursor-not-allowed'
-                : 'cursor-pointer'
-            }`}
+          <button
+            onClick={() => setSourceOpen(true)}
+            disabled={!profile.isProUser || isTyping}
+            className="p-3 rounded-xl shrink-0 flex items-center justify-center transition-colors disabled:opacity-40"
             style={{
               background: pendingImage ? 'var(--signal)' : 'var(--surface)',
               border: `1px solid ${pendingImage ? 'var(--signal)' : 'var(--rule)'}`,
@@ -535,19 +537,21 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
             aria-label="Attach a photo"
           >
             <Camera className="w-4 h-4 shrink-0" />
-            <input
-              type="file"
-              accept="image/*"
-              disabled={!profile.isProUser || isTyping}
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                // Cleared so the same file can be picked again after an error.
-                e.target.value = '';
-                if (file) void attachImage(file);
-              }}
-            />
-          </label>
+          </button>
+
+          {/* Gallery input, opened programmatically by the chooser below. */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              // Cleared so the same file can be picked again after an error.
+              e.target.value = '';
+              if (file) void attachImage(file);
+            }}
+          />
 
           <input
             type="text"
@@ -575,6 +579,81 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
             <Send className="w-4 h-4 shrink-0" />
           </button>
         </div>
+
+        {/* Source chooser. Two explicit options rather than relying on the
+            OS picker, which hides the camera behind a menu on some devices. */}
+        {sourceOpen && (
+          <div
+            className="fixed inset-0 z-[105] flex items-end sm:items-center justify-center"
+            style={{ background: 'rgba(0,0,0,0.6)' }}
+            onClick={() => setSourceOpen(false)}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl p-4 space-y-2"
+              style={{ background: 'var(--surface)', border: '1px solid var(--rule)' }}
+            >
+              <p className="t-section mb-3">Add a photo</p>
+
+              <button
+                onClick={() => {
+                  setSourceOpen(false);
+                  setCaptureOpen(true);
+                }}
+                className="w-full text-left rounded-xl p-3.5 flex items-center gap-3"
+                style={{ background: 'var(--surface-sunk)', border: '1px solid var(--rule)' }}
+              >
+                <span
+                  className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center"
+                  style={{ background: 'var(--signal)' }}
+                >
+                  <Camera className="w-[18px] h-[18px] shrink-0" style={{ color: '#fff' }} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[15px] font-bold">Take a photo</span>
+                  <span className="t-meta block mt-0.5">Use your camera now</span>
+                </span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setSourceOpen(false);
+                  fileInputRef.current?.click();
+                }}
+                className="w-full text-left rounded-xl p-3.5 flex items-center gap-3"
+                style={{ background: 'var(--surface-sunk)', border: '1px solid var(--rule)' }}
+              >
+                <span
+                  className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center"
+                  style={{ background: 'var(--surface)', border: '1px solid var(--rule)' }}
+                >
+                  <ImageIcon
+                    className="w-[18px] h-[18px] shrink-0"
+                    style={{ color: 'var(--ink-dim)' }}
+                  />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[15px] font-bold">Choose from gallery</span>
+                  <span className="t-meta block mt-0.5">Pick an existing photo</span>
+                </span>
+              </button>
+
+              <button onClick={() => setSourceOpen(false)} className="btn-quiet w-full mt-2">
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {captureOpen && (
+          <PhotoCapture
+            onCancel={() => setCaptureOpen(false)}
+            onCapture={(file) => {
+              setCaptureOpen(false);
+              void attachImage(file);
+            }}
+          />
+        )}
 
         {/* Non-Pro overlay if applicable */}
         {!profile.isProUser && (
