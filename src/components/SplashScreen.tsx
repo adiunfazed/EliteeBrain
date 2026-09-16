@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { Activity } from 'lucide-react';
 
@@ -25,21 +25,47 @@ const LOGO_VIEWBOX = { w: 100, h: 100 };
 const LOGO_SCALE = 0.72;
 
 export const SplashScreen: React.FC<Props> = ({ onFinish, ready = false }) => {
+  /** Mount time, held in a ref so it survives the effect re-running. */
+  const startedAt = useRef(Date.now());
+
+  /** Progress shown on the bar, 0–100. */
+  const [pct, setPct] = useState(8);
+
+  /**
+   * Creep forward while waiting.
+   *
+   * Real loading has no measurable percentage, so this eases toward 90 and
+   * stops — never claiming completion the app has not reached. It slows as it
+   * climbs, which reads as work getting harder rather than stalling.
+   */
   useEffect(() => {
-    // A brief floor so the logo does not flash on a fast load, and a ceiling
-    // so a slow network never traps the user on a splash screen.
-    const MIN_MS = 2000;
+    if (ready) return;
+
+    const id = window.setInterval(() => {
+      setPct((p) => (p >= 90 ? p : p + Math.max(1, Math.round((90 - p) / 12))));
+    }, 120);
+
+    return () => window.clearInterval(id);
+  }, [ready]);
+
+  useEffect(() => {
+    // A brief floor so the logo does not flash on a very fast load, and a
+    // ceiling so a slow network never traps anyone here.
+    const MIN_MS = 900;
     const MAX_MS = 5000;
-    const started = Date.now();
 
     if (ready) {
-      const remaining = Math.max(0, MIN_MS - (Date.now() - started));
-      const t = setTimeout(() => onFinish?.(), remaining);
-      return () => clearTimeout(t);
+      setPct(100);
+      // Measured from mount, so a load that already took a second does not
+      // wait another one.
+      const elapsed = Date.now() - startedAt.current;
+      const remaining = Math.max(0, MIN_MS - elapsed);
+      const t = window.setTimeout(() => onFinish?.(), remaining);
+      return () => window.clearTimeout(t);
     }
 
-    const timer = setTimeout(() => onFinish?.(), MAX_MS);
-    return () => clearTimeout(timer);
+    const timer = window.setTimeout(() => onFinish?.(), MAX_MS);
+    return () => window.clearTimeout(timer);
   }, [onFinish, ready]);
 
   return (
@@ -48,11 +74,11 @@ export const SplashScreen: React.FC<Props> = ({ onFinish, ready = false }) => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.6, ease: 'easeInOut' }}
-      className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-[#0B0E14] text-[var(--ink)] select-none overflow-hidden font-sans"
+      className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-[#07060B] text-[var(--ink)] select-none overflow-hidden font-sans"
     >
       {/* Background Radial Gradient & Grid Accent */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(92,108,242,0.12)_0%,transparent_70%)] pointer-events-none" />
-      <div className="absolute inset-0 bg-[radial-gradient(#2A313C_1px,transparent_1px)] [background-size:32px_32px] opacity-20 pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(122,99,224,0.22)_0%,transparent_72%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(#2E2740_1px,transparent_1px)] [background-size:32px_32px] opacity-20 pointer-events-none" />
 
       {/* Central Animated Logo & Card Container */}
       <motion.div
@@ -103,12 +129,12 @@ export const SplashScreen: React.FC<Props> = ({ onFinish, ready = false }) => {
                 viewBox={`0 0 ${LOGO_VIEWBOX.w} ${LOGO_VIEWBOX.h}`}
                 aria-hidden="true"
               >
-                <path d={LOGO_L} fill="#AC9BEE" />
+                <path d={LOGO_L} fill="#9B7FF0" />
               </svg>
             ) : (
               <span
                 className="font-display font-extrabold leading-none"
-                style={{ fontSize: 62, color: '#AC9BEE', letterSpacing: '-0.04em' }}
+                style={{ fontSize: 62, color: '#9B7FF0', letterSpacing: '-0.04em' }}
               >
                 L
               </span>
@@ -137,7 +163,7 @@ export const SplashScreen: React.FC<Props> = ({ onFinish, ready = false }) => {
           className="font-display font-extrabold tracking-tight"
           style={{ fontSize: 21, marginTop: 4 }}
         >
-          Elite<span style={{ color: '#AC9BEE' }}>Life</span>
+          Elite<span style={{ color: '#9B7FF0' }}>Life</span>
         </motion.p>
 
         <motion.p
@@ -162,7 +188,7 @@ export const SplashScreen: React.FC<Props> = ({ onFinish, ready = false }) => {
           {ready ? 'Ready' : 'Getting your day together…'}
         </motion.p>
 
-        {/* Smooth 2.5-second Loading Bar */}
+        {/* Progress, driven by actual readiness rather than a timer. */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -171,18 +197,22 @@ export const SplashScreen: React.FC<Props> = ({ onFinish, ready = false }) => {
         >
           <div className="h-1.5 w-full bg-[var(--surface-sunk)] rounded-full overflow-hidden border border-[var(--rule)]">
             <motion.div
+              className="h-full bg-gradient-to-r from-[#7E63DC] to-[#9B7FF0]"
               initial={{ width: '0%' }}
-              animate={{ width: '100%' }}
-              transition={{ duration: 2.1, ease: [0.4, 0, 0.2, 1] }}
-              className="h-full bg-gradient-to-r from-[#7E63DC] to-[#AC9BEE]"
+              animate={{ width: `${pct}%` }}
+              // Quick when it completes, unhurried while waiting — so the
+              // jump to full reads as finishing rather than as a glitch.
+              transition={{ duration: ready ? 0.2 : 0.5, ease: 'easeOut' }}
             />
           </div>
           <div className="flex items-center justify-between text-[11px] text-[var(--ink-muted)]">
             <span className="flex items-center gap-1.5">
-              <Activity className="w-3.5 h-3.5 shrink-0 text-[#7E63DC] animate-pulse" />
-              <span>Initializing Protocol...</span>
+              <Activity
+                className={`w-3.5 h-3.5 shrink-0 text-[#7E63DC] ${ready ? '' : 'animate-pulse'}`}
+              />
+              <span>{ready ? 'Ready' : 'Loading your data…'}</span>
             </span>
-            <span className="text-[var(--signal-ink)] font-bold font-mono">READY</span>
+            <span className="text-[var(--signal-ink)] font-bold tabular-nums">{pct}%</span>
           </div>
         </motion.div>
       </motion.div>

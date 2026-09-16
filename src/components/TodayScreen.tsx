@@ -503,7 +503,9 @@ export const TodayScreen: React.FC<Props> = ({
 
           <HabitsPanel
             habits={habits
-              .filter((h: any) => h.status === 'active')
+              // Scheduled for today specifically, not merely active. A habit
+              // set for selected weekdays must not appear on the others.
+              .filter((h: any) => isScheduledOn(h, today))
               .slice(0, 8)
               .map((h: any) => ({
                 id: h.id,
