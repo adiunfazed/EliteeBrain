@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Minus, Plus } from 'lucide-react';
 import { Exercise } from '../../lib/bodyTraining';
 import { soundFx } from '../../utils/audio';
@@ -16,7 +16,15 @@ interface Props {
   onCancel: () => void;
 }
 
-/** A stepper rather than a free text field: fewer taps, no invalid input. */
+/**
+ * A stepper whose number is itself an input.
+ *
+ * The buttons stay for a quick nudge, but going from 10 to 30 should not cost
+ * twenty taps — tapping the number opens the numeric keypad and the exact
+ * figure can be typed. The field is only committed on blur or Enter, so a
+ * half-typed "3" on the way to "30" is never clamped up to the minimum
+ * underneath the user's finger.
+ */
 const Stepper: React.FC<{
   label: string;
   value: number;
@@ -25,52 +33,113 @@ const Stepper: React.FC<{
   max: number;
   step: number;
   onChange: (v: number) => void;
-}> = ({ label, value, unit, min, max, step, onChange }) => (
-  <div className="flex items-center gap-3">
-    <span className="t-sub min-w-0 flex-1">{label}</span>
+}> = ({ label, value, unit, min, max, step, onChange }) => {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(String(value));
+  const inputRef = useRef<HTMLInputElement>(null);
 
-    <div className="flex items-center gap-2 shrink-0">
-      <button
-        onClick={() => {
-          soundFx.playClick();
-          onChange(Math.max(min, value - step));
-        }}
-        disabled={value <= min}
-        aria-label={`Less ${label}`}
-        className="w-9 h-9 rounded-lg flex items-center justify-center"
-        style={{
-          background: 'var(--surface-sunk)',
-          border: '1px solid var(--rule)',
-          opacity: value <= min ? 0.4 : 1,
-        }}
-      >
-        <Minus className="w-4 h-4 shrink-0" />
-      </button>
+  // While the field is closed it simply mirrors the value, so the +/- buttons
+  // and the typed value can never disagree.
+  useEffect(() => {
+    if (!editing) setDraft(String(value));
+  }, [value, editing]);
 
-      <span className="t-figure tabular-nums text-center" style={{ fontSize: 18, minWidth: 54 }}>
-        {value}
-        <span className="t-meta ml-0.5">{unit}</span>
-      </span>
+  const open = () => {
+    setDraft(String(value));
+    setEditing(true);
+    // Selected on open: the common case is replacing the number, not
+    // appending to it.
+    window.setTimeout(() => inputRef.current?.select(), 0);
+  };
 
-      <button
-        onClick={() => {
-          soundFx.playClick();
-          onChange(Math.min(max, value + step));
-        }}
-        disabled={value >= max}
-        aria-label={`More ${label}`}
-        className="w-9 h-9 rounded-lg flex items-center justify-center"
-        style={{
-          background: 'var(--surface-sunk)',
-          border: '1px solid var(--rule)',
-          opacity: value >= max ? 0.4 : 1,
-        }}
-      >
-        <Plus className="w-4 h-4 shrink-0" />
-      </button>
+  const commit = () => {
+    setEditing(false);
+
+    const parsed = Number.parseInt(draft.replace(/[^\d]/g, ''), 10);
+    // Anything that is not a sensible positive number leaves the value alone
+    // rather than silently becoming zero.
+    if (!Number.isFinite(parsed)) {
+      setDraft(String(value));
+      return;
+    }
+
+    const next = Math.max(min, Math.min(max, parsed));
+    setDraft(String(next));
+    if (next !== value) {
+      soundFx.playClick();
+      onChange(next);
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-3">
+      <span className="t-sub min-w-0 flex-1">{label}</span>
+
+      <div className="flex items-center gap-2 shrink-0">
+        <button
+          onClick={() => {
+            soundFx.playClick();
+            onChange(Math.max(min, value - step));
+          }}
+          disabled={value <= min}
+          aria-label={`Less ${label}`}
+          className="step-btn"
+        >
+          <Minus className="w-4 h-4 shrink-0" />
+        </button>
+
+        {editing ? (
+          <input
+            ref={inputRef}
+            // Numeric keypad on mobile without the spinner arrows a number
+            // input drags in on desktop.
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value.replace(/[^\d]/g, '').slice(0, 4))}
+            onBlur={commit}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                inputRef.current?.blur();
+              } else if (e.key === 'Escape') {
+                setDraft(String(value));
+                setEditing(false);
+              }
+            }}
+            aria-label={`${label}, type a number`}
+            autoFocus
+            className="step-field"
+          />
+        ) : (
+          <button
+            onClick={open}
+            aria-label={`${label}: ${value}${unit}. Tap to type a number.`}
+            className="step-value"
+          >
+            <span className="t-figure tabular-nums" style={{ fontSize: 18 }}>
+              {value}
+            </span>
+            {unit && <span className="t-meta ml-0.5">{unit}</span>}
+          </button>
+        )}
+
+        <button
+          onClick={() => {
+            soundFx.playClick();
+            onChange(Math.min(max, value + step));
+          }}
+          disabled={value >= max}
+          aria-label={`More ${label}`}
+          className="step-btn"
+        >
+          <Plus className="w-4 h-4 shrink-0" />
+        </button>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 /**
  * Configuring a set before starting.

@@ -63,6 +63,77 @@ interface ExerciseDefinition {
   formCheck?: (lm: Landmark[]) => boolean;
   /** Shown when the form check rejects the movement. */
   formHint?: string;
+  /**
+   * Live posture check, run every tracked frame.
+   *
+   * Separate from `formCheck`: that one decides whether a rep counts, this one
+   * only coaches. Returns a short message when something is wrong, or null
+   * when the posture is fine. Never guesses — if the landmarks it needs are
+   * not visible it returns null rather than inventing a correction.
+   */
+  posture?: (lm: Landmark[]) => string | null;
+  /** How far from the bottom counts as "nearly there", in degrees. */
+  nearBottom?: number;
+}
+
+/** The angle at B for A-B-C, or null when any point is too faint to trust. */
+function safeAngle(
+  lm: Landmark[],
+  a: number,
+  b: number,
+  c: number,
+  minVisibility = 0.5
+): number | null {
+  const pa = lm[a];
+  const pb = lm[b];
+  const pc = lm[c];
+  if (!pa || !pb || !pc) return null;
+  if (
+    (pa.visibility ?? 0) < minVisibility ||
+    (pb.visibility ?? 0) < minVisibility ||
+    (pc.visibility ?? 0) < minVisibility
+  ) {
+    return null;
+  }
+  return angleAt(pa, pb, pc);
+}
+
+/** The more visible of a pair of landmarks, or null if neither is reliable. */
+function clearer(lm: Landmark[], a: number, b: number, min = 0.5): Landmark | null {
+  const pa = lm[a];
+  const pb = lm[b];
+  const va = pa?.visibility ?? 0;
+  const vb = pb?.visibility ?? 0;
+  if (va < min && vb < min) return null;
+  return va >= vb ? pa : pb;
+}
+
+/**
+ * How far the hips sit off the straight shoulder-to-ankle line.
+ *
+ * Returned as a fraction of body length, signed: positive means the hips hang
+ * below the line (a sagging push-up or plank), negative means they ride above
+ * it (piking). Scale-free, so it holds at any distance from the camera.
+ *
+ * An unsigned joint angle cannot tell sag from pike — both read as "less than
+ * straight" — which is why this measures the offset rather than the angle.
+ */
+function hipDeviation(lm: Landmark[]): number | null {
+  const shoulder = clearer(lm, LM.leftShoulder, LM.rightShoulder);
+  const hip = clearer(lm, LM.leftHip, LM.rightHip);
+  const ankle = clearer(lm, LM.leftAnkle, LM.rightAnkle);
+  if (!shoulder || !hip || !ankle) return null;
+
+  const dx = ankle.x - shoulder.x;
+  const dy = ankle.y - shoulder.y;
+  const length = Math.hypot(dx, dy);
+  // Too short to measure against: the body is end-on to the camera.
+  if (length < 0.15) return null;
+
+  // Signed perpendicular distance from the hip to the shoulder-ankle line.
+  // Screen y grows downward, so a positive cross product puts the hip below.
+  const cross = (hip.x - shoulder.x) * dy - (hip.y - shoulder.y) * dx;
+  return -cross / (length * length);
 }
 
 const DEFINITIONS: Record<PoseExerciseId, ExerciseDefinition> = {
@@ -77,6 +148,15 @@ const DEFINITIONS: Record<PoseExerciseId, ExerciseDefinition> = {
     upAngle: 155,
     minConfidence: 0.6,
     minRepMs: 550,
+    nearBottom: 22,
+    // A push-up fails at the hips long before it fails at the elbows.
+    posture: (lm) => {
+      const dev = hipDeviation(lm);
+      if (dev === null) return null;
+      if (dev > 0.07) return 'Keep your back straight';
+      if (dev < -0.09) return 'Lower your hips';
+      return null;
+    },
   },
 
   // Knee angle. 90 is a deep squat; 160 is standing.
@@ -97,6 +177,17 @@ const DEFINITIONS: Record<PoseExerciseId, ExerciseDefinition> = {
     upAngle: 160,
     minConfidence: 0.6,
     minRepMs: 600,
+    nearBottom: 25,
+    // Torso lean, measured as the angle at the hip between shoulder and knee.
+    // Folding forward turns a squat into a good-morning.
+    posture: (lm) => {
+      const left = safeAngle(lm, LM.leftShoulder, LM.leftHip, LM.leftKnee);
+      const right = safeAngle(lm, LM.rightShoulder, LM.rightHip, LM.rightKnee);
+      const torso = left !== null && right !== null ? (left + right) / 2 : (left ?? right);
+      if (torso === null) return null;
+      if (torso < 55) return 'Chest up — you are folding forward';
+      return null;
+    },
   },
 
   // Front knee, same joints as a squat but a shallower bottom, since a lunge
@@ -135,6 +226,15 @@ const DEFINITIONS: Record<PoseExerciseId, ExerciseDefinition> = {
     upAngle: 160,
     minConfidence: 0.55,
     minRepMs: 650,
+    nearBottom: 20,
+    posture: (lm) => {
+      const left = safeAngle(lm, LM.leftShoulder, LM.leftHip, LM.leftKnee);
+      const right = safeAngle(lm, LM.rightShoulder, LM.rightHip, LM.rightKnee);
+      const torso = left !== null && right !== null ? Math.max(left, right) : (left ?? right);
+      if (torso === null) return null;
+      if (torso < 60) return 'Keep your torso upright';
+      return null;
+    },
   },
 
   // Hip angle: bent lying flat, straight at the top of the bridge. The
@@ -149,6 +249,7 @@ const DEFINITIONS: Record<PoseExerciseId, ExerciseDefinition> = {
     upAngle: 160,
     minConfidence: 0.55,
     minRepMs: 600,
+    nearBottom: 18,
   },
 
   // Ankle travel is too small for a reliable angle, so this one uses the
@@ -172,6 +273,7 @@ const DEFINITIONS: Record<PoseExerciseId, ExerciseDefinition> = {
     upAngle: 145,
     minConfidence: 0.5,
     minRepMs: 450,
+    nearBottom: 12,
   },
 };
 
@@ -187,6 +289,28 @@ const MIN_BOTTOM_MS = 200;
 /** Exercises measured by a raised position rather than a bent one. */
 const INVERTED: PoseExerciseId[] = ['glute-bridge'];
 
+/** How a coaching line should be read. */
+export type CueTone = 'good' | 'warn' | 'bad' | 'dim';
+
+export interface RepCue {
+  text: string;
+  tone: CueTone;
+}
+
+/**
+ * Something that just happened, reported on exactly one frame.
+ *
+ * The UI uses it to flash green or red once, rather than having to diff the
+ * count itself and guess why a movement did not register.
+ */
+export interface RepEvent {
+  kind: 'rep' | 'rejected';
+  /** Why a movement did not count. Always set on a rejection. */
+  reason?: string;
+  /** The count after this event. */
+  count: number;
+}
+
 export interface RepReading {
   count: number;
   status: TrackingStatus;
@@ -198,6 +322,12 @@ export interface RepReading {
   phase: 'top' | 'bottom';
   /** Plain-language cause when tracking is not working. */
   reason?: string;
+  /** Live coaching line. Only ever set when the pose is trusted. */
+  cue?: RepCue;
+  /** Fires on a single frame. See RepEvent. */
+  event?: RepEvent;
+  /** True once the configured target has been reached. */
+  targetReached: boolean;
 }
 
 /**
@@ -206,7 +336,7 @@ export interface RepReading {
  * Stateful and deliberately not a React hook, so the render loop can feed it
  * every frame without causing re-renders on frames that change nothing.
  */
-export function createRepEngine(exercise: PoseExerciseId) {
+export function createRepEngine(exercise: PoseExerciseId, target = 0) {
   const def = DEFINITIONS[exercise] || DEFINITIONS.squats;
   const inverted = INVERTED.includes(exercise);
 
@@ -219,7 +349,16 @@ export function createRepEngine(exercise: PoseExerciseId) {
    * as the top of a rep produces a phantom count on the first movement.
    */
   let calibrated = false;
-  let lastRepAt = 0;
+  /**
+   * When the body last left the top of a rep.
+   *
+   * This is what a rep's duration is measured against. The previous version
+   * measured the gap since the last COUNTED rep, which meant one rejected rep
+   * made the next one look slow enough to reject as well — the counter would
+   * sit at 29 and only move after several extra movements. Timing the actual
+   * cycle removes that feedback loop entirely.
+   */
+  let cycleStartedAt = 0;
   /** Frames spent below the confidence floor, used to report lost tracking. */
   let lowFrames = 0;
   /** Consecutive frames a threshold has been satisfied. */
@@ -230,22 +369,40 @@ export function createRepEngine(exercise: PoseExerciseId) {
   let deepest = 180;
   /** Whether the bottom of the current rep had the right shape. */
   let bottomFormOk = true;
+  /** Deepest point reached while descending but before the bottom was met. */
+  let attemptDeepest = 180;
+  /** True once the target has been hit, after which counting stops. */
+  let locked = false;
   /** Small rolling window, so one bad frame cannot flip the phase. */
   const window: number[] = [];
+
+  /** How far past the top the body currently is, in degrees. */
+  const travelFrom = (angle: number) =>
+    inverted ? Math.abs(angle - def.downAngle) : Math.abs(def.upAngle - angle);
+
+  /** The full range of one rep, in degrees. */
+  const fullTravel = Math.abs(def.upAngle - def.downAngle) || 1;
+
+  const idle = (over: Partial<RepReading>): RepReading => ({
+    count,
+    status: 'tracking',
+    confidence: 0,
+    angle: 180,
+    phase,
+    targetReached: locked,
+    ...over,
+  });
 
   return {
     /** Feed one frame of landmarks. */
     push(landmarks: Landmark[] | null, now = Date.now()): RepReading {
       if (!landmarks || landmarks.length < 33) {
         lowFrames++;
-        return {
-          count,
+        return idle({
           status: 'no-body',
-          confidence: 0,
-          angle: 180,
-          phase,
           reason: 'No body found. Step back so more of you is in frame.',
-        };
+          cue: { text: 'Get into position', tone: 'dim' },
+        });
       }
 
       const side = betterSide(landmarks, def.left, def.right);
@@ -255,30 +412,27 @@ export function createRepEngine(exercise: PoseExerciseId) {
 
       if (bodyConfidence < 0.4) {
         lowFrames++;
-        return {
-          count,
+        return idle({
           status: 'partial',
           confidence: bodyConfidence,
-          angle: 180,
-          phase,
           reason: def.framingHint,
-        };
+          cue: { text: 'Get into position', tone: 'dim' },
+        });
       }
 
       if (side.confidence < def.minConfidence) {
         lowFrames++;
         // Counting is paused rather than guessed at. Inventing a rep here is
-        // exactly what makes a counter untrustworthy.
-        return {
-          count,
+        // exactly what makes a counter untrustworthy — and it is why no cue
+        // above 'dim' is ever produced from a pose this unclear.
+        return idle({
           status: 'low-confidence',
           confidence: side.confidence,
-          angle: 180,
-          phase,
           // Presence is fine but the tracked joints are unclear, which is
           // almost always the angle rather than the distance.
           reason: 'The tracked joints are partly hidden. Turn more side-on to the camera.',
-        };
+          cue: { text: 'Get into position', tone: 'dim' },
+        });
       }
 
       lowFrames = 0;
@@ -293,21 +447,34 @@ export function createRepEngine(exercise: PoseExerciseId) {
       const atBottom = inverted ? angle >= def.upAngle : angle <= def.downAngle;
       const atTop = inverted ? angle <= def.downAngle : angle >= def.upAngle;
 
+      // Posture coaching is computed from the same trusted frame, and is
+      // deliberately null whenever the landmarks it needs are unclear.
+      const postureWarning = def.posture ? def.posture(landmarks) : null;
+
       // Wait for a clean top position before counting anything.
       if (!calibrated) {
         if (atTop) {
           calibrated = true;
           phase = 'top';
           heldFrames = 0;
+          cycleStartedAt = now;
         }
-        return {
-          count,
-          status: 'tracking',
+        return idle({
           confidence: side.confidence,
           angle,
-          phase,
           reason: 'Get into the starting position to begin.',
-        };
+          cue: { text: 'Get into position', tone: 'dim' },
+        });
+      }
+
+      // Target met: hold the number exactly where it is. Extra movements
+      // after the last rep must never push a 30-rep set to 31.
+      if (locked) {
+        return idle({
+          confidence: side.confidence,
+          angle,
+          cue: { text: 'Set complete', tone: 'good' },
+        });
       }
 
       // A threshold must be held for consecutive frames before the phase
@@ -327,41 +494,68 @@ export function createRepEngine(exercise: PoseExerciseId) {
       } else if (phase === 'bottom' && atTop) {
         heldFrames++;
         if (heldFrames >= HOLD_FRAMES) {
-          const elapsed = now - lastRepAt;
           // How far the body actually travelled this cycle, which separates a
           // genuine rep from a small movement that happened to cross a line.
-          const travelled = inverted
-            ? Math.abs(deepest - def.downAngle)
-            : Math.abs(def.upAngle - deepest);
+          const travelled = travelFrom(deepest);
 
           const deepEnough = travelled >= MIN_TRAVEL_DEGREES;
-          const slowEnough = elapsed >= def.minRepMs;
+          // The duration of THIS rep, top to top — not the gap since the last
+          // one that happened to be accepted.
+          const cycleMs = now - cycleStartedAt;
+          const slowEnough = cycleMs >= def.minRepMs;
           // Right depth, wrong exercise: rejected rather than counted.
           const rightShape = !def.formCheck || bottomFormOk;
           // A bottom position held for a plausible moment. Passing straight
           // through in two frames is a tracking glitch, not a repetition.
           const realPause = now - bottomAt >= MIN_BOTTOM_MS;
 
-          if (deepEnough && slowEnough && realPause && rightShape) {
-            count++;
-            lastRepAt = now;
-          }
-
-          const rejectedForShape = deepEnough && slowEnough && realPause && !rightShape;
-
           phase = 'top';
           heldFrames = 0;
+          // The next rep is timed from here, whatever the verdict on this one.
+          cycleStartedAt = now;
+          attemptDeepest = angle;
 
-          if (rejectedForShape) {
+          if (deepEnough && slowEnough && realPause && rightShape) {
+            count++;
+            if (target > 0 && count >= target) locked = true;
+
             return {
               count,
               status: 'tracking',
               confidence: side.confidence,
               angle,
               phase,
-              reason: def.formHint,
+              targetReached: locked,
+              cue: {
+                text: locked ? 'Set complete' : postureWarning || 'Good rep',
+                tone: postureWarning && !locked ? 'warn' : 'good',
+              },
+              event: { kind: 'rep', count },
             };
           }
+
+          // Rejected. The user is told which of the four gates failed, in the
+          // order that matters most, rather than being left to guess why the
+          // number did not move.
+          const why = !rightShape
+            ? def.formHint || 'That was not the right movement'
+            : !deepEnough
+              ? 'Rep incomplete — go lower'
+              : !realPause
+                ? 'Move slower — pause at the bottom'
+                : 'Move slower';
+
+          return {
+            count,
+            status: 'tracking',
+            confidence: side.confidence,
+            angle,
+            phase,
+            targetReached: false,
+            reason: !rightShape ? def.formHint : undefined,
+            cue: { text: why, tone: 'bad' },
+            event: { kind: 'rejected', reason: why, count },
+          };
         }
       } else {
         // Moved away from the threshold before it was confirmed.
@@ -369,15 +563,75 @@ export function createRepEngine(exercise: PoseExerciseId) {
         if (phase === 'bottom') {
           // Track the extreme actually reached while down.
           deepest = inverted ? Math.max(deepest, angle) : Math.min(deepest, angle);
+        } else {
+          // Descending but not yet deep enough. Remembering how far they got
+          // is what makes "go lower" a fact rather than a guess.
+          attemptDeepest = inverted
+            ? Math.max(attemptDeepest, angle)
+            : Math.min(attemptDeepest, angle);
+
+          // Back at the top having dipped most of the way without ever
+          // reaching depth: a genuine half rep, worth saying so. The bar is
+          // set high enough that a wobble at the top cannot trigger it.
+          if (atTop && travelFrom(attemptDeepest) >= fullTravel * 0.35) {
+            attemptDeepest = angle;
+            cycleStartedAt = now;
+            return {
+              count,
+              status: 'tracking',
+              confidence: side.confidence,
+              angle,
+              phase,
+              targetReached: false,
+              cue: { text: 'Rep incomplete — go lower', tone: 'bad' },
+              event: { kind: 'rejected', reason: 'Go lower', count },
+            };
+          }
+
+          if (atTop) {
+            attemptDeepest = angle;
+            cycleStartedAt = now;
+          }
         }
       }
 
-      return { count, status: 'tracking', confidence: side.confidence, angle, phase };
+      /* ---- steady-state coaching ---- */
+
+      let cue: RepCue;
+      if (postureWarning) {
+        cue = { text: postureWarning, tone: 'warn' };
+      } else if (phase === 'bottom') {
+        cue = { text: 'Now press back up', tone: 'good' };
+      } else {
+        // 0 at the top of the movement, 1 at full depth.
+        const depth = travelFrom(angle) / fullTravel;
+        cue =
+          depth > 0.3
+            ? { text: 'Go lower', tone: 'warn' }
+            : { text: 'Good form', tone: 'good' };
+      }
+
+      return {
+        count,
+        status: 'tracking',
+        confidence: side.confidence,
+        angle,
+        phase,
+        targetReached: false,
+        cue,
+      };
     },
 
-    /** Manual correction, for the cases detection cannot cover. */
+    /**
+     * Manual correction, for the cases detection cannot cover.
+     *
+     * Respects the target the same way detection does, so tapping "Count one"
+     * cannot push a 30-rep set to 31 either.
+     */
     adjust(delta: number): number {
-      count = Math.max(0, count + delta);
+      const ceiling = target > 0 ? target : Number.MAX_SAFE_INTEGER;
+      count = Math.max(0, Math.min(ceiling, count + delta));
+      locked = target > 0 && count >= target;
       return count;
     },
 
@@ -385,15 +639,22 @@ export function createRepEngine(exercise: PoseExerciseId) {
       count = 0;
       phase = 'top';
       calibrated = false;
-      lastRepAt = 0;
+      cycleStartedAt = 0;
       heldFrames = 0;
       bottomAt = 0;
       deepest = 180;
+      attemptDeepest = 180;
+      locked = false;
+      lowFrames = 0;
       window.length = 0;
     },
 
     get value(): number {
       return count;
+    },
+
+    get reachedTarget(): boolean {
+      return locked;
     },
   };
 }

@@ -45,31 +45,33 @@
 }
 
 .dark {
-  /* 60% — base. Near-black canvas with a faint purple cast in the
-     surfaces, so panels read as dark violet rather than grey. */
-  --ground: #07060B;
-  /* A clearer step up from the ground, so a card reads as a surface rather
-     than a slightly different shade of the page. */
-  --surface: #191325;
-  --surface-sunk: #241C36;
+  /* 60% — base. Near-black canvas. The surfaces carry only a trace of
+     violet: enough that the app is not grey, far short of the tinted
+     panels that made every card look lit from inside. Violet is an
+     accent here, not an ambient colour. */
+  --ground: #08080B;
+  /* A clear step up from the ground, so a card reads as a surface rather
+     than a slightly different shade of the page — achieved with
+     lightness rather than saturation. */
+  --surface: #131319;
+  --surface-sunk: #1B1B22;
 
   /* 30% — secondary. Text, rules, and structure. */
-  --ink: #F4F2F8;
-  --ink-muted: #9C96AD;
-  --ink-dim: #8B849E;
-  /* Thin and low contrast, as the brief asks — visible as an edge, never
-     as a line competing with the content. */
-  --rule: #2E2740;
-  --rule-strong: #423857;
+  --ink: #F5F4F8;
+  --ink-muted: #9B99A8;
+  --ink-dim: #7F7D8C;
+  /* Neutral, not violet. A purple hairline around every panel is what
+     made the interface read as neon rather than premium — a border is
+     structure, and structure should be silent. */
+  --rule: #23232C;
+  --rule-strong: #33333E;
 
-  /* 10% — accent. Used sparingly: one primary action per view. */
-  /* Softer than #7A63E0: same violet family, less saturation, a touch
-     warmer. The old value sat near maximum blue, which glares on an OLED
-     panel — especially with a phone's warm reading mode on. */
-  --signal: #7A63E0;
+  /* 10% — accent. Used sparingly: active, selected, progress and the one
+     primary action per view. Nothing decorative. */
+  --signal: #7C6BE8;
   /* Text and icons on dark need to stay legible, so this is lightened
      rather than dimmed. */
-  --signal-ink: #AC9BEE;
+  --signal-ink: #B3A6F2;
 
   --dom-memory: #F43F5E;
   --dom-focus: #7E63DC;
@@ -316,7 +318,7 @@
   transition: transform 0.16s cubic-bezier(0.22, 1, 0.36, 1),
     border-color 0.16s ease, background-color 0.16s ease;
 }
-.eb-card-tap:hover { border-color: var(--signal); }
+.eb-card-tap:hover { border-color: var(--rule-strong); }
 .eb-card-tap:active { transform: scale(0.985); }
 
 /* --- Type scale --- */
@@ -374,7 +376,7 @@
   font-weight: 700;
   transition: transform 0.14s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.16s ease;
 }
-.eb-btn-ghost:hover { border-color: var(--signal); transform: translate(-1px, -1px); }
+.eb-btn-ghost:hover { border-color: var(--rule-strong); transform: translate(-1px, -1px); }
 .eb-btn-ghost:active { transform: translate(1px, 1px); }
 
 .eb-chip-active {
@@ -385,7 +387,7 @@
 }
 
 /* --- Solid tiles. Flat so several can coexist without competing. --- */
-.eb-tile-violet { background: #7A63E0; color: #fff; }
+.eb-tile-violet { background: var(--signal); color: #fff; }
 .eb-tile-coral  { background: #FF6B57; color: #fff; }
 .eb-tile-amber  { background: #FFB020; color: #1A1205; }
 .eb-tile-teal   { background: #00C2A8; color: #04231F; }
@@ -464,7 +466,7 @@
   height: 2px;
   border-radius: 999px;
   background: var(--signal);
-  box-shadow: 0 0 10px 1px var(--signal);
+  box-shadow: 0 0 6px 0 color-mix(in oklab, var(--signal) 60%, transparent);
 }
 
 /* --- Section reveal on scroll, for module and card lists. --- */
@@ -630,7 +632,7 @@
 .eb-tab[data-active='true'] {
   color: #fff;
   background: var(--signal);
-  box-shadow: 0 2px 0 0 rgba(0, 0, 0, 0.45), 0 0 18px -4px var(--signal);
+  box-shadow: 0 2px 0 0 rgba(0, 0, 0, 0.35);
 }
 
 /* --- Section header rule: a short accent bar under a heading. --- */
@@ -644,7 +646,6 @@
   height: 3px;
   border-radius: 999px;
   background: var(--signal);
-  box-shadow: 0 0 10px 0 var(--signal);
 }
 
 /* --- Stat tile: subtle inner light from the top, per the lighting rule. --- */
@@ -657,7 +658,7 @@
   box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
   transition: border-color 0.18s ease, transform 0.16s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.eb-tile:hover { border-color: var(--signal); transform: translateY(-2px); }
+.eb-tile:hover { border-color: var(--rule-strong); transform: translateY(-2px); }
 
 @media (prefers-reduced-motion: reduce) {
   .eb-tab, .eb-tile { transition: none; }
@@ -861,7 +862,7 @@
   border: 1px solid var(--rule);
   transition: border-color 0.16s ease, transform 0.16s cubic-bezier(0.22,1,0.36,1);
 }
-.btn-quiet:hover { border-color: var(--signal); }
+.btn-quiet:hover { border-color: var(--rule-strong); }
 .btn-quiet:active { transform: scale(0.978); }
 
 /* --- Motion: one curve, one duration, used consistently. --- */
@@ -972,11 +973,9 @@
     color-mix(in oklab, var(--signal) 16%, var(--surface)),
     var(--surface)
   );
-  border: 1px solid color-mix(in oklab, var(--signal) 40%, var(--rule));
+  border: 1px solid color-mix(in oklab, var(--signal) 26%, var(--rule));
   border-radius: 20px;
-  box-shadow:
-    0 1px 0 0 rgba(255, 255, 255, 0.07) inset,
-    0 12px 32px -16px color-mix(in oklab, var(--signal) 70%, transparent);
+  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.06) inset;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1318,7 +1317,7 @@ button, [role='button'] {
 /* Interaction: a border shift, not a lift and glow. */
 .eb-card:active,
 .panel:active {
-  border-color: color-mix(in oklab, var(--signal) 40%, var(--rule));
+  border-color: color-mix(in oklab, var(--signal) 26%, var(--rule));
 }
 
 /* Buttons — tactile without being loud. */
@@ -1500,7 +1499,7 @@ button, a[role='button'], [role='tab'] {
 .btn-quiet:active,
 .eb-btn-ghost:active {
   transform: scale(0.985);
-  border-color: color-mix(in oklab, var(--signal) 45%, var(--rule));
+  border-color: color-mix(in oklab, var(--signal) 28%, var(--rule));
 }
 
 /* Tertiary: text only, for actions that should not compete at all. */
@@ -1549,8 +1548,8 @@ button, a[role='button'], [role='tab'] {
 .chip[data-active='true'],
 .chip.is-active {
   color: var(--ink);
-  background: color-mix(in oklab, var(--signal) 14%, transparent);
-  border-color: color-mix(in oklab, var(--signal) 50%, var(--rule));
+  background: color-mix(in oklab, var(--signal) 15%, transparent);
+  border-color: color-mix(in oklab, var(--signal) 30%, var(--rule));
 }
 
 /* Circle — day pickers and single-character toggles. */
@@ -1744,9 +1743,7 @@ button > span,
 }
 
 .dark .glow-today {
-  box-shadow:
-    0 0 0 2px color-mix(in oklab, var(--signal) 11%, transparent),
-    0 0 7px -2px color-mix(in oklab, var(--signal) 35%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--signal) 9%, transparent);
 }
 
 /* The tick lands with a small pulse rather than simply appearing. */
@@ -1876,7 +1873,7 @@ button > span,
 }
 
 .task-strip:active {
-  border-color: color-mix(in oklab, var(--signal) 38%, var(--rule));
+  border-color: color-mix(in oklab, var(--signal) 26%, var(--rule));
 }
 
 .task-strip[data-done='true'] {
@@ -1885,7 +1882,7 @@ button > span,
 }
 
 .task-strip[data-pinned='true'] {
-  border-color: color-mix(in oklab, var(--signal) 42%, var(--rule));
+  border-color: color-mix(in oklab, var(--signal) 30%, var(--rule));
 }
 
 .task-strip[data-selected='true'] {
@@ -1964,9 +1961,9 @@ button > span,
 /* Completion control — right side, thumb-sized target, small visual mark. */
 .task-check {
   flex: none;
-  width: 40px;
-  height: 40px;
-  margin: -6px -6px 0 0;
+  width: 38px;
+  height: 38px;
+  margin: -6px -8px 0 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2002,14 +1999,14 @@ button > span,
 /* Left icon tile. Small, monochrome-ish, one per row. */
 .task-icon {
   flex: none;
-  width: 30px;
-  height: 30px;
-  border-radius: 9px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: color-mix(in oklab, var(--signal) 13%, transparent);
-  color: var(--signal-ink);
+  background: var(--surface-sunk);
+  color: var(--ink-muted);
 }
 
 .task-icon[data-done='true'] {
@@ -2020,7 +2017,7 @@ button > span,
 /* Subtasks: indented compact rows under the parent, sharing its surface. */
 .task-subs {
   border-top: 1px solid var(--rule);
-  padding: 6px 12px 8px 50px;
+  padding: 6px 12px 8px 46px;
 }
 
 .task-sub-row {
@@ -2076,12 +2073,255 @@ button > span,
 }
 
 .dark .task-check-mark[data-state='done'] {
-  box-shadow:
-    0 0 0 2px color-mix(in oklab, var(--signal) 13%, transparent),
-    0 0 8px -2px color-mix(in oklab, var(--signal) 42%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--signal) 10%, transparent);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .task-check-mark[data-state='done'] { animation: none; }
   .task-check:active .task-check-mark { transform: none; }
+}
+
+
+/* ==================================================================
+   Body training: live camera feedback
+
+   A rep verdict is a wash of colour that fades, not a flash. Anything
+   sharper is distracting while someone is mid-movement, and the point
+   is to be readable at the edge of vision.
+   ================================================================== */
+
+@keyframes cam-verdict {
+  0%   { opacity: 0; }
+  18%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.cam-flash {
+  animation: cam-verdict 520ms ease-out forwards;
+}
+
+.cam-flash[data-tone='good'] {
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 194, 168, 0) 45%,
+    rgba(0, 194, 168, 0.28) 100%
+  );
+  box-shadow: inset 0 0 0 2px rgba(0, 194, 168, 0.55);
+}
+
+.cam-flash[data-tone='bad'] {
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 90, 110, 0) 45%,
+    rgba(255, 90, 110, 0.26) 100%
+  );
+  box-shadow: inset 0 0 0 2px rgba(255, 90, 110, 0.5);
+}
+
+@keyframes cam-cue-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.cam-cue {
+  animation: cam-cue-in 180ms ease-out;
+}
+
+/* The rep counter lifts briefly when a rep lands, so the number itself
+   confirms the rep rather than silently incrementing. */
+@keyframes rep-bump {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+.rep-bump {
+  animation: rep-bump 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cam-flash { animation: none; opacity: 0.55; }
+  .cam-cue { animation: none; }
+  .rep-bump { animation: none; }
+}
+
+
+/* ==================================================================
+   Steppers: quick nudge, or type the exact number
+
+   The number is a control, not a label, so it looks tappable — a faint
+   sunk field rather than plain text. The purple only appears while it
+   is actually being edited.
+   ================================================================== */
+
+.step-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-sunk);
+  border: 1px solid var(--rule);
+  color: var(--ink);
+  transition: transform 140ms ease, border-color 140ms ease, background-color 140ms ease;
+}
+
+.step-btn:disabled {
+  opacity: 0.35;
+}
+
+.step-btn:not(:disabled):hover {
+  border-color: color-mix(in oklab, var(--signal) 45%, var(--rule));
+}
+
+.step-btn:not(:disabled):active {
+  transform: scale(0.92);
+  background: color-mix(in oklab, var(--signal) 16%, var(--surface-sunk));
+  border-color: color-mix(in oklab, var(--signal) 55%, var(--rule));
+}
+
+.step-value,
+.step-field {
+  width: 74px;
+  height: 40px;
+  border-radius: 11px;
+  flex: none;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  background: color-mix(in oklab, var(--surface-sunk) 70%, transparent);
+  border: 1px solid transparent;
+  transition: border-color 140ms ease, background-color 140ms ease;
+}
+
+.step-value {
+  padding-top: 9px;
+}
+
+.step-value:hover {
+  border-color: var(--rule);
+}
+
+.step-value:active {
+  background: var(--surface-sunk);
+}
+
+.step-field {
+  display: block;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  background: var(--surface-sunk);
+  border-color: var(--signal);
+  outline: none;
+  /* A restrained halo, so the field being live is obvious without glare. */
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--signal) 16%, transparent);
+  padding: 0 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .step-btn:not(:disabled):active { transform: none; }
+}
+
+
+/* ==================================================================
+   Personal record celebration
+
+   Warm gold against the usual purple, because it is the one moment in
+   the app that is genuinely rare. Restrained: one halo, no confetti.
+   ================================================================== */
+
+.pr-card {
+  background: var(--surface);
+  border: 1px solid color-mix(in oklab, var(--signal) 40%, var(--rule));
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.05) inset,
+    0 0 32px -16px color-mix(in oklab, var(--signal) 45%, transparent);
+}
+
+.pr-badge {
+  background: color-mix(in oklab, #FFB020 16%, transparent);
+  border: 1px solid color-mix(in oklab, #FFB020 34%, var(--rule));
+  box-shadow: 0 0 26px -8px color-mix(in oklab, #FFB020 60%, transparent);
+}
+
+
+/* ==================================================================
+   Task row: drag handle and section controls
+
+   The handle lives at the far right of the row, after the completion
+   control, and takes its own space in the flex line rather than
+   floating over the row. An overlay handle on the left was swallowing
+   the gesture people were using to scroll the list.
+   ================================================================== */
+
+.task-grip {
+  flex: none;
+  width: 24px;
+  height: 32px;
+  margin-right: -6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: var(--rule-strong);
+  background: transparent;
+  /* Quiet until it is needed: the row is for reading, and a row of grips
+     down the side of a list is noise. */
+  opacity: 0.45;
+  cursor: grab;
+  transition: opacity 160ms ease, color 160ms ease, background-color 160ms ease;
+}
+
+.task-grip:hover {
+  opacity: 0.9;
+  color: var(--ink-dim);
+}
+
+/* While actually dragging it becomes unmistakable. */
+.task-grip[data-dragging='true'] {
+  opacity: 1;
+  cursor: grabbing;
+  color: var(--signal-ink);
+  background: color-mix(in oklab, var(--signal) 14%, transparent);
+}
+
+/* A coarse pointer has no hover, so the handle stays visible enough to
+   find by eye — just never loud enough to compete with the task name. */
+@media (hover: none) {
+  .task-grip { opacity: 0.4; }
+}
+
+/* Sorting, and the completed-work toggle. A pill, not a button: these are
+   view preferences, not actions. */
+.sort-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 11px;
+  border-radius: 999px;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--ink-dim);
+  background: transparent;
+  border: 1px solid var(--rule);
+  white-space: nowrap;
+  transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease;
+}
+
+.sort-pill:hover {
+  color: var(--ink);
+  border-color: var(--rule-strong);
+}
+
+.sort-pill:active {
+  background: var(--surface-sunk);
 }

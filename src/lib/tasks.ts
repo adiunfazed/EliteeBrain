@@ -228,3 +228,102 @@ export function bucketTasks(tasks: Task[], today: string = todayISO()): TaskBuck
 export function completedTodayCount(tasks: Task[], today: string = todayISO()): number {
   return tasks.filter((t) => t.completed && (t.completedAt || '').startsWith(today)).length;
 }
+
+/** One dated section of the single task list. */
+export interface TaskGroup {
+  /** Stable key. A date group uses its ISO date. */
+  id: string;
+  label: string;
+  /** Overdue is the only group that should read as a warning. */
+  tone?: 'warn';
+  tasks: Task[];
+}
+
+/**
+ * Group open tasks into the sections the task list shows.
+ *
+ * Chronological rather than categorical: a task moves between sections purely
+ * because its due date and today's date have a different relationship, so
+ * nothing has to be filed anywhere and nothing needs moving by hand.
+ *
+ * Completed tasks are excluded here and nowhere else — they stay in the
+ * database, in history, and in every XP and analytics calculation. This
+ * function decides what the *active* list shows, not what exists.
+ */
+export function groupTasksByDate(
+  tasks: Task[],
+  today: string = todayISO(),
+  sortWithin: (a: Task, b: Task) => number = () => 0
+): TaskGroup[] {
+  const tomorrow = addDays(today, 1);
+
+  const overdue: Task[] = [];
+  const todayTasks: Task[] = [];
+  const tomorrowTasks: Task[] = [];
+  const undated: Task[] = [];
+  /** Every other future date gets its own section. */
+  const future = new Map<string, Task[]>();
+
+  for (const t of tasks) {
+    if (t.completed) continue;
+
+    if (!t.dueDate) undated.push(t);
+    else if (t.dueDate < today) overdue.push(t);
+    else if (t.dueDate === today) todayTasks.push(t);
+    else if (t.dueDate === tomorrow) tomorrowTasks.push(t);
+    else {
+      const list = future.get(t.dueDate);
+      if (list) list.push(t);
+      else future.set(t.dueDate, [t]);
+    }
+  }
+
+  const groups: TaskGroup[] = [];
+
+  // Overdue first: it is the only thing in the list that is already a
+  // problem, and burying it under today's work is how it stays one.
+  if (overdue.length > 0) {
+    groups.push({
+      id: 'overdue',
+      label: 'Overdue',
+      tone: 'warn',
+      // Oldest first — the thing that has been waiting longest is the thing
+      // most worth dealing with.
+      tasks: overdue.sort(
+        (a, b) => (a.dueDate || '').localeCompare(b.dueDate || '') || sortWithin(a, b)
+      ),
+    });
+  }
+
+  if (todayTasks.length > 0) {
+    groups.push({ id: 'today', label: 'Today', tasks: todayTasks.sort(sortWithin) });
+  }
+
+  if (tomorrowTasks.length > 0) {
+    groups.push({ id: 'tomorrow', label: 'Tomorrow', tasks: tomorrowTasks.sort(sortWithin) });
+  }
+
+  for (const date of Array.from(future.keys()).sort()) {
+    const when = new Date(`${date}T00:00:00`);
+    const sameYear = when.getFullYear() === new Date(`${today}T00:00:00`).getFullYear();
+
+    groups.push({
+      id: date,
+      label: when.toLocaleDateString(undefined, {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+        ...(sameYear ? {} : { year: 'numeric' }),
+      }),
+      tasks: future.get(date)!.sort(sortWithin),
+    });
+  }
+
+  // Undated work last. It is real, so it is never hidden, but it is also the
+  // only group with no claim on any particular day.
+  if (undated.length > 0) {
+    groups.push({ id: 'anytime', label: 'No date', tasks: undated.sort(sortWithin) });
+  }
+
+  return groups;
+}

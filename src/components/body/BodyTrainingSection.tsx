@@ -4,12 +4,15 @@ import { ExerciseLibrary } from './ExerciseLibrary';
 import { ExerciseRunner, SetResult } from './ExerciseRunner';
 import { WorkoutConfig, WorkoutConfigValue } from './WorkoutConfig';
 import { WorkoutHistory } from './WorkoutHistory';
+import { PrCelebration, PrRecord } from './PrCelebration';
 import { WakeChallengeSection } from '../wake/WakeChallengeSection';
 import { WakeEntryCard } from '../wake/WakeEntryCard';
 import {
   Exercise,
   Difficulty,
+  PR_XP,
   WorkoutSession,
+  personalRecords,
   workoutXp,
 } from '../../lib/bodyTraining';
 import { subscribeWorkouts, saveWorkout, subscribeAlarms } from '../../lib/trainingStore';
@@ -46,6 +49,20 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId, profile, onUpgrad
   const [config, setConfig] = useState<WorkoutConfigValue | null>(null);
   const [sessions, setSessions] = useState<WorkoutSession[]>([]);
   const [saveError, setSaveError] = useState<string | null>(null);
+  /** A record set during THIS session, so reloads never re-celebrate. */
+  const [newRecord, setNewRecord] = useState<PrRecord | null>(null);
+
+  /**
+   * Records as they stood when the current exercise started.
+   *
+   * Frozen for the duration of a run: comparing against a live value would
+   * mean the second set of a session had to beat the first to be a record,
+   * which is not what a personal best means — and the first set's own record
+   * would then suppress the celebration for a better second set.
+   */
+  const recordsAtStart = useRef<Record<string, number>>({});
+  /** PRs already celebrated and paid for, keyed by exercise and value. */
+  const celebrated = useRef<Set<string>>(new Set());
 
   /**
    * Session ids already rewarded.
@@ -71,6 +88,9 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId, profile, onUpgrad
 
   const today = todayISO();
 
+  /** Best single set per exercise, derived from everything ever saved. */
+  const records = useMemo(() => personalRecords(sessions), [sessions]);
+
   const todayStats = useMemo(() => {
     const todays = sessions.filter((s) => s.date === today);
     const sets = todays.reduce(
@@ -79,6 +99,35 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId, profile, onUpgrad
     );
     return { sessions: todays.length, sets };
   }, [sessions, today]);
+
+  /**
+   * A single set just ended.
+   *
+   * Personal records are judged here rather than at the end of the exercise,
+   * so the celebration lands while the user is still catching their breath
+   * from the set that earned it.
+   */
+  const handleSetComplete = (exercise: Exercise, result: SetResult) => {
+    const previous = recordsAtStart.current[exercise.id] || 0;
+    if (result.value <= previous) return;
+
+    const key = `${exercise.id}:${result.value}`;
+    // The same record is never celebrated — or paid for — twice.
+    if (celebrated.current.has(key)) return;
+    celebrated.current.add(key);
+
+    setNewRecord({
+      exerciseId: exercise.id,
+      exerciseName: exercise.name,
+      value: result.value,
+      unit: exercise.metric === 'hold' ? 'seconds' : 'reps',
+      previous: previous > 0 ? previous : undefined,
+    });
+
+    // Awarded against the same guard as the celebration, so a record cannot
+    // be farmed by repeating the set that set it.
+    awardXp(PR_XP, `${exercise.name} personal record`);
+  };
 
   const handleComplete = async (exercise: Exercise, results: SetResult[]) => {
     setView('library');
@@ -102,12 +151,23 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId, profile, onUpgrad
         },
       ],
       completed: { [exercise.id]: valid.length },
+      // What was actually achieved, set by set. Without this a personal
+      // record could only ever be inferred from the planned target, and would
+      // not survive a reload as the real number.
+      results: { [exercise.id]: valid.map((r) => r.value) },
       startedAt: new Date(Date.now() - 60000).toISOString(),
       finishedAt: new Date().toISOString(),
       xpAwarded: 0,
     };
 
     session.xpAwarded = workoutXp(session);
+
+    // Recorded on the session so the two XP sources stay distinguishable in
+    // history rather than being silently merged into one number.
+    const bestThisRun = Math.max(...valid.map((r) => r.value));
+    if (bestThisRun > (recordsAtStart.current[exercise.id] || 0)) {
+      session.prXp = PR_XP;
+    }
 
     setSessions((prev) => [session, ...prev]);
     soundFx.playSuccess();
@@ -176,12 +236,20 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId, profile, onUpgrad
 
           <ExerciseLibrary
             difficulty={difficulty}
+            records={records}
             onDifficultyChange={setDifficulty}
             onStart={(ex) => {
               setSelected(ex);
               setConfig({
                 sets: 3,
-                target: ex.targets[difficulty],
+                // One past the existing record, because the target is now the
+                // ceiling for a set — defaulting to the record exactly would
+                // make a personal best unreachable without editing the number
+                // every single time.
+                target: Math.max(
+                  records[ex.id] ? records[ex.id] + 1 : 0,
+                  ex.targets[difficulty]
+                ),
                 restSeconds: ex.restSeconds,
               });
               setView('config');
@@ -234,6 +302,9 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId, profile, onUpgrad
           }}
           onStart={(next) => {
             setConfig(next);
+            // The bar to beat is fixed now, before a single rep is done.
+            recordsAtStart.current = { ...records };
+            celebrated.current = new Set();
             setView('running');
           }}
         />
@@ -245,13 +316,18 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId, profile, onUpgrad
           sets={config.sets}
           target={config.target}
           restSeconds={config.restSeconds}
+          best={recordsAtStart.current[selected.id] || 0}
           onClose={() => {
             setView('library');
             setSelected(null);
           }}
+          onSetComplete={(result) => handleSetComplete(selected, result)}
           onComplete={(results) => handleComplete(selected, results)}
         />
       )}
+
+      {/* Sits above the runner, so a record is seen the moment it happens. */}
+      <PrCelebration record={newRecord} onDismiss={() => setNewRecord(null)} />
     </div>
   );
 };

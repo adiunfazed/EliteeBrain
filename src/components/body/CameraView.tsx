@@ -1,17 +1,47 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Camera, AlertTriangle, Hand } from 'lucide-react';
 import { createPoseDetector, PoseDetector } from '../../lib/pose/detector';
-import { createRepEngine, PoseExerciseId, TrackingStatus } from '../../lib/pose/repEngine';
+import {
+  createRepEngine,
+  CueTone,
+  PoseExerciseId,
+  RepEvent,
+  TrackingStatus,
+} from '../../lib/pose/repEngine';
 import { drawSkeleton } from '../../lib/pose/drawSkeleton';
 import { soundFx } from '../../utils/audio';
 
 interface Props {
   exercise: PoseExerciseId;
+  /**
+   * Reps to reach. The engine stops counting here, so a 30-rep set can never
+   * read 31 however many extra movements the camera sees.
+   */
+  target?: number;
   /** Fired when the engine counts a rep. */
   onRep: (count: number) => void;
+  /** Fired once per accepted or rejected movement. */
+  onFeedback?: (event: RepEvent) => void;
   /** Fired when the user gives up on the camera. */
   onManualMode: () => void;
+  /**
+   * Counting only happens while this is true.
+   *
+   * The stream and the model stay alive when it is false, so resting between
+   * sets does not cost a second camera permission prompt and a second model
+   * load — but movements during rest are not counted toward anything.
+   */
+  active?: boolean;
+  /** Change this to start a fresh set. The count returns to zero. */
+  resetKey?: number | string;
 }
+
+const CUE_COLOR: Record<CueTone, string> = {
+  good: '#6EE7B7',
+  warn: '#FFB020',
+  bad: '#FF6B7E',
+  dim: '#CFCAD9',
+};
 
 type Stage = 'idle' | 'starting' | 'loading-model' | 'live' | 'error';
 
@@ -32,12 +62,23 @@ const STATUS_TEXT: Record<TrackingStatus, { label: string; tone: 'good' | 'warn'
  * detected. Showing a counting state while detection is dead is the specific
  * behaviour that made the previous version untrustworthy.
  */
-export const CameraView: React.FC<Props> = ({ exercise, onRep, onManualMode }) => {
+export const CameraView: React.FC<Props> = ({
+  exercise,
+  target = 0,
+  onRep,
+  onFeedback,
+  onManualMode,
+  active = true,
+  resetKey,
+}) => {
   const [stage, setStage] = useState<Stage>('idle');
   const [status, setStatus] = useState<TrackingStatus>('no-body');
   const [confidence, setConfidence] = useState(0);
   const [reason, setReason] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [cue, setCue] = useState<{ text: string; tone: CueTone } | null>(null);
+  /** A short-lived green or red wash over the preview after each movement. */
+  const [flash, setFlash] = useState<'good' | 'bad' | null>(null);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -46,11 +87,31 @@ export const CameraView: React.FC<Props> = ({ exercise, onRep, onManualMode }) =
   const engineRef = useRef<ReturnType<typeof createRepEngine> | null>(null);
   const rafRef = useRef<number | null>(null);
   const lastCountRef = useRef(0);
+  /**
+   * Last time the status strip was refreshed.
+   *
+   * The detector runs at the display refresh rate. Pushing confidence — a
+   * float that changes every single frame — into React state at 60Hz meant a
+   * full re-render per frame, which is what made the skeleton stutter. The
+   * numbers are read by a human, so a few updates a second is plenty.
+   */
+  const lastUiAt = useRef(0);
+  const flashTimer = useRef<number | null>(null);
+  /** Props the render loop reads. Refs, because the loop starts once. */
+  const onRepRef = useRef(onRep);
+  const onFeedbackRef = useRef(onFeedback);
+  const activeRef = useRef(active);
+  onRepRef.current = onRep;
+  onFeedbackRef.current = onFeedback;
+  activeRef.current = active;
 
   /** Release everything. A live stream leaves the camera light on. */
   const teardown = () => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     rafRef.current = null;
+
+    if (flashTimer.current) window.clearTimeout(flashTimer.current);
+    flashTimer.current = null;
 
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
@@ -60,6 +121,21 @@ export const CameraView: React.FC<Props> = ({ exercise, onRep, onManualMode }) =
   };
 
   useEffect(() => teardown, []);
+
+  /**
+   * A new set starts from zero.
+   *
+   * The engine is reset rather than rebuilt, so the camera, the model and the
+   * skeleton carry on uninterrupted between sets — the user grants permission
+   * and waits for the model exactly once per exercise.
+   */
+  useEffect(() => {
+    if (resetKey === undefined) return;
+    engineRef.current?.reset();
+    lastCountRef.current = 0;
+    setCue(null);
+    setFlash(null);
+  }, [resetKey]);
 
   const start = async () => {
     setStage('starting');
@@ -102,8 +178,9 @@ export const CameraView: React.FC<Props> = ({ exercise, onRep, onManualMode }) =
 
       setStage('loading-model');
       detectorRef.current = await createPoseDetector();
-      engineRef.current = createRepEngine(exercise);
+      engineRef.current = createRepEngine(exercise, target);
       lastCountRef.current = 0;
+      lastUiAt.current = 0;
 
       setStage('live');
       loop();
@@ -143,17 +220,52 @@ export const CameraView: React.FC<Props> = ({ exercise, onRep, onManualMode }) =
         canvas.height = video.videoHeight;
       }
 
+      // Resting: the stream and the model stay loaded, but pose inference is
+      // the expensive part and nothing is being counted, so it is skipped
+      // rather than run against a hidden canvas.
+      if (!activeRef.current) {
+        rafRef.current = requestAnimationFrame(run);
+        return;
+      }
+
       const landmarks = detector.detect(video, performance.now());
       const reading = engine.push(landmarks);
 
-      setStatus(reading.status);
-      setConfidence(reading.confidence);
-      setReason(reading.reason ?? null);
+      // Throttled: a human reads these, and a re-render per frame is what
+      // made the overlay stutter.
+      const now = performance.now();
+      if (now - lastUiAt.current > 150) {
+        lastUiAt.current = now;
+        setStatus(reading.status);
+        setConfidence(reading.confidence);
+        setReason(reading.reason ?? null);
+        setCue(reading.cue ?? null);
+      }
 
-      if (reading.count !== lastCountRef.current) {
+      // A movement was judged. Reported exactly once, whichever way it went.
+      if (reading.event) {
+        const good = reading.event.kind === 'rep';
+
+        if (good) {
+          lastCountRef.current = reading.count;
+          soundFx.playClick();
+          onRepRef.current(reading.count);
+        }
+
+        // The cue for a judged movement always shows, throttle or not —
+        // this is the one message that must not be swallowed.
+        if (reading.cue) setCue(reading.cue);
+
+        setFlash(good ? 'good' : 'bad');
+        if (flashTimer.current) window.clearTimeout(flashTimer.current);
+        flashTimer.current = window.setTimeout(() => setFlash(null), 520);
+
+        onFeedbackRef.current?.(reading.event);
+      } else if (reading.count !== lastCountRef.current) {
+        // Belt and braces: the count is the source of truth even if an event
+        // were ever missed.
         lastCountRef.current = reading.count;
-        soundFx.playClick();
-        onRep(reading.count);
+        onRepRef.current(reading.count);
       }
 
       const ctx = canvas.getContext('2d');
@@ -200,6 +312,28 @@ export const CameraView: React.FC<Props> = ({ exercise, onRep, onManualMode }) =
           className="absolute inset-0 w-full h-full pointer-events-none"
           style={{ transform: 'scaleX(-1)' }}
         />
+
+        {/* Rep verdict: a brief wash of colour and a matching ring. Subtle
+            enough to read at the edge of vision without pulling the eye off
+            the movement. */}
+        {stage === 'live' && flash && (
+          <span
+            key={flash + lastCountRef.current}
+            className="absolute inset-0 pointer-events-none rounded-xl cam-flash"
+            data-tone={flash}
+          />
+        )}
+
+        {/* The live assistant. Sits at the bottom of the frame so it never
+            covers the body being tracked. */}
+        {stage === 'live' && cue && (
+          <span
+            className="absolute bottom-2.5 left-2.5 right-2.5 px-2.5 py-1.5 rounded-lg text-[13px] font-semibold text-center cam-cue"
+            style={{ background: 'rgba(0,0,0,0.62)', color: CUE_COLOR[cue.tone] }}
+          >
+            {cue.text}
+          </span>
+        )}
 
         {stage === 'live' && (
           <span

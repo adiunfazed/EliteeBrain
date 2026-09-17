@@ -1,6 +1,6 @@
 import React from 'react';
 import * as Icons from 'lucide-react';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Trophy } from 'lucide-react';
 import { EXERCISES, Exercise, Difficulty, DIFFICULTY_LABEL } from '../../lib/bodyTraining';
 import { soundFx } from '../../utils/audio';
 
@@ -18,6 +18,8 @@ interface Props {
   difficulty: Difficulty;
   onDifficultyChange: (d: Difficulty) => void;
   onStart: (exercise: Exercise) => void;
+  /** Best single set per exercise. Absent for anything never done. */
+  records?: Record<string, number>;
 }
 
 /**
@@ -31,6 +33,7 @@ export const ExerciseLibrary: React.FC<Props> = ({
   difficulty,
   onDifficultyChange,
   onStart,
+  records = {},
 }) => (
   <div className="space-y-3">
     <div className="flex items-center gap-2">
@@ -57,6 +60,8 @@ export const ExerciseLibrary: React.FC<Props> = ({
       {EXERCISES.map((ex) => {
         const Icon = (Icons as any)[ex.icon] || Icons.Dumbbell;
         const target = ex.targets[difficulty];
+        const best = records[ex.id] || 0;
+        const unit = ex.metric === 'hold' ? 'seconds' : 'reps';
 
         return (
           <button
@@ -87,6 +92,29 @@ export const ExerciseLibrary: React.FC<Props> = ({
                 {target} {ex.metric === 'hold' ? 'seconds' : 'reps'} · {ex.restSeconds}s rest
               </span>
             </span>
+
+            {/* Only shown once there is a real record to show. The unit is
+                left off deliberately — the line above already says "reps" or
+                "seconds", and repeating it here cost enough width to truncate
+                that line on a narrow phone. */}
+            {best > 0 && (
+              <span
+                className="shrink-0 flex items-center gap-1 px-1.5 py-1 rounded-lg"
+                style={{
+                  background: 'color-mix(in oklab, var(--warn) 12%, transparent)',
+                  border: '1px solid color-mix(in oklab, var(--warn) 28%, var(--rule))',
+                }}
+                aria-label={`Personal best ${best} ${unit}`}
+              >
+                <Trophy className="w-3 h-3 shrink-0 eb-warn" />
+                <span
+                  className="text-[12px] font-bold tabular-nums"
+                  style={{ color: 'var(--warn)' }}
+                >
+                  {best}
+                </span>
+              </span>
+            )}
 
             <ChevronRight className="w-4 h-4 shrink-0" style={{ color: 'var(--ink-dim)' }} />
           </button>

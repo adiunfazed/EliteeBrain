@@ -12,6 +12,37 @@ service cloud.firestore {
         && request.auth.token.email.lower() == 'unfazed.adibiz@gmail.com';
     }
 
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function profileMap() {
+      return request.resource.data.get('profileData', {});
+    }
+
+    // Counters that live on the user's own profile and feed the leaderboard.
+    //
+    // The server recomputes task, habit, routine, focus and sleep XP from the
+    // activity records themselves, so those cannot be forged. Game XP is a
+    // plain counter on the profile, and the owner can write their own
+    // profile — so the obvious attack is to set it to a huge number.
+    //
+    // The enforcing control is server-side: serverLeaderboard clamps every
+    // profile-sourced figure before it counts toward a rank, including the
+    // per-module totals that rules cannot iterate over. This is the outer
+    // fence, rejecting a value that is not even the right shape.
+    //
+    // Some accounts store profileData as a JSON string rather than a map.
+    // Those are skipped rather than denied: blocking them would break profile
+    // writes for existing users, and the server reads no XP out of a string
+    // anyway, so they contribute nothing to a rank.
+    function profileCountersSane() {
+      return !(profileMap() is map)
+             || (profileMap().get('gamesXp', 0) is number
+                 && profileMap().get('gamesXp', 0) >= 0
+                 && profileMap().get('gamesXp', 0) <= 1000000);
+    }
+
     // Deny anything not explicitly matched below.
     match /{document=**} {
       allow read, write: if false;
@@ -25,11 +56,13 @@ service cloud.firestore {
 
       allow create: if isSignedIn()
                     && request.auth.uid == userId
-                    && request.resource.data.get('lifetimePro', false) == false;
+                    && request.resource.data.get('lifetimePro', false) == false
+                    && profileCountersSane();
 
       allow update: if isAdmin()
                     || (isSignedIn()
                         && request.auth.uid == userId
+                        && profileCountersSane()
                         // A user may never alter their own entitlement:
                         // not the Pro flag, not lifetime, and not the trial
                         // clock (which would otherwise allow endless trials).
@@ -69,8 +102,13 @@ service cloud.firestore {
 
     // --- Body training and alarms. Private: when someone wakes up and what
     //     they can physically do are not for other accounts to read. ---
+    //
+    // A workout document holds the sets completed, the reps achieved in each
+    // of them, and the personal records derived from those. It is the user's
+    // own training record and nothing on the leaderboard is computed from it,
+    // so the owner writes it freely — but nobody else can read a line of it.
     match /users/{userId}/workouts/{workoutId} {
-      allow read, write: if isSignedIn() && request.auth.uid == userId;
+      allow read, write: if isOwner(userId);
     }
 
     match /users/{userId}/alarms/{alarmId} {

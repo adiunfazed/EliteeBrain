@@ -141,30 +141,90 @@ export function localWorkouts(): WorkoutSession[] {
   return readLocal<WorkoutSession>(WORKOUTS_KEY);
 }
 
+/** Newest first, so "recent workouts" needs no further sorting. */
+function byNewest(rows: WorkoutSession[]): WorkoutSession[] {
+  return [...rows].sort((a, b) =>
+    (b.finishedAt || b.startedAt || b.date || '').localeCompare(
+      a.finishedAt || a.startedAt || a.date || ''
+    )
+  );
+}
+
+/**
+ * Live listeners within this tab.
+ *
+ * Firestore's own snapshot covers the signed-in online case, but a workout
+ * finished while signed out — or while a write is failing — produced no
+ * snapshot at all, so history and personal bests only appeared after the page
+ * was closed and reopened. Notifying locally on every save removes that
+ * entirely: the UI updates from the local write, and the server reconciles
+ * behind it.
+ */
+const workoutListeners = new Set<(rows: WorkoutSession[]) => void>();
+
+function publishWorkouts(rows: WorkoutSession[]): void {
+  const sorted = byNewest(rows);
+  for (const fn of workoutListeners) {
+    try {
+      fn(sorted);
+    } catch (err) {
+      console.error('Workout listener failed:', err);
+    }
+  }
+}
+
 export function subscribeWorkouts(
   userId: string | null,
   onChange: (rows: WorkoutSession[]) => void
 ): () => void {
-  onChange(localWorkouts());
-  if (!userId || !db) return () => {};
+  workoutListeners.add(onChange);
+  onChange(byNewest(localWorkouts()));
 
-  return onSnapshot(
+  if (!userId || !db) {
+    return () => {
+      workoutListeners.delete(onChange);
+    };
+  }
+
+  const stop = onSnapshot(
     collection(db, 'users', userId, 'workouts'),
     (snap) => {
-      const rows = snap.docs.map((d) => d.data() as WorkoutSession);
-      writeLocal(WORKOUTS_KEY, rows);
-      onChange(rows);
+      const server = snap.docs.map((d) => d.data() as WorkoutSession);
+      const serverIds = new Set(server.map((w) => w.id));
+
+      // Local rows the server has not accepted yet are kept rather than
+      // dropped. Replacing outright meant a just-finished workout — and the
+      // personal best inside it — could vanish the moment a snapshot landed,
+      // which is the stale-overwrites-newer case the brief calls out.
+      const pending = localWorkouts().filter((w) => !serverIds.has(w.id));
+      const merged = byNewest([...server, ...pending]).slice(0, 200);
+
+      writeLocal(WORKOUTS_KEY, merged);
+      publishWorkouts(merged);
     },
     (err) => console.error('Workout subscription failed:', err?.message || err)
   );
+
+  return () => {
+    workoutListeners.delete(onChange);
+    stop();
+  };
 }
 
 export async function saveWorkout(
   userId: string | null,
   session: WorkoutSession
 ): Promise<void> {
-  const next = [session, ...localWorkouts().filter((w) => w.id !== session.id)].slice(0, 200);
+  const next = byNewest([
+    session,
+    ...localWorkouts().filter((w) => w.id !== session.id),
+  ]).slice(0, 200);
+
+  // Local first, then tell everyone watching — before the network is touched,
+  // so the screen updates whether or not the write succeeds.
   writeLocal(WORKOUTS_KEY, next);
+  publishWorkouts(next);
+
   if (!userId || !db) return;
   await setDoc(doc(db, 'users', userId, 'workouts', session.id), strip(session), {
     merge: true,

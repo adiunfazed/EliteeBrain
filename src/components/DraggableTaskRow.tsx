@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Reorder, useDragControls } from 'motion/react';
 import { GripVertical } from 'lucide-react';
 import { Task } from '../types';
@@ -7,7 +7,15 @@ import { soundFx } from '../utils/audio';
 interface Props {
   task: Task;
   onDragEnd: () => void;
-  children: React.ReactNode;
+  /**
+   * Given the handle to place inside the row.
+   *
+   * The handle is handed to the row rather than layered over it so it can sit
+   * in the flex line after the completion control, where it takes its own
+   * space. Absolutely positioning it meant it floated over whatever happened
+   * to be underneath and swallowed touches meant for the list.
+   */
+  children: (handle: React.ReactNode) => React.ReactNode;
 }
 
 /**
@@ -21,32 +29,49 @@ interface Props {
  */
 export const DraggableTaskRow: React.FC<Props> = ({ task, onDragEnd, children }) => {
   const controls = useDragControls();
+  const [dragging, setDragging] = useState(false);
+
+  const handle = (
+    <button
+      onPointerDown={(e) => {
+        // Only a deliberate press on the handle starts a drag. The row itself
+        // has no drag listener, so a swipe or a scroll anywhere else on the
+        // list behaves exactly as it would in a plain scrolling list.
+        e.preventDefault();
+        // The row is also a swipe target. Stopping here means a press that
+        // began on the handle can only ever become a reorder, never a
+        // half-committed swipe-to-complete.
+        e.stopPropagation();
+        soundFx.playClick();
+        setDragging(true);
+        controls.start(e);
+      }}
+      onPointerUp={() => setDragging(false)}
+      onPointerCancel={() => setDragging(false)}
+      aria-label="Drag to reorder"
+      // touch-none is what stops the browser claiming the gesture as a scroll
+      // before the drag can begin — and it applies to this 28px square only,
+      // so the rest of the row still scrolls normally.
+      className="task-grip touch-none"
+      data-dragging={dragging ? 'true' : 'false'}
+    >
+      <GripVertical className="w-4 h-4 shrink-0" />
+    </button>
+  );
 
   return (
     <Reorder.Item
       value={task}
       dragListener={false}
       dragControls={controls}
-      onDragEnd={onDragEnd}
+      onDragEnd={() => {
+        setDragging(false);
+        onDragEnd();
+      }}
       whileDrag={{ scale: 1.015, zIndex: 30 }}
       className="relative"
     >
-      <button
-        onPointerDown={(e) => {
-          e.preventDefault();
-          soundFx.playClick();
-          controls.start(e);
-        }}
-        aria-label="Drag to reorder"
-        className="absolute left-0 top-0 bottom-0 z-20 w-6 flex items-start justify-center pt-[13px] touch-none"
-        style={{ color: 'var(--rule-strong)' }}
-      >
-        <GripVertical className="w-3.5 h-3.5 shrink-0" />
-      </button>
-
-      {/* The handle sits on the left because the right of every task row is
-          the completion control, which must stay the easiest thing to hit. */}
-      <div className="pl-5">{children}</div>
+      {children(handle)}
     </Reorder.Item>
   );
 };

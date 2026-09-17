@@ -18,6 +18,30 @@ import { readDisplayName, resolveEntitlement } from './serverEntitlement';
 
 const TRAINING_XP_KEY = 'totalXp';
 
+/**
+ * Ceilings on the parts of the total that come from the user document.
+ *
+ * Task, habit, routine, focus and sleep XP are recomputed here from the
+ * activity records themselves, so a client cannot inflate them. Brain-training
+ * and game XP are different: they are counters stored on the user's own
+ * profile, and Firestore rules let the owner write their own profile. Without
+ * a ceiling, editing one number in devtools would put that user at the top of
+ * the leaderboard — which is exactly the thing the board exists not to allow.
+ *
+ * These are set far above any real total: the highest rank begins at 25,000
+ * career XP, so a legitimate player never comes near them.
+ */
+const MAX_MODULE_XP = 50_000;
+const MAX_GAMES_XP = 50_000;
+const MAX_CLIENT_SOURCED_XP = 100_000;
+
+/** A finite, non-negative number no larger than `ceiling`. */
+function clampXp(value: unknown, ceiling: number): number {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n <= 0) return 0;
+  return Math.min(Math.floor(n), ceiling);
+}
+
 export interface LeaderboardEntry {
   uid: string;
   displayName: string;
@@ -196,16 +220,26 @@ export async function computeUserXp(uid: string): Promise<{ career: number; week
     if (date >= weekStart) weekly += day;
   }
 
-  // Training and game XP live on the user document.
+  // Training and game XP live on the user document, which the owner can
+  // write. Every value taken from there is clamped before it is trusted, and
+  // the combined contribution is clamped again — so a forged profile can at
+  // worst reach a ceiling a real player could also reach, never an
+  // unreachable number.
   const data = userSnap.exists ? userSnap.data() : null;
   const profile = data?.profileData || {};
-  const modules = profile.modules || {};
-  const trainingXp = Object.values(modules).reduce(
-    (sum: number, m: any) => sum + (m?.[TRAINING_XP_KEY] || m?.xp || 0),
-    0
+  const modules = profile.modules && typeof profile.modules === 'object' ? profile.modules : {};
+
+  const trainingXp = (Object.values(modules) as any[]).reduce(
+    (sum: number, m: any) => sum + clampXp(m?.[TRAINING_XP_KEY] ?? m?.xp, MAX_MODULE_XP),
+    0 as number
   );
-  career += Number(trainingXp) || 0;
-  career += Number(profile.gamesXp) || 0;
+
+  const clientSourced = Math.min(
+    trainingXp + clampXp(profile.gamesXp, MAX_GAMES_XP),
+    MAX_CLIENT_SOURCED_XP
+  );
+
+  career += clientSourced;
 
   return { career, weekly };
 }

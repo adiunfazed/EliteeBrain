@@ -20,6 +20,7 @@ import { CalendarClock, ChevronRight, ArrowUpDown, Target,
 import type { Recurrence, Task, TaskCategory, TaskEnergy, TaskPriority } from '../types';
 import { 
   bucketTasks,
+  groupTasksByDate,
   makeTask,
   patchTask,
   removeTask,
@@ -57,8 +58,6 @@ interface Props {
   /** Opens a goal found by search. */
   onOpenGoal?: (goalId: string) => void;
 }
-
-type TabId = 'today' | 'overdue' | 'upcoming' | 'completed';
 
 const PRIORITY_STYLE: Record<
   TaskPriority,
@@ -159,7 +158,8 @@ interface ToastItem {
 
 export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus, onOpenGoal }) => {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [tab, setTab] = useState<TabId>('today');
+  /** Completed work is out of the way by default, never gone. */
+  const [showCompleted, setShowCompleted] = useState(false);
   const [draft, setDraft] = useState('');
   const [draftPriority] = useState<TaskPriority>('normal');
   const [draftCategory, setDraftCategory] = useState<TaskCategory | undefined>();
@@ -180,8 +180,13 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
   const [openSubtasks, setOpenSubtasks] = useState<Record<string, boolean>>({});
   /** Ids picked for a bulk action. */
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  /** Live order during a drag, before it is committed. */
-  const [dragOrder, setDragOrder] = useState<Task[] | null>(null);
+  /**
+   * Live order during a drag, before it is committed.
+   *
+   * Keyed by group, because each dated section reorders independently — one
+   * shared list would let a drag inside Today renumber Tomorrow as well.
+   */
+  const [dragOrder, setDragOrder] = useState<{ group: string; tasks: Task[] } | null>(null);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [stuckDismissed, setStuckDismissed] = useState<string | null>(null);
@@ -230,19 +235,19 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
     if (q.length < 2) return [];
     return goals.filter((g) => g.title.toLowerCase().includes(q)).slice(0, 4);
   }, [goals, search]);
-  const overdue = useMemo(
-    () => buckets.today.filter((t) => t.dueDate && t.dueDate < todayISO()),
-    [buckets.today]
-  );
   const stuck = useMemo(() => {
     const t = mostStuckTask(tasks);
     return t && t.id !== stuckDismissed ? t : null;
   }, [tasks, stuckDismissed]);
 
-
-  const visible = useMemo(() => {
-    let base = tab === 'overdue' ? overdue : buckets[tab];
-    let found = searchTasks(base, search);
+  /**
+   * Search, applied to every task rather than to one tab at a time.
+   *
+   * With a single list there is no time filter left to fight with, so the
+   * result is simply "the tasks that match", grouped by date like the rest.
+   */
+  const matched = useMemo(() => {
+    let found = searchTasks(tasks, search);
 
     // Also match tasks by the goal they belong to, so searching a goal name
     // finds the work attached to it.
@@ -252,34 +257,57 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
         goals.filter((g) => g.title.toLowerCase().includes(q)).map((g) => g.id)
       );
       if (matchingGoalIds.size > 0) {
-        const byGoal = base.filter((t) => t.goalId && matchingGoalIds.has(t.goalId));
+        const byGoal = tasks.filter((t) => t.goalId && matchingGoalIds.has(t.goalId));
         const seen = new Set(found.map((t) => t.id));
         found = [...found, ...byGoal.filter((t) => !seen.has(t.id))];
       }
     }
 
-    // Sorting is applied last, so it never fights the search or time filter.
+    return found;
+  }, [tasks, search, goals]);
+
+  /** How tasks are ordered inside a dated section. */
+  const withinGroup = useMemo(() => {
     const PRIORITY_ORDER = { critical: 0, high: 1, normal: 2, low: 3 } as const;
 
     if (sortBy === 'priority') {
-      return [...found].sort(
-        (a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority]
-      );
+      return (a: Task, b: Task) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority];
     }
 
     if (sortBy === 'quick') {
       // Tasks without an estimate sort last: an unknown duration is not a
       // quick win, and guessing one would be worse.
-      return [...found].sort(
-        (a, b) => (a.estimatedMinutes ?? 9999) - (b.estimatedMinutes ?? 9999)
-      );
+      return (a: Task, b: Task) =>
+        (a.estimatedMinutes ?? 9999) - (b.estimatedMinutes ?? 9999);
     }
 
     // Manual order applies only to the default sort. Under an explicit sort
     // the user has asked for a specific ordering, and honouring drags too
     // would leave the two fighting each other.
-    return byManualOrder(found, () => 0);
-  }, [buckets, overdue, tab, search, sortBy, goals]);
+    return (a: Task, b: Task) => {
+      // Pinned priorities float to the top of their own day.
+      if (!!a.pinned !== !!b.pinned) return a.pinned ? -1 : 1;
+      const order = byManualOrder([a, b], () => 0);
+      return order[0] === a ? -1 : 1;
+    };
+  }, [sortBy]);
+
+  /** The one list, in date order. Completed tasks are never in it. */
+  const groups = useMemo(
+    () => groupTasksByDate(matched, todayISO(), withinGroup),
+    [matched, withinGroup]
+  );
+
+  const openCount = useMemo(() => groups.reduce((n, g) => n + g.tasks.length, 0), [groups]);
+
+  /** Kept out of the active list, kept in the database. */
+  const completed = useMemo(
+    () =>
+      matched
+        .filter((t) => t.completed)
+        .sort((a, b) => (b.completedAt || '').localeCompare(a.completedAt || '')),
+    [matched]
+  );
 
   const detailTask = useMemo(
     () => tasks.find((t) => t.id === detailId) || null,
@@ -418,7 +446,6 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
   /* ---------------- render ---------------- */
 
   const pct = progress.total > 0 ? progress.done / progress.total : 0;
-  const dayComplete = progress.total > 0 && progress.done === progress.total;
 
   /**
    * Persist a drag.
@@ -426,9 +453,12 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
    * Writes only the moved task: its neighbours keep their positions, so a
    * reorder costs one write rather than one per row.
    */
-  const commitReorder = async (moved: Task) => {
-    const next = dragOrder;
-    if (!next) return;
+  const commitReorder = async (moved: Task, groupId: string) => {
+    // Only the section that was actually dragged in is renumbered. A stale
+    // order left over from another section would reposition a task against
+    // neighbours it is no longer listed beside.
+    if (!dragOrder || dragOrder.group !== groupId) return;
+    const next = dragOrder.tasks;
 
     const index = next.findIndex((t) => t.id === moved.id);
     if (index < 0) {
@@ -489,7 +519,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
    * full edit, delete — lives in the detail sheet or behind a gesture, so the
    * row itself carries exactly one control.
    */
-  const renderCard = (task: Task, highlight = false) => {
+  const renderCard = (task: Task, opts: { handle?: React.ReactNode } = {}) => {
     const pri = PRIORITY_STYLE[task.priority] || PRIORITY_STYLE.normal;
     const isOverdue = !!task.dueDate && task.dueDate < todayISO() && !task.completed;
     const steps = subtaskProgress(task);
@@ -606,7 +636,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
           transition={{ duration: 0.16 }}
           className="task-strip overflow-hidden"
           data-done={task.completed ? 'true' : 'false'}
-          data-pinned={highlight && !task.completed ? 'true' : 'false'}
+          data-pinned={task.pinned && !task.completed ? 'true' : 'false'}
           data-selected={selected.has(task.id) ? 'true' : 'false'}
           onContextMenu={(e: React.MouseEvent) => {
             e.preventDefault();
@@ -616,7 +646,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
         >
           {/* icon · name + metadata · check. Three columns, and only the
               middle one is allowed to grow. */}
-          <div className="flex items-start gap-2.5 px-3 py-2.5">
+          <div className="flex items-start gap-2 px-2.5 py-2.5">
             <button
               onClick={rowTap}
               aria-label="Task details"
@@ -695,6 +725,10 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                 {task.completed && <Check className="w-3.5 h-3.5 shrink-0 stroke-[3]" />}
               </span>
             </button>
+
+            {/* Far right, after the check. Only present on a row that can
+                actually be reordered. */}
+            {opts.handle}
           </div>
 
           {/* Subtasks: indented rows on the parent's own surface, revealed on
@@ -732,18 +766,13 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
   };
 
   /**
-   * A row that is not draggable — pinned priorities, and every row under an
-   * explicit sort.
+   * The rows of one section, honouring a drag that is still in progress.
    *
-   * It carries the same left gutter the drag handle occupies, so the strips
-   * line up down the whole list instead of stepping in and out by 20px
-   * depending on whether a row happens to be reorderable.
+   * Scoped to the section being dragged in, so a live reorder inside Today
+   * cannot disturb the order Tomorrow is rendered in.
    */
-  const renderStatic = (task: Task, highlight = false) => (
-    <div key={task.id} className="pl-5">
-      {renderCard(task, highlight)}
-    </div>
-  );
+  const orderFor = (group: { id: string; tasks: Task[] }) =>
+    dragOrder && dragOrder.group === group.id ? dragOrder.tasks : group.tasks;
 
   return (
     <div className="space-y-4">
@@ -773,7 +802,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
       {/* The "next action" card lives on Home, which owns that role. Repeating
           it here duplicated the top of a list that is already priority-ranked. */}
 
-      {stuck && tab === 'today' && (
+      {stuck && !search.trim() && (
         <StuckTaskCard
           task={stuck}
           onDismiss={() => setStuckDismissed(stuck.id)}
@@ -782,30 +811,16 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
         />
       )}
 
-      {/* Needs attention */}
-      {overdue.length > 0 && tab === 'today' && (
-        <div className="rounded-xl border border-amber-500/25 bg-amber-500/[0.06] p-3.5">
-          <div className="flex items-center gap-1.5">
-            <AlertTriangle className="w-3.5 h-3.5 shrink-0 eb-warn" />
-            <span className="t-meta eb-warn tracking-widest uppercase">
-              Needs attention
-            </span>
-          </div>
-          <p className="text-[11px] text-[var(--ink-muted)] mt-1">
-            {overdue.length} task{overdue.length === 1 ? '' : 's'} passed their date. Move or
-            finish.
-          </p>
-        </div>
-      )}
-
       {/* Search. Flex row rather than an absolutely-positioned icon: the
           icon and the field are siblings, so text can never run under it. */}
       <div
-        className="flex items-center gap-2.5 rounded-xl px-3.5 transition-colors"
+        className="flex items-center gap-2.5 rounded-xl px-3 transition-colors"
         style={{
           background: 'var(--surface)',
-          border: `1px solid ${searchFocused ? 'var(--signal)' : 'var(--rule)'}`,
-          minHeight: 48,
+          border: `1px solid ${
+            searchFocused ? 'color-mix(in oklab, var(--signal) 45%, var(--rule))' : 'var(--rule)'
+          }`,
+          minHeight: 42,
         }}
       >
         <Search className="w-4 h-4 shrink-0" style={{ color: 'var(--ink-dim)' }} />
@@ -930,117 +945,123 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
         </motion.div>
       )}
 
-      {/* Sort. A single cycling control rather than three chips competing
-          with the tabs above them. */}
-      {tab !== 'completed' && visible.length > 1 && (
-        <div className="flex items-center justify-end">
+      {/* Sort. A single cycling pill — the tabs it used to compete with are
+          gone, and the list groups itself by date now. */}
+      {openCount > 1 && (
+        <div className="flex items-center justify-between gap-2">
+          <span className="t-meta">
+            {openCount} open
+          </span>
+
           <button
             onClick={() => {
               soundFx.playClick();
               const order = ['date', 'priority', 'quick'] as const;
               setSortBy(order[(order.indexOf(sortBy) + 1) % order.length]);
             }}
-            className="btn-text flex items-center gap-1.5"
+            className="sort-pill"
           >
             <ArrowUpDown className="w-3.5 h-3.5 shrink-0" />
-            {sortBy === 'date' ? 'By date' : sortBy === 'priority' ? 'By priority' : 'Quickest first'}
+            {sortBy === 'date' ? 'By date' : sortBy === 'priority' ? 'By priority' : 'Quickest'}
           </button>
         </div>
       )}
 
-      {/* Tabs + time filter */}
-      <div className="flex items-center gap-1.5 flex-wrap">
-        {[
-          { id: 'today' as TabId, label: 'Today', count: buckets.today.length },
-          ...(overdue.length > 0
-            ? [{ id: 'overdue' as TabId, label: 'Overdue', count: overdue.length }]
-            : []),
-          { id: 'upcoming' as TabId, label: 'Upcoming', count: buckets.upcoming.length },
-          { id: 'completed' as TabId, label: 'Done', count: buckets.completed.length },
-        ].map((t) => (
-          <button
-            key={t.id}
-            onClick={() => {
-              soundFx.playClick();
-              setTab(t.id);
-            }}
-            data-active={tab === t.id}
-            className="chip shrink-0"
-          >
-            {t.label}
-            <span className="opacity-55">{t.count}</span>
-          </button>
-        ))}
-
-      </div>
-
-      {/* List */}
-      {visible.length === 0 ? (
+      {/* One list, grouped by when the work is due. Nothing to switch
+          between: a task moves section by itself as its date arrives. */}
+      {openCount === 0 ? (
         <div className="text-center py-12 px-6 border border-dashed border-[var(--rule)] rounded-xl">
           <p className="t-section">
-            {tab === 'today'
-              ? 'Clear day.'
-              : tab === 'upcoming'
-                ? 'Nothing scheduled.'
-                : 'Nothing finished yet.'}
+            {search.trim() ? 'Nothing matches.' : 'Clear list.'}
           </p>
-          <p className="text-[11px] text-[var(--ink-muted)] mt-1.5 max-w-xs mx-auto leading-relaxed">
-            {tab === 'today'
-              ? 'Nothing is waiting on you. Add what matters and start.'
-              : tab === 'upcoming'
-                ? 'Give a task a date and it waits here until the day arrives.'
-                : 'Completed work collects here so you can see what you got done.'}
+          <p className="text-[12px] text-[var(--ink-muted)] mt-1.5 max-w-xs mx-auto leading-relaxed">
+            {search.trim()
+              ? 'No open task matches that search. Completed work is further down.'
+              : 'Nothing is waiting on you. Add what matters and start.'}
           </p>
-          {tab !== 'completed' && (
-            <button
-              onClick={() => inputRef.current?.focus()}
-              className="btn-lg mt-5"
-            >
+          {!search.trim() && (
+            <button onClick={() => setComposerOpen(true)} className="btn-lg mt-5">
               <Plus className="w-3.5 h-3.5 shrink-0" />
               Add task
             </button>
           )}
         </div>
       ) : (
-        <div className="space-y-2">
-          {tab === 'today' && visible.some((t) => t.pinned) && (
-            <p className="t-meta eb-warn/80 tracking-widest uppercase pt-1">
-              Today's priorities
-            </p>
-          )}
-          <AnimatePresence initial={false}>
-            {visible.filter((t) => t.pinned).map((t) => renderStatic(t, true))}
-          </AnimatePresence>
-
-          {tab === 'today' &&
-            visible.some((t) => t.pinned) &&
-            visible.some((t) => !t.pinned) && (
-              <p className="eb-label pt-2">
-                Everything else
-              </p>
-            )}
-          {/* Drag to reorder, but only under the default sort and when not
-              selecting — otherwise two interactions compete for the gesture. */}
-          {sortBy === 'date' && selected.size === 0 ? (
-            <Reorder.Group
-              axis="y"
-              values={dragOrder ?? visible.filter((t) => !t.pinned)}
-              onReorder={setDragOrder}
-              className="space-y-2"
-            >
-              {(dragOrder ?? visible.filter((t) => !t.pinned)).map((t) => (
-                <DraggableTaskRow
-                  key={t.id}
-                  task={t}
-                  onDragEnd={() => commitReorder(t)}
+        <div className="space-y-5">
+          {groups.map((group) => (
+            <div key={group.id} className="space-y-2">
+              <div className="flex items-baseline gap-2 px-0.5">
+                <span
+                  className="eb-label"
+                  style={group.tone === 'warn' ? { color: 'var(--warn)' } : undefined}
                 >
-                  {renderCard(t)}
-                </DraggableTaskRow>
-              ))}
-            </Reorder.Group>
-          ) : (
+                  {group.label}
+                </span>
+                <span className="t-meta" style={{ fontSize: 11 }}>
+                  {group.tasks.length}
+                </span>
+                <span className="flex-1 h-px" style={{ background: 'var(--rule)' }} />
+              </div>
+
+              {/* Drag to reorder within a section, under the default sort and
+                  when not selecting — otherwise two interactions compete for
+                  the same gesture. Reordering across dates is not offered,
+                  because the date is what puts a task in its section. */}
+              {sortBy === 'date' && selected.size === 0 ? (
+                <Reorder.Group
+                  axis="y"
+                  values={orderFor(group)}
+                  onReorder={(next) => setDragOrder({ group: group.id, tasks: next })}
+                  className="space-y-2"
+                >
+                  {orderFor(group).map((t) => (
+                    <DraggableTaskRow
+                      key={t.id}
+                      task={t}
+                      onDragEnd={() => commitReorder(t, group.id)}
+                    >
+                      {(handle) => renderCard(t, { handle })}
+                    </DraggableTaskRow>
+                  ))}
+                </Reorder.Group>
+              ) : (
+                <AnimatePresence initial={false}>
+                  {group.tasks.map((t) => (
+                    <React.Fragment key={t.id}>{renderCard(t)}</React.Fragment>
+                  ))}
+                </AnimatePresence>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Completed work. Out of the active list, still in the database and
+          still counted by history, analytics and XP — this only decides
+          whether it is on screen. */}
+      {completed.length > 0 && (
+        <div className="space-y-2 pt-1">
+          <button
+            onClick={() => {
+              soundFx.playClick();
+              setShowCompleted((v) => !v);
+            }}
+            className="sort-pill"
+            aria-expanded={showCompleted}
+          >
+            <ChevronDown
+              className="w-3.5 h-3.5 shrink-0 transition-transform"
+              style={{ transform: showCompleted ? 'rotate(0deg)' : 'rotate(-90deg)' }}
+            />
+            Completed
+            <span style={{ opacity: 0.6 }}>{completed.length}</span>
+          </button>
+
+          {showCompleted && (
             <AnimatePresence initial={false}>
-              {visible.filter((t) => !t.pinned).map((t) => renderStatic(t))}
+              {completed.slice(0, 40).map((t) => (
+                <React.Fragment key={t.id}>{renderCard(t)}</React.Fragment>
+              ))}
             </AnimatePresence>
           )}
         </div>

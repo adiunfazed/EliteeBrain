@@ -1,10 +1,10 @@
 /**
  * Body training.
  *
- * Equipment-free exercises with beginner-safe targets. Progress is recorded
- * manually rather than detected by camera: rep detection from a phone camera
- * is unreliable enough that a miscount would undermine trust in every number
- * the app shows.
+ * Equipment-free exercises with beginner-safe targets. Reps are counted by the
+ * camera where it can see the movement clearly, and by hand where it cannot —
+ * detection pauses rather than guesses, because one invented rep would
+ * undermine trust in every number the app shows.
  */
 
 export type ExerciseId =
@@ -54,7 +54,7 @@ export const EXERCISES: Exercise[] = [
     metric: 'reps',
     targets: { easy: 8, moderate: 15, hard: 25 },
     restSeconds: 60,
-    icon: 'MoveVertical',
+    icon: 'PersonStanding',
   },
   {
     id: 'lunges',
@@ -74,7 +74,8 @@ export const EXERCISES: Exercise[] = [
     metric: 'hold',
     targets: { easy: 20, moderate: 40, hard: 60 },
     restSeconds: 45,
-    icon: 'Minus',
+    // A hold, not a movement — a stopwatch says that; a bare dash says nothing.
+    icon: 'Timer',
   },
   {
     id: 'glute-bridge',
@@ -84,7 +85,7 @@ export const EXERCISES: Exercise[] = [
     metric: 'reps',
     targets: { easy: 10, moderate: 15, hard: 25 },
     restSeconds: 45,
-    icon: 'ChevronsUp',
+    icon: 'MoveUp',
   },
   {
     id: 'calf-raises',
@@ -127,7 +128,55 @@ export interface WorkoutSession {
   startedAt: string;
   finishedAt?: string;
   xpAwarded: number;
+  /**
+   * What was actually achieved in each set, keyed by exercise id.
+   *
+   * Optional, because sessions recorded before this existed have no such
+   * record and must stay readable. Where it is missing, the planned target is
+   * the best evidence available of what was done.
+   */
+  results?: Record<string, number[]>;
+  /** XP granted for personal records in this session, counted separately. */
+  prXp?: number;
 }
+
+/**
+ * The best single set per exercise, across every session.
+ *
+ * Per set rather than per session: a long easy session should never outrank a
+ * genuinely harder one. Reps for rep exercises, seconds for holds.
+ *
+ * Sessions that predate per-set results fall back to the planned target, which
+ * is what those sessions were completed against — a set only counted at all if
+ * it met its target, so the target is a true floor, never an inflation.
+ */
+export function personalRecords(sessions: WorkoutSession[]): Record<string, number> {
+  const best: Record<string, number> = {};
+
+  for (const s of sessions || []) {
+    for (const item of s.items || []) {
+      const achieved = s.results?.[item.exerciseId];
+      const values = achieved && achieved.length > 0 ? achieved : [item.target];
+
+      for (const v of values) {
+        if (typeof v !== 'number' || !Number.isFinite(v) || v <= 0) continue;
+        if (!best[item.exerciseId] || v > best[item.exerciseId]) {
+          best[item.exerciseId] = v;
+        }
+      }
+    }
+  }
+
+  return best;
+}
+
+/**
+ * XP for beating a personal record.
+ *
+ * Flat, and small relative to a workout: the record is its own reward, and
+ * making PRs lucrative encourages exactly one bad set rather than consistency.
+ */
+export const PR_XP = 25;
 
 /**
  * XP for a finished workout.

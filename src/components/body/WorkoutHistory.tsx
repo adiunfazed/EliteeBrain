@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Trophy, Check } from 'lucide-react';
-import { WorkoutSession, exerciseById } from '../../lib/bodyTraining';
+import { WorkoutSession, exerciseById, personalRecords } from '../../lib/bodyTraining';
 
 interface Props {
   sessions: WorkoutSession[];
@@ -27,18 +27,12 @@ function prettyDate(iso: string): string {
  */
 export const WorkoutHistory: React.FC<Props> = ({ sessions }) => {
   const stats = useMemo(() => {
-    const best: Record<string, number> = {};
+    // One definition of a personal best, shared with the runner and the PR
+    // celebration, so the three can never disagree about what the record is.
+    const best = personalRecords(sessions);
     let totalSets = 0;
 
     for (const s of sessions) {
-      for (const item of s.items || []) {
-        // Personal best measured per set rather than per session, so a long
-        // session does not outrank a genuinely harder one.
-        const perSet = item.target;
-        if (!best[item.exerciseId] || perSet > best[item.exerciseId]) {
-          best[item.exerciseId] = perSet;
-        }
-      }
       totalSets += Object.values(s.completed || {}).reduce((n, v) => n + v, 0);
     }
 
@@ -56,7 +50,9 @@ export const WorkoutHistory: React.FC<Props> = ({ sessions }) => {
     );
   }
 
-  const bestEntries = Object.entries(stats.best).slice(0, 3);
+  // Every exercise with a record, in library order so the list does not
+  // reshuffle each time one of them is beaten.
+  const bestEntries = Object.entries(stats.best).filter(([id]) => exerciseById(id));
 
   return (
     <div className="space-y-3">
@@ -120,7 +116,12 @@ export const WorkoutHistory: React.FC<Props> = ({ sessions }) => {
             .map((i) => {
               const ex = exerciseById(i.exerciseId);
               if (!ex) return null;
-              return `${i.sets} × ${i.target}${ex.metric === 'hold' ? 's' : ''}`;
+              // What was actually done, where it was recorded. Older sessions
+              // only have the target they were completed against.
+              const done = s.results?.[i.exerciseId];
+              const per =
+                done && done.length > 0 ? Math.max(...done) : i.target;
+              return `${i.sets} × ${per}${ex.metric === 'hold' ? 's' : ''}`;
             })
             .filter(Boolean)
             .join(' · ');
