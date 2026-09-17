@@ -13,6 +13,7 @@ import {
   Target,
   Flag,
   CalendarDays,
+  Pencil,
 } from 'lucide-react';
 import type { Recurrence, RecurrenceFreq, Subtask, Task, TaskReflection } from '../types';
 import { describeRecurrence, subtaskProgress } from '../lib/recurrence';
@@ -29,6 +30,8 @@ interface Props {
   onPatch: (changes: Partial<Task>) => void;
   onDelete: () => void;
   onStartFocus?: (task: Task) => void;
+  /** Opens the full composer for this task. */
+  onEdit?: (task: Task) => void;
 }
 
 const REFLECTIONS: { id: TaskReflection; label: string; emoji: string }[] = [
@@ -51,6 +54,7 @@ export const TaskDetailSheet: React.FC<Props> = ({
   onPatch,
   onDelete,
   onStartFocus,
+  onEdit,
 }) => {
   const [subtaskDraft, setSubtaskDraft] = useState('');
   const [notes, setNotes] = useState('');
@@ -131,13 +135,29 @@ export const TaskDetailSheet: React.FC<Props> = ({
             <h3 className="eb-heading text-base tracking-tight break-words min-w-0">
               {task.title}
             </h3>
-            <button
-              onClick={onClose}
-              aria-label="Close"
-              className="shrink-0 w-10 h-10 rounded-xl hover:bg-[var(--surface-sunk)] text-[var(--ink-muted)] flex items-center justify-center"
-            >
-              <X className="w-4 h-4 shrink-0" />
-            </button>
+            <div className="flex items-center gap-1 shrink-0">
+              {/* Full edit. The list row itself carries no pencil any more, so
+                  this is the route to name, time, duration, reminder and icon. */}
+              {onEdit && (
+                <button
+                  onClick={() => {
+                    soundFx.playClick();
+                    onEdit(task);
+                  }}
+                  aria-label="Edit task"
+                  className="w-10 h-10 rounded-xl hover:bg-[var(--surface-sunk)] text-[var(--ink-muted)] flex items-center justify-center"
+                >
+                  <Pencil className="w-4 h-4 shrink-0" />
+                </button>
+              )}
+              <button
+                onClick={onClose}
+                aria-label="Close"
+                className="w-10 h-10 rounded-xl hover:bg-[var(--surface-sunk)] text-[var(--ink-muted)] flex items-center justify-center"
+              >
+                <X className="w-4 h-4 shrink-0" />
+              </button>
+            </div>
           </div>
 
           {/* Facts */}

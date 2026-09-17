@@ -1856,3 +1856,232 @@ button > span,
   text-decoration: line-through;
   color: var(--ink-dim);
 }
+
+
+/* ==================================================================
+   Plan → Tasks: compact task strips
+
+   A task is a strip of information, not a dashboard card: one hairline
+   border, one small radius, tight padding. Height is driven by the task
+   name, which is the only thing in the row allowed to grow.
+   ================================================================== */
+
+.task-strip {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.03) inset;
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+
+.task-strip:active {
+  border-color: color-mix(in oklab, var(--signal) 38%, var(--rule));
+}
+
+.task-strip[data-done='true'] {
+  background: color-mix(in oklab, var(--surface) 70%, var(--ground));
+  border-color: color-mix(in oklab, var(--rule) 75%, transparent);
+}
+
+.task-strip[data-pinned='true'] {
+  border-color: color-mix(in oklab, var(--signal) 42%, var(--rule));
+}
+
+.task-strip[data-selected='true'] {
+  outline: 2px solid var(--signal);
+  outline-offset: -2px;
+}
+
+/* ------------------------------------------------------------------
+   Task names are never truncated
+
+   No line clamp, no ellipsis, no fixed height. A long name wraps onto
+   as many lines as it needs and the row grows with it. `break-word`
+   only ever splits a single word that is itself wider than the row
+   (a pasted URL), so ordinary words stay whole.
+   ------------------------------------------------------------------ */
+
+.task-name {
+  display: block;
+  min-width: 0;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: none;
+  -webkit-line-clamp: none;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1.35;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+}
+
+@media (min-width: 640px) {
+  .task-name { font-size: 15.5px; }
+}
+
+.task-name[data-done='true'] {
+  color: var(--ink-dim);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+
+/* Metadata sits under the name, wraps by item, and never competes with it. */
+.task-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  /* Spacing separates the items. A drawn divider looked correct on one line
+     and stranded a floating bar at the start of every wrapped one. */
+  gap: 1px 11px;
+  min-width: 0;
+  margin-top: 4px;
+}
+
+.task-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  max-width: 100%;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 11.5px;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-muted);
+  overflow-wrap: normal;
+  word-break: keep-all;
+}
+
+.task-meta-item[data-tone='warn'] { color: var(--warn); }
+.task-meta-item[data-tone='signal'] { color: var(--signal-ink); }
+
+/* Completion control — right side, thumb-sized target, small visual mark. */
+.task-check {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  margin: -6px -6px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.task-check-mark {
+  width: 23px;
+  height: 23px;
+  border-radius: 999px;
+  border: 1.5px solid var(--rule-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+
+.task-check:active .task-check-mark {
+  transform: scale(0.92);
+}
+
+.task-check-mark[data-state='done'] {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: #fff;
+}
+
+.task-check:hover .task-check-mark[data-state='open'] {
+  border-color: var(--signal);
+}
+
+/* Left icon tile. Small, monochrome-ish, one per row. */
+.task-icon {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in oklab, var(--signal) 13%, transparent);
+  color: var(--signal-ink);
+}
+
+.task-icon[data-done='true'] {
+  background: var(--surface-sunk);
+  color: var(--ink-dim);
+}
+
+/* Subtasks: indented compact rows under the parent, sharing its surface. */
+.task-subs {
+  border-top: 1px solid var(--rule);
+  padding: 6px 12px 8px 50px;
+}
+
+.task-sub-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  width: 100%;
+  text-align: left;
+  padding: 5px 0;
+  min-width: 0;
+}
+
+.task-sub-box {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  border-radius: 5px;
+  border: 1.5px solid var(--rule-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.task-sub-box[data-state='done'] {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: #fff;
+}
+
+.task-sub-label {
+  min-width: 0;
+  flex: 1;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--ink);
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.task-sub-label[data-state='done'] {
+  color: var(--ink-dim);
+  text-decoration: line-through;
+}
+
+/* The tick lands with a small pulse and a restrained purple halo. */
+.task-check-mark[data-state='done'] {
+  animation: eb-pop 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dark .task-check-mark[data-state='done'] {
+  box-shadow:
+    0 0 0 2px color-mix(in oklab, var(--signal) 13%, transparent),
+    0 0 8px -2px color-mix(in oklab, var(--signal) 42%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .task-check-mark[data-state='done'] { animation: none; }
+  .task-check:active .task-check-mark { transform: none; }
+}

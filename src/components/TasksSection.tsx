@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence, Reorder } from 'motion/react';
-import { Trash2, Pencil, GripVertical, CalendarClock, ChevronRight, ArrowUpDown, Target,
+import { CalendarClock, ChevronRight, ArrowUpDown, Target,
   Check,
   Plus,
   X,
@@ -12,8 +12,12 @@ import { Trash2, Pencil, GripVertical, CalendarClock, ChevronRight, ArrowUpDown,
   Search,
   Repeat,
   ListChecks,
+  CalendarDays,
+  Clock,
+  Timer,
+  Bell,
 } from 'lucide-react';
-import type { Task, TaskCategory, TaskEnergy, TaskPriority } from '../types';
+import type { Recurrence, Task, TaskCategory, TaskEnergy, TaskPriority } from '../types';
 import { 
   bucketTasks,
   makeTask,
@@ -36,7 +40,7 @@ import { AddButton } from './AddButton';
 import { SwipeableRow } from './SwipeableRow';
 import { DraggableTaskRow } from './DraggableTaskRow';
 import * as Icons from 'lucide-react';
-import { iconNameFor } from '../lib/taskIcons';
+import { rowIconName } from '../lib/taskIcons';
 import { byManualOrder, positionFor, needsRebalance, rebalance } from '../lib/ordering';
 import { TaskComposer } from './TaskComposer';
 import { TaskDetailSheet } from './TaskDetailSheet';
@@ -108,6 +112,43 @@ function prettyDate(iso?: string): string {
     day: 'numeric',
     month: 'short',
   });
+}
+
+/** 18:30 → "6:30 PM". Stored 24h, read in whatever the user is used to. */
+function prettyTime(hhmm?: string): string {
+  if (!hhmm) return '';
+  const [h, m] = hhmm.split(':').map(Number);
+  if (!Number.isFinite(h)) return hhmm;
+  const period = h >= 12 ? 'PM' : 'AM';
+  const hour = h % 12 === 0 ? 12 : h % 12;
+  return `${hour}:${String(Number.isFinite(m) ? m : 0).padStart(2, '0')} ${period}`;
+}
+
+/** 45 → "45m", 90 → "1h 30m". Never "90m", which nobody reads as an hour. */
+function prettyDuration(mins?: number): string {
+  if (!mins || mins <= 0) return '';
+  if (mins < 60) return `${mins}m`;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return m ? `${h}h ${m}m` : `${h}h`;
+}
+
+function prettyReminder(mins?: number): string {
+  if (mins === undefined || mins === null) return '';
+  if (mins <= 0) return 'On time';
+  if (mins < 60) return `${mins}m before`;
+  const h = Math.round((mins / 60) * 10) / 10;
+  return `${h}h before`;
+}
+
+function prettyRepeat(rec?: Recurrence): string {
+  if (!rec) return '';
+  const every = rec.interval && rec.interval > 1 ? rec.interval : 1;
+  if (every === 1) {
+    return rec.freq === 'daily' ? 'Daily' : rec.freq === 'weekly' ? 'Weekly' : 'Monthly';
+  }
+  const unit = rec.freq === 'daily' ? 'days' : rec.freq === 'weekly' ? 'weeks' : 'months';
+  return `Every ${every} ${unit}`;
 }
 
 interface ToastItem {
@@ -437,28 +478,100 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
   };
 
   /**
-   * A task as a compact list row.
+   * A task as a compact information strip.
    *
-   * One horizontal line: icon, then title and a single metadata line, then the
-   * completion control. Everything else — notes, the full subtask list, focus,
-   * rescheduling — lives in the detail sheet or behind a gesture, because a
-   * list whose rows are 300px tall stops being a list.
+   *   [icon]  TASK NAME                                      ( ✓ )
+   *           meta · meta · meta
+   *
+   * The name is the only element allowed to grow: it wraps onto as many lines
+   * as it needs and is never clamped or ellipsised, because a task you cannot
+   * read is not a task list. Everything else — notes, focus, rescheduling,
+   * full edit, delete — lives in the detail sheet or behind a gesture, so the
+   * row itself carries exactly one control.
    */
   const renderCard = (task: Task, highlight = false) => {
     const pri = PRIORITY_STYLE[task.priority] || PRIORITY_STYLE.normal;
     const isOverdue = !!task.dueDate && task.dueDate < todayISO() && !task.completed;
     const steps = subtaskProgress(task);
     const expanded = openSubtasks[task.id] === true;
+    const goalTitle = task.goalId ? goals.find((g) => g.id === task.goalId)?.title : undefined;
 
-    /** The single metadata line. Kept to what changes a decision. */
-    const meta = [
-      task.dueDate ? prettyDate(task.dueDate) : null,
-      task.dueTime || null,
-      task.estimatedMinutes ? `${task.estimatedMinutes}m` : null,
-      task.goalId ? goals.find((g) => g.id === task.goalId)?.title : null,
-    ]
-      .filter(Boolean)
-      .join(' · ');
+    /** Tapping the row body. Selects while a bulk selection is running. */
+    const rowTap = () => {
+      if (selected.size > 0) {
+        setSelected((prev) => {
+          const next = new Set(prev);
+          if (next.has(task.id)) next.delete(task.id);
+          else next.add(task.id);
+          return next;
+        });
+        return;
+      }
+      setDetailId(task.id);
+    };
+
+    /**
+     * Metadata, in one wrapping line under the name.
+     *
+     * Built rather than templated so a field the task does not have simply
+     * never appears — no dashes, no empty placeholders.
+     */
+    const meta: {
+      key: string;
+      icon: typeof ChevronsUp;
+      text: string;
+      tone?: 'warn' | 'signal';
+      dot?: string;
+      onClick?: () => void;
+    }[] = [];
+
+    if (steps.total > 0) {
+      meta.push({
+        key: 'subtasks',
+        icon: expanded ? ChevronDown : ListChecks,
+        text: `${steps.done}/${steps.total}`,
+        tone: 'signal',
+        onClick: () => {
+          soundFx.playClick();
+          setOpenSubtasks((prev) => ({ ...prev, [task.id]: !prev[task.id] }));
+        },
+      });
+    }
+
+    if (task.dueDate) {
+      meta.push({
+        key: 'due',
+        icon: CalendarDays,
+        text: task.dueTime
+          ? `${prettyDate(task.dueDate)} ${prettyTime(task.dueTime)}`
+          : prettyDate(task.dueDate),
+        tone: isOverdue ? 'warn' : undefined,
+      });
+    } else if (task.dueTime) {
+      meta.push({ key: 'time', icon: Clock, text: prettyTime(task.dueTime) });
+    }
+
+    if (task.estimatedMinutes) {
+      meta.push({ key: 'dur', icon: Timer, text: prettyDuration(task.estimatedMinutes) });
+    }
+
+    // Normal is the default every task starts with, so showing it would put a
+    // word on every row that tells the user nothing.
+    if (task.priority !== 'normal') {
+      meta.push({ key: 'pri', icon: pri.icon, text: pri.label, dot: pri.hex });
+    }
+
+    if (task.reminderMinutesBefore !== undefined && task.reminderMinutesBefore !== null) {
+      meta.push({ key: 'rem', icon: Bell, text: prettyReminder(task.reminderMinutesBefore) });
+    }
+
+    if (task.recurrence) {
+      meta.push({ key: 'rep', icon: Repeat, text: prettyRepeat(task.recurrence) });
+    }
+
+    if (goalTitle) {
+      meta.push({ key: 'goal', icon: Target, text: goalTitle });
+    }
 
     return (
       <SwipeableRow
@@ -491,168 +604,108 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, height: 0, marginBottom: 0 }}
           transition={{ duration: 0.16 }}
-          className="relative overflow-hidden rounded-xl eb-card"
-          style={
-            selected.has(task.id)
-              ? { outline: '2px solid var(--signal)', outlineOffset: -2 }
-              : highlight
-                ? { borderColor: 'color-mix(in oklab, var(--signal) 45%, var(--rule))' }
-                : undefined
-          }
+          className="task-strip overflow-hidden"
+          data-done={task.completed ? 'true' : 'false'}
+          data-pinned={highlight && !task.completed ? 'true' : 'false'}
+          data-selected={selected.has(task.id) ? 'true' : 'false'}
+          onContextMenu={(e: React.MouseEvent) => {
+            e.preventDefault();
+            soundFx.playClick();
+            setSelected((prev) => new Set(prev).add(task.id));
+          }}
         >
-          {/* Priority as a left edge, so it costs no horizontal space. */}
-          {!task.completed && (
-            <span className={`absolute left-0 top-0 bottom-0 w-[3px] ${pri.bar}`} />
-          )}
-
-          <div className="pl-3.5 pr-2.5 py-2.5">
-            {/* Title first, across the full width. Previously it shared a row
-                with five other elements and was the only one that could
-                shrink, so it always lost. */}
-            <div
-              className="flex items-start gap-3"
-              onContextMenu={(e) => {
-                e.preventDefault();
-                soundFx.playClick();
-                setSelected((prev) => new Set(prev).add(task.id));
-              }}
+          {/* icon · name + metadata · check. Three columns, and only the
+              middle one is allowed to grow. */}
+          <div className="flex items-start gap-2.5 px-3 py-2.5">
+            <button
+              onClick={rowTap}
+              aria-label="Task details"
+              className="task-icon mt-[1px]"
+              data-done={task.completed ? 'true' : 'false'}
             >
-              <button
-                onClick={() => {
-                  if (selected.size > 0) {
-                    setSelected((prev) => {
-                      const next = new Set(prev);
-                      next.has(task.id) ? next.delete(task.id) : next.add(task.id);
-                      return next;
-                    });
-                    return;
-                  }
-                  setDetailId(task.id);
-                }}
-                className="flex-1 min-w-0 text-left"
-              >
-                <span
-                  className={`block text-[15px] leading-snug line-clamp-2 ${
-                    task.completed ? 'text-[var(--ink-dim)] line-through' : 'text-[var(--ink)]'
-                  }`}
-                >
+              {(() => {
+                const name = rowIconName(task);
+                const Chosen = name ? (Icons as any)[name] : null;
+                const Icon = Chosen || pri.icon;
+                return <Icon className="w-[15px] h-[15px] shrink-0" />;
+              })()}
+            </button>
+
+            <div className="flex-1 min-w-0">
+              {/* The name. No clamp, no ellipsis — it wraps and the row grows
+                  with it, because a half-shown task is a useless one. */}
+              <button onClick={rowTap} className="block w-full text-left">
+                <span className="task-name" data-done={task.completed ? 'true' : 'false'}>
                   {task.pinned && !task.completed && (
-                    <Star className="inline w-3 h-3 mb-0.5 mr-1 eb-warn fill-amber-400" />
+                    <Star className="inline w-3 h-3 mb-[3px] mr-1 eb-warn fill-amber-400" />
                   )}
                   {task.title}
                 </span>
               </button>
 
-              {/* Completion stays top-right, aligned with the first line. */}
-              <button
-                onClick={() => handleToggle(task)}
-                aria-label={task.completed ? 'Mark not done' : 'Mark done'}
-                className="shrink-0 w-7 h-7 flex items-center justify-center -mt-0.5"
-              >
-                <span
-                  className={`w-[24px] h-[24px] rounded-full border-2 flex items-center justify-center transition-all ${
-                    task.completed
-                      ? 'bg-emerald-500 border-emerald-500 text-slate-950 glow-done'
-                      : 'border-[var(--rule-strong)]'
-                  }`}
-                >
-                  {task.completed && <Check className="w-3.5 h-3.5 shrink-0 stroke-[3]" />}
-                </span>
-              </button>
+              {meta.length > 0 && (
+                <div className="task-meta">
+                  {meta.map((m) => {
+                    const Icon = m.icon;
+                    const body = (
+                      <>
+                        {m.dot ? (
+                          <span
+                            className="shrink-0 rounded-full"
+                            style={{ width: 6, height: 6, background: m.dot }}
+                          />
+                        ) : (
+                          <Icon className="w-[13px] h-[13px] shrink-0" />
+                        )}
+                        <span className="min-w-0">{m.text}</span>
+                      </>
+                    );
+
+                    return m.onClick ? (
+                      <button
+                        key={m.key}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          m.onClick!();
+                        }}
+                        className="task-meta-item"
+                        data-tone={m.tone}
+                        aria-expanded={m.key === 'subtasks' ? expanded : undefined}
+                      >
+                        {body}
+                      </button>
+                    ) : (
+                      <span key={m.key} className="task-meta-item" data-tone={m.tone}>
+                        {body}
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
-            {/* Second line: icon, metadata, actions. */}
-            <div className="flex items-center gap-2 mt-2">
-              <span
-                className="w-6 h-6 rounded-lg shrink-0 flex items-center justify-center"
-                style={{
-                  background: task.completed
-                    ? 'var(--surface-sunk)'
-                    : `color-mix(in oklab, ${pri.hex} 18%, transparent)`,
-                }}
-              >
-                {(() => {
-                  const name = iconNameFor(task.iconId);
-                  const Chosen = name ? (Icons as any)[name] : null;
-                  const Icon = Chosen || pri.icon;
-                  return (
-                    <Icon
-                      className="w-3.5 h-3.5 shrink-0"
-                      style={{ color: task.completed ? 'var(--ink-dim)' : pri.hex }}
-                    />
-                  );
-                })()}
+            {/* The one control on the row. Existing toggle logic, unchanged. */}
+            <button
+              onClick={() => handleToggle(task)}
+              aria-label={task.completed ? 'Mark not done' : 'Mark done'}
+              aria-pressed={task.completed}
+              className="task-check"
+            >
+              <span className="task-check-mark" data-state={task.completed ? 'done' : 'open'}>
+                {task.completed && <Check className="w-3.5 h-3.5 shrink-0 stroke-[3]" />}
               </span>
-
-              {meta && (
-                <span className={`t-meta truncate min-w-0 ${isOverdue ? 'eb-warn' : ''}`}>
-                  {meta}
-                </span>
-              )}
-
-              {steps.total > 0 && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setOpenSubtasks((prev) => ({ ...prev, [task.id]: !prev[task.id] }));
-                  }}
-                  className="t-meta flex items-center gap-1 shrink-0"
-                  style={{ color: 'var(--signal-ink)' }}
-                >
-                  <ListChecks className="w-3.5 h-3.5 shrink-0" />
-                  {steps.done}/{steps.total}
-                </button>
-              )}
-
-              {task.recurrence && (
-                <Repeat className="w-3.5 h-3.5 shrink-0" style={{ color: 'var(--ink-dim)' }} />
-              )}
-
-              <span className="flex-1" />
-
-              {!task.completed && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    soundFx.playClick();
-                    setEditingTask(task);
-                    setComposerOpen(true);
-                  }}
-                  aria-label="Edit task"
-                  className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center"
-                  style={{ color: 'var(--ink-dim)' }}
-                >
-                  <Pencil className="w-3.5 h-3.5 shrink-0" />
-                </button>
-              )}
-
-              {/* Delete. Undoable for six seconds, so it needs no
-                  confirmation dialogue. */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDelete(task);
-                }}
-                aria-label="Delete task"
-                className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center"
-                style={{ color: 'var(--ink-dim)' }}
-              >
-                <Trash2 className="w-3.5 h-3.5 shrink-0" />
-              </button>
-            </div>
+            </button>
           </div>
 
-          {/* Subtasks, only when asked for, and compact enough not to turn the
-              row back into a card. */}
+          {/* Subtasks: indented rows on the parent's own surface, revealed on
+              request. Never a second card. */}
           {expanded && steps.total > 0 && (
-            <div
-              className="px-4 pb-3 space-y-1"
-              style={{ borderTop: '1px solid var(--rule)', paddingTop: 10 }}
-            >
-              {task.subtasks!.map((st) => (
+            <div className="task-subs">
+              {task.subtasks!.map((st, i) => (
                 <button
                   key={st.id}
                   onClick={() => {
+                    soundFx.playClick();
                     const next = (task.subtasks || []).map((x) =>
                       x.id === st.id ? { ...x, done: !x.done } : x
                     );
@@ -661,25 +714,13 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
                     );
                     void patch(task, { subtasks: next });
                   }}
-                  className="flex items-center gap-2.5 w-full text-left py-1"
+                  className="task-sub-row"
                 >
-                  <span
-                    className="w-4 h-4 rounded shrink-0 flex items-center justify-center"
-                    style={{
-                      background: st.done ? 'var(--done)' : 'transparent',
-                      border: `1px solid ${st.done ? 'var(--done)' : 'var(--rule-strong)'}`,
-                    }}
-                  >
-                    {st.done && <Check className="w-2.5 h-2.5 shrink-0 text-white" />}
+                  <span className="task-sub-box" data-state={st.done ? 'done' : 'open'}>
+                    {st.done && <Check className="w-2.5 h-2.5 shrink-0 stroke-[3]" />}
                   </span>
-                  <span
-                    className="text-[13px] min-w-0 flex-1 truncate"
-                    style={{
-                      textDecoration: st.done ? 'line-through' : undefined,
-                      color: st.done ? 'var(--ink-dim)' : 'var(--ink)',
-                    }}
-                  >
-                    {st.title}
+                  <span className="task-sub-label" data-state={st.done ? 'done' : 'open'}>
+                    {i + 1}) {st.title}
                   </span>
                 </button>
               ))}
@@ -689,6 +730,20 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
       </SwipeableRow>
     );
   };
+
+  /**
+   * A row that is not draggable — pinned priorities, and every row under an
+   * explicit sort.
+   *
+   * It carries the same left gutter the drag handle occupies, so the strips
+   * line up down the whole list instead of stepping in and out by 20px
+   * depending on whether a row happens to be reorderable.
+   */
+  const renderStatic = (task: Task, highlight = false) => (
+    <div key={task.id} className="pl-5">
+      {renderCard(task, highlight)}
+    </div>
+  );
 
   return (
     <div className="space-y-4">
@@ -954,7 +1009,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
             </p>
           )}
           <AnimatePresence initial={false}>
-            {visible.filter((t) => t.pinned).map((t) => renderCard(t, true))}
+            {visible.filter((t) => t.pinned).map((t) => renderStatic(t, true))}
           </AnimatePresence>
 
           {tab === 'today' &&
@@ -985,7 +1040,7 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
             </Reorder.Group>
           ) : (
             <AnimatePresence initial={false}>
-              {visible.filter((t) => !t.pinned).map((t) => renderCard(t))}
+              {visible.filter((t) => !t.pinned).map((t) => renderStatic(t))}
             </AnimatePresence>
           )}
         </div>
@@ -1004,6 +1059,13 @@ export const TasksSection: React.FC<Props> = ({ userId, goals = [], onStartFocus
         onPatch={(changes) => detailTask && patch(detailTask, changes)}
         onDelete={() => detailTask && handleDelete(detailTask)}
         onStartFocus={onStartFocus}
+        onEdit={(task) => {
+          // The row carries only the completion control now, so full edit is
+          // reached through the detail sheet rather than a pencil per row.
+          setDetailId(null);
+          setEditingTask(task);
+          setComposerOpen(true);
+        }}
       />
 
       <AddButton label="Add task" onClick={() => setComposerOpen(true)} />

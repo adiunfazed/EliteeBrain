@@ -38,13 +38,15 @@ export const DraggableTaskRow: React.FC<Props> = ({ task, onDragEnd, children })
           controls.start(e);
         }}
         aria-label="Drag to reorder"
-        className="absolute right-1 top-1/2 -translate-y-1/2 z-20 w-8 h-12 flex items-center justify-center touch-none"
-        style={{ color: 'var(--ink-dim)' }}
+        className="absolute left-0 top-0 bottom-0 z-20 w-6 flex items-start justify-center pt-[13px] touch-none"
+        style={{ color: 'var(--rule-strong)' }}
       >
-        <GripVertical className="w-4 h-4 shrink-0" />
+        <GripVertical className="w-3.5 h-3.5 shrink-0" />
       </button>
 
-      <div className="pr-7">{children}</div>
+      {/* The handle sits on the left because the right of every task row is
+          the completion control, which must stay the easiest thing to hit. */}
+      <div className="pl-5">{children}</div>
     </Reorder.Item>
   );
 };
