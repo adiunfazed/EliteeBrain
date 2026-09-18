@@ -9,6 +9,7 @@ import {
 import { db } from './firebase';
 import { Alarm, AlarmLog } from './wakeChallenge';
 import { WorkoutSession } from './bodyTraining';
+import type { PersonalRecord, RecordMap } from './personalRecords';
 
 /**
  * Persistence for body training and alarms.
@@ -21,6 +22,7 @@ import { WorkoutSession } from './bodyTraining';
 const ALARMS_KEY = 'elitebrain_alarms_v1';
 const ALARM_LOGS_KEY = 'elitebrain_alarm_logs_v1';
 const WORKOUTS_KEY = 'elitebrain_workouts_v1';
+const RECORDS_KEY = 'elitebrain_records_v1';
 
 function readLocal<T>(key: string): T[] {
   if (typeof window === 'undefined') return [];
@@ -229,4 +231,130 @@ export async function saveWorkout(
   await setDoc(doc(db, 'users', userId, 'workouts', session.id), strip(session), {
     merge: true,
   });
+}
+
+/* ---------------- personal records ---------------- */
+
+/**
+ * Records live in their own tiny documents, one per exercise.
+ *
+ * A record used to be inferred purely from the saved workouts, which meant a
+ * single failed workout write silently erased a personal best — the set had
+ * happened, the celebration had already been shown, and then the number was
+ * gone. Writing the record separately, the moment it is set, decouples "my
+ * best ever" from "did that one document save".
+ */
+
+export function localRecords(): RecordMap {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = localStorage.getItem(RECORDS_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    return parsed && typeof parsed === 'object' ? (parsed as RecordMap) : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeRecords(map: RecordMap): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(RECORDS_KEY, JSON.stringify(map));
+  } catch {
+    /* private mode or quota — the in-memory copy still serves this session */
+  }
+}
+
+const recordListeners = new Set<(records: RecordMap) => void>();
+
+function publishRecords(map: RecordMap): void {
+  for (const fn of recordListeners) {
+    try {
+      fn(map);
+    } catch (err) {
+      console.error('Record listener failed:', err);
+    }
+  }
+}
+
+/** Keep whichever copy of a record is higher. */
+function higher(a?: PersonalRecord, b?: PersonalRecord): PersonalRecord | undefined {
+  if (!a) return b;
+  if (!b) return a;
+  return (Number(a.value) || 0) >= (Number(b.value) || 0) ? a : b;
+}
+
+export function subscribeRecords(
+  userId: string | null,
+  onChange: (records: RecordMap) => void
+): () => void {
+  recordListeners.add(onChange);
+  onChange(localRecords());
+
+  if (!userId || !db) {
+    return () => {
+      recordListeners.delete(onChange);
+    };
+  }
+
+  const stop = onSnapshot(
+    collection(db, 'users', userId, 'records'),
+    (snap) => {
+      const server: RecordMap = {};
+      for (const d of snap.docs) {
+        const row = d.data() as PersonalRecord;
+        if (row && typeof row.value === 'number') server[row.exerciseId || d.id] = row;
+      }
+
+      // Merged rather than replaced. A record set while offline, or while a
+      // write was being refused, must not be wiped by the first snapshot that
+      // does not know about it yet.
+      const local = localRecords();
+      const merged: RecordMap = {};
+      for (const id of new Set([...Object.keys(local), ...Object.keys(server)])) {
+        const best = higher(local[id], server[id]);
+        if (best) merged[id] = best;
+      }
+
+      writeRecords(merged);
+      publishRecords(merged);
+    },
+    (err) => console.error('Record subscription failed:', err?.message || err)
+  );
+
+  return () => {
+    recordListeners.delete(onChange);
+    stop();
+  };
+}
+
+/**
+ * Store a new personal record.
+ *
+ * Local first and published immediately, so the number on screen changes the
+ * instant the set ends whether or not the network agrees. A lower value is
+ * ignored outright: records only ever go up, so a stale write arriving late
+ * can never knock one back down.
+ */
+export async function saveRecord(
+  userId: string | null,
+  record: PersonalRecord
+): Promise<void> {
+  const value = Number(record?.value);
+  if (!record?.exerciseId || !Number.isFinite(value) || value <= 0) return;
+
+  const current = localRecords();
+  const held = current[record.exerciseId];
+  if (held && (Number(held.value) || 0) >= value) return;
+
+  const next = { ...current, [record.exerciseId]: { ...record, value: Math.floor(value) } };
+  writeRecords(next);
+  publishRecords(next);
+
+  if (!userId || !db) return;
+  await setDoc(
+    doc(db, 'users', userId, 'records', record.exerciseId),
+    strip(next[record.exerciseId] as any),
+    { merge: true }
+  );
 }

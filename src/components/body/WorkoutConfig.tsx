@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Minus, Plus } from 'lucide-react';
+import { Minus, Plus, Trophy } from 'lucide-react';
 import { Exercise } from '../../lib/bodyTraining';
 import { soundFx } from '../../utils/audio';
 
@@ -12,6 +12,8 @@ export interface WorkoutConfigValue {
 interface Props {
   exercise: Exercise;
   initial: WorkoutConfigValue;
+  /** The user's best single set, 0 when there is none yet. */
+  best?: number;
   onStart: (config: WorkoutConfigValue) => void;
   onCancel: () => void;
 }
@@ -152,6 +154,7 @@ const Stepper: React.FC<{
 export const WorkoutConfig: React.FC<Props> = ({
   exercise,
   initial,
+  best = 0,
   onStart,
   onCancel,
 }) => {
@@ -167,6 +170,22 @@ export const WorkoutConfig: React.FC<Props> = ({
       <div>
         <p className="t-section">{exercise.name}</p>
         <p className="t-meta mt-0.5">{exercise.cue}</p>
+
+        {/* The number to beat, stated plainly, so the target below has some
+            meaning before it is changed. */}
+        {best > 0 && (
+          <p className="t-meta mt-2 flex items-center gap-1.5">
+            <Trophy className="w-3.5 h-3.5 shrink-0 eb-warn" />
+            <span>
+              Your best is{' '}
+              <strong style={{ color: 'var(--ink)' }}>
+                {best} {isHold ? 'seconds' : 'reps'}
+              </strong>{' '}
+              in one set.
+              {target > best && ' This beats it.'}
+            </span>
+          </p>
+        )}
       </div>
 
       <div className="panel-sm space-y-3.5">

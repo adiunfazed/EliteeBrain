@@ -2090,32 +2090,35 @@ button > span,
    is to be readable at the edge of vision.
    ================================================================== */
 
+/* Held, then released. The old 520ms fade was gone before anyone
+   mid-movement could notice it, which is the whole point of the colour. */
 @keyframes cam-verdict {
   0%   { opacity: 0; }
-  18%  { opacity: 1; }
+  10%  { opacity: 1; }
+  62%  { opacity: 1; }
   100% { opacity: 0; }
 }
 
 .cam-flash {
-  animation: cam-verdict 520ms ease-out forwards;
+  animation: cam-verdict 1600ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .cam-flash[data-tone='good'] {
   background: radial-gradient(
     ellipse at center,
-    rgba(0, 194, 168, 0) 45%,
-    rgba(0, 194, 168, 0.28) 100%
+    rgba(0, 194, 168, 0) 42%,
+    rgba(0, 194, 168, 0.32) 100%
   );
-  box-shadow: inset 0 0 0 2px rgba(0, 194, 168, 0.55);
+  box-shadow: inset 0 0 0 3px rgba(0, 194, 168, 0.68);
 }
 
 .cam-flash[data-tone='bad'] {
   background: radial-gradient(
     ellipse at center,
-    rgba(255, 90, 110, 0) 45%,
-    rgba(255, 90, 110, 0.26) 100%
+    rgba(255, 90, 110, 0) 42%,
+    rgba(255, 90, 110, 0.3) 100%
   );
-  box-shadow: inset 0 0 0 2px rgba(255, 90, 110, 0.5);
+  box-shadow: inset 0 0 0 3px rgba(255, 90, 110, 0.62);
 }
 
 @keyframes cam-cue-in {
@@ -2124,7 +2127,35 @@ button > span,
 }
 
 .cam-cue {
-  animation: cam-cue-in 180ms ease-out;
+  animation: cam-cue-in 200ms ease-out;
+}
+
+/* The verdict strip under the frame, which mirrors the in-frame colour so
+   the result is readable without watching the preview. */
+.rep-verdict {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 13.5px;
+  animation: cam-cue-in 200ms ease-out;
+}
+
+.rep-verdict[data-tone='good'] {
+  color: var(--done);
+  background: color-mix(in oklab, var(--done) 13%, transparent);
+  border: 1px solid color-mix(in oklab, var(--done) 32%, var(--rule));
+}
+
+.rep-verdict[data-tone='bad'] {
+  color: #FF6B7E;
+  background: rgba(255, 107, 126, 0.12);
+  border: 1px solid rgba(255, 107, 126, 0.3);
 }
 
 /* The rep counter lifts briefly when a rep lands, so the number itself
@@ -2324,4 +2355,198 @@ button > span,
 
 .sort-pill:active {
   background: var(--surface-sunk);
+}
+
+
+/* ==================================================================
+   ELI — the contextual coach layer
+
+   A small persistent entry point and one compact panel. Quiet by
+   default: the glow exists only while the context engine actually has
+   something to say, because a coach that always looks urgent is one
+   people learn to ignore.
+
+   Bottom LEFT deliberately — "Add task" owns the bottom right, and two
+   floating controls in one corner means one of them gets mis-tapped.
+   ================================================================== */
+
+.eli-fab {
+  position: fixed;
+  left: 1rem;
+  bottom: calc(5.25rem + env(safe-area-inset-bottom));
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 44px;
+  padding: 0 14px 0 12px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  color: var(--ink-muted);
+  box-shadow: 0 8px 22px -12px rgba(0, 0, 0, 0.8);
+  transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1), border-color 200ms ease,
+    color 200ms ease, background-color 200ms ease;
+}
+
+.eli-fab-label {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+
+.eli-fab:active {
+  transform: scale(0.95);
+}
+
+/* With something to say: accented, and a slow breath rather than a
+   blink. Nothing here moves fast enough to pull the eye off the page. */
+.eli-fab[data-has-news='true'] {
+  color: var(--ink);
+  border-color: color-mix(in oklab, var(--signal) 34%, var(--rule));
+  background: color-mix(in oklab, var(--signal) 9%, var(--surface));
+}
+
+.dark .eli-fab[data-has-news='true'] {
+  animation: eli-breathe 3.4s ease-in-out infinite;
+}
+
+@keyframes eli-breathe {
+  0%, 100% {
+    box-shadow: 0 8px 22px -12px rgba(0, 0, 0, 0.8),
+      0 0 0 0 color-mix(in oklab, var(--signal) 26%, transparent);
+  }
+  50% {
+    box-shadow: 0 8px 22px -12px rgba(0, 0, 0, 0.8),
+      0 0 14px -2px color-mix(in oklab, var(--signal) 40%, transparent);
+  }
+}
+
+/* The unread mark. Small, and the only thing on the button that is
+   ever brightly coloured. */
+.eli-fab-dot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--signal);
+  border: 2px solid var(--ground);
+}
+
+/* ---- the panel ---- */
+
+.eli-panel {
+  position: fixed;
+  z-index: 94;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.04) inset,
+    0 20px 48px -20px rgba(0, 0, 0, 0.9);
+
+  /* Mobile: a sheet across the bottom, above the tab bar. */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 20px 20px 0 0;
+  padding: 18px 16px calc(18px + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 640px) {
+  /* Desktop: a compact panel by the button, not a sheet across the page. */
+  .eli-panel {
+    left: 1rem;
+    right: auto;
+    bottom: calc(7.5rem + env(safe-area-inset-bottom));
+    width: 380px;
+    max-width: calc(100vw - 2rem);
+    border-radius: 18px;
+    padding: 18px;
+  }
+}
+
+.eli-avatar {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in oklab, var(--signal) 16%, transparent);
+  border: 1px solid color-mix(in oklab, var(--signal) 26%, var(--rule));
+  color: var(--signal-ink);
+}
+
+/* Contextual actions. Pills, sized for a thumb, never full-width slabs. */
+.eli-action {
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+  color: #fff;
+  background: var(--signal);
+  border: 1px solid var(--signal);
+  transition: transform 140ms ease, filter 140ms ease;
+}
+
+.eli-action:active {
+  transform: scale(0.97);
+  filter: brightness(0.94);
+}
+
+.eli-quiet {
+  min-height: 34px;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 12.5px;
+  white-space: nowrap;
+  color: var(--ink-dim);
+  background: none;
+  border: none;
+  transition: color 140ms ease;
+}
+
+.eli-quiet:hover {
+  color: var(--ink);
+}
+
+.eli-divider {
+  height: 1px;
+  background: var(--rule);
+  margin: 16px 0 12px;
+}
+
+/* The way into the existing chat. Reads as a link, not a fourth button
+   competing with the contextual actions above it. */
+.eli-ask {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 42px;
+  padding: 0 4px;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--signal-ink);
+  background: none;
+  border: none;
+  transition: color 140ms ease;
+}
+
+.eli-ask:hover {
+  color: #C9BEF7;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dark .eli-fab[data-has-news='true'] { animation: none; }
+  .eli-fab:active { transform: none; }
+  .eli-action:active { transform: none; }
 }

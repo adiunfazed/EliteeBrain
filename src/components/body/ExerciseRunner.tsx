@@ -73,6 +73,7 @@ export const ExerciseRunner: React.FC<Props> = ({
    */
   const finishing = useRef(false);
   const finishTimer = useRef<number | null>(null);
+  const verdictTimer = useRef<number | null>(null);
 
   /** Never above the target, never below zero. */
   const clamp = (n: number) => Math.max(0, Math.min(target, n));
@@ -115,6 +116,7 @@ export const ExerciseRunner: React.FC<Props> = ({
   useEffect(
     () => () => {
       if (finishTimer.current) window.clearTimeout(finishTimer.current);
+      if (verdictTimer.current) window.clearTimeout(verdictTimer.current);
     },
     []
   );
@@ -239,7 +241,13 @@ export const ExerciseRunner: React.FC<Props> = ({
                 setValue(clamp(count + manualExtra.current));
                 setBump((n) => n + 1);
               }}
-              onFeedback={setFeedback}
+              onFeedback={(event) => {
+                setFeedback(event);
+                // Cleared on a timer so the strip shows the last movement
+                // rather than lingering as a permanent label.
+                if (verdictTimer.current) window.clearTimeout(verdictTimer.current);
+                verdictTimer.current = window.setTimeout(() => setFeedback(null), 2200);
+              }}
               onManualMode={() => setManual(true)}
             />
           </div>
@@ -248,17 +256,23 @@ export const ExerciseRunner: React.FC<Props> = ({
         {phase === 'working' && (
           <div className="max-w-md mx-auto">
             {/* The live verdict, repeated below the frame so it is readable
-                without watching the preview. Only ever real engine output. */}
+                without watching the preview. Only ever real engine output,
+                and it clears itself rather than sitting there stale. */}
             {!isHold && !manual && feedback && (
-              <p
-                className="t-meta mt-2.5 flex items-center justify-center gap-1.5"
-                style={{
-                  color: feedback.kind === 'rep' ? 'var(--done)' : '#FF6B7E',
-                }}
+              <div
+                key={`${feedback.kind}-${feedback.count}-${feedback.reason ?? ''}`}
+                className="rep-verdict"
+                data-tone={feedback.kind === 'rep' ? 'good' : 'bad'}
               >
-                <Activity className="w-3.5 h-3.5 shrink-0" />
-                {feedback.kind === 'rep' ? 'Good rep' : feedback.reason || 'Rep incomplete'}
-              </p>
+                {feedback.kind === 'rep' ? (
+                  <Check className="w-4 h-4 shrink-0" />
+                ) : (
+                  <Activity className="w-4 h-4 shrink-0" />
+                )}
+                {feedback.kind === 'rep'
+                  ? 'Good rep'
+                  : feedback.reason || 'That one did not count'}
+              </div>
             )}
 
             <div className="text-center mt-5">

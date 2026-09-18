@@ -74,6 +74,52 @@ interface ExerciseDefinition {
   posture?: (lm: Landmark[]) => string | null;
   /** How far from the bottom counts as "nearly there", in degrees. */
   nearBottom?: number;
+  /**
+   * Whether the body is actually in this exercise's starting position.
+   *
+   * The measured angle alone cannot answer this, and assuming it could is
+   * what produced a phantom rep on every single start: standing upright with
+   * straight arms satisfies the push-up "top" perfectly, so the counter armed
+   * while the user was still walking to the mat — and then read kneeling down
+   * and pressing into a plank as rep one.
+   *
+   * Returns null when the landmarks needed are unclear, which keeps the
+   * counter disarmed rather than arming on a guess.
+   */
+  ready?: (lm: Landmark[]) => boolean | null;
+  /** What to tell the user while they are not yet in position. */
+  readyHint: string;
+  /** Per-exercise coaching wording. Generic cues help nobody. */
+  cues: {
+    /** Descending, but not deep enough yet. */
+    lower: string;
+    /** At the bottom, time to come back up. */
+    up: string;
+    /** Moving well. */
+    good: string;
+    /** A rep that did not reach depth. */
+    shallow: string;
+    /** A rep thrown away too fast to be real. */
+    fast: string;
+  };
+}
+
+/** True when the torso is nearer horizontal than vertical. */
+function torsoHorizontal(lm: Landmark[]): boolean | null {
+  const shoulder = clearer(lm, LM.leftShoulder, LM.rightShoulder);
+  const hip = clearer(lm, LM.leftHip, LM.rightHip);
+  if (!shoulder || !hip) return null;
+
+  const dx = Math.abs(hip.x - shoulder.x);
+  const dy = Math.abs(hip.y - shoulder.y);
+  if (dx + dy < 0.04) return null;
+  return dx > dy;
+}
+
+/** True when the torso is nearer vertical than horizontal. */
+function torsoVertical(lm: Landmark[]): boolean | null {
+  const flat = torsoHorizontal(lm);
+  return flat === null ? null : !flat;
 }
 
 /** The angle at B for A-B-C, or null when any point is too faint to trust. */
@@ -149,6 +195,17 @@ const DEFINITIONS: Record<PoseExerciseId, ExerciseDefinition> = {
     minConfidence: 0.6,
     minRepMs: 550,
     nearBottom: 22,
+    // A plank, not a person standing up. This is the check that stops
+    // getting into position from counting as the first rep.
+    ready: (lm) => torsoHorizontal(lm),
+    readyHint: 'Get into a push-up position, arms straight',
+    cues: {
+      lower: 'Lower your chest',
+      up: 'Press back up',
+      good: 'Good form',
+      shallow: 'Chest closer to the floor',
+      fast: 'Slow down — pause at the bottom',
+    },
     // A push-up fails at the hips long before it fails at the elbows.
     posture: (lm) => {
       const dev = hipDeviation(lm);
@@ -178,6 +235,18 @@ const DEFINITIONS: Record<PoseExerciseId, ExerciseDefinition> = {
     minConfidence: 0.6,
     minRepMs: 600,
     nearBottom: 25,
+    // Standing tall, both legs straight. Walking into frame bends a knee
+    // through the same range a squat does, so arming needs the standing
+    // position held rather than merely touched.
+    ready: (lm) => torsoVertical(lm),
+    readyHint: 'Stand tall, facing the camera',
+    cues: {
+      lower: 'Sit back and go lower',
+      up: 'Drive up through your heels',
+      good: 'Good depth',
+      shallow: 'Go lower — thighs closer to parallel',
+      fast: 'Slow down — control the descent',
+    },
     // Torso lean, measured as the angle at the hip between shoulder and knee.
     // Folding forward turns a squat into a good-morning.
     posture: (lm) => {
@@ -227,6 +296,15 @@ const DEFINITIONS: Record<PoseExerciseId, ExerciseDefinition> = {
     minConfidence: 0.55,
     minRepMs: 650,
     nearBottom: 20,
+    ready: (lm) => torsoVertical(lm),
+    readyHint: 'Stand side-on with your feet together',
+    cues: {
+      lower: 'Drop the back knee',
+      up: 'Push back to standing',
+      good: 'Good form',
+      shallow: 'Lower further — front knee toward ninety',
+      fast: 'Slow down — step with control',
+    },
     posture: (lm) => {
       const left = safeAngle(lm, LM.leftShoulder, LM.leftHip, LM.leftKnee);
       const right = safeAngle(lm, LM.rightShoulder, LM.rightHip, LM.rightKnee);
@@ -250,6 +328,16 @@ const DEFINITIONS: Record<PoseExerciseId, ExerciseDefinition> = {
     minConfidence: 0.55,
     minRepMs: 600,
     nearBottom: 18,
+    // Lying down, not standing over the phone.
+    ready: (lm) => torsoHorizontal(lm),
+    readyHint: 'Lie on your back with your knees bent',
+    cues: {
+      lower: 'Lift your hips higher',
+      up: 'Lower under control',
+      good: 'Good form',
+      shallow: 'Lift higher — hips level with your knees',
+      fast: 'Slow down — squeeze at the top',
+    },
   },
 
   // Ankle travel is too small for a reliable angle, so this one uses the
@@ -274,6 +362,17 @@ const DEFINITIONS: Record<PoseExerciseId, ExerciseDefinition> = {
     minConfidence: 0.5,
     minRepMs: 450,
     nearBottom: 12,
+    // Only the feet are in frame, so there is no torso to judge. Arming
+    // instead relies on the heels being down and held, handled by the
+    // sustained hold every exercise now requires.
+    readyHint: 'Point the camera at your feet, heels down',
+    cues: {
+      lower: 'Rise higher onto your toes',
+      up: 'Lower your heels',
+      good: 'Good range',
+      shallow: 'Rise higher — up onto the balls of your feet',
+      fast: 'Slow down — pause at the top',
+    },
   },
 };
 
@@ -285,6 +384,21 @@ const MIN_TRAVEL_DEGREES = 25;
 
 /** Minimum time spent at the bottom, in milliseconds. */
 const MIN_BOTTOM_MS = 200;
+
+/**
+ * How long the starting position must be held before counting begins.
+ *
+ * A single frame at the top used to be enough, which is why every session
+ * opened with a phantom rep: the counter armed the moment a straight arm or a
+ * standing leg appeared, long before the user was in position, and then read
+ * getting into position as the first repetition. Holding still for a beat is
+ * something a person does naturally before starting, and something that
+ * walking across a room never does by accident.
+ */
+const ARM_HOLD_MS = 900;
+
+/** The top must also be held this long before a descent can begin a rep. */
+const MIN_TOP_MS = 220;
 
 /** Exercises measured by a raised position rather than a bent one. */
 const INVERTED: PoseExerciseId[] = ['glute-bridge'];
@@ -328,6 +442,17 @@ export interface RepReading {
   event?: RepEvent;
   /** True once the configured target has been reached. */
   targetReached: boolean;
+  /**
+   * Where the counter is in getting started.
+   *
+   * 'finding'  — no trustworthy pose yet.
+   * 'position' — a pose, but not this exercise's starting position.
+   * 'holding'  — in position; holding it steady to arm the counter.
+   * 'counting' — armed. Reps from here are real.
+   */
+  armState: 'finding' | 'position' | 'holding' | 'counting';
+  /** 0–1 progress through the steady hold that arms the counter. */
+  armProgress: number;
 }
 
 /**
@@ -348,7 +473,16 @@ export function createRepEngine(exercise: PoseExerciseId, target = 0) {
    * Until it has, the body may already be at the bottom, and treating that
    * as the top of a rep produces a phantom count on the first movement.
    */
-  let calibrated = false;
+  /**
+   * Whether the counter is armed.
+   *
+   * Replaces the old single-frame `calibrated` flag. See ARM_HOLD_MS.
+   */
+  let armed = false;
+  /** When the starting position was first held continuously. */
+  let holdingSince = 0;
+  /** When the body last arrived at the top of the movement. */
+  let topSince = 0;
   /**
    * When the body last left the top of a rep.
    *
@@ -390,18 +524,31 @@ export function createRepEngine(exercise: PoseExerciseId, target = 0) {
     angle: 180,
     phase,
     targetReached: locked,
+    armState: armed ? 'counting' : 'finding',
+    armProgress: 0,
     ...over,
   });
+
+  /** Losing the pose disarms the counter rather than leaving it half-armed. */
+  const disarm = () => {
+    armed = false;
+    holdingSince = 0;
+    topSince = 0;
+    heldFrames = 0;
+    phase = 'top';
+  };
 
   return {
     /** Feed one frame of landmarks. */
     push(landmarks: Landmark[] | null, now = Date.now()): RepReading {
       if (!landmarks || landmarks.length < 33) {
         lowFrames++;
+        disarm();
         return idle({
           status: 'no-body',
           reason: 'No body found. Step back so more of you is in frame.',
-          cue: { text: 'Get into position', tone: 'dim' },
+          cue: { text: def.readyHint, tone: 'dim' },
+          armState: 'finding',
         });
       }
 
@@ -412,11 +559,13 @@ export function createRepEngine(exercise: PoseExerciseId, target = 0) {
 
       if (bodyConfidence < 0.4) {
         lowFrames++;
+        disarm();
         return idle({
           status: 'partial',
           confidence: bodyConfidence,
           reason: def.framingHint,
-          cue: { text: 'Get into position', tone: 'dim' },
+          cue: { text: def.readyHint, tone: 'dim' },
+          armState: 'finding',
         });
       }
 
@@ -425,13 +574,17 @@ export function createRepEngine(exercise: PoseExerciseId, target = 0) {
         // Counting is paused rather than guessed at. Inventing a rep here is
         // exactly what makes a counter untrustworthy — and it is why no cue
         // above 'dim' is ever produced from a pose this unclear.
+        // Counting pauses but arming is kept: a single unclear frame
+        // mid-set should not throw the user back to "get into position".
+        holdingSince = 0;
         return idle({
           status: 'low-confidence',
           confidence: side.confidence,
           // Presence is fine but the tracked joints are unclear, which is
           // almost always the angle rather than the distance.
           reason: 'The tracked joints are partly hidden. Turn more side-on to the camera.',
-          cue: { text: 'Get into position', tone: 'dim' },
+          cue: { text: 'Hold steady', tone: 'dim' },
+          armState: armed ? 'counting' : 'position',
         });
       }
 
@@ -451,19 +604,58 @@ export function createRepEngine(exercise: PoseExerciseId, target = 0) {
       // deliberately null whenever the landmarks it needs are unclear.
       const postureWarning = def.posture ? def.posture(landmarks) : null;
 
-      // Wait for a clean top position before counting anything.
-      if (!calibrated) {
-        if (atTop) {
-          calibrated = true;
-          phase = 'top';
-          heldFrames = 0;
-          cycleStartedAt = now;
+      /* ---- arming ---- */
+
+      // Arming needs three things at once, all held steady: the exercise's
+      // own starting posture, the top of the movement, and a trusted pose.
+      // Any one of them alone is satisfied by a person simply standing in
+      // front of the phone, which is precisely how the old single-frame gate
+      // handed out a free rep at the start of every session.
+      if (!armed) {
+        const inPosition = def.ready ? def.ready(landmarks) : true;
+
+        // A null posture reading means the landmarks were unclear. Unknown is
+        // not the same as ready, so the counter stays disarmed.
+        if (inPosition !== true || !atTop) {
+          holdingSince = 0;
+          return idle({
+            confidence: side.confidence,
+            angle,
+            reason: def.readyHint,
+            cue: { text: def.readyHint, tone: 'dim' },
+            armState: 'position',
+            armProgress: 0,
+          });
         }
+
+        if (holdingSince === 0) holdingSince = now;
+        const heldMs = now - holdingSince;
+
+        if (heldMs < ARM_HOLD_MS) {
+          return idle({
+            confidence: side.confidence,
+            angle,
+            cue: { text: 'Hold it — starting', tone: 'good' },
+            armState: 'holding',
+            armProgress: Math.min(1, heldMs / ARM_HOLD_MS),
+          });
+        }
+
+        // Armed. The user is in position and has been still, so the next
+        // descent is a genuine first repetition.
+        armed = true;
+        phase = 'top';
+        heldFrames = 0;
+        cycleStartedAt = now;
+        topSince = now;
+        attemptDeepest = angle;
+
         return idle({
           confidence: side.confidence,
           angle,
-          reason: 'Get into the starting position to begin.',
-          cue: { text: 'Get into position', tone: 'dim' },
+          cue: { text: def.cues.good, tone: 'good' },
+          armState: 'counting',
+          armProgress: 1,
         });
       }
 
@@ -474,17 +666,27 @@ export function createRepEngine(exercise: PoseExerciseId, target = 0) {
           confidence: side.confidence,
           angle,
           cue: { text: 'Set complete', tone: 'good' },
+          armState: 'counting',
+          armProgress: 1,
         });
       }
 
       // A threshold must be held for consecutive frames before the phase
       // changes. One stray frame at the boundary was enough to register a
       // rep that never happened.
-      if (phase === 'top' && atBottom) {
+      // Time spent at the top, which the first rep of a set needs as much as
+      // any other: a body that has only just arrived at the top is still
+      // settling, and settling is not the start of a repetition.
+      if (phase === 'top' && atTop) {
+        if (topSince === 0) topSince = now;
+      }
+
+      if (phase === 'top' && atBottom && topSince !== 0 && now - topSince >= MIN_TOP_MS) {
         heldFrames++;
         if (heldFrames >= HOLD_FRAMES) {
           phase = 'bottom';
           heldFrames = 0;
+          topSince = 0;
           bottomAt = now;
           deepest = angle;
           // Judged here, at the deepest point, where a lunge and a squat
@@ -513,6 +715,7 @@ export function createRepEngine(exercise: PoseExerciseId, target = 0) {
           heldFrames = 0;
           // The next rep is timed from here, whatever the verdict on this one.
           cycleStartedAt = now;
+          topSince = now;
           attemptDeepest = angle;
 
           if (deepEnough && slowEnough && realPause && rightShape) {
@@ -526,6 +729,8 @@ export function createRepEngine(exercise: PoseExerciseId, target = 0) {
               angle,
               phase,
               targetReached: locked,
+              armState: 'counting',
+              armProgress: 1,
               cue: {
                 text: locked ? 'Set complete' : postureWarning || 'Good rep',
                 tone: postureWarning && !locked ? 'warn' : 'good',
@@ -540,10 +745,8 @@ export function createRepEngine(exercise: PoseExerciseId, target = 0) {
           const why = !rightShape
             ? def.formHint || 'That was not the right movement'
             : !deepEnough
-              ? 'Rep incomplete — go lower'
-              : !realPause
-                ? 'Move slower — pause at the bottom'
-                : 'Move slower';
+              ? def.cues.shallow
+              : def.cues.fast;
 
           return {
             count,
@@ -552,6 +755,8 @@ export function createRepEngine(exercise: PoseExerciseId, target = 0) {
             angle,
             phase,
             targetReached: false,
+            armState: 'counting',
+            armProgress: 1,
             reason: !rightShape ? def.formHint : undefined,
             cue: { text: why, tone: 'bad' },
             event: { kind: 'rejected', reason: why, count },
@@ -583,8 +788,10 @@ export function createRepEngine(exercise: PoseExerciseId, target = 0) {
               angle,
               phase,
               targetReached: false,
-              cue: { text: 'Rep incomplete — go lower', tone: 'bad' },
-              event: { kind: 'rejected', reason: 'Go lower', count },
+              armState: 'counting',
+              armProgress: 1,
+              cue: { text: def.cues.shallow, tone: 'bad' },
+              event: { kind: 'rejected', reason: def.cues.shallow, count },
             };
           }
 
@@ -601,14 +808,14 @@ export function createRepEngine(exercise: PoseExerciseId, target = 0) {
       if (postureWarning) {
         cue = { text: postureWarning, tone: 'warn' };
       } else if (phase === 'bottom') {
-        cue = { text: 'Now press back up', tone: 'good' };
+        cue = { text: def.cues.up, tone: 'good' };
       } else {
         // 0 at the top of the movement, 1 at full depth.
         const depth = travelFrom(angle) / fullTravel;
         cue =
           depth > 0.3
-            ? { text: 'Go lower', tone: 'warn' }
-            : { text: 'Good form', tone: 'good' };
+            ? { text: def.cues.lower, tone: 'warn' }
+            : { text: def.cues.good, tone: 'good' };
       }
 
       return {
@@ -618,6 +825,8 @@ export function createRepEngine(exercise: PoseExerciseId, target = 0) {
         angle,
         phase,
         targetReached: false,
+        armState: 'counting',
+        armProgress: 1,
         cue,
       };
     },
@@ -638,7 +847,9 @@ export function createRepEngine(exercise: PoseExerciseId, target = 0) {
     reset(): void {
       count = 0;
       phase = 'top';
-      calibrated = false;
+      armed = false;
+      holdingSince = 0;
+      topSince = 0;
       cycleStartedAt = 0;
       heldFrames = 0;
       bottomAt = 0;

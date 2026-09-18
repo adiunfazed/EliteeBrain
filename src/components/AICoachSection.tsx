@@ -113,7 +113,7 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
       const welcomeMessage: CoachChatMessage = {
         id: 'welcome_1',
         sender: 'coach',
-        text: `Hi\n\nI can see your tasks, habits, routine and goals. Ask me what to do next, why you're falling behind, or how to fix your plan.\n\nWhat would you like help with?`,
+        text: `I'm ELI, your EliteLife Coach.\n\nI can see your tasks, habits, routine and goals. Ask me what to do next, why you're falling behind, or how to fix your plan.\n\nWhat would you like help with?`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setMessages([welcomeMessage]);
@@ -159,7 +159,7 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
       const idToken = await getIdToken();
       if (!idToken) {
         throw new Error(
-          'You need to be signed in with Google or email to use the AI Coach. Guest mode has no account to verify.'
+          'You need to be signed in with Google or email to talk to ELI. Guest mode has no account to verify.'
         );
       }
       const res = await fetch('/api/coach', {
@@ -305,10 +305,10 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
                 )}
               </div>
               <h2 className="text-xl sm:text-2xl font-display font-bold text-white mt-1">
-                AI Coach
+                ELI
               </h2>
               <p className="text-xs text-[var(--ink-muted)] mt-0.5">
-                Ask about your plan, your habits, or what to do next.
+                Your EliteLife Coach — ask about your plan, your habits, or what to do next.
               </p>
             </div>
           </div>
@@ -322,7 +322,7 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
               className="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-mono text-xs font-extrabold rounded-xl shadow-md flex items-center gap-2 cursor-pointer transition-all shrink-0"
             >
               <Crown className="w-4 h-4 shrink-0" />
-              <span>Unlock AI Coach Pro</span>
+              <span>Unlock ELI Pro</span>
             </button>
           )}
         </div>
@@ -562,8 +562,8 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
               profile.isProUser
                 ? pendingImage
                   ? 'What do you want to know about this photo?'
-                  : 'Ask your AI Coach anything...'
-                : 'Pro subscription required for AI Coach chat...'
+                  : 'Ask ELI anything...'
+                : 'Pro subscription required to chat with ELI...'
             }
             disabled={!profile.isProUser || isTyping}
             className="flex-1 min-w-0 px-4 py-3 bg-[var(--surface)] border border-[var(--rule)] text-white font-mono text-xs rounded-xl focus:border-[var(--signal)] focus:outline-none disabled:opacity-50"
@@ -662,7 +662,7 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
               <Lock className="w-6 h-6 shrink-0" />
             </div>
             <h3 className="text-lg font-display font-bold text-white">
-              Unlock AI Coach
+              Unlock ELI
             </h3>
             <p className="text-xs text-[var(--ink-muted)] max-w-md">
               Upgrade to Elite Life Pro to get personalized trial analyses, custom training schedules, and real-time AI guidance.
@@ -674,7 +674,7 @@ export const AICoachSection: React.FC<AICoachSectionProps> = ({
               }}
               className="px-6 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-mono text-xs font-black rounded-xl shadow-lg cursor-pointer transition-all flex items-center gap-2"
             >
-              <span>Unlock AI Coach Now</span>
+              <span>Unlock ELI Now</span>
               <ArrowRight className="w-4 h-4 shrink-0" />
             </button>
           </div>

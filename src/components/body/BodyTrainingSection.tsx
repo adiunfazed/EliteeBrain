@@ -12,10 +12,23 @@ import {
   Difficulty,
   PR_XP,
   WorkoutSession,
-  personalRecords,
   workoutXp,
 } from '../../lib/bodyTraining';
-import { subscribeWorkouts, saveWorkout, subscribeAlarms } from '../../lib/trainingStore';
+import {
+  RecordMap,
+  beatsRecord,
+  mergeRecords,
+  recordValues,
+  recordsFromSessions,
+  suggestedTarget,
+} from '../../lib/personalRecords';
+import {
+  subscribeWorkouts,
+  saveWorkout,
+  subscribeAlarms,
+  subscribeRecords,
+  saveRecord,
+} from '../../lib/trainingStore';
 import { todayISO } from '../../lib/tasks';
 import { soundFx } from '../../utils/audio';
 import { useXp } from '../XpToast';
@@ -43,7 +56,6 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId, profile, onUpgrad
   const entitlement = useMemo(() => resolveEntitlement(profile || {}), [profile]);
   const { awardXp } = useXp();
 
-  const [difficulty, setDifficulty] = useState<Difficulty>('easy');
   const [view, setView] = useState<View>('library');
   const [selected, setSelected] = useState<Exercise | null>(null);
   const [config, setConfig] = useState<WorkoutConfigValue | null>(null);
@@ -51,6 +63,8 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId, profile, onUpgrad
   const [saveError, setSaveError] = useState<string | null>(null);
   /** A record set during THIS session, so reloads never re-celebrate. */
   const [newRecord, setNewRecord] = useState<PrRecord | null>(null);
+  /** Records as their own documents, independent of the workout history. */
+  const [storedRecords, setStoredRecords] = useState<RecordMap>({});
 
   /**
    * Records as they stood when the current exercise started.
@@ -74,6 +88,7 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId, profile, onUpgrad
   const awarded = useRef<Set<string>>(new Set());
 
   useEffect(() => subscribeWorkouts(userId, setSessions), [userId]);
+  useEffect(() => subscribeRecords(userId, setStoredRecords), [userId]);
 
   // Read only for the entry card's summary line. The full screen subscribes
   // separately for the list it manages.
@@ -88,8 +103,17 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId, profile, onUpgrad
 
   const today = todayISO();
 
-  /** Best single set per exercise, derived from everything ever saved. */
-  const records = useMemo(() => personalRecords(sessions), [sessions]);
+  /**
+   * The one answer to "what is my best?".
+   *
+   * Stored records and the records the sessions imply, merged with the higher
+   * value winning — so a record cannot be lost by a failed workout write, and
+   * cannot drift above the work that actually earned it either.
+   */
+  const records = useMemo(
+    () => recordValues(mergeRecords(storedRecords, recordsFromSessions(sessions))),
+    [storedRecords, sessions]
+  );
 
   const todayStats = useMemo(() => {
     const todays = sessions.filter((s) => s.date === today);
@@ -107,14 +131,36 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId, profile, onUpgrad
    * so the celebration lands while the user is still catching their breath
    * from the set that earned it.
    */
-  const handleSetComplete = (exercise: Exercise, result: SetResult) => {
-    const previous = recordsAtStart.current[exercise.id] || 0;
-    if (result.value <= previous) return;
+  const handleSetComplete = async (exercise: Exercise, result: SetResult) => {
+    // Judged against the records frozen when the exercise started, not the
+    // live value — otherwise set two would have to beat set one to count, and
+    // set one's own record would suppress a better set two.
+    const baseline = recordsAtStart.current;
+    if (!beatsRecord(baseline, exercise.id, result.value)) return;
 
+    const previous = baseline[exercise.id] || 0;
     const key = `${exercise.id}:${result.value}`;
+
     // The same record is never celebrated — or paid for — twice.
     if (celebrated.current.has(key)) return;
     celebrated.current.add(key);
+
+    // Persisted first, and on its own. This is the change that makes a record
+    // stick: it no longer depends on the workout document saving later, so a
+    // refused or failed workout write cannot erase a best the user just set.
+    // The store publishes locally before touching the network, so the number
+    // on screen is already correct by the time this resolves.
+    try {
+      await saveRecord(userId, {
+        exerciseId: exercise.id,
+        value: result.value,
+        achievedAt: new Date().toISOString(),
+      });
+      setSaveError(null);
+    } catch (err) {
+      console.error('Could not sync the personal record:', err);
+      setSaveError('Record saved on this device. It will sync when you reconnect.');
+    }
 
     setNewRecord({
       exerciseId: exercise.id,
@@ -146,8 +192,10 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId, profile, onUpgrad
         {
           exerciseId: exercise.id,
           sets: valid.length,
-          target: config?.target ?? exercise.targets[difficulty],
-          difficulty,
+          target: config?.target ?? exercise.targets.easy,
+          // Retained on the record because older sessions carry it and the
+          // type is shared; nothing in the interface sets it any more.
+          difficulty: 'easy' as Difficulty,
         },
       ],
       completed: { [exercise.id]: valid.length },
@@ -169,7 +217,6 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId, profile, onUpgrad
       session.prXp = PR_XP;
     }
 
-    setSessions((prev) => [session, ...prev]);
     soundFx.playSuccess();
 
     // Guarded so a repeated call, a retry or a re-render cannot award twice.
@@ -235,21 +282,12 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId, profile, onUpgrad
             </div>
 
           <ExerciseLibrary
-            difficulty={difficulty}
             records={records}
-            onDifficultyChange={setDifficulty}
             onStart={(ex) => {
               setSelected(ex);
               setConfig({
                 sets: 3,
-                // One past the existing record, because the target is now the
-                // ceiling for a set — defaulting to the record exactly would
-                // make a personal best unreachable without editing the number
-                // every single time.
-                target: Math.max(
-                  records[ex.id] ? records[ex.id] + 1 : 0,
-                  ex.targets[difficulty]
-                ),
+                target: suggestedTarget(records, ex.id, ex.targets.easy),
                 restSeconds: ex.restSeconds,
               });
               setView('config');
@@ -296,6 +334,7 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId, profile, onUpgrad
         <WorkoutConfig
           exercise={selected}
           initial={config}
+          best={records[selected.id] || 0}
           onCancel={() => {
             setView('library');
             setSelected(null);

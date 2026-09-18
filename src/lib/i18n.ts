@@ -17,7 +17,7 @@ const EN: Dict = {
   // Navigation
   'nav.today': 'Today',
   'nav.train': 'Train',
-  'nav.coach': 'Coach',
+  'nav.coach': 'ELI',
   'nav.plan': 'Plan',
   'nav.more': 'More',
 
@@ -86,7 +86,7 @@ const EN: Dict = {
 const HI: Dict = {
   'nav.today': 'आज',
   'nav.train': 'ट्रेन',
-  'nav.coach': 'कोच',
+  'nav.coach': 'ELI',
   'nav.plan': 'प्लान',
   'nav.more': 'और',
 

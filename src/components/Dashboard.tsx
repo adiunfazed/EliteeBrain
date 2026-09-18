@@ -15,6 +15,7 @@ import { VoiceCoachScreen } from './coach/VoiceCoachScreen';
 import { t } from '../lib/i18n';
 import { RankProgressionSection } from './RankProgressionSection';
 import { AICoachSection } from './AICoachSection';
+import { EliCoach } from './eli/EliCoach';
 import { GamesSection } from './GamesSection';
 const BodyTrainingSection = lazy(() =>
   import('./body/BodyTrainingSection').then((m) => ({ default: m.BodyTrainingSection }))
@@ -53,6 +54,9 @@ import { emphasisedGroup } from '../lib/goals';
 import { subscribeFocusSessions, focusSessionsToday, focusSecondsToday } from '../lib/focus';
 import { completedTodayCount as tasksDoneToday } from '../lib/tasks';
 import { subscribeTasks, bucketTasks } from '../lib/tasks';
+import { subscribeWorkouts, subscribeRecords } from '../lib/trainingStore';
+import { recordValues, mergeRecords, recordsFromSessions } from '../lib/personalRecords';
+import type { EliAction } from '../lib/eli';
 import { soundFx } from '../utils/audio';
 import { User, signInWithGoogle } from '../lib/firebase';
 import { Dumbbell, Gamepad2,
@@ -146,7 +150,13 @@ export const Dashboard: React.FC<Props> = ({
   const [routineLogs, setRoutineLogs] = useState<any[]>([]);
   const [sleepLogs, setSleepLogs] = useState<any[]>([]);
   const [allGoals, setAllGoals] = useState<any[]>([]);
+  // Training data, for the two ELI rules that concern it. The store serves
+  // local first, so this costs nothing at startup.
+  const [allWorkouts, setAllWorkouts] = useState<any[]>([]);
+  const [storedRecords, setStoredRecords] = useState<any>({});
 
+  useEffect(() => subscribeWorkouts(currentUser?.uid || null, setAllWorkouts), [currentUser?.uid]);
+  useEffect(() => subscribeRecords(currentUser?.uid || null, setStoredRecords), [currentUser?.uid]);
   useEffect(() => subscribeGoals(currentUser?.uid || null, setAllGoals), [currentUser?.uid]);
   useEffect(() => subscribeHabits(currentUser?.uid || null, setAllHabits), [currentUser?.uid]);
   useEffect(() => subscribeHabitLogs(currentUser?.uid || null, setAllHabitLogs), [currentUser?.uid]);
@@ -290,6 +300,103 @@ export const Dashboard: React.FC<Props> = ({
     setLifePane(undefined);
   }, [activeSection]);
 
+  /**
+   * Everything ELI reads.
+   *
+   * Assembled from the collections this screen already subscribes to for the
+   * signed-in account, so ELI adds no data access of its own and cannot see
+   * anything the user cannot.
+   */
+  const eliContext = useMemo(
+    () => ({
+      tasks: allTasks,
+      habits: allHabits,
+      habitLogs: allHabitLogs,
+      focusSessions: allFocus,
+      routineBlocks,
+      routineLogs,
+      goals: allGoals,
+      workouts: allWorkouts,
+      records: recordValues(mergeRecords(storedRecords, recordsFromSessions(allWorkouts))),
+      profile,
+    }),
+    [
+      allTasks,
+      allHabits,
+      allHabitLogs,
+      allFocus,
+      routineBlocks,
+      routineLogs,
+      allGoals,
+      allWorkouts,
+      storedRecords,
+      profile,
+    ]
+  );
+
+  /**
+   * Carry out one of ELI's suggestions.
+   *
+   * Every branch reuses navigation this screen already has. ELI performs no
+   * action of its own — it knows what is worth doing and hands the doing back
+   * to the feature that owns it.
+   */
+  const handleEliAction = useCallback(
+    (action: EliAction) => {
+      switch (action.id) {
+        case 'start-focus': {
+          // Focus lives with Today, and needs the task itself rather than an
+          // id, so it is looked up from the live list.
+          const task = action.taskId
+            ? allTasks.find((t) => t.id === action.taskId) || null
+            : null;
+          if (task) setFocusHandoff(task);
+          setActiveSection('engine');
+          break;
+        }
+        case 'open-tasks':
+          paneRequestedRef.current = true;
+          setHubPane('tasks');
+          setActiveSection('hub');
+          break;
+        case 'open-habits':
+          paneRequestedRef.current = true;
+          setHubPane('habits');
+          setActiveSection('hub');
+          break;
+        case 'open-routine':
+          paneRequestedRef.current = true;
+          setHubPane('routine');
+          setActiveSection('hub');
+          break;
+        case 'open-goals':
+          paneRequestedRef.current = true;
+          setHubPane('goals');
+          setActiveSection('hub');
+          break;
+        case 'open-quest':
+          // The daily quest card lives on Today.
+          setActiveSection('engine');
+          break;
+        case 'open-training':
+          setTrainTab('body');
+          setActiveSection('exercises');
+          break;
+        case 'open-progress':
+          setActiveSection('progress');
+          break;
+        case 'ask':
+          setActiveSection('coach');
+          break;
+        default:
+          break;
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+    [allTasks]
+  );
+
   /** Open Plan on a specific pane. */
   const goToPane = useCallback((pane: typeof hubPane) => {
     paneRequestedRef.current = true;
@@ -377,7 +484,7 @@ export const Dashboard: React.FC<Props> = ({
     },
     {
       id: 'coach' as DashboardSection,
-      label: 'Coach',
+      label: 'ELI',
       shortLabel: t('nav.coach'),
       icon: Bot,
       activeColor: 'eb-chip-active',
@@ -733,7 +840,7 @@ export const Dashboard: React.FC<Props> = ({
           </motion.div>
         )}
 
-        {/* SECTION 3: AI COACH */}
+        {/* SECTION 3: ELI */}
         {activeSection === 'coach' && (
           <motion.div
             key="section-coach"
@@ -1082,6 +1189,18 @@ export const Dashboard: React.FC<Props> = ({
           onClose={() => setShowShare(false)}
         />
       )}
+
+      {/* ELI. Mounted here because this screen already holds every
+          collection it reads, so it adds no subscriptions, no requests and
+          nothing to the startup path. Hidden on the Coach screen itself,
+          where the full chat is already open. */}
+      <EliCoach
+        userId={currentUser?.uid || null}
+        context={eliContext}
+        hidden={activeSection === 'coach' || !!coachTool || showLeaderboard || showShare}
+        onAction={handleEliAction}
+        onAsk={() => setActiveSection('coach')}
+      />
 
       {/* PERSISTENT BOTTOM NAVIGATION BAR (Fixed at bottom of screen, sleek & compact) */}
       <div className="fixed bottom-0 inset-x-0 z-40 bg-[var(--surface)]/95 backdrop-blur-2xl px-1.5 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] overflow-visible"

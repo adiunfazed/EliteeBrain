@@ -36,6 +36,17 @@ interface Props {
   resetKey?: number | string;
 }
 
+/**
+ * How long a coaching line keeps its place, in milliseconds.
+ *
+ * Long enough to read while moving. Anything shorter and the text simply
+ * flickers, which is what made the feedback useless rather than helpful.
+ */
+const CUE_HOLD_MS = 1400;
+
+/** How long a green or red rep verdict stays up. */
+const VERDICT_HOLD_MS = 1600;
+
 const CUE_COLOR: Record<CueTone, string> = {
   good: '#6EE7B7',
   warn: '#FFB020',
@@ -77,8 +88,13 @@ export const CameraView: React.FC<Props> = ({
   const [reason, setReason] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [cue, setCue] = useState<{ text: string; tone: CueTone } | null>(null);
-  /** A short-lived green or red wash over the preview after each movement. */
+  /** A green or red wash over the preview after each movement. */
   const [flash, setFlash] = useState<'good' | 'bad' | null>(null);
+  /** How far through the steady hold that arms the counter. */
+  const [arming, setArming] = useState<{ state: string; progress: number }>({
+    state: 'finding',
+    progress: 0,
+  });
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -97,6 +113,15 @@ export const CameraView: React.FC<Props> = ({
    */
   const lastUiAt = useRef(0);
   const flashTimer = useRef<number | null>(null);
+  /**
+   * Until when the message on screen must not be replaced.
+   *
+   * The engine produces a reading every frame, and simply showing the newest
+   * one meant the text changed several times a second — unreadable, and it is
+   * why the coaching felt like noise. A cue now holds its place long enough
+   * to actually be read, and a rep verdict outranks ordinary coaching.
+   */
+  const cueHeldUntil = useRef(0);
   /** Props the render loop reads. Refs, because the loop starts once. */
   const onRepRef = useRef(onRep);
   const onFeedbackRef = useRef(onFeedback);
@@ -239,7 +264,14 @@ export const CameraView: React.FC<Props> = ({
         setStatus(reading.status);
         setConfidence(reading.confidence);
         setReason(reading.reason ?? null);
-        setCue(reading.cue ?? null);
+        setArming({ state: reading.armState, progress: reading.armProgress });
+
+        // Ordinary coaching only replaces what is on screen once the previous
+        // message has had its time.
+        if (reading.cue && now >= cueHeldUntil.current) {
+          setCue(reading.cue);
+          cueHeldUntil.current = now + CUE_HOLD_MS;
+        }
       }
 
       // A movement was judged. Reported exactly once, whichever way it went.
@@ -252,13 +284,17 @@ export const CameraView: React.FC<Props> = ({
           onRepRef.current(reading.count);
         }
 
-        // The cue for a judged movement always shows, throttle or not —
-        // this is the one message that must not be swallowed.
-        if (reading.cue) setCue(reading.cue);
+        // A judged movement always shows, throttle or not, and outranks the
+        // hold on whatever coaching line was up — this is the one message
+        // that must never be swallowed.
+        if (reading.cue) {
+          setCue(reading.cue);
+          cueHeldUntil.current = now + VERDICT_HOLD_MS;
+        }
 
         setFlash(good ? 'good' : 'bad');
         if (flashTimer.current) window.clearTimeout(flashTimer.current);
-        flashTimer.current = window.setTimeout(() => setFlash(null), 520);
+        flashTimer.current = window.setTimeout(() => setFlash(null), VERDICT_HOLD_MS);
 
         onFeedbackRef.current?.(reading.event);
       } else if (reading.count !== lastCountRef.current) {
@@ -328,10 +364,41 @@ export const CameraView: React.FC<Props> = ({
             covers the body being tracked. */}
         {stage === 'live' && cue && (
           <span
-            className="absolute bottom-2.5 left-2.5 right-2.5 px-2.5 py-1.5 rounded-lg text-[13px] font-semibold text-center cam-cue"
-            style={{ background: 'rgba(0,0,0,0.62)', color: CUE_COLOR[cue.tone] }}
+            key={cue.text}
+            className="absolute bottom-2.5 left-2.5 right-2.5 px-3 py-2 rounded-xl text-[14px] font-bold text-center cam-cue"
+            style={{ background: 'rgba(0,0,0,0.72)', color: CUE_COLOR[cue.tone] }}
           >
             {cue.text}
+          </span>
+        )}
+
+        {/* Arming. Shown as a ring filling up, so waiting for the counter to
+            start reads as progress rather than as nothing happening. */}
+        {stage === 'live' && arming.state === 'holding' && (
+          <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <svg viewBox="0 0 48 48" style={{ width: 62, height: 62 }}>
+              <circle
+                cx="24"
+                cy="24"
+                r="21"
+                fill="rgba(0,0,0,0.45)"
+                stroke="rgba(255,255,255,0.18)"
+                strokeWidth="3"
+              />
+              <circle
+                cx="24"
+                cy="24"
+                r="21"
+                fill="none"
+                stroke="#6EE7B7"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeDasharray={2 * Math.PI * 21}
+                strokeDashoffset={2 * Math.PI * 21 * (1 - arming.progress)}
+                transform="rotate(-90 24 24)"
+                style={{ transition: 'stroke-dashoffset 140ms linear' }}
+              />
+            </svg>
           </span>
         )}
 

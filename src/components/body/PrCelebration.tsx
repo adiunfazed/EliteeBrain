@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Trophy } from 'lucide-react';
 
@@ -28,11 +28,19 @@ interface Props {
 export const PrCelebration: React.FC<Props> = ({ record, onDismiss }) => {
   // Clears itself: it sits over the rest screen between sets, and having to
   // dismiss it before carrying on would be in the way.
+  //
+  // Keyed on the record rather than on the callback. `onDismiss` is an inline
+  // arrow in the parent, so it is a new function on every render — depending
+  // on it restarted this timer continuously while reps were coming in, and
+  // the celebration could sit on screen indefinitely.
+  const dismissRef = useRef(onDismiss);
+  dismissRef.current = onDismiss;
+
   useEffect(() => {
     if (!record) return;
-    const id = window.setTimeout(onDismiss, 4200);
+    const id = window.setTimeout(() => dismissRef.current(), 5000);
     return () => window.clearTimeout(id);
-  }, [record, onDismiss]);
+  }, [record?.exerciseId, record?.value]);
 
   return (
     <AnimatePresence>

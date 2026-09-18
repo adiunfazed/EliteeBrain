@@ -1,7 +1,8 @@
 import React from 'react';
 import * as Icons from 'lucide-react';
 import { ChevronRight, Trophy } from 'lucide-react';
-import { EXERCISES, Exercise, Difficulty, DIFFICULTY_LABEL } from '../../lib/bodyTraining';
+import { EXERCISES, Exercise } from '../../lib/bodyTraining';
+import { suggestedTarget } from '../../lib/personalRecords';
 import { soundFx } from '../../utils/audio';
 
 /** A tint per exercise, so six rows are scannable rather than identical. */
@@ -15,8 +16,6 @@ const TINTS: Record<string, string> = {
 };
 
 interface Props {
-  difficulty: Difficulty;
-  onDifficultyChange: (d: Difficulty) => void;
   onStart: (exercise: Exercise) => void;
   /** Best single set per exercise. Absent for anything never done. */
   records?: Record<string, number>;
@@ -29,38 +28,18 @@ interface Props {
  * would be a wall of cards, and the useful comparison between them is the
  * target, which reads better in a list.
  */
-export const ExerciseLibrary: React.FC<Props> = ({
-  difficulty,
-  onDifficultyChange,
-  onStart,
-  records = {},
-}) => (
+export const ExerciseLibrary: React.FC<Props> = ({ onStart, records = {} }) => (
   <div className="space-y-3">
-    <div className="flex items-center gap-2">
-      <span className="t-meta shrink-0">Level</span>
-      <div className="flex items-center gap-1">
-        {(['easy', 'moderate', 'hard'] as Difficulty[]).map((d) => (
-          <button
-            key={d}
-            onClick={() => {
-              soundFx.playClick();
-              onDifficultyChange(d);
-            }}
-            className="chip"
-            data-active={difficulty === d}
-          >
-            {DIFFICULTY_LABEL[d]}
-          </button>
-        ))}
-      </div>
-
-    </div>
-
+    {/* No level picker. Sets and reps are typed in on the next screen, so a
+        difficulty setting only ever changed a number the user was about to
+        choose for themselves — two controls for one decision. */}
     <div className="space-y-1.5">
       {EXERCISES.map((ex) => {
         const Icon = (Icons as any)[ex.icon] || Icons.Dumbbell;
-        const target = ex.targets[difficulty];
         const best = records[ex.id] || 0;
+        // What tapping through will offer: one past the record where there is
+        // one, the gentle starting figure where there is not.
+        const target = suggestedTarget(records, ex.id, ex.targets.easy);
         const unit = ex.metric === 'hold' ? 'seconds' : 'reps';
 
         return (
@@ -89,6 +68,7 @@ export const ExerciseLibrary: React.FC<Props> = ({
             <span className="min-w-0 flex-1">
               <span className="block text-[15px] font-bold leading-snug">{ex.name}</span>
               <span className="t-meta block mt-0.5 truncate">
+                {best > 0 ? 'Next: ' : ''}
                 {target} {ex.metric === 'hold' ? 'seconds' : 'reps'} · {ex.restSeconds}s rest
               </span>
             </span>

@@ -1,0 +1,244 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { ArrowRight, Sparkles, X } from 'lucide-react';
+import {
+  EliAction,
+  EliContext,
+  EliMemory,
+  loadEliMemory,
+  pickSuggestion,
+  saveEliMemory,
+  suppressSuggestion,
+} from '../../lib/eli';
+import { soundFx } from '../../utils/audio';
+
+interface Props {
+  /** The signed-in account, or null. Scopes suppression per account. */
+  userId: string | null;
+  /** Live data, already subscribed by the caller for this account. */
+  context: EliContext;
+  /** Carry out an action using the app's existing navigation. */
+  onAction: (action: EliAction) => void;
+  /** Opens the existing full chat. */
+  onAsk: () => void;
+  /** Hidden while a full-screen surface owns the display. */
+  hidden?: boolean;
+}
+
+/**
+ * ELI — a quiet contextual layer over what the app already knows.
+ *
+ * The button is always there; the glow is not. It appears only when the
+ * context engine has found something real to say, which is what keeps this
+ * from becoming another badge demanding attention.
+ *
+ * The suggestion is recomputed from live data rather than stored, so it
+ * corrects itself: complete the task ELI is asking about and the message is
+ * not stale or dismissed, it simply no longer exists.
+ */
+export const EliCoach: React.FC<Props> = ({
+  userId,
+  context,
+  onAction,
+  onAsk,
+  hidden = false,
+}) => {
+  const [open, setOpen] = useState(false);
+  const [memory, setMemory] = useState<EliMemory>({});
+  /**
+   * Re-evaluated on a slow tick as well as on data changes.
+   *
+   * Several rules depend on the time of day — an evening summary, a streak
+   * that is only at risk once it is late — and those would otherwise not
+   * appear until something else happened to trigger a render.
+   */
+  const [tick, setTick] = useState(0);
+
+  // Suppression is per account, and reloaded when the account changes so one
+  // person's dismissals never apply to another's session.
+  useEffect(() => {
+    setMemory(loadEliMemory(userId));
+    setOpen(false);
+  }, [userId]);
+
+  useEffect(() => {
+    const id = window.setInterval(() => setTick((n) => n + 1), 120_000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  const suggestion = useMemo(
+    () => pickSuggestion(context, memory, Date.now()),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [context, memory, tick]
+  );
+
+  /** Closes the sheet if what it was showing has ceased to be true. */
+  useEffect(() => {
+    if (open && !suggestion) setOpen(false);
+  }, [open, suggestion]);
+
+  const remember = (next: EliMemory) => {
+    setMemory(next);
+    saveEliMemory(userId, next);
+  };
+
+  const snooze = (minutes: number) => {
+    if (!suggestion) return;
+    remember(suppressSuggestion(memory, suggestion.id, minutes));
+    setOpen(false);
+  };
+
+  // Escape closes, matching every other dismissable surface in the app.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open]);
+
+  if (hidden) return null;
+
+  const toneColor =
+    suggestion?.tone === 'warn'
+      ? 'var(--warn)'
+      : suggestion?.tone === 'praise'
+        ? 'var(--done)'
+        : 'var(--signal-ink)';
+
+  return (
+    <>
+      {/* The persistent entry point. Sits above the tab bar, clear of it. */}
+      <button
+        onClick={() => {
+          soundFx.playClick();
+          setOpen((v) => !v);
+        }}
+        aria-label={suggestion ? 'ELI has a suggestion' : 'Ask ELI'}
+        aria-expanded={open}
+        className="eli-fab"
+        data-has-news={suggestion ? 'true' : 'false'}
+      >
+        <Sparkles className="w-[18px] h-[18px] shrink-0" />
+        <span className="eli-fab-label">ELI</span>
+        {suggestion && <span className="eli-fab-dot" />}
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.16 }}
+              onClick={() => setOpen(false)}
+              className="fixed inset-0 z-[93]"
+              style={{ background: 'rgba(0,0,0,0.5)' }}
+            />
+
+            <motion.div
+              initial={{ opacity: 0, y: 16, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 12, scale: 0.98 }}
+              transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
+              role="dialog"
+              aria-label="ELI"
+              className="eli-panel"
+            >
+              <div className="flex items-start gap-3">
+                <span className="eli-avatar">
+                  <Sparkles className="w-4 h-4 shrink-0" />
+                </span>
+
+                <div className="min-w-0 flex-1">
+                  <p className="text-[15px] font-bold leading-tight">ELI</p>
+                  <p className="t-meta mt-0.5">Your EliteLife Coach</p>
+                </div>
+
+                <button
+                  onClick={() => setOpen(false)}
+                  aria-label="Close"
+                  className="shrink-0 w-9 h-9 rounded-xl flex items-center justify-center"
+                  style={{ color: 'var(--ink-dim)' }}
+                >
+                  <X className="w-4 h-4 shrink-0" />
+                </button>
+              </div>
+
+              {/* One message. Never a list, never a feed. */}
+              {suggestion ? (
+                <>
+                  <p
+                    className="text-[14.5px] leading-relaxed mt-3.5"
+                    style={{ color: 'var(--ink)' }}
+                  >
+                    <span
+                      className="inline-block w-1.5 h-1.5 rounded-full mr-2 mb-[2px]"
+                      style={{ background: toneColor }}
+                    />
+                    {suggestion.message}
+                  </p>
+
+                  {/* What to do about it. */}
+                  <div className="flex flex-wrap items-center gap-2 mt-4">
+                    {suggestion.actions.map((action) => (
+                      <button
+                        key={`${action.id}-${action.label}`}
+                        onClick={() => {
+                          soundFx.playClick();
+                          // Acted on, so it should not reappear immediately
+                          // even if the underlying fact takes a moment to
+                          // change — starting a focus session does not
+                          // complete the task.
+                          remember(suppressSuggestion(memory, suggestion.id, 30));
+                          setOpen(false);
+                          onAction(action);
+                        }}
+                        className="eli-action"
+                      >
+                        {action.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Declining, kept deliberately quiet and on its own line:
+                      as pills beside the real actions these wrapped onto a
+                      second row and read as equal choices. */}
+                  <div className="flex items-center gap-4 mt-3">
+                    <button onClick={() => snooze(suggestion.snoozeMinutes)} className="eli-quiet">
+                      Later
+                    </button>
+                    <button onClick={() => snooze(60 * 24)} className="eli-quiet">
+                      Not now
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <p className="t-sub mt-3.5">
+                  Nothing needs your attention right now. I will say something when it does.
+                </p>
+              )}
+
+              <div className="eli-divider" />
+
+              <button
+                onClick={() => {
+                  soundFx.playClick();
+                  setOpen(false);
+                  onAsk();
+                }}
+                className="eli-ask"
+              >
+                <span>Ask ELI anything</span>
+                <ArrowRight className="w-4 h-4 shrink-0" />
+              </button>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
+  );
+};

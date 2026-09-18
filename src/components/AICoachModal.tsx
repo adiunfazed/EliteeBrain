@@ -23,7 +23,7 @@ export const AICoachModal: React.FC<Props> = ({
   const chatEndRef = useRef<HTMLDivElement>(null);
 
 
-  // Initialize initial welcoming AI Coach message
+  // Initialize ELI's opening message
   useEffect(() => {
     if (isOpen && messages.length === 0) {
       const welcomeMessage: CoachChatMessage = {
@@ -70,7 +70,7 @@ export const AICoachModal: React.FC<Props> = ({
       const idToken = await getIdToken();
       if (!idToken) {
         throw new Error(
-          'You need to be signed in with Google or email to use the AI Coach. Guest mode has no account to verify.'
+          'You need to be signed in with Google or email to talk to ELI. Guest mode has no account to verify.'
         );
       }
       const res = await fetch('/api/coach', {
@@ -277,7 +277,7 @@ export const AICoachModal: React.FC<Props> = ({
             <div className="p-4 bg-gradient-to-r from-amber-500/10 via-amber-600/10 to-cyan-500/10 border border-amber-500/40 rounded-xl text-center space-y-2 mt-4 shadow-md">
               <div className="flex items-center justify-center gap-1.5 eb-warn font-bold text-xs uppercase tracking-wider">
                 <Crown className="w-4 h-4 shrink-0" />
-                <span>Unlock the AI Coach</span>
+                <span>Unlock ELI</span>
               </div>
               <p className="text-xs text-slate-300 leading-relaxed max-w-sm mx-auto">
                 Pro gives you unlimited AI coaching, every training module, and your full progress history.
@@ -337,8 +337,8 @@ export const AICoachModal: React.FC<Props> = ({
             onChange={(e) => setChatInput(e.target.value)}
             placeholder={
               profile.isProUser
-                ? "Ask AI Coach anything about your brain training..."
-                : "Ask AI Coach (Upgrade to Pro for full chat)..."
+                ? "Ask ELI anything about your training..."
+                : "Ask ELI (Upgrade to Pro for full chat)..."
             }
             className="flex-1 min-w-0 bg-slate-900 border border-slate-800 focus:border-cyan-500 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none transition-colors"
           />

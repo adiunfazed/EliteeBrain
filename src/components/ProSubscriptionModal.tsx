@@ -544,7 +544,7 @@ export const ProSubscriptionModal: React.FC<Props> = ({
               <p className="eb-label">Every plan includes</p>
               <ul className="mt-2.5 space-y-1.5">
                 {[
-                  'AI Coach — photo analysis, voice feedback, and chat that knows your data',
+                  'ELI, your EliteLife Coach — photo analysis, voice feedback, and chat that knows your data',
                   'All 11 training modules and the full game library',
                   'Tasks, habits, routine and goals with reminders',
                   'Streaks, ranks, leaderboard and daily quests',

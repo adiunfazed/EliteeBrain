@@ -111,6 +111,28 @@ service cloud.firestore {
       allow read, write: if isOwner(userId);
     }
 
+    // --- Personal records (users/{uid}/records/{exerciseId}) ---
+    //
+    // One small document per exercise, holding the best single set. Written
+    // the instant a record is set, separately from the workout, so a personal
+    // best cannot be lost to a failed workout write.
+    //
+    // Nothing on the leaderboard is computed from these, so there is no
+    // incentive to forge one and no ceiling to enforce — but the shape is
+    // checked so a malformed write cannot break the reader, and the document
+    // id must match the exercise it claims.
+    match /users/{userId}/records/{exerciseId} {
+      allow read: if isOwner(userId);
+
+      allow write: if isOwner(userId)
+                   && request.resource.data.get('exerciseId', '') == exerciseId
+                   && request.resource.data.get('value', 0) is number
+                   && request.resource.data.get('value', 0) > 0
+                   && request.resource.data.get('value', 0) <= 100000;
+
+      allow delete: if isOwner(userId);
+    }
+
     match /users/{userId}/alarms/{alarmId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
     }

@@ -21,6 +21,44 @@ function put(lm: Landmark[], index: number, x: number, y: number, visibility = 0
 }
 
 /**
+ * A body in a push-up position, elbows bent to `elbow` degrees.
+ *
+ * Torso horizontal, which is what tells the engine this is a plank and not a
+ * person standing in front of the phone.
+ */
+function pushupFrame(elbow: number, standing = false): Landmark[] {
+  const lm = blank();
+  const rad = (elbow * Math.PI) / 180;
+
+  for (const [shoulderI, elbowI, wristI, hipI, ankleI, dy] of [
+    [LM.leftShoulder, LM.leftElbow, LM.leftWrist, LM.leftHip, LM.leftAnkle, -0.02],
+    [LM.rightShoulder, LM.rightElbow, LM.rightWrist, LM.rightHip, LM.rightAnkle, 0.02],
+  ] as const) {
+    const sx = 0.35;
+    const sy = 0.5 + dy;
+    put(lm, shoulderI, sx, sy);
+
+    if (standing) {
+      // Upright: the hip is BELOW the shoulder, so the torso reads vertical.
+      put(lm, hipI, sx, sy + 0.25);
+      put(lm, ankleI, sx, sy + 0.5);
+    } else {
+      // Plank: the hip is to the SIDE of the shoulder, so it reads horizontal.
+      put(lm, hipI, sx + 0.25, sy);
+      put(lm, ankleI, sx + 0.5, sy);
+    }
+
+    // Upper arm straight down from the shoulder, forearm opening to `elbow`.
+    const ex = sx;
+    const ey = sy + 0.12;
+    put(lm, elbowI, ex, ey);
+    put(lm, wristI, ex + 0.12 * Math.sin(rad), ey - 0.12 * Math.cos(rad));
+  }
+
+  return lm;
+}
+
+/**
  * A body whose knees are bent to `knee` degrees.
  *
  * Both legs identical, torso upright — a textbook squat, so the shape checks
@@ -87,8 +125,10 @@ function simulate(reps: number, opts: SimOptions = {}) {
     return r;
   };
 
-  // Settle at the top so the engine calibrates.
-  for (let i = 0; i < 10; i++) feed(top);
+  // Settle in the starting position long enough to arm the counter, exactly
+  // as a person does before beginning a set.
+  const settleFrames = Math.ceil(1400 / frameMs);
+  for (let i = 0; i < settleFrames; i++) feed(top);
 
   const half = Math.max(1, Math.round((cycleMs - pauseMs) / 2 / frameMs));
   const pauseFrames = Math.max(1, Math.round(pauseMs / frameMs));
@@ -188,6 +228,112 @@ check('a long pause at the bottom still counts once per rep', once.count, 12);
 
 const repEvents = simulate(15).events.filter((e) => e.startsWith('rep:')).length;
 check('one rep event per counted rep', repEvents, 15);
+
+console.log('\n--- arming: getting into position is not a rep ---');
+
+/**
+ * The exact sequence that used to hand out a free rep.
+ *
+ * The user stands in front of the phone with straight arms — which satisfies
+ * the push-up "top" perfectly — then kneels down, plants their hands, and
+ * presses up into a plank. Under the old single-frame gate that arc armed the
+ * counter and then read itself as repetition one.
+ */
+function pushupStartup(opts: { holdBeforeStarting?: number } = {}) {
+  const engine = createRepEngine('pushups', 0);
+  let now = 0;
+  const feed = (lm: Landmark[]) => {
+    const r = engine.push(lm, now);
+    now += 33;
+    return r;
+  };
+
+  // Standing in front of the camera, arms straight at the side.
+  for (let i = 0; i < 20; i++) feed(pushupFrame(170, true));
+  const afterStanding = engine.value;
+
+  // Kneeling down and planting the hands: the elbow bends deeply.
+  for (let i = 0; i < 10; i++) feed(pushupFrame(95, true));
+  // Pressing up into the plank position.
+  for (let i = 0; i < 10; i++) feed(pushupFrame(170, false));
+  const afterGettingIntoPosition = engine.value;
+
+  // Now actually settling in position before starting.
+  const hold = opts.holdBeforeStarting ?? 40;
+  let last = feed(pushupFrame(170, false));
+  for (let i = 0; i < hold; i++) last = feed(pushupFrame(170, false));
+
+  return {
+    afterStanding,
+    afterGettingIntoPosition,
+    armState: last.armState,
+    engine,
+    feed,
+  };
+}
+
+const startup = pushupStartup();
+check('standing in front of the camera counts nothing', startup.afterStanding, 0);
+check(
+  'getting down into position counts nothing',
+  startup.afterGettingIntoPosition,
+  0
+);
+check('holding the position arms the counter', startup.armState, 'counting');
+
+// And from there, real push-ups do count.
+{
+  const { engine, feed } = pushupStartup();
+  for (let rep = 0; rep < 5; rep++) {
+    for (let i = 0; i < 10; i++) feed(pushupFrame(170 - (75 * (i + 1)) / 10, false));
+    for (let i = 0; i < 8; i++) feed(pushupFrame(95, false));
+    for (let i = 0; i < 10; i++) feed(pushupFrame(95 + (75 * (i + 1)) / 10, false));
+    for (let i = 0; i < 4; i++) feed(pushupFrame(170, false));
+  }
+  check('five real push-ups after arming count five', engine.value, 5);
+}
+
+// A short glance at the position does not arm it either.
+{
+  const engine = createRepEngine('pushups', 0);
+  let now = 0;
+  const feed = (lm: Landmark[]) => {
+    const r = engine.push(lm, now);
+    now += 33;
+    return r;
+  };
+  // In position for only ~200ms, well short of the hold.
+  let last = feed(pushupFrame(170, false));
+  for (let i = 0; i < 5; i++) last = feed(pushupFrame(170, false));
+  check('a brief glance at the position does not arm', last.armState, 'holding');
+  check('and nothing is counted', engine.value, 0);
+}
+
+// Losing the body disarms, so a rep cannot straddle a dropout.
+{
+  const { engine, feed } = pushupStartup();
+  const lost = engine.push(null, 9_000);
+  check('losing the body disarms the counter', lost.armState, 'finding');
+  check('and the count is preserved, not reset', lost.count, engine.value);
+}
+
+console.log('\n--- squats arm from standing, not from walking past ---');
+
+{
+  const engine = createRepEngine('squats', 0);
+  let now = 0;
+  const feed = (knee: number) => {
+    const r = engine.push(squatFrame(knee), now);
+    now += 33;
+    return r;
+  };
+  // Walking into frame: the knee swings through the squat range repeatedly
+  // without ever settling at the top.
+  for (let step = 0; step < 6; step++) {
+    for (const a of [170, 140, 115, 100, 115, 140]) feed(a);
+  }
+  check('walking into frame counts nothing', engine.value, 0);
+}
 
 console.log(`\n${failures === 0 ? 'All checks passed.' : `${failures} check(s) failed.`}`);
 process.exit(failures === 0 ? 0 : 1);
