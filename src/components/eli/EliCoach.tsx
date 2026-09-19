@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowRight, Sparkles, X } from 'lucide-react';
+import { ArrowRight, X } from 'lucide-react';
+import { EliFace } from './EliFace';
 import {
   EliAction,
   EliContext,
@@ -59,6 +60,14 @@ export const EliCoach: React.FC<Props> = ({
   const [open, setOpen] = useState(false);
   /** The small note shown instead of the panel when there is nothing to say. */
   const [emptyNote, setEmptyNote] = useState(false);
+  /**
+   * Set when a press turned into a drag.
+   *
+   * Releasing a drag also fires a click on the element underneath, which
+   * would open the panel every time the button was merely moved. A ref, not
+   * state, because it has to be read in the very same event it was set in.
+   */
+  const dragged = useRef(false);
   const [memory, setMemory] = useState<EliMemory>({});
   /**
    * Re-evaluated on a slow tick as well as on data changes.
@@ -162,8 +171,28 @@ export const EliCoach: React.FC<Props> = ({
   return (
     <>
       {/* The persistent entry point. Sits above the tab bar, clear of it. */}
-      <button
+      <motion.button
+        // Draggable anywhere on screen, and back home on release: it can be
+        // moved out of the way of whatever is underneath it for a moment,
+        // but never ends up lost somewhere the user did not mean it to stay.
+        drag
+        dragSnapToOrigin
+        dragMomentum={false}
+        dragElastic={0.9}
+        dragTransition={{ bounceStiffness: 420, bounceDamping: 26 }}
+        whileDrag={{ scale: 1.1 }}
+        whileTap={{ scale: 0.94 }}
+        onDragStart={() => {
+          dragged.current = true;
+        }}
+        onDragEnd={() => {
+          // Cleared after the click that follows a drag has been swallowed.
+          window.setTimeout(() => {
+            dragged.current = false;
+          }, 0);
+        }}
         onClick={() => {
+          if (dragged.current) return;
           soundFx.playClick();
           if (suggestion) {
             setEmptyNote(false);
@@ -179,10 +208,9 @@ export const EliCoach: React.FC<Props> = ({
         className="eli-fab"
         data-has-news={suggestion ? 'true' : 'false'}
       >
-        <Sparkles className="w-[18px] h-[18px] shrink-0" />
-        <span className="eli-fab-label">ELI</span>
+        <EliFace size={30} alert={!!suggestion} />
         {suggestion && <span className="eli-fab-dot" />}
-      </button>
+      </motion.button>
 
       <AnimatePresence>
         {emptyNote && !open && (
@@ -235,7 +263,7 @@ export const EliCoach: React.FC<Props> = ({
             >
               <div className="flex items-start gap-3">
                 <span className="eli-avatar">
-                  <Sparkles className="w-4 h-4 shrink-0" />
+                  <EliFace size={22} />
                 </span>
 
                 <div className="min-w-0 flex-1">
