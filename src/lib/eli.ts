@@ -35,6 +35,7 @@ export type EliSignalKind =
   | 'overdue-priority'
   | 'postponed'
   | 'due-today'
+  | 'tasks-left'
   | 'habit-at-risk'
   | 'routine-missed'
   | 'quest'
@@ -311,6 +312,28 @@ export function buildSuggestions(ctx: EliContext): EliSuggestion[] {
       score: 78,
       actions: [ACT.focus(first.id), ACT.openTasks('Open tasks', first.id)],
       snoozeMinutes: 120,
+    });
+  }
+
+  // What is left today, at any priority. This is the line ELI opens with when
+  // the app is launched, so it has to exist on an ordinary day too — not only
+  // when something is late or urgent.
+  if (dueToday.length > 0) {
+    const order = { critical: 0, high: 1, normal: 2, low: 3 } as const;
+    const first = [...dueToday].sort(
+      (a, b) => (order[a.priority] ?? 2) - (order[b.priority] ?? 2)
+    )[0];
+    out.push({
+      id: `tasks-left:${today}:${dueToday.length}`,
+      kind: 'tasks-left',
+      message:
+        dueToday.length === 1
+          ? `1 task left today: "${first.title}".`
+          : `${dueToday.length} tasks left today, starting with "${first.title}".`,
+      tone: 'nudge',
+      score: 50,
+      actions: [ACT.focus(first.id), ACT.openTasks('Open tasks', first.id)],
+      snoozeMinutes: 180,
     });
   }
 

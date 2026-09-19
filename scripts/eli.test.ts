@@ -92,7 +92,7 @@ check(
 );
 
 check(
-  'a task due today at nine in the morning is not yet worth mentioning',
+  'a task due today is mentioned from the morning, as what is left',
   pickKind(
     ctx({
       tasks: [task('a', { dueDate: TODAY, priority: 'high' })],
@@ -100,7 +100,71 @@ check(
       now: at(9),
     })
   ),
-  null
+  'tasks-left'
+);
+
+console.log('\n--- what is left today (the launch briefing) ---');
+
+check(
+  'one task left is named',
+  message(
+    ctx({
+      tasks: [task('Edit videos', { dueDate: TODAY })],
+      profile: { questLog: { date: TODAY, id: 'q', title: 'q', xp: 10 } } as any,
+      now: at(9),
+    })
+  ),
+  '1 task left today: "Edit videos".'
+);
+
+check(
+  'several are counted, and the most important is named first',
+  message(
+    ctx({
+      tasks: [
+        task('Low thing', { dueDate: TODAY, priority: 'low' }),
+        task('Big thing', { dueDate: TODAY, priority: 'critical' }),
+        task('Mid thing', { dueDate: TODAY }),
+      ],
+      profile: { questLog: { date: TODAY, id: 'q', title: 'q', xp: 10 } } as any,
+      now: at(9),
+    })
+  ),
+  '3 tasks left today, starting with "Big thing".'
+);
+
+check(
+  'completed tasks are not counted as left',
+  message(
+    ctx({
+      tasks: [
+        task('Done', { dueDate: TODAY, completed: true, completedAt: `${TODAY}T08:00:00.000Z` }),
+        task('Open', { dueDate: TODAY }),
+      ],
+      profile: { questLog: { date: TODAY, id: 'q', title: 'q', xp: 10 } } as any,
+      now: at(9),
+    })
+  ),
+  '1 task left today: "Open".'
+);
+
+check(
+  'tomorrow\'s tasks are not "left today"',
+  kinds(ctx({ tasks: [task('a', { dueDate: '2026-09-19' })], now: at(9) })).includes('tasks-left'),
+  false
+);
+
+check(
+  'an overdue task still outranks the list of what is left',
+  pickKind(
+    ctx({
+      tasks: [
+        task('Late', { dueDate: YESTERDAY, priority: 'high' }),
+        task('Today', { dueDate: TODAY }),
+      ],
+    })
+  ),
+  'overdue-priority'
 );
 
 console.log('\n--- overdue and postponed ---');

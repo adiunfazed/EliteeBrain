@@ -23,7 +23,19 @@ interface Props {
   onAsk: () => void;
   /** Hidden while a full-screen surface owns the display. */
   hidden?: boolean;
+  /**
+   * True once this account's data has actually arrived.
+   *
+   * The launch briefing waits for it: opening on the first render would judge
+   * an empty list and either say nothing or say the wrong thing.
+   */
+  ready?: boolean;
 }
+
+/** How long after the data is ready the launch briefing appears. */
+const LAUNCH_DELAY_MS = 1800;
+/** How long the small "no messages" note stays up. */
+const EMPTY_NOTE_MS = 2600;
 
 /**
  * ELI — a quiet contextual layer over what the app already knows.
@@ -42,8 +54,11 @@ export const EliCoach: React.FC<Props> = ({
   onAction,
   onAsk,
   hidden = false,
+  ready = true,
 }) => {
   const [open, setOpen] = useState(false);
+  /** The small note shown instead of the panel when there is nothing to say. */
+  const [emptyNote, setEmptyNote] = useState(false);
   const [memory, setMemory] = useState<EliMemory>({});
   /**
    * Re-evaluated on a slow tick as well as on data changes.
@@ -71,6 +86,43 @@ export const EliCoach: React.FC<Props> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [context, memory, tick]
   );
+
+  /**
+   * The launch briefing.
+   *
+   * Once per app launch, per account, ELI opens by itself if it has something
+   * real to say — remaining tasks, an overdue item, a streak at risk. Tracked
+   * in sessionStorage, so reopening the app briefs again but moving between
+   * screens does not. With nothing to say, it stays closed: an empty panel on
+   * launch would be noise.
+   */
+  useEffect(() => {
+    if (!ready || hidden || !suggestion) return;
+
+    const key = `elitelife_eli_briefed_${userId || 'guest'}`;
+    try {
+      if (sessionStorage.getItem(key)) return;
+    } catch {
+      /* storage unavailable — fall through and brief once this render */
+    }
+
+    const id = window.setTimeout(() => {
+      try {
+        sessionStorage.setItem(key, '1');
+      } catch {
+        /* ignore */
+      }
+      setOpen(true);
+    }, LAUNCH_DELAY_MS);
+
+    return () => window.clearTimeout(id);
+  }, [ready, hidden, suggestion?.id, userId]);
+
+  useEffect(() => {
+    if (!emptyNote) return;
+    const id = window.setTimeout(() => setEmptyNote(false), EMPTY_NOTE_MS);
+    return () => window.clearTimeout(id);
+  }, [emptyNote]);
 
   /** Closes the sheet if what it was showing has ceased to be true. */
   useEffect(() => {
@@ -113,9 +165,16 @@ export const EliCoach: React.FC<Props> = ({
       <button
         onClick={() => {
           soundFx.playClick();
-          setOpen((v) => !v);
+          if (suggestion) {
+            setEmptyNote(false);
+            setOpen((v) => !v);
+          } else {
+            // Nothing to say: a small note, not a whole panel announcing it.
+            setOpen(false);
+            setEmptyNote((v) => !v);
+          }
         }}
-        aria-label={suggestion ? 'ELI has a suggestion' : 'Ask ELI'}
+        aria-label={suggestion ? 'ELI has a suggestion' : 'ELI — no new messages'}
         aria-expanded={open}
         className="eli-fab"
         data-has-news={suggestion ? 'true' : 'false'}
@@ -124,6 +183,32 @@ export const EliCoach: React.FC<Props> = ({
         <span className="eli-fab-label">ELI</span>
         {suggestion && <span className="eli-fab-dot" />}
       </button>
+
+      <AnimatePresence>
+        {emptyNote && !open && (
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 4 }}
+            transition={{ duration: 0.16 }}
+            role="status"
+            className="eli-note"
+          >
+            <span>No new messages</span>
+            <button
+              onClick={() => {
+                soundFx.playClick();
+                setEmptyNote(false);
+                onAsk();
+              }}
+              className="eli-note-link"
+            >
+              Ask ELI
+              <ArrowRight className="w-3 h-3 shrink-0" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {open && (

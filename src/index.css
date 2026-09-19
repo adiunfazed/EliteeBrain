@@ -2366,14 +2366,16 @@ button > span,
    something to say, because a coach that always looks urgent is one
    people learn to ignore.
 
-   Bottom LEFT deliberately — "Add task" owns the bottom right, and two
-   floating controls in one corner means one of them gets mis-tapped.
+   Bottom right, stacked ABOVE the "Add task" button rather than beside
+   it: the two share the thumb's corner, and a clear 12px gap between
+   them is what stops one being tapped for the other.
    ================================================================== */
 
 .eli-fab {
   position: fixed;
-  left: 1rem;
-  bottom: calc(5.25rem + env(safe-area-inset-bottom));
+  right: 1rem;
+  /* Add task sits at 5.25rem and is 52px tall; this clears it by 12px. */
+  bottom: calc(5.25rem + 64px + env(safe-area-inset-bottom));
   z-index: 70;
   display: flex;
   align-items: center;
@@ -2457,9 +2459,9 @@ button > span,
 @media (min-width: 640px) {
   /* Desktop: a compact panel by the button, not a sheet across the page. */
   .eli-panel {
-    left: 1rem;
-    right: auto;
-    bottom: calc(7.5rem + env(safe-area-inset-bottom));
+    left: auto;
+    right: 1rem;
+    bottom: calc(5.25rem + 120px + env(safe-area-inset-bottom));
     width: 380px;
     max-width: calc(100vw - 2rem);
     border-radius: 18px;
@@ -2549,4 +2551,40 @@ button > span,
   .dark .eli-fab[data-has-news='true'] { animation: none; }
   .eli-fab:active { transform: none; }
   .eli-action:active { transform: none; }
+}
+
+
+/* Nothing to say: one small line by the button, gone on its own. A whole
+   panel announcing that there is nothing to announce is its own noise. */
+.eli-note {
+  position: fixed;
+  right: 1rem;
+  bottom: calc(5.25rem + 120px + env(safe-area-inset-bottom));
+  z-index: 71;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 8px 7px 12px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  box-shadow: 0 8px 22px -12px rgba(0, 0, 0, 0.8);
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--ink-dim);
+  white-space: nowrap;
+}
+
+.eli-note-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--signal-ink);
+  background: color-mix(in oklab, var(--signal) 12%, transparent);
+  border: none;
 }

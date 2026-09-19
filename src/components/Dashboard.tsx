@@ -1198,6 +1198,7 @@ export const Dashboard: React.FC<Props> = ({
         userId={currentUser?.uid || null}
         context={eliContext}
         hidden={activeSection === 'coach' || !!coachTool || showLeaderboard || showShare}
+        ready={!currentUser || isHydrated}
         onAction={handleEliAction}
         onAsk={() => setActiveSection('coach')}
       />
