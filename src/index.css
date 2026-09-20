@@ -2587,3 +2587,166 @@ button > span,
   background: color-mix(in oklab, var(--signal) 12%, transparent);
   border: none;
 }
+
+
+/* ==================================================================
+   Habits — a check-in list
+
+   The same strip the task list uses, because it is the same kind of
+   reading: what did I do, what didn't I. Rings, week dots and streak
+   statistics live in the drawer, where one habit has the whole screen.
+   ================================================================== */
+
+.habit-strip {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.03) inset;
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+
+.habit-strip:active {
+  border-color: color-mix(in oklab, var(--signal) 26%, var(--rule));
+}
+
+/* Done fades back rather than disappearing: the point of a check-in list
+   is seeing what you did, not only what is left. */
+.habit-strip[data-done='true'] {
+  background: color-mix(in oklab, var(--surface) 70%, var(--ground));
+  border-color: color-mix(in oklab, var(--rule) 75%, transparent);
+}
+
+/* ---- the drawer ---- */
+
+.habit-detail {
+  padding: 2px 0 4px;
+}
+
+.habit-ring {
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.habit-ring:active {
+  transform: scale(0.94);
+}
+
+/* The ring track only — a descendant selector here also caught the tick
+   inside the core and pinned it to the core's top-left corner. */
+.habit-ring > svg {
+  position: absolute;
+  inset: 0;
+}
+
+/* Absolutely positioned rather than sized with width math: as a flex child
+   with a margin and a calc width, the tick drifted out of the disc at larger
+   sizes. Insets cannot disagree with the ring around them. */
+.habit-ring-core {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: var(--ink-muted);
+}
+
+.habit-ring-core[data-done='true'] {
+  color: #fff;
+}
+
+/* The finished state is a filled disc, not a heavier ring — a habit that
+   is done should read as closed, at a glance, from across the screen. */
+.habit-ring[data-done='true'] .habit-ring-core {
+  inset: 5px;
+  background: var(--signal);
+  color: #fff;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--signal) 12%, transparent);
+  animation: eb-pop 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.habit-ring-value {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+/* ---- the week ---- */
+
+.habit-week-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-top: 18px;
+}
+
+.habit-week-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.habit-week-label {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 10.5px;
+  color: var(--ink-dim);
+  line-height: 1;
+}
+
+.habit-week-dot {
+  width: 100%;
+  max-width: 30px;
+  aspect-ratio: 1 / 1;
+  border-radius: 999px;
+  border: 1.5px solid transparent;
+}
+
+/* Met: solid. The only filled state, so a good week is obvious. */
+.habit-week-dot[data-state='met'] {
+  background: var(--signal);
+}
+
+/* Due and missed: an empty outline — the shape of something not filled in. */
+.habit-week-dot[data-state='missed'] {
+  background: transparent;
+  border-color: var(--rule-strong);
+}
+
+/* Today, still open: the accent outline, so the eye lands on it. */
+.habit-week-dot[data-state='today'] {
+  background: color-mix(in oklab, var(--signal) 12%, transparent);
+  border-color: var(--signal);
+}
+
+/* Never scheduled: barely there. Not a miss, so it must not look like one. */
+.habit-week-dot[data-state='off'] {
+  background: var(--surface-sunk);
+  opacity: 0.5;
+}
+
+.habit-stat-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--rule);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .habit-ring:active { transform: none; }
+  .habit-ring[data-done='true'] .habit-ring-core { animation: none; }
+}

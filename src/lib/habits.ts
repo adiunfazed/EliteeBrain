@@ -209,3 +209,69 @@ export function habitInsight(habit: Habit, stats: HabitStats): string | null {
   }
   return `You've completed ${stats.completionRate}% of scheduled days so far.`;
 }
+
+/** One section of the habits list. */
+export interface HabitGroup {
+  id: 'due' | 'done' | 'other';
+  label: string;
+  habits: Habit[];
+}
+
+/**
+ * Split habits into what today actually asks of you.
+ *
+ * The list used to show every active habit at once, which meant a habit set
+ * for Saturday sat among Monday's work looking equally undone — the screen
+ * asked for things it was not actually asking for.
+ *
+ * Three sections: what is due and still open, what is already done today, and
+ * everything scheduled for another day. The last one is returned rather than
+ * dropped so those habits can still be edited; the caller keeps it collapsed.
+ *
+ * Archived habits are never in any section. They are the caller's to show.
+ */
+export function groupHabitsForDay(
+  habits: Habit[],
+  logs: HabitLog[],
+  today: string = todayISO()
+): HabitGroup[] {
+  const due: Habit[] = [];
+  const done: Habit[] = [];
+  const other: Habit[] = [];
+
+  for (const habit of habits || []) {
+    if (!habit || habit.status !== 'active') continue;
+
+    if (!isScheduledOn(habit, today)) {
+      other.push(habit);
+      continue;
+    }
+
+    if (isCompleteOn(habit, logs || [], today)) done.push(habit);
+    else due.push(habit);
+  }
+
+  const groups: HabitGroup[] = [];
+  if (due.length > 0) groups.push({ id: 'due', label: 'Today', habits: due });
+  if (done.length > 0) groups.push({ id: 'done', label: 'Done today', habits: done });
+  if (other.length > 0) groups.push({ id: 'other', label: 'Other days', habits: other });
+  return groups;
+}
+
+/**
+ * The next date a habit is actually scheduled, or null within the horizon.
+ *
+ * Used to tell the user when an out-of-scope habit comes back round, so
+ * "Other days" is informative rather than just a drawer things vanish into.
+ */
+export function nextScheduledDate(
+  habit: Habit,
+  from: string = todayISO(),
+  horizonDays = 14
+): string | null {
+  for (let i = 1; i <= horizonDays; i++) {
+    const iso = shiftISO(from, i);
+    if (isScheduledOn(habit, iso)) return iso;
+  }
+  return null;
+}

@@ -1,13 +1,6 @@
 import React, { useEffect, useMemo, useState , useRef} from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Trash2, X, CalendarDays, Target, Repeat,
-  Plus,
-  Flame,
-  Check,
-  Archive,
-  AlertTriangle,
-  Pencil,
-} from 'lucide-react';
+import { Trash2, X, CalendarDays, Target, Repeat, Plus, Flame, Check, Archive, AlertTriangle, Pencil, Minus, ChevronDown } from 'lucide-react';
 import type { Goal, Habit, HabitLog, Milestone, Task } from '../types';
 import {
   newGoal,
@@ -22,7 +15,17 @@ import {
   subscribeHabitLogs,
   subscribeHabits,
 } from '../lib/goalStore';
-import { describeCadence, describeTarget, habitStats } from '../lib/habits';
+import {
+  describeCadence,
+  describeTarget,
+  groupHabitsForDay,
+  habitStats,
+  isScheduledOn,
+  nextScheduledDate,
+  shiftISO,
+  valueOn,
+} from '../lib/habits';
+import { HabitRing } from './HabitRing';
 import {
   daysRemaining,
   goalProgress,
@@ -52,6 +55,13 @@ interface Props {
 
 type Pane = 'goals' | 'habits';
 
+/** "tomorrow" / "Fri" — for saying when an out-of-scope habit comes round. */
+function prettyDay(iso: string, today: string): string {
+  if (iso === shiftISO(today, 1)) return 'tomorrow';
+  const d = new Date(`${iso}T00:00:00`);
+  return d.toLocaleDateString(undefined, { weekday: 'short' });
+}
+
 export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, tasks = [], routineBlocks = [], routineLogs = [], onStartFocus }) => {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [habits, setHabits] = useState<Habit[]>([]);
@@ -62,6 +72,8 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
   const goalInputRef = useRef<HTMLInputElement>(null);
   const [goalComposerOpen, setGoalComposerOpen] = useState(false);
   const [habitComposerOpen, setHabitComposerOpen] = useState(false);
+  /** Habits scheduled for another day, kept collapsed. */
+  const [showOtherDays, setShowOtherDays] = useState(false);
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
   const [historyHabit, setHistoryHabit] = useState<Habit | null>(null);
   const [detailGoal, setDetailGoal] = useState<Goal | null>(null);
@@ -91,6 +103,16 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
     [habits]
   );
   const warning = useMemo(() => overcommitmentWarning(habits, today), [habits, today]);
+
+  /** What today actually asks for, split from what it does not. */
+  const habitGroups = useMemo(
+    () => groupHabitsForDay(habits, logs, today),
+    [habits, logs, today]
+  );
+  const otherDayHabits = useMemo(
+    () => habitGroups.find((g) => g.id === 'other')?.habits ?? [],
+    [habitGroups]
+  );
 
   /* ---------------- actions ---------------- */
 
@@ -272,204 +294,96 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
    * selection and history live in their own sheets — inlining all of that is
    * what made this four hundred lines and half a screen tall.
    */
-  const HabitRow: React.FC<{ habit: Habit; compact?: boolean }> = ({ habit }) => {
+  /**
+   * A habit as a check-in row.
+   *
+   * Deliberately plain: the name, what today asks for, and one tick. A habit
+   * list is read as "what did I do and what didn't I" — rings, week dots and
+   * progress bars on every row turned that glance into a dashboard. All of
+   * that still exists, one tap away, where there is room for it.
+   */
+  const HabitRow: React.FC<{ habit: Habit; muted?: boolean }> = ({ habit, muted = false }) => {
     const stats = habitStats(habit, logs, today);
-    const pct = Math.min(1, stats.todayValue / Math.max(1, stats.target));
-
-    /** The last seven days, oldest first, so the row reads left to right. */
-    const week = useMemo(() => {
-      const out: { iso: string; label: string; value: number; due: boolean }[] = [];
-      for (let i = 6; i >= 0; i--) {
-        const d = new Date(`${today}T00:00:00`);
-        d.setDate(d.getDate() - i);
-        const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
-          d.getDate()
-        ).padStart(2, '0')}`;
-        const log = logs.find((l) => l.habitId === habit.id && l.date === iso);
-        const due =
-          habit.cadence === 'daily' ||
-          habit.cadence === 'weekly' ||
-          (habit.weekdays || []).includes(d.getDay());
-        out.push({
-          iso,
-          label: ['S', 'M', 'T', 'W', 'T', 'F', 'S'][d.getDay()],
-          value: log?.value || 0,
-          due,
-        });
-      }
-      return out;
-    }, [habit, logs, today]);
-
-    const target = Math.max(1, habit.targetValue || 1);
+    const counted = habit.metric !== 'yes_no';
+    const step = habit.metric === 'duration' ? 10 : 1;
+    const upcoming = muted ? nextScheduledDate(habit, today) : null;
 
     return (
-      <div className="rounded-xl eb-card p-4">
-        {/* Top row: name, then the completion control on the right. */}
-        <div className="flex items-start gap-3">
-          <div className="min-w-0 flex-1">
-            <p
-              className={`text-[15px] font-semibold leading-snug line-clamp-1 ${
-                habit.status === 'archived' ? 'text-[var(--ink-dim)]' : ''
-              }`}
-            >
-              {habit.title}
-            </p>
-            <p className="t-meta mt-0.5 truncate">
-              {describeCadence(habit)}
-              {habit.metric !== 'yes_no' ? ` · ${stats.todayValue}/${describeTarget(habit)}` : ''}
-            </p>
-          </div>
-
-          {habit.metric === 'yes_no' ? (
-            <button
-              onClick={() => record(habit, stats.completedToday ? 0 : stats.target)}
-              aria-label={stats.completedToday ? 'Mark not done' : 'Mark done'}
-              className="shrink-0 w-10 h-10 flex items-center justify-center"
-            >
-              <span
-                className={`w-[26px] h-[26px] rounded-full border-2 flex items-center justify-center transition-all ${
-                  stats.completedToday
-                    ? 'bg-emerald-500 border-emerald-500 text-slate-950 glow-done'
-                    : 'border-[var(--rule-strong)]'
-                }`}
-              >
-                {stats.completedToday && <Check className="w-3.5 h-3.5 shrink-0 stroke-[3]" />}
-              </span>
-            </button>
-          ) : (
-            <div className="flex items-center gap-1.5 shrink-0">
-              <button
-                onClick={() => record(habit, Math.max(0, stats.todayValue - (habit.metric === 'duration' ? 10 : 1)))}
-                aria-label="Less"
-                className="w-8 h-8 rounded-lg flex items-center justify-center"
-                style={{ background: 'var(--surface-sunk)', color: 'var(--ink-dim)' }}
-              >
-                −
-              </button>
-              <span className="t-figure text-[15px] w-8 text-center">{stats.todayValue}</span>
-              <button
-                onClick={() => record(habit, stats.todayValue + (habit.metric === 'duration' ? 10 : 1))}
-                aria-label="More"
-                className="w-8 h-8 rounded-lg flex items-center justify-center"
-                style={{ background: 'var(--surface-sunk)', color: 'var(--ink-dim)' }}
-              >
-                +
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Seven days in one grid row. A grid cannot wrap, so these never
-            stack vertically however narrow the screen gets. */}
-        <div className="grid grid-cols-7 gap-1.5 mt-3.5">
-          {week.map((d, i) => {
-            const met = d.value >= target;
-            const isToday = i === 6;
-            // Today is still in progress, so an unfinished habit today is not
-            // a miss — marking it red would be wrong and discouraging.
-            const missed = !met && d.due && !isToday;
-
-            return (
-              <div key={d.iso} className="flex flex-col items-center gap-1 min-w-0">
-                <span className="t-meta leading-none">{d.label}</span>
-                <span
-                  className={`w-full rounded-full ${
-                    met ? 'glow-done' : isToday ? 'glow-today' : missed ? 'glow-missed' : ''
-                  }`}
-                  style={{
-                    aspectRatio: '1 / 1',
-                    maxWidth: 28,
-                    background: met
-                      ? 'var(--done)'
-                      : missed
-                        ? 'color-mix(in oklab, var(--danger) 55%, transparent)'
-                        : d.due
-                          ? 'var(--surface-sunk)'
-                          : 'transparent',
-                    border: isToday
-                      ? '2px solid var(--signal)'
-                      : d.due && !met && !missed
-                        ? '1px solid var(--rule)'
-                        : '1px solid transparent',
-                  }}
-                />
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Progress for counted habits, where the number alone is not enough. */}
-        {habit.metric !== 'yes_no' && (
-          <div
-            className="h-1 rounded-full overflow-hidden mt-3"
-            style={{ background: 'var(--surface-sunk)' }}
-          >
-            <div
-              className="h-full rounded-full transition-[width] duration-300"
-              style={{ width: `${pct * 100}%`, background: 'var(--done)' }}
-            />
-          </div>
-        )}
-
-        {/* Streak and actions on one line. */}
-        <div className="flex items-center gap-2 mt-3">
-          {stats.currentStreak > 0 && (
-            <span className="t-meta flex items-center gap-1 min-w-0">
-              <Flame className="w-3.5 h-3.5 shrink-0 eb-warn" />
-              {stats.currentStreak} day{stats.currentStreak === 1 ? '' : 's'}
-            </span>
-          )}
-
-          <span className="flex-1" />
-
+      <div className="habit-strip" data-done={stats.completedToday ? 'true' : 'false'}>
+        <div className="flex items-start gap-2.5 px-2.5 py-2.5">
           <button
             onClick={() => {
               soundFx.playClick();
               setHistoryHabit(habit);
             }}
-            aria-label="History"
-            className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-            style={{ color: 'var(--ink-dim)' }}
+            aria-label={`${habit.title} history`}
+            className="task-icon mt-[1px]"
+            data-done={stats.completedToday ? 'true' : 'false'}
           >
-            <CalendarDays className="w-4 h-4 shrink-0" />
+            <Repeat className="w-[15px] h-[15px] shrink-0" />
           </button>
 
+          <div className="flex-1 min-w-0">
+            <button
+              onClick={() => {
+                soundFx.playClick();
+                setHistoryHabit(habit);
+              }}
+              className="block w-full text-left"
+            >
+              <span className="task-name" data-done={stats.completedToday ? 'true' : 'false'}>
+                {habit.title}
+              </span>
+            </button>
+
+            <div className="task-meta">
+              {counted && (
+                <span className="task-meta-item">
+                  {stats.todayValue}/{describeTarget(habit)}
+                </span>
+              )}
+
+              {stats.currentStreak > 0 && (
+                <span className="task-meta-item" data-tone="warn">
+                  <Flame className="w-[13px] h-[13px] shrink-0" />
+                  {stats.currentStreak} day{stats.currentStreak === 1 ? '' : 's'}
+                </span>
+              )}
+
+              {upcoming ? (
+                <span className="task-meta-item">
+                  <CalendarDays className="w-[13px] h-[13px] shrink-0" />
+                  Next {prettyDay(upcoming, today)}
+                </span>
+              ) : (
+                <span className="task-meta-item">{describeCadence(habit)}</span>
+              )}
+            </div>
+          </div>
+
+          {/* One tick, the same one the task list uses. Tapping a counted
+              habit adds a step; tapping a finished one clears the day. */}
           <button
             onClick={() => {
-              soundFx.playClick();
-              setEditingHabit(habit);
-              setHabitComposerOpen(true);
+              if (stats.completedToday) record(habit, 0);
+              else record(habit, counted ? stats.todayValue + step : stats.target);
             }}
-            aria-label="Edit habit"
-            className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-            style={{ color: 'var(--ink-dim)' }}
-          >
-            <Pencil className="w-4 h-4 shrink-0" />
-          </button>
-
-          <button
-            onClick={() =>
-              patchHabit(userId, habit.id, {
-                status: habit.status === 'active' ? 'archived' : 'active',
-              })
+            aria-label={
+              stats.completedToday
+                ? `${habit.title}: mark not done`
+                : counted
+                  ? `${habit.title}: add ${step}`
+                  : `${habit.title}: mark done`
             }
-            aria-label={habit.status === 'active' ? 'Archive' : 'Restore'}
-            className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-            style={{ color: 'var(--ink-dim)' }}
+            aria-pressed={stats.completedToday}
+            className="task-check"
           >
-            <Archive className="w-4 h-4 shrink-0" />
-          </button>
-
-          <button
-            onClick={() => {
-              soundFx.playClick();
-              deleteHabitForever(habit);
-            }}
-            aria-label="Delete habit"
-            className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-            style={{ color: 'var(--ink-dim)' }}
-          >
-            <Trash2 className="w-4 h-4 shrink-0" />
+            <span
+              className="task-check-mark"
+              data-state={stats.completedToday ? 'done' : 'open'}
+            >
+              {stats.completedToday && <Check className="w-3.5 h-3.5 shrink-0 stroke-[3]" />}
+            </span>
           </button>
         </div>
       </div>
@@ -785,8 +699,177 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
           title={historyHabit.title}
           onClose={() => setHistoryHabit(null)}
         >
+          {/* Today, in full: the ring, the week, and the controls for
+              counted habits. All of this used to be on every row. */}
+          {(() => {
+            const habit = historyHabit;
+            const stats = habitStats(habit, logs, today);
+            const target = Math.max(1, stats.target);
+            const counted = habit.metric !== 'yes_no';
+            const step = habit.metric === 'duration' ? 10 : 1;
+
+            const week: { iso: string; value: number; due: boolean; today: boolean }[] = [];
+            for (let i = 6; i >= 0; i--) {
+              const iso = shiftISO(today, -i);
+              week.push({
+                iso,
+                value: valueOn(logs, habit.id, iso),
+                due: isScheduledOn(habit, iso),
+                today: i === 0,
+              });
+            }
+
+            return (
+              <div className="habit-detail">
+                <div className="flex items-center gap-4">
+                  <HabitRing
+                    size={72}
+                    progress={Math.min(1, stats.todayValue / target)}
+                    done={stats.completedToday}
+                    value={stats.todayValue}
+                    showValue={counted}
+                    label={stats.completedToday ? 'Mark not done' : 'Mark done'}
+                    onClick={() => {
+                      if (stats.completedToday) record(habit, 0);
+                      else record(habit, counted ? stats.todayValue + step : stats.target);
+                    }}
+                  />
+
+                  <div className="min-w-0 flex-1">
+                    <p className="eb-label">Today</p>
+                    <p className="t-section mt-0.5">
+                      {counted
+                        ? `${stats.todayValue} of ${describeTarget(habit)}`
+                        : stats.completedToday
+                          ? 'Done'
+                          : 'Not yet'}
+                    </p>
+
+                    {counted && (
+                      <div className="flex items-center gap-2 mt-2.5">
+                        <button
+                          onClick={() => record(habit, Math.max(0, stats.todayValue - step))}
+                          disabled={stats.todayValue <= 0}
+                          aria-label={`Remove ${step}`}
+                          className="step-btn"
+                        >
+                          <Minus className="w-4 h-4 shrink-0" />
+                        </button>
+                        <button
+                          onClick={() => record(habit, stats.todayValue + step)}
+                          aria-label={`Add ${step}`}
+                          className="step-btn"
+                        >
+                          <Plus className="w-4 h-4 shrink-0" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* The last seven days. Filled means met, hollow means it was
+                    due and missed, faint means it was never scheduled. */}
+                <div className="habit-week-row">
+                  {week.map((d) => (
+                    <div key={d.iso} className="habit-week-cell">
+                      <span className="habit-week-label">
+                        {['S', 'M', 'T', 'W', 'T', 'F', 'S'][new Date(`${d.iso}T00:00:00`).getDay()]}
+                      </span>
+                      <span
+                        className="habit-week-dot"
+                        data-state={
+                          d.value >= target
+                            ? 'met'
+                            : !d.due
+                              ? 'off'
+                              : d.today
+                                ? 'today'
+                                : 'missed'
+                        }
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <div className="habit-stat-row">
+                  <div>
+                    <span className="eb-label block">Streak</span>
+                    <span className="t-figure block mt-1" style={{ fontSize: 20 }}>
+                      {stats.currentStreak}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="eb-label block">Best</span>
+                    <span className="t-figure block mt-1" style={{ fontSize: 20 }}>
+                      {stats.bestStreak}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="eb-label block">Done</span>
+                    <span className="t-figure block mt-1" style={{ fontSize: 20 }}>
+                      {stats.completionRate}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
           <HabitHistory habit={historyHabit} logs={logs} />
-          <button onClick={() => setHistoryHabit(null)} className="btn-quiet w-full mt-6">
+
+          {/* The actions that used to sit on every row. One habit at a time,
+              where there is room to label them. */}
+          <div className="flex items-center gap-2 mt-5">
+            <button
+              onClick={() => {
+                soundFx.playClick();
+                setEditingHabit(historyHabit);
+                setHistoryHabit(null);
+                setHabitComposerOpen(true);
+              }}
+              className="btn-quiet flex-1"
+            >
+              <Pencil className="w-4 h-4 shrink-0 inline mr-1.5" />
+              Edit
+            </button>
+
+            <button
+              onClick={() => {
+                soundFx.playClick();
+                patchHabit(userId, historyHabit.id, {
+                  status: historyHabit.status === 'active' ? 'archived' : 'active',
+                });
+                setHabits((prev) =>
+                  prev.map((x) =>
+                    x.id === historyHabit.id
+                      ? { ...x, status: x.status === 'active' ? 'archived' : 'active' }
+                      : x
+                  )
+                );
+                setHistoryHabit(null);
+              }}
+              className="btn-quiet flex-1"
+            >
+              <Archive className="w-4 h-4 shrink-0 inline mr-1.5" />
+              {historyHabit.status === 'active' ? 'Archive' : 'Restore'}
+            </button>
+          </div>
+
+          <button
+            onClick={() => {
+              soundFx.playClick();
+              const habit = historyHabit;
+              setHistoryHabit(null);
+              deleteHabitForever(habit);
+            }}
+            className="btn-quiet w-full mt-2"
+            style={{ color: 'var(--danger, #FF6B7E)' }}
+          >
+            <Trash2 className="w-4 h-4 shrink-0 inline mr-1.5" />
+            Delete habit
+          </button>
+
+          <button onClick={() => setHistoryHabit(null)} className="btn-lg w-full mt-4">
             Close
           </button>
         </ComposerSheet>
@@ -853,7 +936,65 @@ export const GoalsSection: React.FC<Props> = ({ userId, pane: controlledPane, ta
               hint="For example: Read 10 pages · Train · In bed by 11"
             />
           ) : (
-            activeHabits.map((h) => <HabitRow key={h.id} habit={h} />)
+            <div className="space-y-5">
+              {habitGroups
+                .filter((g) => g.id !== 'other')
+                .map((group) => (
+                  <div key={group.id} className="space-y-2">
+                    <div className="flex items-baseline gap-2 px-0.5">
+                      <span className="eb-label">{group.label}</span>
+                      <span className="t-meta" style={{ fontSize: 11 }}>
+                        {group.habits.length}
+                      </span>
+                      <span className="flex-1 h-px" style={{ background: 'var(--rule)' }} />
+                    </div>
+
+                    {group.habits.map((h) => (
+                      <HabitRow key={h.id} habit={h} />
+                    ))}
+                  </div>
+                ))}
+
+              {/* Everything today does not ask for. Out of the way by
+                  default: a habit set for Saturday sitting among Monday's
+                  work reads as something you have failed to do. */}
+              {otherDayHabits.length > 0 && (
+                <div className="space-y-2">
+                  <button
+                    onClick={() => {
+                      soundFx.playClick();
+                      setShowOtherDays((v) => !v);
+                    }}
+                    className="sort-pill"
+                    aria-expanded={showOtherDays}
+                  >
+                    <ChevronDown
+                      className="w-3.5 h-3.5 shrink-0 transition-transform"
+                      style={{ transform: showOtherDays ? 'rotate(0deg)' : 'rotate(-90deg)' }}
+                    />
+                    Other days
+                    <span style={{ opacity: 0.6 }}>{otherDayHabits.length}</span>
+                  </button>
+
+                  {showOtherDays &&
+                    otherDayHabits.map((h) => <HabitRow key={h.id} habit={h} muted />)}
+                </div>
+              )}
+
+              {/* Nothing due, but habits exist: say so rather than showing
+                  an empty screen that looks broken. */}
+              {habitGroups.every((g) => g.id === 'other') && (
+                <div
+                  className="text-center py-8 px-6 rounded-xl"
+                  style={{ border: '1px dashed var(--rule)' }}
+                >
+                  <p className="t-section">Nothing due today.</p>
+                  <p className="t-meta mt-1.5">
+                    Your habits are scheduled for other days. A rest day is part of the plan.
+                  </p>
+                </div>
+              )}
+            </div>
           )}
 
           {habits.some((h) => h.status === 'archived') && (
