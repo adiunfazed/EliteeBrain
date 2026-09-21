@@ -382,6 +382,10 @@ export const Dashboard: React.FC<Props> = ({
           setTrainTab('body');
           setActiveSection('exercises');
           break;
+        case 'open-modules':
+          setTrainTab('modules');
+          setActiveSection('exercises');
+          break;
         case 'open-progress':
           setActiveSection('progress');
           break;

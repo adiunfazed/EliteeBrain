@@ -9,7 +9,7 @@ import { ActionsPanel, HabitsPanel, RoutinePanel } from './dash/TodayPanels';
 import { praiseFor } from '../lib/praise';
 import { reviewToday, suggestNextActions } from '../lib/nextAction';
 import { blocksForDate, minutesOf } from '../lib/routine';
-import { isScheduledOn, valueOn } from '../lib/habits';
+import { habitStats, isScheduledOn, valueOn } from '../lib/habits';
 import { soundFx } from '../utils/audio';
 import { useXp } from './XpToast';
 import { XP } from '../lib/xp';
@@ -116,24 +116,27 @@ export const TodayScreen: React.FC<Props> = ({
     () => blocksForDate(routineBlocks, localRoutine, today),
     [routineBlocks, localRoutine, today]
   );
-  const openHabits = useMemo(() => {
-    // Anything already listed under "Your day" is not repeated here.
-    const shown = new Set(day.map((d) => d.block.title.trim().toLowerCase()));
-    const seen = new Set<string>();
 
-    return habits.filter((h) => {
-      if (h.status !== 'active') return false;
-      if (!isScheduledOn(h, today)) return false;
-      if (valueOn(localHabits, h.id, today) >= Math.max(1, h.targetValue || 1)) return false;
-
-      const key = h.title.trim().toLowerCase();
-      if (shown.has(key)) return false;
-      // Guard against duplicate habits created with the same name.
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-  }, [habits, localHabits, today, day]);
+  /**
+   * Every habit today actually asks for, done or not.
+   *
+   * `isScheduledOn` already refuses archived habits, but the status check is
+   * kept explicit so the rule is readable here rather than implied. Nothing
+   * is sliced: the panel shows all of these, because a panel that lists five
+   * while its own counter says six hides work the user cannot reach.
+   */
+  const todayHabits = useMemo(
+    () =>
+      habits
+        .filter((h) => h.status === 'active' && isScheduledOn(h, today))
+        .map((h) => ({
+          id: h.id,
+          title: h.title,
+          done: valueOn(localHabits, h.id, today) >= Math.max(1, h.targetValue || 1),
+          streak: habitStats(h, localHabits, today).currentStreak,
+        })),
+    [habits, localHabits, today]
+  );
 
   /** Missed items that can actually be rescheduled. */
   const missedTasks = useMemo(
@@ -188,7 +191,7 @@ export const TodayScreen: React.FC<Props> = ({
           if (diff !== 0) return diff;
           return String(a.createdAt || '').localeCompare(String(b.createdAt || ''));
         })
-        .slice(0, 12),
+        ,
     [tasks, today]
   );
 
@@ -281,66 +284,64 @@ export const TodayScreen: React.FC<Props> = ({
     <div className="max-w-2xl mx-auto">
       {/* ---------------- Header ---------------- */}
       <header className="enter relative pt-2 pb-1">
-        {/* Colour bleeding from behind the text rather than a container around
-            it — the header should read as part of the page, not a control. */}
+        {/* One soft wash of the brand colour behind the greeting. The teal
+            blob that used to sit beside it read as a stray green smudge
+            rather than as depth, and two coloured glows behind one heading
+            was one too many. */}
         <div
-          className="pointer-events-none absolute -top-16 -left-10 w-72 h-56 rounded-full opacity-[0.18] blur-3xl"
+          className="pointer-events-none absolute -top-16 -left-10 w-72 h-56 rounded-full opacity-[0.13] blur-3xl"
           style={{ background: 'var(--signal)' }}
         />
-        <div
-          className="pointer-events-none absolute -top-10 right-0 w-56 h-44 rounded-full opacity-[0.10] blur-3xl"
-          style={{ background: '#00C2A8' }}
-        />
 
-        <p className="t-meta relative">
+        <p className="today-date relative">
           {now.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}
         </p>
-        <h1 className="t-display mt-2 relative">
+
+        <h1 className="t-display mt-1.5 relative">
           {greeting}
           {firstName && <span className="text-[var(--signal-ink)]">, {firstName}</span>}
         </h1>
 
-        {review.total > 0 && (
-          <div className="mt-4 relative">
-            <p className="t-sub">
-              <span className="text-[var(--ink)] font-semibold">
-                {review.done} of {review.total}
-              </span>{' '}
-              done today
-              {review.total - review.done > 0 && ` · ${review.total - review.done} left`}
+        {/* What is left, itemised.
+            This replaced "0 of 11 done today · 11 left", where the 11 silently
+            included routine blocks and matched nothing the user could count on
+            screen. Every number here is named, so the parts always add up to
+            the total. */}
+        {(() => {
+          const openTasks = todayTasks.filter((t) => !t.completed).length;
+          const openHabitCount = todayHabits.filter((h) => !h.done).length;
+          const openBlocks = day.filter((d) => d.state !== 'done' && d.state !== 'skipped').length;
+          const left = openTasks + openHabitCount + openBlocks;
+
+          const parts = [
+            openTasks > 0 ? `${openTasks} ${openTasks === 1 ? 'task' : 'tasks'}` : null,
+            openHabitCount > 0
+              ? `${openHabitCount} ${openHabitCount === 1 ? 'habit' : 'habits'}`
+              : null,
+            openBlocks > 0
+              ? `${openBlocks} ${openBlocks === 1 ? 'routine block' : 'routine blocks'}`
+              : null,
+          ].filter(Boolean);
+
+          if (left === 0) {
+            const didAnything =
+              doneTasks.length > 0 || todayHabits.some((h) => h.done) || day.length > 0;
+            return didAnything ? (
+              <p className="today-left relative" data-tone="clear">
+                Everything for today is done.
+              </p>
+            ) : null;
+          }
+
+          return (
+            <p className="today-left relative">
+              <span className="today-left-count">{left}</span>
+              {left === 1 ? ' thing left today' : ' things left today'}
+              <span className="today-left-parts"> · {parts.join(' · ')}</span>
             </p>
-
-            <div className="h-1.5 rounded-full bg-[var(--surface-sunk)] overflow-hidden mt-3">
-              <motion.div
-                className="h-full rounded-full"
-                style={{
-                  background:
-                    review.done >= review.total
-                      ? 'var(--done)'
-                      : 'linear-gradient(90deg, var(--signal), color-mix(in oklab, var(--signal) 60%, #fff))',
-                }}
-                initial={false}
-                animate={{ width: `${(review.done / Math.max(1, review.total)) * 100}%` }}
-                transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-              />
-            </div>
-          </div>
-        )}
+          );
+        })()}
       </header>
-
-      {/* One-line summary, so the first thing on screen answers "how much is
-          left" without reading three sections. */}
-      {(() => {
-        const left = todayTasks.length + openHabits.length;
-        if (left === 0) return null;
-        return (
-          <p className="t-sub mt-1">
-            {left} {left === 1 ? 'thing' : 'things'} left today
-            {todayTasks.length > 0 ? ` · ${todayTasks.length} tasks` : ''}
-            {openHabits.length > 0 ? ` · ${openHabits.length} habits` : ''}
-          </p>
-        );
-      })()}
 
       {/* ---------------- Daily quest ---------------- */}
       <section className="sec enter enter-1">
@@ -355,6 +356,53 @@ export const TodayScreen: React.FC<Props> = ({
           onStoreQuest={onStoreQuest}
           onComplete={onCompleteQuest}
         />
+      </section>
+
+      {/* ---------------- Today's work ----------------
+          Straight after the quest, so the header's "what is left" is
+          answered by the very next thing on screen rather than three
+          sections further down. */}
+      <section className="sec">
+        <div className="dash">
+          <ActionsPanel
+            tasks={[...todayTasks, ...doneTasks]}
+            onToggle={completeTask}
+            onOpenAll={() => onGo('tasks')}
+          />
+
+          <HabitsPanel
+            habits={todayHabits}
+            onToggle={async (id, done) => {
+              const habit = habits.find((h: any) => h.id === id);
+              if (!habit) return;
+              const value = done ? Math.max(1, habit.targetValue || 1) : 0;
+
+              setLocalHabits((prev) => [
+                { id: `${today}__${id}`, habitId: id, date: today, value, updatedAt: '' },
+                ...prev.filter((l: any) => !(l.habitId === id && l.date === today)),
+              ]);
+              soundFx.playClick();
+
+              try {
+                await setHabitValue(userId, id, today, value);
+              } catch (e) {
+                console.error('Could not update habit:', e);
+              }
+            }}
+            onOpenAll={() => onGo('habits')}
+          />
+
+          <RoutinePanel
+            blocks={day.map((d: any) => ({
+              id: d.block.id,
+              title: d.block.title,
+              startTime: d.block.startTime,
+              endTime: d.block.endTime,
+              state: d.state,
+            }))}
+            onOpenAll={() => onGo('routine')}
+          />
+        </div>
       </section>
 
       {/* ---------------- Do this next ---------------- */}
@@ -491,60 +539,6 @@ export const TodayScreen: React.FC<Props> = ({
           </div>
         </section>
       )}
-
-      {/* ---------------- Today's work ---------------- */}
-      <section className="sec">
-        <div className="dash">
-          <ActionsPanel
-            tasks={[...todayTasks, ...doneTasks]}
-            onToggle={completeTask}
-            onOpenAll={() => onGo('tasks')}
-          />
-
-          <HabitsPanel
-            habits={habits
-              // Scheduled for today specifically, not merely active. A habit
-              // set for selected weekdays must not appear on the others.
-              .filter((h: any) => isScheduledOn(h, today))
-              .slice(0, 8)
-              .map((h: any) => ({
-                id: h.id,
-                title: h.title,
-                done: valueOn(localHabits, h.id, today) >= Math.max(1, h.targetValue || 1),
-                streak: 0,
-              }))}
-            onToggle={async (id, done) => {
-              const habit = habits.find((h: any) => h.id === id);
-              if (!habit) return;
-              const value = done ? Math.max(1, habit.targetValue || 1) : 0;
-
-              setLocalHabits((prev) => [
-                { id: `${today}__${id}`, habitId: id, date: today, value, updatedAt: '' },
-                ...prev.filter((l: any) => !(l.habitId === id && l.date === today)),
-              ]);
-              soundFx.playClick();
-
-              try {
-                await setHabitValue(userId, id, today, value);
-              } catch (e) {
-                console.error('Could not update habit:', e);
-              }
-            }}
-            onOpenAll={() => onGo('habits')}
-          />
-
-          <RoutinePanel
-            blocks={day.map((d: any) => ({
-              id: d.block.id,
-              title: d.block.title,
-              startTime: d.block.startTime,
-              endTime: d.block.endTime,
-              state: d.state,
-            }))}
-            onOpenAll={() => onGo('routine')}
-          />
-        </div>
-      </section>
 
       {/* ---------------- Empty ---------------- */}
       {nothingPlanned && (

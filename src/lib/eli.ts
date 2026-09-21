@@ -43,7 +43,10 @@ export type EliSignalKind =
   | 'workout-done'
   | 'focus-progress'
   | 'goal-deadline'
-  | 'goal-untouched'
+  | 'habit-slipping'
+  | 'habit-missed'
+  | 'training-idle'
+  | 'modules-idle'
   | 'day-summary'
   | 'inactive'
   | 'first-steps';
@@ -57,6 +60,7 @@ export type EliActionId =
   | 'open-goals'
   | 'open-quest'
   | 'open-training'
+  | 'open-modules'
   | 'open-progress'
   | 'ask'
   | 'later'
@@ -178,6 +182,8 @@ const ACT = {
   goals: (label = 'View goal'): EliAction => ({ id: 'open-goals', label }),
   quest: (label = 'Do quest'): EliAction => ({ id: 'open-quest', label }),
   training: (label = 'Open training'): EliAction => ({ id: 'open-training', label }),
+  modules: (label = 'Open mind training'): EliAction => ({ id: 'open-modules', label }),
+  ask: (label = 'Talk it through'): EliAction => ({ id: 'ask', label }),
   progress: (label = 'View progress'): EliAction => ({ id: 'open-progress', label }),
 };
 
@@ -202,6 +208,20 @@ function parseHm(hm?: string): number | null {
   const [h, m] = hm.split(':').map(Number);
   if (!Number.isFinite(h)) return null;
   return h * 60 + (Number.isFinite(m) ? m : 0);
+}
+
+/** The ISO date `n` days before `iso`. */
+function daysBefore(iso: string, n: number): string {
+  const d = new Date(`${iso}T00:00:00`);
+  d.setDate(d.getDate() - n);
+  return isoOf(d);
+}
+
+/** "14 Sep" — short, and the same wherever the app runs. */
+function shortDate(iso: string): string {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const [, m, d] = iso.split('-').map(Number);
+  return `${d} ${months[(m || 1) - 1] ?? ''}`.trim();
 }
 
 function daysBetween(fromISO: string, toISO: string): number {
@@ -250,11 +270,11 @@ export function buildSuggestions(ctx: EliContext): EliSuggestion[] {
       kind: 'overdue-priority',
       message:
         late === 1
-          ? `"${worst.title}" was due yesterday and is still open.`
-          : `"${worst.title}" was due ${late} days ago and is still open.`,
+          ? `"${worst.title}" was due yesterday and is still open. What is holding it up?`
+          : `"${worst.title}" was due ${late} days ago and is still open. What is holding it up?`,
       tone: 'warn',
       score: 95,
-      actions: [ACT.focus(worst.id), ACT.openTasks('Open task', worst.id)],
+      actions: [ACT.focus(worst.id), ACT.ask()],
       snoozeMinutes: 180,
     });
   } else if (overdue.length > 0) {
@@ -264,8 +284,8 @@ export function buildSuggestions(ctx: EliContext): EliSuggestion[] {
       kind: 'overdue-priority',
       message:
         overdue.length === 1
-          ? `"${worst.title}" is past its date.`
-          : `${plural(overdue.length, 'task')} are past their date, the oldest being "${worst.title}".`,
+          ? `"${worst.title}" is past its date. Still worth doing, or time to reschedule it?`
+          : `${plural(overdue.length, 'task')} are past their date, the oldest being "${worst.title}". Reschedule or knock one out?`,
       tone: 'warn',
       score: 70,
       actions: [ACT.openTasks('Open tasks', worst.id), ACT.focus(worst.id)],
@@ -362,6 +382,72 @@ export function buildSuggestions(ctx: EliContext): EliSuggestion[] {
     }
   }
 
+  // Habits that keep being skipped. Counted only over days the habit was
+  // actually due and actually existed, so a habit made on Friday is never
+  // judged on Monday-to-Thursday.
+  const logs = ctx.habitLogs || [];
+  let slipping: { habit: Habit; due: number; done: number } | null = null;
+  let missedYesterday: Habit | null = null;
+  const yesterday = daysBefore(today, 1);
+
+  for (const habit of activeHabits) {
+    // A weekly quota is open every day by design, so an unticked day is not a
+    // miss and a quiet week-so-far is not a slip.
+    if (habit.cadence === 'weekly') continue;
+    const born = (habit.createdAt || '').slice(0, 10);
+    let due = 0;
+    let done = 0;
+    for (let i = 1; i <= 7; i++) {
+      const day = daysBefore(today, i);
+      if (born && day < born) break;
+      if (!isScheduledOn(habit, day)) continue;
+      due++;
+      if (isCompleteOn(habit, logs, day)) done++;
+    }
+    if (due >= 4 && done / due <= 0.34) {
+      const worse = !slipping || done / due < slipping.done / slipping.due ||
+        (done / due === slipping.done / slipping.due && due > slipping.due);
+      if (worse) slipping = { habit, due, done };
+    }
+
+    if (
+      !missedYesterday &&
+      (!born || born <= yesterday) &&
+      isScheduledOn(habit, yesterday) &&
+      !isCompleteOn(habit, logs, yesterday) &&
+      isScheduledOn(habit, today) &&
+      !isCompleteOn(habit, logs, today)
+    ) {
+      missedYesterday = habit;
+    }
+  }
+
+  if (slipping) {
+    const { habit, due, done } = slipping;
+    out.push({
+      id: `habit-slipping:${habit.id}:${today}`,
+      kind: 'habit-slipping',
+      message:
+        done === 0
+          ? `"${habit.title}" was due ${plural(due, 'time')} this past week and wasn't done once. What's getting in the way?`
+          : `"${habit.title}" was done ${done} of the last ${due} times it was due. What's getting in the way?`,
+      tone: 'warn',
+      score: 74,
+      actions: [ACT.habits('Check in'), ACT.ask()],
+      snoozeMinutes: 720,
+    });
+  } else if (missedYesterday) {
+    out.push({
+      id: `habit-missed:${missedYesterday.id}:${today}`,
+      kind: 'habit-missed',
+      message: `You missed "${missedYesterday.title}" yesterday. Did something come up? Today is still open.`,
+      tone: 'nudge',
+      score: 58,
+      actions: [ACT.habits('Check in'), ACT.ask()],
+      snoozeMinutes: 360,
+    });
+  }
+
   /* ---- routine ---- */
 
   const dayBlocks = blocksForDate(ctx.routineBlocks || [], ctx.routineLogs || [], today);
@@ -430,6 +516,75 @@ export function buildSuggestions(ctx: EliContext): EliSuggestion[] {
     }
   }
 
+  // Body training that has gone quiet. Only said to someone who has trained
+  // before — an empty list could equally mean the history has not loaded, and
+  // ELI does not claim what it cannot see.
+  const lastWorkout = workouts
+    .map((w) => w.date)
+    .filter(Boolean)
+    .sort()
+    .pop();
+  if (lastWorkout && lastWorkout < today) {
+    const gap = daysBetween(lastWorkout, today);
+    if (gap >= 4) {
+      out.push({
+        id: `training-idle:${lastWorkout}`,
+        kind: 'training-idle',
+        message: `No body training since ${shortDate(lastWorkout)}, ${plural(
+          gap,
+          'day'
+        )} ago. What's stopping you from a quick set today?`,
+        tone: 'nudge',
+        score: 48,
+        actions: [ACT.training('Start training'), ACT.ask()],
+        snoozeMinutes: 720,
+      });
+    }
+  }
+
+  /* ---- mind training ---- */
+
+  const moduleStates = Object.values(
+    (ctx.profile?.modules || {}) as Record<string, { history?: { date?: string }[]; totalSessions?: number }>
+  ).filter((m) => m && typeof m === 'object');
+  const moduleDates = moduleStates
+    .flatMap((m) => (Array.isArray(m.history) ? m.history : []))
+    .map((h) => (typeof h?.date === 'string' ? h.date : ''))
+    .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d));
+  const lastModule = [...moduleDates].sort().pop();
+
+  if (lastModule && lastModule < today) {
+    const gap = daysBetween(lastModule, today);
+    if (gap >= 3) {
+      out.push({
+        id: `modules-idle:${lastModule}`,
+        kind: 'modules-idle',
+        message: `No mind training for ${plural(gap, 'day')}. Want to do one module today?`,
+        tone: 'nudge',
+        score: 44,
+        actions: [ACT.modules(), ACT.ask()],
+        snoozeMinutes: 720,
+      });
+    }
+  } else if (
+    !lastModule &&
+    moduleStates.length > 0 &&
+    moduleStates.every((m) => !m.totalSessions) &&
+    tasks.length + activeHabits.length > 0
+  ) {
+    // The profile is the record of module sessions, so an account that is in
+    // use with every counter at zero has truly never tried one.
+    out.push({
+      id: 'modules-idle:never',
+      kind: 'modules-idle',
+      message: "You haven't tried a mind training module yet. Want to start with one?",
+      tone: 'nudge',
+      score: 26,
+      actions: [ACT.modules('Try one')],
+      snoozeMinutes: 2880,
+    });
+  }
+
   /* ---- focus ---- */
 
   const focusToday = (ctx.focusSessions || []).filter(
@@ -473,23 +628,6 @@ export function buildSuggestions(ctx: EliContext): EliSuggestion[] {
       snoozeMinutes: 480,
     });
     break;
-  }
-
-  // A goal with nothing attached to it is a wish, not a plan — but this is
-  // only worth raising when there is other work to compare it against.
-  if (out.length === 0 && activeGoals.length > 0 && open.length > 0) {
-    const orphan = activeGoals.find((g) => !open.some((t) => t.goalId === g.id));
-    if (orphan) {
-      out.push({
-        id: `goal-untouched:${orphan.id}`,
-        kind: 'goal-untouched',
-        message: `"${orphan.title}" has no open tasks attached to it.`,
-        tone: 'nudge',
-        score: 30,
-        actions: [ACT.goals(), ACT.openTasks('Add a task')],
-        snoozeMinutes: 1440,
-      });
-    }
   }
 
   /* ---- daily quest ---- */
@@ -541,6 +679,7 @@ export function buildSuggestions(ctx: EliContext): EliSuggestion[] {
     ...(ctx.focusSessions || []).map((s) => (s.endedAt || '').slice(0, 10)),
     ...(ctx.habitLogs || []).map((l) => l.date),
     ...workouts.map((w) => w.date),
+    ...moduleDates,
   ]
     .filter(Boolean)
     .sort()

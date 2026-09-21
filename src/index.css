@@ -2750,3 +2750,149 @@ button > span,
   .habit-ring:active { transform: none; }
   .habit-ring[data-done='true'] .habit-ring-core { animation: none; }
 }
+
+
+/* ==================================================================
+   Home — header and panels
+
+   The panels now list everything, so each row is tightened to make a
+   longer list read as a list rather than a wall. 32px per row keeps a
+   thumb-sized target while fitting six habits where five used to sit.
+   ================================================================== */
+
+.today-date {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 12.5px;
+  letter-spacing: 0.02em;
+  color: var(--ink-dim);
+}
+
+/* What is left, as one line under the greeting. */
+.today-left {
+  margin-top: 12px;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 14.5px;
+  line-height: 1.45;
+  color: var(--ink-muted);
+}
+
+.today-left-count {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.today-left-parts {
+  color: var(--ink-dim);
+}
+
+.today-left[data-tone='clear'] {
+  color: var(--done);
+  font-weight: 600;
+}
+
+/* ---- panels ---- */
+
+.panel-sm .panel-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  color: var(--ink-muted);
+}
+
+/* The count is the way into the full list, so it looks pressable. */
+.panel-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+  padding: 3px 4px 3px 9px;
+  border-radius: 999px;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-muted);
+  background: var(--surface-sunk);
+  border: none;
+  transition: color 140ms ease;
+}
+
+.panel-count:hover {
+  color: var(--ink);
+}
+
+.panel-sm .panel-row {
+  gap: 10px;
+  padding: 6px 0;
+  min-height: 32px;
+}
+
+.panel-sm .row-label {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 1.3;
+  color: var(--ink);
+}
+
+.panel-sm .row-done .row-label {
+  color: var(--ink-dim);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+
+/* The tick: a generous tap target around a small mark, so compact rows do
+   not mean fiddly taps. */
+.panel-tick {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  margin: -4px -4px -4px -6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.panel-tick-mark {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 2px solid var(--rule-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+/* Green on Home, as it was — a check-in reads as done in the colour people
+   already associate with done. */
+.panel-tick-mark[data-state='done'] {
+  background: var(--done);
+  border-color: var(--done);
+  color: #062a24;
+  animation: eb-pop 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.panel-tick:hover .panel-tick-mark[data-state='open'] {
+  border-color: var(--ink-dim);
+}
+
+.panel-tag {
+  flex: none;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 11px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel-tick-mark[data-state='done'] { animation: none; }
+}

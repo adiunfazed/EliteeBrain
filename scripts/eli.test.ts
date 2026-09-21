@@ -178,13 +178,13 @@ check(
 check(
   'and it says how late it is, from the date itself',
   message(ctx({ tasks: [task('Physics DPP', { dueDate: YESTERDAY, priority: 'high' })] })),
-  '"Physics DPP" was due yesterday and is still open.'
+  '"Physics DPP" was due yesterday and is still open. What is holding it up?'
 );
 
 check(
   'several days late is counted, not rounded to "a while"',
   message(ctx({ tasks: [task('Chem revision', { dueDate: '2026-09-14', priority: 'critical' })] })),
-  '"Chem revision" was due 4 days ago and is still open.'
+  '"Chem revision" was due 4 days ago and is still open. What is holding it up?'
 );
 
 check(
@@ -564,6 +564,138 @@ ok(
   'a corrupt due date is not turned into a day count',
   !kinds(ctx({ tasks: [task('a', { dueDate: 'not-a-date' })] })).some((k) =>
     k.startsWith('overdue')
+  )
+);
+
+
+console.log('\n--- habits that keep slipping ---');
+
+const hb = (id: string, over: any = {}) => ({
+  id,
+  title: id,
+  cadence: 'daily',
+  metric: 'yes_no',
+  targetValue: 1,
+  status: 'active',
+  createdAt: '2026-08-01T00:00:00.000Z',
+  updatedAt: '2026-08-01T00:00:00.000Z',
+  ...over,
+});
+const hlog = (habitId: string, date: string) => ({ id: `${date}__${habitId}`, habitId, date, value: 1, updatedAt: '' });
+const pastDays = (n: number) => Array.from({ length: n }, (_, i) => {
+  const d = new Date(2026, 8, 18 - (i + 1));
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+});
+
+{
+  const c = ctx({ habits: [hb('Meditate')] as any, habitLogs: [hlog('Meditate', pastDays(7)[2])] as any });
+  const s = buildSuggestions(c).find((x) => x.kind === 'habit-slipping');
+  ok('a daily habit done once in seven days is flagged', !!s);
+  check(
+    'with the real count, and a question',
+    s?.message,
+    '"Meditate" was done 1 of the last 7 times it was due. What\'s getting in the way?'
+  );
+  ok('and it offers to talk it through', !!s?.actions.some((a) => a.id === 'ask'));
+}
+
+check(
+  'never done at all is said plainly',
+  buildSuggestions(ctx({ habits: [hb('Stretch')] as any })).find((x) => x.kind === 'habit-slipping')?.message,
+  '"Stretch" was due 7 times this past week and wasn\'t done once. What\'s getting in the way?'
+);
+
+ok(
+  'a habit done most days is left alone',
+  !kinds(ctx({ habits: [hb('Read')] as any, habitLogs: pastDays(6).map((d) => hlog('Read', d)) as any })).includes('habit-slipping')
+);
+
+ok(
+  'a habit made two days ago is not judged on days before it existed',
+  !kinds(ctx({ habits: [hb('New', { createdAt: '2026-09-16T08:00:00.000Z' })] as any })).includes('habit-slipping')
+);
+
+ok(
+  'an archived habit is never flagged',
+  !kinds(ctx({ habits: [hb('Old', { status: 'archived' })] as any })).some((k) => k.startsWith('habit'))
+);
+
+{
+  // Done every day but yesterday: not slipping, but yesterday was missed.
+  const days = pastDays(7).filter((d) => d !== YESTERDAY);
+  const c = ctx({ habits: [hb('Walk')] as any, habitLogs: days.map((d) => hlog('Walk', d)) as any });
+  check('a single missed day is asked about', kinds(c).includes('habit-missed'), true);
+  check(
+    'by name',
+    buildSuggestions(c).find((x) => x.kind === 'habit-missed')?.message,
+    'You missed "Walk" yesterday. Did something come up? Today is still open.'
+  );
+  const doneToday = ctx({ habits: [hb('Walk')] as any, habitLogs: [...days, TODAY].map((d) => hlog('Walk', d)) as any });
+  ok('but not once today is already done', !kinds(doneToday).includes('habit-missed'));
+}
+
+ok(
+  'a twice-a-week habit met twice is neither slipping nor missed',
+  !kinds(ctx({ habits: [hb('Run', { cadence: 'weekly', timesPerWeek: 2 })] as any, habitLogs: [hlog('Run', pastDays(7)[1]), hlog('Run', pastDays(7)[4])] as any })).some((k) => k === 'habit-slipping' || k === 'habit-missed')
+);
+
+console.log('\n--- training that has gone quiet ---');
+
+const wk = (date: string) => ({ id: `w-${date}`, date, results: {}, completed: {} });
+
+{
+  const c = ctx({ workouts: [wk('2026-09-10'), wk('2026-09-12')] as any });
+  const s = buildSuggestions(c).find((x) => x.kind === 'training-idle');
+  check(
+    'six days since the last session is said with the real date',
+    s?.message,
+    "No body training since 12 Sep, 6 days ago. What's stopping you from a quick set today?"
+  );
+  check('and opens body training', s?.actions[0].id, 'open-training');
+}
+
+ok('a session two days ago is not nagged about', !kinds(ctx({ workouts: [wk('2026-09-16')] as any })).includes('training-idle'));
+ok('no history at all makes no claim', !kinds(ctx({ workouts: [] })).includes('training-idle'));
+
+console.log('\n--- mind training ---');
+
+const mods = (dates: string[], sessions = dates.length) => ({
+  modules: {
+    memory: { level: 1, xp: 0, bestScore: 0, totalSessions: sessions, completedToday: false, history: dates.map((date) => ({ date, timestamp: 0, score: 1, accuracy: 1, level: 1 })) },
+    focus: { level: 1, xp: 0, bestScore: 0, totalSessions: 0, completedToday: false, history: [] },
+  },
+});
+
+{
+  const s = buildSuggestions(ctx({ profile: mods(['2026-09-01', '2026-09-13']) as any })).find((x) => x.kind === 'modules-idle');
+  check('five days without a module is counted from the last one', s?.message, 'No mind training for 5 days. Want to do one module today?');
+  check('and opens the modules tab', s?.actions[0].id, 'open-modules');
+}
+
+ok('a module yesterday is not nagged about', !kinds(ctx({ profile: mods([YESTERDAY]) as any })).includes('modules-idle'));
+
+check(
+  'an account in use that has never tried a module is invited once',
+  buildSuggestions(ctx({ tasks: [task('a')], profile: mods([], 0) as any })).find((x) => x.kind === 'modules-idle')?.id,
+  'modules-idle:never'
+);
+
+ok(
+  'no profile means no claim either way',
+  !kinds(ctx({ tasks: [task('a')], profile: null })).includes('modules-idle')
+);
+
+ok(
+  'malformed history dates are ignored rather than parsed',
+  !kinds(ctx({ profile: { modules: { memory: { totalSessions: 3, history: [{ date: 'yesterday' }, null] } } } as any })).includes('modules-idle')
+);
+
+console.log('\n--- goal nagging is gone ---');
+
+ok(
+  'a goal with no linked tasks is not raised',
+  !buildSuggestions(ctx({ goals: [{ id: 'g', title: 'Fit', status: 'active' }] as any, tasks: [task('a')] })).some((s) =>
+    /no open tasks attached|link/i.test(s.message)
   )
 );
 
