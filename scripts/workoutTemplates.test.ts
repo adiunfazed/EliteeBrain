@@ -11,6 +11,7 @@
 
 import {
   TEMPLATE_LIMITS,
+  catalogueExercises,
   clampWeight,
   normaliseSet,
   cleanName,
@@ -401,6 +402,37 @@ console.log('\n--- the exercises you have invented ---');
 
 check('no templates means no custom exercises', customExercisesFrom([]), []);
 check('and a broken template does not break the list', customExercisesFrom([null as any]), []);
+
+
+console.log('\n--- the gym catalogue ---');
+
+{
+  const catalogue = catalogueExercises();
+  ok('there are plenty to pick from', catalogue.length >= 40);
+  ok('every one has a name', catalogue.every((e) => e.name.trim().length > 0));
+  ok('every one is a custom exercise, id and all', catalogue.every((e) => isCustomExercise(e.id)));
+  ok('none of them claims the camera can count it', catalogue.every((e) => !e.tracked));
+  ok(
+    'each has a rest worth having',
+    catalogue.every((e) => e.restSeconds >= 30 && e.restSeconds <= 300)
+  );
+
+  const ids = catalogue.map((e) => e.id);
+  check('no two entries share an id', new Set(ids).size, ids.length);
+
+  const bench = catalogue.find((e) => e.name === 'Bench press')!;
+  check(
+    'picking a lift and typing its name are the same exercise',
+    bench.id,
+    customExerciseId('bench press')
+  );
+
+  check(
+    'a carry is timed rather than counted in reps',
+    catalogue.find((e) => e.name === 'Farmer carry')?.metric,
+    'hold'
+  );
+}
 
 console.log('\n--- the starter workout ---');
 

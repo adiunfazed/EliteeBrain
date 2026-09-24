@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   ArrowDown,
   ArrowUp,
-  Camera,
+  Copy,
   Dumbbell,
   Plus,
   Timer,
@@ -37,10 +37,10 @@ interface Props {
   records?: RecordViews;
   onSave: (template: WorkoutTemplate) => void;
   onDelete?: (templateId: string) => void;
+  /** Saves a copy under a new id, leaving the original untouched. */
+  onDuplicate?: (template: WorkoutTemplate) => void;
   onCancel: () => void;
 }
-
-const TRACKED = new Set(['pushups', 'squats', 'lunges', 'glute-bridge', 'calf-raises']);
 
 /**
  * Building a workout.
@@ -64,6 +64,7 @@ export const TemplateBuilder: React.FC<Props> = ({
   records = {},
   onSave,
   onDelete,
+  onDuplicate,
   onCancel,
 }) => {
   const [name, setName] = useState(template?.name || '');
@@ -210,12 +211,7 @@ export const TemplateBuilder: React.FC<Props> = ({
                   <span className="min-w-0 flex-1">
                     <span className="block text-[15.5px] font-bold truncate">{item.name}</span>
                     <span className="t-meta mt-0.5 flex items-center gap-2 flex-wrap dot-meta">
-                      {TRACKED.has(item.exerciseId) ? (
-                        <span className="inline-flex items-center gap-1">
-                          <Camera className="w-3 h-3 shrink-0" />
-                          camera counts it
-                        </span>
-                      ) : item.metric === 'hold' ? (
+                      {item.metric === 'hold' ? (
                         <span className="inline-flex items-center gap-1">
                           <Timer className="w-3 h-3 shrink-0" />
                           timed hold
@@ -343,7 +339,13 @@ export const TemplateBuilder: React.FC<Props> = ({
         </button>
       </div>
 
-      {editing && onDelete && (
+      <p className="t-meta text-center">
+        {editing
+          ? 'Saved to your account and synced to every device you sign in on.'
+          : 'Saved to your account, ready to run whenever you are.'}
+      </p>
+
+      {editing && (onDelete || onDuplicate) && (
         <div className="pt-1">
           {confirmDelete ? (
             <div className="panel-sm">
@@ -365,11 +367,34 @@ export const TemplateBuilder: React.FC<Props> = ({
               </div>
             </div>
           ) : (
-            <div className="flex justify-center">
-              <button onClick={() => setConfirmDelete(true)} className="btn-text eb-danger">
-                <Trash2 className="w-3.5 h-3.5 shrink-0" />
-                Delete this workout
-              </button>
+            <div className="flex items-center justify-center gap-4">
+              {onDuplicate && (
+                <button
+                  onClick={() => {
+                    soundFx.playClick();
+                    // The copy is made from what is on screen, including
+                    // unsaved edits — duplicating a draft and keeping the
+                    // original is exactly why someone presses this.
+                    onDuplicate(
+                      normaliseTemplate({
+                        name: `${cleanName(name) || 'Workout'} copy`,
+                        items,
+                      })
+                    );
+                  }}
+                  className="btn-text"
+                >
+                  <Copy className="w-3.5 h-3.5 shrink-0" />
+                  Duplicate
+                </button>
+              )}
+
+              {onDelete && (
+                <button onClick={() => setConfirmDelete(true)} className="btn-text eb-danger">
+                  <Trash2 className="w-3.5 h-3.5 shrink-0" />
+                  Delete
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -379,7 +404,10 @@ export const TemplateBuilder: React.FC<Props> = ({
         open={picking}
         known={known}
         records={records}
-        chosen={items.map((i) => i.exerciseId)}
+        counts={items.reduce<Record<string, number>>((map, i) => {
+          map[i.exerciseId] = (map[i.exerciseId] || 0) + 1;
+          return map;
+        }, {})}
         onPick={add}
         onClose={() => setPicking(false)}
       />

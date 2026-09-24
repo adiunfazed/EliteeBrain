@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Dumbbell, Flame, History, Trophy, Zap } from 'lucide-react';
 import { ExerciseLibrary } from './ExerciseLibrary';
-import { ExerciseRunner, SetResult } from './ExerciseRunner';
+import { SessionScreen, SetResult } from './SessionScreen';
 import { WorkoutConfig, WorkoutConfigValue } from './WorkoutConfig';
 import { WorkoutHistory } from './WorkoutHistory';
 import { WorkoutList } from './WorkoutList';
@@ -72,9 +72,6 @@ interface Run {
   templateId?: string;
   templateName?: string;
   items: TemplateItem[];
-  index: number;
-  /** Sets finished, per item, in the order they were done. */
-  done: SetResult[][];
   startedAt: string;
 }
 
@@ -263,52 +260,38 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId, profile, onUpgrad
       templateId: meta.id,
       templateName: meta.name,
       items: rows,
-      index: 0,
-      done: rows.map(() => []),
       startedAt: new Date().toISOString(),
     });
     setView('running');
   };
 
   /**
-   * One exercise in the session finished, or was skipped.
+   * The session is over.
    *
    * Written against the live `run` rather than inside a state updater: saving
    * a workout is a side effect, and an updater can be invoked more than once
    * for the same change, which would file the same session twice.
    */
-  const handleExerciseDone = (results: SetResult[]) => {
-    if (!run) return;
-
-    const done = run.done.map((rows, i) => (i === run.index ? results : rows));
-    const nextIndex = run.index + 1;
-
-    if (nextIndex < run.items.length) {
-      setRun({ ...run, index: nextIndex, done });
-      return;
-    }
-
-    setRun(null);
-    finishSession({ ...run, done });
-  };
-
-  /** The whole session ended early. Everything already finished is kept. */
-  const handleAbort = () => {
+  const handleFinish = (done: SetResult[][]) => {
     if (!run) {
       setView('home');
       return;
     }
-
-    const anything = run.done.some((rows) => rows.length > 0);
+    const state = run;
     setRun(null);
-    if (anything) finishSession(run);
-    else setView('home');
+    finishSession(state, done);
   };
 
-  const finishSession = async (state: Run) => {
+  /** Nothing was logged, so there is nothing to file. */
+  const handleAbort = () => {
+    setRun(null);
+    setView('home');
+  };
+
+  const finishSession = async (state: Run, done: SetResult[][]) => {
     const lines: SummaryLine[] = state.items.map((item, i) => {
-      const sets = (state.done[i] || []).map((r) => ({ weight: r.weight, reps: r.value }));
-      const completedSets = (state.done[i] || []).filter((r) => r.value >= r.target).length;
+      const sets = (done[i] || []).map((r) => ({ weight: r.weight, reps: r.value }));
+      const completedSets = (done[i] || []).filter((r) => r.value >= r.target).length;
 
       // A record is claimed only where one of the two bests was actually
       // beaten, judged by the same rule the live celebration used.
@@ -448,6 +431,19 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId, profile, onUpgrad
     }
   };
 
+  /** Save a copy, leaving the original as it was. */
+  const handleDuplicateTemplate = async (copy: WorkoutTemplate) => {
+    setView('home');
+    setEditingTemplate(null);
+    try {
+      await saveTemplate(userId, copy);
+      setSaveError(null);
+    } catch (err) {
+      console.error('Could not copy the workout:', err);
+      setSaveError('Copy saved on this device. It will sync when you reconnect.');
+    }
+  };
+
   const handleDeleteTemplate = async (templateId: string) => {
     setView('home');
     setEditingTemplate(null);
@@ -461,9 +457,6 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId, profile, onUpgrad
   };
 
   /* ---------------- render ---------------- */
-
-  const runItem = run ? run.items[run.index] : null;
-  const nextName = run && run.index + 1 < run.items.length ? run.items[run.index + 1].name : null;
 
   return (
     <div className="space-y-4">
@@ -590,6 +583,7 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId, profile, onUpgrad
           records={records}
           onSave={handleSaveTemplate}
           onDelete={handleDeleteTemplate}
+          onDuplicate={handleDuplicateTemplate}
           onCancel={() => {
             setEditingTemplate(null);
             setView('home');
@@ -643,24 +637,25 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId, profile, onUpgrad
         />
       )}
 
-      {view === 'running' && run && runItem && (
-        <ExerciseRunner
-          // Keyed by position so every exercise starts the runner cleanly,
-          // rather than inheriting the previous exercise's set count.
-          key={`${run.startedAt}:${run.index}`}
-          item={runItem}
-          position={{ index: run.index, total: run.items.length }}
-          nextName={nextName}
-          best={recordViews(recordsAtStart.current)[runItem.exerciseId] || EMPTY_VIEW}
-          isRecord={(set) =>
-            !!judgeSet(recordsAtStart.current, runItem.exerciseId, set, {
-              name: runItem.name,
-              metric: runItem.metric,
-            })
-          }
+      {view === 'running' && run && (
+        <SessionScreen
+          key={run.startedAt}
+          title={run.templateName || run.items[0]?.name || 'Workout'}
+          items={run.items}
+          // Camera counting belongs to a single exercise started from Quick
+          // start. A custom workout is typed in, set by set.
+          allowCamera={!run.templateId}
+          records={recordViews(recordsAtStart.current)}
+          isRecord={(exerciseId, set) => {
+            const item = run.items.find((i) => i.exerciseId === exerciseId);
+            return !!judgeSet(recordsAtStart.current, exerciseId, set, {
+              name: item?.name,
+              metric: item?.metric,
+            });
+          }}
+          onSetComplete={handleSetComplete}
+          onFinish={handleFinish}
           onAbort={handleAbort}
-          onSetComplete={(result) => handleSetComplete(runItem, result)}
-          onComplete={handleExerciseDone}
         />
       )}
 

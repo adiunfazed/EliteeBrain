@@ -400,6 +400,93 @@ export interface KnownExercise {
 
 const TRACKED = new Set(['pushups', 'squats', 'lunges', 'glute-bridge', 'calf-raises']);
 
+/**
+ * The gym catalogue.
+ *
+ * Common lifts, so building a push day does not mean typing "Bench press"
+ * from scratch every time. They are ordinary custom exercises — the ids come
+ * from the same name-derived rule — so a lift picked from this list and the
+ * same lift typed by hand are one exercise with one personal best, and
+ * nothing here is treated as camera-countable.
+ *
+ * Deliberately not exhaustive. It covers what most people actually put in a
+ * session; anything missing is one typed name away.
+ */
+const CATALOGUE: { name: string; metric?: ExerciseMetric; rest?: number }[] = [
+  // Chest
+  { name: 'Bench press', rest: 120 },
+  { name: 'Incline bench press', rest: 120 },
+  { name: 'Dumbbell press', rest: 90 },
+  { name: 'Dumbbell fly', rest: 60 },
+  { name: 'Cable crossover', rest: 60 },
+  { name: 'Chest dip', rest: 90 },
+  // Back
+  { name: 'Deadlift', rest: 180 },
+  { name: 'Barbell row', rest: 120 },
+  { name: 'Dumbbell row', rest: 90 },
+  { name: 'Lat pulldown', rest: 90 },
+  { name: 'Seated cable row', rest: 90 },
+  { name: 'Pull-up', rest: 120 },
+  { name: 'Chin-up', rest: 120 },
+  { name: 'Face pull', rest: 60 },
+  { name: 'Shrug', rest: 60 },
+  // Legs
+  { name: 'Back squat', rest: 180 },
+  { name: 'Front squat', rest: 150 },
+  { name: 'Romanian deadlift', rest: 120 },
+  { name: 'Leg press', rest: 120 },
+  { name: 'Leg extension', rest: 60 },
+  { name: 'Leg curl', rest: 60 },
+  { name: 'Hip thrust', rest: 90 },
+  { name: 'Bulgarian split squat', rest: 90 },
+  { name: 'Standing calf raise', rest: 45 },
+  // Shoulders and arms
+  { name: 'Overhead press', rest: 120 },
+  { name: 'Arnold press', rest: 90 },
+  { name: 'Lateral raise', rest: 45 },
+  { name: 'Rear delt fly', rest: 45 },
+  { name: 'Barbell curl', rest: 60 },
+  { name: 'Dumbbell curl', rest: 60 },
+  { name: 'Hammer curl', rest: 60 },
+  { name: 'Preacher curl', rest: 60 },
+  { name: 'Triceps pushdown', rest: 60 },
+  { name: 'Skull crusher', rest: 60 },
+  { name: 'Close-grip bench press', rest: 90 },
+  { name: 'Triceps dip', rest: 90 },
+  // Core and carries
+  { name: 'Hanging leg raise', rest: 60 },
+  { name: 'Cable crunch', rest: 45 },
+  { name: 'Russian twist', rest: 45 },
+  { name: 'Ab wheel rollout', rest: 60 },
+  { name: 'Side plank', metric: 'hold', rest: 45 },
+  { name: 'Farmer carry', metric: 'hold', rest: 90 },
+  { name: 'Dead hang', metric: 'hold', rest: 60 },
+  // Conditioning
+  { name: 'Burpee', rest: 60 },
+  { name: 'Mountain climber', rest: 45 },
+  { name: 'Jump rope', metric: 'hold', rest: 60 },
+  { name: 'Kettlebell swing', rest: 60 },
+  { name: 'Box jump', rest: 90 },
+  { name: 'Battle ropes', metric: 'hold', rest: 60 },
+];
+
+/**
+ * Common lifts, ready to add.
+ *
+ * Built once per call from the same id rule as a typed name, so picking
+ * "Bench press" here and typing it by hand are indistinguishable afterwards.
+ */
+export function catalogueExercises(): KnownExercise[] {
+  return CATALOGUE.map((row) => ({
+    id: customExerciseId(row.name),
+    name: row.name,
+    metric: row.metric || 'reps',
+    custom: true,
+    restSeconds: row.rest ?? 60,
+    tracked: false,
+  }));
+}
+
 export function presetExercises(): KnownExercise[] {
   return EXERCISES.map((e) => ({
     id: e.id,

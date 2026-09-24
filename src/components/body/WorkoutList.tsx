@@ -1,11 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { Pencil, Play, Plus, Repeat } from 'lucide-react';
-import {
-  WorkoutTemplate,
-  itemLine,
-  summariseTemplate,
-} from '../../lib/workoutTemplates';
+import { WorkoutTemplate, summariseTemplate } from '../../lib/workoutTemplates';
 import { soundFx } from '../../utils/audio';
 
 interface Props {
@@ -58,9 +54,12 @@ export const WorkoutList: React.FC<Props> = ({ templates, onStart, onEdit, onCre
     <div className="space-y-2">
       {templates.map((template, index) => {
         const summary = summariseTemplate(template.items);
+        // The exercises, not the arithmetic: "Bench press · Overhead press"
+        // is how anyone recognises which workout this is. The numbers live
+        // on the line below.
         const shape = (template.items || [])
           .slice(0, 3)
-          .map(itemLine)
+          .map((item) => item.name)
           .join(' · ');
         const used = lastUsedLabel(template.lastUsedAt);
 
@@ -74,9 +73,11 @@ export const WorkoutList: React.FC<Props> = ({ templates, onStart, onEdit, onCre
           >
             <div className="min-w-0 flex-1">
               <p className="text-[15.5px] font-bold leading-snug truncate">{template.name}</p>
-              <p className="t-meta mt-1 truncate tabular-nums">
+              <p className="t-meta mt-1 truncate">
                 {shape}
-                {(template.items || []).length > 3 ? ' …' : ''}
+                {(template.items || []).length > 3
+                  ? ` +${(template.items || []).length - 3} more`
+                  : ''}
               </p>
               {/* Spacing rather than drawn dots: a wrapped line that starts
                   with a floating separator reads as a rendering fault. */}

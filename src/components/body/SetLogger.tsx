@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Check, Pause, Play, Plus, Timer, Trophy, X } from 'lucide-react';
+import { Check, Pause, Play, Plus, Trophy, X } from 'lucide-react';
+import { RestRing } from './RestRing';
 import { soundFx } from '../../utils/audio';
 
 /** One row of the log: what was loaded, what was done, and whether it counts. */
@@ -33,7 +34,7 @@ interface Props {
    */
   goals?: number[];
   /** Seconds left of rest, shown under the row it follows. */
-  rest?: { afterIndex: number; left: number } | null;
+  rest?: { afterIndex: number; left: number; total: number } | null;
   /** Whether the hold timer is running, for a timed exercise. */
   timerRunning?: boolean;
   onChange: (index: number, patch: Partial<LoggedSet>) => void;
@@ -42,6 +43,8 @@ interface Props {
   onAdd?: () => void;
   onRemove?: (index: number) => void;
   onSkipRest?: () => void;
+  /** Restart the rest at a chosen length, in seconds. */
+  onSetRest?: (seconds: number) => void;
   /** Row cap, so a stray finger cannot create forty sets. */
   max?: number;
 }
@@ -151,6 +154,7 @@ export const SetLogger: React.FC<Props> = ({
   onAdd,
   onRemove,
   onSkipRest,
+  onSetRest,
   max = 12,
 }) => {
   const isHold = metric === 'hold';
@@ -191,9 +195,6 @@ export const SetLogger: React.FC<Props> = ({
                 <Cell
                   value={row.weight}
                   suffix="kg"
-                  // An empty weight is bodyweight, which is a real answer for
-                  // a push-up — so the cell says so rather than showing a 0.
-                  placeholder="BW"
                   decimals
                   label={`Set ${index + 1} weight in kilograms`}
                   disabled={row.done}
@@ -273,14 +274,38 @@ export const SetLogger: React.FC<Props> = ({
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="log-rest"
+                  className="rest-panel"
                 >
-                  <Timer className="w-3.5 h-3.5 shrink-0" />
-                  <span className="tabular-nums">Rest {rest.left}s</span>
-                  <span className="flex-1" />
-                  <button onClick={onSkipRest} className="log-rest-skip">
-                    Skip
-                  </button>
+                  <div className="rest-panel-ring">
+                    <RestRing left={rest.left} total={rest.total} size={92} />
+                    <span className="eb-label mt-1.5">Rest</span>
+                  </div>
+
+                  <div className="rest-panel-side">
+                    {/* The three lengths people actually use, one tap each.
+                        Tapping one restarts the rest at that length rather
+                        than adding to it, so a mis-tap is corrected by
+                        tapping the right one. */}
+                    <div className="rest-presets" role="group" aria-label="Rest length">
+                      {[60, 90, 120].map((seconds) => (
+                        <button
+                          key={seconds}
+                          onClick={() => {
+                            soundFx.playClick();
+                            onSetRest?.(seconds);
+                          }}
+                          data-active={rest.total === seconds ? 'true' : 'false'}
+                          className="rest-preset"
+                        >
+                          {seconds}s
+                        </button>
+                      ))}
+                    </div>
+
+                    <button onClick={onSkipRest} className="rest-skip">
+                      Skip rest
+                    </button>
+                  </div>
                 </motion.div>
               )}
             </motion.div>
