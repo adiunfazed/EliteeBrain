@@ -10,6 +10,8 @@ import { db } from './firebase';
 import { Alarm, AlarmLog } from './wakeChallenge';
 import { WorkoutSession } from './bodyTraining';
 import type { PersonalRecord, RecordMap } from './personalRecords';
+import { mergeRecord, recordView } from './personalRecords';
+import { WorkoutTemplate, TEMPLATE_LIMITS, normaliseTemplate } from './workoutTemplates';
 
 /**
  * Persistence for body training and alarms.
@@ -23,6 +25,7 @@ const ALARMS_KEY = 'elitebrain_alarms_v1';
 const ALARM_LOGS_KEY = 'elitebrain_alarm_logs_v1';
 const WORKOUTS_KEY = 'elitebrain_workouts_v1';
 const RECORDS_KEY = 'elitebrain_records_v1';
+const TEMPLATES_KEY = 'elitebrain_workout_templates_v1';
 
 function readLocal<T>(key: string): T[] {
   if (typeof window === 'undefined') return [];
@@ -233,6 +236,116 @@ export async function saveWorkout(
   });
 }
 
+/* ---------------- custom workout templates ---------------- */
+
+/**
+ * A user's own workouts, synced to their account.
+ *
+ * Same local-first arrangement as workouts: the template is usable the moment
+ * it is saved, signed in or not, and Firestore reconciles behind it. A
+ * template is small and rarely written, but it is the thing the user actually
+ * built — losing one to a dropped connection would be the worst failure in
+ * this section, so nothing here depends on the network succeeding.
+ */
+export function localTemplates(): WorkoutTemplate[] {
+  return readLocal<WorkoutTemplate>(TEMPLATES_KEY);
+}
+
+/** Most recently updated first: the one you are working on stays on top. */
+function byRecent(rows: WorkoutTemplate[]): WorkoutTemplate[] {
+  return [...rows].sort((a, b) =>
+    (b.updatedAt || b.createdAt || '').localeCompare(a.updatedAt || a.createdAt || '')
+  );
+}
+
+const templateListeners = new Set<(rows: WorkoutTemplate[]) => void>();
+
+function publishTemplates(rows: WorkoutTemplate[]): void {
+  const sorted = byRecent(rows);
+  for (const fn of templateListeners) {
+    try {
+      fn(sorted);
+    } catch (err) {
+      console.error('Template listener failed:', err);
+    }
+  }
+}
+
+export function subscribeTemplates(
+  userId: string | null,
+  onChange: (rows: WorkoutTemplate[]) => void
+): () => void {
+  templateListeners.add(onChange);
+  onChange(byRecent(localTemplates()));
+
+  if (!userId || !db) {
+    return () => {
+      templateListeners.delete(onChange);
+    };
+  }
+
+  const stop = onSnapshot(
+    collection(db, 'users', userId, 'workoutTemplates'),
+    (snap) => {
+      const server = snap.docs.map((d) => d.data() as WorkoutTemplate).filter((t) => t?.id);
+      const serverIds = new Set(server.map((t) => t.id));
+
+      // A template saved locally that the server has not accepted yet is kept.
+      // Replacing outright would delete a workout the user just built the
+      // moment the first snapshot arrived.
+      //
+      // Deletions are the exception: an id the server has seen and dropped
+      // must not come back, so only rows the server never knew about survive.
+      const deleted = readLocal<string>(`${TEMPLATES_KEY}__deleted`);
+      const pending = localTemplates().filter(
+        (t) => !serverIds.has(t.id) && !deleted.includes(t.id)
+      );
+
+      const merged = byRecent([...server, ...pending]).slice(0, TEMPLATE_LIMITS.templates);
+      writeLocal(TEMPLATES_KEY, merged);
+      publishTemplates(merged);
+    },
+    (err) => console.error('Template subscription failed:', err?.message || err)
+  );
+
+  return () => {
+    templateListeners.delete(onChange);
+    stop();
+  };
+}
+
+export async function saveTemplate(
+  userId: string | null,
+  template: WorkoutTemplate
+): Promise<void> {
+  const clean = normaliseTemplate(template);
+  const next = byRecent([
+    clean,
+    ...localTemplates().filter((t) => t.id !== clean.id),
+  ]).slice(0, TEMPLATE_LIMITS.templates);
+
+  writeLocal(TEMPLATES_KEY, next);
+  publishTemplates(next);
+
+  if (!userId || !db) return;
+  await setDoc(doc(db, 'users', userId, 'workoutTemplates', clean.id), strip(clean), {
+    merge: true,
+  });
+}
+
+export async function removeTemplate(userId: string | null, templateId: string): Promise<void> {
+  writeLocal(TEMPLATES_KEY, localTemplates().filter((t) => t.id !== templateId));
+  // Remembered so a snapshot that predates the delete cannot resurrect it.
+  writeLocal(
+    `${TEMPLATES_KEY}__deleted`,
+    [templateId, ...readLocal<string>(`${TEMPLATES_KEY}__deleted`)].slice(0, 100)
+  );
+  publishTemplates(localTemplates());
+
+  if (!userId || !db) return;
+  await deleteDoc(doc(db, 'users', userId, 'workoutTemplates', templateId));
+}
+
 /* ---------------- personal records ---------------- */
 
 /**
@@ -277,11 +390,15 @@ function publishRecords(map: RecordMap): void {
   }
 }
 
-/** Keep whichever copy of a record is higher. */
+/**
+ * Keep the best of two copies of a record.
+ *
+ * Merged per dimension rather than picking one document whole: a device that
+ * has only ever seen the bodyweight best must not wipe out a weighted one,
+ * and the reverse.
+ */
 function higher(a?: PersonalRecord, b?: PersonalRecord): PersonalRecord | undefined {
-  if (!a) return b;
-  if (!b) return a;
-  return (Number(a.value) || 0) >= (Number(b.value) || 0) ? a : b;
+  return mergeRecord(a, b);
 }
 
 export function subscribeRecords(
@@ -340,14 +457,24 @@ export async function saveRecord(
   userId: string | null,
   record: PersonalRecord
 ): Promise<void> {
-  const value = Number(record?.value);
-  if (!record?.exerciseId || !Number.isFinite(value) || value <= 0) return;
+  if (!record?.exerciseId) return;
+
+  const incoming = recordView(record);
+  // Nothing worth storing: neither a bodyweight best nor a weighted one.
+  if (incoming.reps <= 0 && incoming.e1rm <= 0) return;
 
   const current = localRecords();
   const held = current[record.exerciseId];
-  if (held && (Number(held.value) || 0) >= value) return;
+  const merged = mergeRecord(held, record);
+  if (!merged) return;
 
-  const next = { ...current, [record.exerciseId]: { ...record, value: Math.floor(value) } };
+  // A write that improves nothing is dropped, so a stale write arriving late
+  // can never knock a record back down and cannot cause a pointless publish.
+  const before = recordView(held);
+  const after = recordView(merged);
+  if (held && after.reps <= before.reps && after.e1rm <= before.e1rm) return;
+
+  const next = { ...current, [record.exerciseId]: merged };
   writeRecords(next);
   publishRecords(next);
 

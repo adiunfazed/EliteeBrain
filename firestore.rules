@@ -111,6 +111,32 @@ service cloud.firestore {
       allow read, write: if isOwner(userId);
     }
 
+    // --- Custom workouts (users/{uid}/workoutTemplates/{templateId}) ---
+    //
+    // A named list of exercises with the user's own sets and reps. Strictly
+    // private, like the rest of the training data, and owned by the account
+    // in the path — never by an id sent in the body.
+    //
+    // The shape is checked rather than trusted: a document id that disagrees
+    // with the id inside it, a missing name, or an items list that is not a
+    // list would all break the reader on another device, and a list long
+    // enough to be an attack on the client is refused outright. The numbers
+    // inside each item are clamped by the app on read as well, because rules
+    // cannot iterate a list.
+    match /users/{userId}/workoutTemplates/{templateId} {
+      allow read: if isOwner(userId);
+
+      allow write: if isOwner(userId)
+                   && request.resource.data.get('id', '') == templateId
+                   && request.resource.data.get('name', '') is string
+                   && request.resource.data.get('name', '').size() > 0
+                   && request.resource.data.get('name', '').size() <= 60
+                   && request.resource.data.get('items', []) is list
+                   && request.resource.data.get('items', []).size() <= 24;
+
+      allow delete: if isOwner(userId);
+    }
+
     // --- Personal records (users/{uid}/records/{exerciseId}) ---
     //
     // One small document per exercise, holding the best single set. Written
@@ -124,11 +150,25 @@ service cloud.firestore {
     match /users/{userId}/records/{exerciseId} {
       allow read: if isOwner(userId);
 
+      // A record now has two dimensions: the best bodyweight set in reps
+      // (`value`) and the best weighted set, ranked by estimated one-rep max
+      // (`e1rm`, with the `weight` and reps that produced it). Either may be
+      // zero — a barbell lift has no bodyweight best and a bodyweight
+      // exercise has no load — so the shape check requires at least one of
+      // them to be real rather than requiring both.
       allow write: if isOwner(userId)
                    && request.resource.data.get('exerciseId', '') == exerciseId
                    && request.resource.data.get('value', 0) is number
-                   && request.resource.data.get('value', 0) > 0
-                   && request.resource.data.get('value', 0) <= 100000;
+                   && request.resource.data.get('value', 0) >= 0
+                   && request.resource.data.get('value', 0) <= 100000
+                   && request.resource.data.get('e1rm', 0) is number
+                   && request.resource.data.get('e1rm', 0) >= 0
+                   && request.resource.data.get('e1rm', 0) <= 100000
+                   && request.resource.data.get('weight', 0) is number
+                   && request.resource.data.get('weight', 0) >= 0
+                   && request.resource.data.get('weight', 0) <= 1000
+                   && (request.resource.data.get('value', 0) > 0
+                       || request.resource.data.get('e1rm', 0) > 0);
 
       allow delete: if isOwner(userId);
     }

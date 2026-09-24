@@ -5,11 +5,14 @@ import { Trophy } from 'lucide-react';
 export interface PrRecord {
   exerciseId: string;
   exerciseName: string;
-  /** Reps, or seconds for a hold. */
+  /** Reps, seconds for a hold, or kilograms for a loaded set. */
   value: number;
-  unit: 'reps' | 'seconds';
+  /** "reps", "seconds", or "kg × 8" for a weighted best. */
+  unit: string;
   /** What it beat. Absent when this is the first record for the exercise. */
   previous?: number;
+  /** The old best written out, e.g. "65 kg × 8". Preferred over `previous`. */
+  previousText?: string;
 }
 
 interface Props {
@@ -84,9 +87,12 @@ export const PrCelebration: React.FC<Props> = ({ record, onDismiss }) => {
               </span>
             </p>
 
-            {record.previous ? (
+            {record.previousText || record.previous ? (
               <p className="t-meta mt-3">
-                Beat your previous best of {record.previous} {record.unit}.
+                {/* The old best in its own words. Pairing the previous weight
+                    with this set's reps would describe a set nobody did. */}
+                Beat your previous best of{' '}
+                {record.previousText || `${record.previous} ${record.unit}`}.
               </p>
             ) : (
               <p className="t-meta mt-3">Your first record for this exercise.</p>

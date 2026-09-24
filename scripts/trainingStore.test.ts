@@ -19,8 +19,17 @@ const store = new Map<string, string>();
   clear: () => store.clear(),
 };
 
-import { saveRecord, subscribeRecords, localRecords } from '../src/lib/trainingStore';
-import { recordValues } from '../src/lib/personalRecords';
+import {
+  saveRecord,
+  subscribeRecords,
+  localRecords,
+  saveTemplate,
+  removeTemplate,
+  subscribeTemplates,
+  localTemplates,
+} from '../src/lib/trainingStore';
+import { recordValues, epley } from '../src/lib/personalRecords';
+import { itemFromCustom, normaliseTemplate } from '../src/lib/workoutTemplates';
 
 let failures = 0;
 
@@ -94,6 +103,94 @@ async function main() {
   check('a stopped listener hears nothing further', seen.length, before);
   check('but the record was still stored', recordValues(localRecords()).pushups, 40);
   stop2();
+
+  console.log('\n--- a weighted best and a bodyweight best live side by side ---');
+
+  await saveRecord(null, {
+    exerciseId: 'bench',
+    value: 0,
+    achievedAt: at,
+    weight: 60,
+    weightReps: 8,
+    e1rm: epley(60, 8),
+    weightAt: at,
+  });
+  check('a loaded set is stored as a weighted best', localRecords().bench?.weight, 60);
+  check('and leaves the bodyweight figure alone', localRecords().bench?.value, 0);
+
+  await saveRecord(null, { exerciseId: 'bench', value: 15, achievedAt: at });
+  check('a bodyweight set adds its own best', localRecords().bench?.value, 15);
+  check('without disturbing the loaded one', localRecords().bench?.weight, 60);
+
+  await saveRecord(null, {
+    exerciseId: 'bench',
+    value: 0,
+    achievedAt: at,
+    weight: 40,
+    weightReps: 8,
+    e1rm: epley(40, 8),
+    weightAt: at,
+  });
+  check('a lighter set cannot replace a heavier one', localRecords().bench?.weight, 60);
+
+  await saveRecord(null, {
+    exerciseId: 'bench',
+    value: 0,
+    achievedAt: at,
+    weight: 70,
+    weightReps: 6,
+    e1rm: epley(70, 6),
+    weightAt: at,
+  });
+  check('a genuinely better set does replace it', localRecords().bench?.weight, 70);
+  check('and the bodyweight best is still there', localRecords().bench?.value, 15);
+
+  console.log('\n--- a custom workout is usable the moment it is saved ---');
+
+  const templates: string[][] = [];
+  const stopT = subscribeTemplates(null, (rows) => templates.push(rows.map((t) => t.name)));
+
+  check('subscribing yields what is stored at once', templates, [[]]);
+
+  const push = normaliseTemplate({
+    id: 'tpl_push',
+    name: 'Push day',
+    items: [itemFromCustom('Bench press', 'reps', { sets: 4, target: 8 })],
+  });
+  await saveTemplate(null, push);
+
+  check('saving notifies the subscriber without a round trip', templates.length, 2);
+  check('with the workout in it', templates[1], ['Push day']);
+  check('and it is on the device', localTemplates().length, 1);
+  check(
+    'with its numbers intact, set by set',
+    localTemplates()[0].items[0].plan,
+    [
+      { weight: 0, reps: 8 },
+      { weight: 0, reps: 8 },
+      { weight: 0, reps: 8 },
+      { weight: 0, reps: 8 },
+    ]
+  );
+
+  await saveTemplate(null, { ...push, name: 'Push day A' });
+  check('editing replaces rather than duplicating', localTemplates().length, 1);
+  check('and the new name is live', templates[templates.length - 1], ['Push day A']);
+
+  await saveTemplate(null, normaliseTemplate({ id: 'tpl_pull', name: 'Pull day', items: [itemFromCustom('Row')] }));
+  check('a second workout joins it', localTemplates().length, 2);
+
+  await saveTemplate(null, { ...push, name: '  ', items: [] } as any);
+  check('a nameless save is stored under a real name', localTemplates().some((t) => t.name === 'Untitled workout'), true);
+
+  await removeTemplate(null, 'tpl_pull');
+  check('deleting removes it', localTemplates().map((t) => t.id), ['tpl_push']);
+  check('and the subscriber is told', templates[templates.length - 1], ['Untitled workout']);
+
+  stopT();
+  const beforeT = templates.length;
+  await saveTemplate(null, normaliseTemplate({ id: 'tpl_legs', name: 'Legs', items: [itemFromCustom('Squat')] }));
+  check('a stopped template listener hears nothing further', templates.length, beforeT);
 
   console.log(`\n${failures === 0 ? 'All checks passed.' : `${failures} check(s) failed.`}`);
   process.exit(failures === 0 ? 0 : 1);

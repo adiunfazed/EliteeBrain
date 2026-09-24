@@ -2,7 +2,7 @@ import React from 'react';
 import * as Icons from 'lucide-react';
 import { ChevronRight, Trophy } from 'lucide-react';
 import { EXERCISES, Exercise } from '../../lib/bodyTraining';
-import { suggestedTarget } from '../../lib/personalRecords';
+import { RecordViews, recordLabel } from '../../lib/personalRecords';
 import { soundFx } from '../../utils/audio';
 
 /** A tint per exercise, so six rows are scannable rather than identical. */
@@ -17,8 +17,8 @@ const TINTS: Record<string, string> = {
 
 interface Props {
   onStart: (exercise: Exercise) => void;
-  /** Best single set per exercise. Absent for anything never done. */
-  records?: Record<string, number>;
+  /** Both bests per exercise. Absent for anything never done. */
+  records?: RecordViews;
 }
 
 /**
@@ -36,11 +36,12 @@ export const ExerciseLibrary: React.FC<Props> = ({ onStart, records = {} }) => (
     <div className="space-y-1.5">
       {EXERCISES.map((ex) => {
         const Icon = (Icons as any)[ex.icon] || Icons.Dumbbell;
-        const best = records[ex.id] || 0;
-        // What tapping through will offer: one past the record where there is
-        // one, the gentle starting figure where there is not.
-        const target = suggestedTarget(records, ex.id, ex.targets.easy);
-        const unit = ex.metric === 'hold' ? 'seconds' : 'reps';
+        const view = records[ex.id];
+        const best = view?.reps || 0;
+        const label = recordLabel(view, ex.metric);
+        // What tapping through will offer: one past the bodyweight record
+        // where there is one, the gentle starting figure where there is not.
+        const target = Math.max(best > 0 ? best + 1 : 0, ex.targets.easy);
 
         return (
           <button
@@ -77,21 +78,21 @@ export const ExerciseLibrary: React.FC<Props> = ({ onStart, records = {} }) => (
                 left off deliberately — the line above already says "reps" or
                 "seconds", and repeating it here cost enough width to truncate
                 that line on a narrow phone. */}
-            {best > 0 && (
+            {label && (
               <span
                 className="shrink-0 flex items-center gap-1 px-1.5 py-1 rounded-lg"
                 style={{
                   background: 'color-mix(in oklab, var(--warn) 12%, transparent)',
                   border: '1px solid color-mix(in oklab, var(--warn) 28%, var(--rule))',
                 }}
-                aria-label={`Personal best ${best} ${unit}`}
+                aria-label={`Personal best ${label}`}
               >
                 <Trophy className="w-3 h-3 shrink-0 eb-warn" />
                 <span
                   className="text-[12px] font-bold tabular-nums"
                   style={{ color: 'var(--warn)' }}
                 >
-                  {best}
+                  {view && view.e1rm > 0 ? `${view.weight}kg` : best}
                 </span>
               </span>
             )}

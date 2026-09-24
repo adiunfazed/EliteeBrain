@@ -8,6 +8,11 @@ import type { WorkoutSession } from '../src/lib/bodyTraining';
 import {
   RecordMap,
   beatsRecord,
+  epley,
+  judgeSet,
+  mergeRecord,
+  recordLabel,
+  recordView,
   mergeRecords,
   recordValues,
   recordsFromSessions,
@@ -53,6 +58,10 @@ function derived(sessions: WorkoutSession[]) {
 
 function rec(exerciseId: string, value: number, achievedAt = '2026-09-18T10:00:00.000Z') {
   return { [exerciseId]: { exerciseId, value, achievedAt } };
+}
+
+function ok(name: string, condition: boolean): void {
+  check(name, condition, true);
 }
 
 console.log('--- records implied by sessions ---');
@@ -152,6 +161,119 @@ check(
   beatsRecord({ squats: 50 }, 'pushups', 3),
   true
 );
+
+
+console.log('\n--- weight and reps, ranked together ---');
+
+check('a single is its own one-rep max', epley(100, 1), 103.3);
+check('more reps at the same weight rank higher', epley(100, 5) > epley(100, 3), true);
+check('more weight at the same reps ranks higher', epley(110, 5) > epley(100, 5), true);
+check('bodyweight has no one-rep max to estimate', epley(0, 20), 0);
+check('nor does a set of nothing', epley(100, 0), 0);
+check('and rubbish is not turned into a number', epley(Number.NaN, 5), 0);
+
+{
+  // 60 × 10 and 70 × 8 are close; the formula is what decides, not the
+  // heavier plate alone.
+  const held = { bench: judgeSet({}, 'bench', { weight: 60, reps: 10 })!.record };
+
+  ok('the first loaded set is always a record', !!judgeSet({}, 'bench', { weight: 60, reps: 10 }));
+  ok('the same set again is not', !judgeSet(held, 'bench', { weight: 60, reps: 10 }));
+  ok('one more rep at the same weight is', !!judgeSet(held, 'bench', { weight: 60, reps: 11 }));
+  ok('a heavier set for fewer reps is judged, not assumed', !!judgeSet(held, 'bench', { weight: 70, reps: 8 }));
+  ok('a much lighter set for a few more reps is not', !judgeSet(held, 'bench', { weight: 40, reps: 12 }));
+  ok('and a warm-up set is never a record', !judgeSet(held, 'bench', { weight: 20, reps: 5 }));
+}
+
+console.log('\n--- the two bests never overwrite each other ---');
+
+{
+  const bodyweight = judgeSet({}, 'dips', { weight: 0, reps: 20 })!.record;
+  const both = mergeRecord(bodyweight, judgeSet({ dips: bodyweight }, 'dips', { weight: 30, reps: 8 })!.record)!;
+
+  check('the bodyweight best survives the loaded one', both.value, 20);
+  check('and the loaded one is stored beside it', both.weight, 30);
+
+  ok(
+    'adding a dumbbell cannot beat the bodyweight record',
+    !judgeSet({ dips: both }, 'dips', { weight: 30, reps: 9 })?.kind.includes('reps')
+  );
+  check(
+    'a bodyweight set is still judged on reps alone',
+    judgeSet({ dips: both }, 'dips', { weight: 0, reps: 21 })?.kind,
+    'reps'
+  );
+  ok(
+    'and 20 bodyweight reps no longer count, because 20 was the record',
+    !judgeSet({ dips: both }, 'dips', { weight: 0, reps: 20 })
+  );
+}
+
+console.log('\n--- what a record reads as ---');
+
+check(
+  'a loaded best leads with the load',
+  recordLabel(recordView({ exerciseId: 'b', value: 12, achievedAt: '', weight: 80, weightReps: 5, e1rm: epley(80, 5) })),
+  '80 kg × 5'
+);
+
+check(
+  'a bodyweight best reads in reps',
+  recordLabel(recordView({ exerciseId: 'p', value: 24, achievedAt: '' })),
+  '24 reps'
+);
+
+check(
+  'a hold reads in seconds',
+  recordLabel(recordView({ exerciseId: 'plank', value: 90, achievedAt: '' }), 'hold'),
+  '90s'
+);
+
+check('nothing at all reads as nothing', recordLabel(undefined), '');
+
+console.log('\n--- a weighted session rebuilds its own records ---');
+
+{
+  const session: WorkoutSession = {
+    id: 'w1',
+    date: '2026-09-24',
+    items: [{ exerciseId: 'custom_bench', name: 'Bench press', metric: 'reps', sets: 3, target: 10, difficulty: 'easy' }],
+    completed: { custom_bench: 3 },
+    results: { custom_bench: [10, 10, 8] },
+    sets: {
+      custom_bench: [
+        { weight: 60, reps: 10 },
+        { weight: 60, reps: 10 },
+        { weight: 70, reps: 8 },
+      ],
+    },
+    startedAt: '2026-09-24T10:00:00.000Z',
+    finishedAt: '2026-09-24T10:40:00.000Z',
+    xpAwarded: 30,
+  };
+
+  const derived = recordsFromSessions([session]);
+  check('the best set is found from the log', derived.custom_bench.weight, 70);
+  check('with the reps that earned it', derived.custom_bench.weightReps, 8);
+  check('and no bodyweight best is invented from a loaded session', derived.custom_bench.value, 0);
+  check('the name travels with it', derived.custom_bench.name, 'Bench press');
+}
+
+{
+  // A session from before weights existed: reps only, and it must still work.
+  const old: WorkoutSession = {
+    id: 'w0',
+    date: '2026-01-01',
+    items: [{ exerciseId: 'pushups', sets: 2, target: 15, difficulty: 'easy' }],
+    completed: { pushups: 2 },
+    results: { pushups: [15, 18] },
+    startedAt: '',
+    xpAwarded: 10,
+  };
+  const derived = recordsFromSessions([old]);
+  check('an old session still yields its bodyweight best', derived.pushups.value, 18);
+  check('and claims no weight it never recorded', derived.pushups.weight, undefined);
+}
 
 console.log('\n--- the target offered when an exercise is opened ---');
 

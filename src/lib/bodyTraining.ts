@@ -109,13 +109,28 @@ export const DIFFICULTY_LABEL: Record<Difficulty, string> = {
   hard: 'Hard',
 };
 
-/** One exercise within a planned workout. */
+/**
+ * One exercise within a planned workout.
+ *
+ * The id is a plain string rather than one of the six built-in ids, because a
+ * user-named exercise is a first-class thing here: it is trained, counted and
+ * holds a personal best exactly like a built-in one. Its name and metric ride
+ * along on the item so a finished session stays readable for ever, even if the
+ * template it came from is later renamed or deleted.
+ */
 export interface WorkoutItem {
-  exerciseId: ExerciseId;
+  exerciseId: string;
   sets: number;
   /** Reps, or seconds for a hold. */
   target: number;
   difficulty: Difficulty;
+  /** Present for user-named exercises; built-in ones are looked up. */
+  name?: string;
+  /** The heaviest weight used on this exercise in the session, in kg. */
+  weight?: number;
+  metric?: 'reps' | 'hold';
+  /** Rest the item was run with, kept for an honest duration estimate. */
+  restSeconds?: number;
 }
 
 /** users/{uid}/workouts/{id} */
@@ -136,8 +151,20 @@ export interface WorkoutSession {
    * the best evidence available of what was done.
    */
   results?: Record<string, number[]>;
+  /**
+   * The full set log: weight and reps for every set, keyed by exercise id.
+   *
+   * Richer than `results`, which is reps alone. Both are written — `results`
+   * so an older build (and every reader written before weights existed) still
+   * shows the right reps, `sets` so a weighted personal best can be
+   * recomputed from history rather than depending on the record document.
+   */
+  sets?: Record<string, { weight: number; reps: number }[]>;
   /** XP granted for personal records in this session, counted separately. */
   prXp?: number;
+  /** The custom workout this came from, where it came from one. */
+  templateId?: string;
+  templateName?: string;
 }
 
 /**
