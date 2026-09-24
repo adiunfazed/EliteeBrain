@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Dumbbell, Flame, History, Trophy, Zap } from 'lucide-react';
 import { ExerciseLibrary } from './ExerciseLibrary';
 import { SessionScreen, SetResult } from './SessionScreen';
+import { SoloRunner } from './SoloRunner';
 import { WorkoutConfig, WorkoutConfigValue } from './WorkoutConfig';
 import { WorkoutHistory } from './WorkoutHistory';
 import { WorkoutList } from './WorkoutList';
@@ -58,7 +59,7 @@ interface Props {
   onUpgrade?: () => void;
 }
 
-type View = 'home' | 'config' | 'running' | 'summary' | 'builder' | 'wake';
+type View = 'home' | 'config' | 'running' | 'solo' | 'summary' | 'builder' | 'wake';
 
 /**
  * A session in progress.
@@ -246,7 +247,10 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId, profile, onUpgrad
 
   /* ---------------- running a session ---------------- */
 
-  const beginRun = (items: TemplateItem[], meta: { id?: string; name?: string } = {}) => {
+  const beginRun = (
+    items: TemplateItem[],
+    meta: { id?: string; name?: string; solo?: boolean } = {}
+  ) => {
     const rows = items.map(normaliseItem).slice(0, 24);
     if (rows.length === 0) return;
 
@@ -262,7 +266,10 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId, profile, onUpgrad
       items: rows,
       startedAt: new Date().toISOString(),
     });
-    setView('running');
+    // One exercise from Quick start gets the live counter; a custom workout
+    // gets the set log. They are different jobs and neither screen does the
+    // other one's well.
+    setView(meta.solo ? 'solo' : 'running');
   };
 
   /**
@@ -612,13 +619,16 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId, profile, onUpgrad
           }}
           onStart={(next) => {
             setConfig(next);
-            beginRun([
-              itemFromExercise(selected, {
-                sets: next.sets,
-                target: next.target,
-                restSeconds: next.restSeconds,
-              }),
-            ]);
+            beginRun(
+              [
+                itemFromExercise(selected, {
+                  sets: next.sets,
+                  target: next.target,
+                  restSeconds: next.restSeconds,
+                }),
+              ],
+              { solo: true }
+            );
           }}
         />
       )}
@@ -642,9 +652,6 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId, profile, onUpgrad
           key={run.startedAt}
           title={run.templateName || run.items[0]?.name || 'Workout'}
           items={run.items}
-          // Camera counting belongs to a single exercise started from Quick
-          // start. A custom workout is typed in, set by set.
-          allowCamera={!run.templateId}
           records={recordViews(recordsAtStart.current)}
           isRecord={(exerciseId, set) => {
             const item = run.items.find((i) => i.exerciseId === exerciseId);
@@ -656,6 +663,17 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId, profile, onUpgrad
           onSetComplete={handleSetComplete}
           onFinish={handleFinish}
           onAbort={handleAbort}
+        />
+      )}
+
+      {view === 'solo' && run && run.items[0] && (
+        <SoloRunner
+          key={run.startedAt}
+          item={run.items[0]}
+          best={recordViews(recordsAtStart.current)[run.items[0].exerciseId]?.reps || 0}
+          onSetComplete={(result) => handleSetComplete(run.items[0], result)}
+          onComplete={(done) => handleFinish([done])}
+          onClose={handleAbort}
         />
       )}
 

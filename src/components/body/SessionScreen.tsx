@@ -1,10 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'motion/react';
-import { Activity, Camera, CameraOff, Check, Trophy, X } from 'lucide-react';
-import { PoseExerciseId, RepEvent } from '../../lib/pose/repEngine';
+import { Check, Trophy, X } from 'lucide-react';
 import { TemplateItem } from '../../lib/workoutTemplates';
 import { RecordViews, recordLabel } from '../../lib/personalRecords';
-import { CameraView } from './CameraView';
 import { LoggedSet, SetLogger } from './SetLogger';
 import { soundFx } from '../../utils/audio';
 
@@ -22,15 +20,6 @@ interface Props {
   items: TemplateItem[];
   /** The bests each exercise held when the session started. */
   records?: RecordViews;
-  /**
-   * Whether camera rep counting is offered at all.
-   *
-   * Off inside a custom workout: those are barbell sessions typed in set by
-   * set, and a camera the user has to aim at themselves between sets is in
-   * the way. It stays on for a single exercise started from Quick start,
-   * which is what it was built for.
-   */
-  allowCamera?: boolean;
   /** True while a set's numbers would beat one of those bests. */
   isRecord?: (exerciseId: string, set: { weight: number; reps: number }) => boolean;
   /** Fires the moment a set is logged, so a record can be shown in real time. */
@@ -41,15 +30,6 @@ interface Props {
   onAbort: () => void;
 }
 
-/** The movements the rep engine can actually judge. Nothing else is guessed. */
-const TRACKED = new Set<PoseExerciseId>([
-  'pushups',
-  'squats',
-  'lunges',
-  'glute-bridge',
-  'calf-raises',
-]);
-
 /**
  * A workout in progress: every exercise on one screen.
  *
@@ -59,15 +39,16 @@ const TRACKED = new Set<PoseExerciseId>([
  * any order. The screen is a list of set tables, which is exactly what a
  * training notebook is.
  *
- * Rest, the camera and the hold timer all belong to one exercise at a time.
- * Only one camera can run, and only one rest can count down per exercise,
- * which the state below enforces rather than hopes for.
+ * Rest and the hold timer belong to one exercise at a time, which the state
+ * below enforces rather than hopes for. Camera rep counting is not offered
+ * here at all: a custom workout is barbell work typed in set by set, and a
+ * camera that has to be aimed at yourself between sets is in the way. It
+ * lives in Quick start, on the single exercise it was built for.
  */
 export const SessionScreen: React.FC<Props> = ({
   title,
   items,
   records = {},
-  allowCamera = false,
   isRecord,
   onSetComplete,
   onFinish,
@@ -80,12 +61,11 @@ export const SessionScreen: React.FC<Props> = ({
       // written is one tap. The exceptions are rows something else fills: a
       // hold counts up from zero, and a camera-counted set is filled rep by
       // rep — pre-filling those would show work as done before it happened.
-      const filledByApp =
-        item.metric === 'hold' ||
-        (allowCamera && TRACKED.has(item.exerciseId as PoseExerciseId));
+      // A hold counts up from zero to its goal; everything else starts
+      // pre-filled with the plan, so a set that went as written is one tap.
       return item.plan.map((set) => ({
         weight: set.weight,
-        reps: filledByApp ? 0 : set.reps,
+        reps: item.metric === 'hold' ? 0 : set.reps,
         done: false,
       }));
     })
@@ -100,20 +80,8 @@ export const SessionScreen: React.FC<Props> = ({
     left: number;
     total: number;
   } | null>(null);
-  /** The exercise the camera is pointed at, if any. */
-  const [cameraOn, setCameraOn] = useState<number | null>(null);
   /** The exercise whose hold timer is running, if any. */
   const [timerOn, setTimerOn] = useState<number | null>(null);
-  const [feedback, setFeedback] = useState<RepEvent | null>(null);
-
-  const verdictTimer = useRef<number | null>(null);
-  useEffect(
-    () => () => {
-      if (verdictTimer.current) window.clearTimeout(verdictTimer.current);
-    },
-    []
-  );
-
   /** Rest counts down under the set it follows. */
   useEffect(() => {
     if (!rest) return;
@@ -174,7 +142,6 @@ export const SessionScreen: React.FC<Props> = ({
     );
     setRows(next);
     if (timerOn === exercise) setTimerOn(null);
-    setFeedback(null);
     soundFx.playSuccess();
 
     onSetComplete?.(item, {
@@ -332,8 +299,6 @@ export const SessionScreen: React.FC<Props> = ({
             const doneCount = list.filter((r) => r.done).length;
             const complete = doneCount === list.length;
             const activeIndex = activeIndexOf(exercise);
-            const tracked = allowCamera && TRACKED.has(item.exerciseId as PoseExerciseId);
-            const camera = cameraOn === exercise && !complete;
             const best = recordLabel(records[item.exerciseId], item.metric);
 
             return (
@@ -361,65 +326,7 @@ export const SessionScreen: React.FC<Props> = ({
                       )}
                     </span>
                   </span>
-
-                  {/* The camera is only offered for the movements the rep
-                      engine was built to judge, and only one exercise can
-                      hold it at a time. */}
-                  {tracked && item.metric === 'reps' && !complete && (
-                    <button
-                      onClick={() => {
-                        soundFx.playClick();
-                        setCameraOn(camera ? null : exercise);
-                      }}
-                      className="run-card-cam"
-                      data-on={camera ? 'true' : 'false'}
-                      aria-label={camera ? 'Turn the camera off' : 'Count this with the camera'}
-                    >
-                      {camera ? (
-                        <CameraOff className="w-3.5 h-3.5 shrink-0" />
-                      ) : (
-                        <Camera className="w-3.5 h-3.5 shrink-0" />
-                      )}
-                    </button>
-                  )}
                 </div>
-
-                {camera && activeIndex >= 0 && (
-                  <div className="mb-3">
-                    <CameraView
-                      exercise={item.exerciseId as PoseExerciseId}
-                      target={planned.current[exercise]?.[activeIndex] || 0}
-                      active={!rest || rest.exercise !== exercise}
-                      resetKey={`${exercise}:${activeIndex}`}
-                      onRep={(count) => patchRow(exercise, activeIndex, { reps: count })}
-                      onFeedback={(event) => {
-                        setFeedback(event);
-                        // Cleared on a timer so the strip shows the last
-                        // movement rather than lingering as a stale label.
-                        if (verdictTimer.current) window.clearTimeout(verdictTimer.current);
-                        verdictTimer.current = window.setTimeout(() => setFeedback(null), 2200);
-                      }}
-                      onManualMode={() => setCameraOn(null)}
-                    />
-
-                    {feedback && (
-                      <div
-                        key={`${feedback.kind}-${feedback.count}-${feedback.reason ?? ''}`}
-                        className="rep-verdict"
-                        data-tone={feedback.kind === 'rep' ? 'good' : 'bad'}
-                      >
-                        {feedback.kind === 'rep' ? (
-                          <Check className="w-4 h-4 shrink-0" />
-                        ) : (
-                          <Activity className="w-4 h-4 shrink-0" />
-                        )}
-                        {feedback.kind === 'rep'
-                          ? 'Good rep'
-                          : feedback.reason || 'That one did not count'}
-                      </div>
-                    )}
-                  </div>
-                )}
 
                 <SetLogger
                   metric={item.metric}

@@ -400,6 +400,35 @@ const ARM_HOLD_MS = 900;
 /** The top must also be held this long before a descent can begin a rep. */
 const MIN_TOP_MS = 220;
 
+/**
+ * How far below the nominal top the counter will accept as "the top".
+ *
+ * Measured angles are not the same as anatomical ones: a phone on the floor
+ * flattens a push-up, a shoulder rotated away from the camera reads a few
+ * degrees short, and plenty of people cannot lock a joint out completely.
+ * With a fixed top threshold, all of them could never arm the counter and
+ * never got a single rep — which looks exactly like the camera not working.
+ *
+ * So the top is re-anchored to the straightest position the user actually
+ * holds while arming, up to this many degrees below the nominal top.
+ */
+const TOP_TOLERANCE = 14;
+
+/** How far from their own top still counts as being back at the top. */
+const TOP_SLACK = 8;
+
+/**
+ * Frames a side must stay unclear before the tracked side is allowed to
+ * change.
+ *
+ * Alternating lunges swap which leg is clearer every rep, and swapping the
+ * measured leg mid-rep makes the angle jump by tens of degrees — which the
+ * state machine reads as a rep that never happened, or loses a real one. The
+ * side is locked when the counter arms and only released when it genuinely
+ * cannot be seen any more.
+ */
+const SIDE_SWAP_FRAMES = 8;
+
 /** Exercises measured by a raised position rather than a bent one. */
 const INVERTED: PoseExerciseId[] = ['glute-bridge'];
 
@@ -509,10 +538,46 @@ export function createRepEngine(exercise: PoseExerciseId, target = 0) {
   let locked = false;
   /** Small rolling window, so one bad frame cannot flip the phase. */
   const window: number[] = [];
+  /**
+   * The straightest angle seen while getting into position, and the
+   * thresholds derived from it.
+   *
+   * Both ends move together: if the user's top reads 8° low, the bottom moves
+   * 8° with it, so the range of motion a rep must cover is exactly the same
+   * as the nominal one. This accommodates the camera and the person without
+   * ever accepting a shallower rep.
+   */
+  let observedTop = inverted ? 180 : 0;
+  let topThreshold = def.upAngle;
+  let downThreshold = def.downAngle;
+  /** The side being measured, fixed while armed. */
+  let trackedSide: number[] | null = null;
+  /** Frames the locked side has been too unclear to use. */
+  let sideUnclearFrames = 0;
 
   /** How far past the top the body currently is, in degrees. */
   const travelFrom = (angle: number) =>
-    inverted ? Math.abs(angle - def.downAngle) : Math.abs(def.upAngle - angle);
+    inverted ? Math.abs(angle - downThreshold) : Math.abs(topThreshold - angle);
+
+  /**
+   * Re-anchor both thresholds to the top this user actually holds.
+   *
+   * Never accepts a top further than TOP_TOLERANCE from the nominal one, and
+   * moves the bottom by the same amount, so the required travel is unchanged.
+   */
+  const anchorTo = (top: number) => {
+    if (inverted) {
+      const clamped = Math.max(def.downAngle, Math.min(def.downAngle + TOP_TOLERANCE, top));
+      const shift = clamped - def.downAngle;
+      downThreshold = clamped;
+      topThreshold = def.upAngle + shift;
+      return;
+    }
+    const clamped = Math.min(def.upAngle, Math.max(def.upAngle - TOP_TOLERANCE, top));
+    const shift = def.upAngle - clamped;
+    topThreshold = clamped;
+    downThreshold = def.downAngle - shift;
+  };
 
   /** The full range of one rep, in degrees. */
   const fullTravel = Math.abs(def.upAngle - def.downAngle) || 1;
@@ -536,6 +601,12 @@ export function createRepEngine(exercise: PoseExerciseId, target = 0) {
     topSince = 0;
     heldFrames = 0;
     phase = 'top';
+    observedTop = inverted ? 180 : 0;
+    topThreshold = def.upAngle;
+    downThreshold = def.downAngle;
+    trackedSide = null;
+    sideUnclearFrames = 0;
+    window.length = 0;
   };
 
   return {
@@ -552,7 +623,65 @@ export function createRepEngine(exercise: PoseExerciseId, target = 0) {
         });
       }
 
-      const side = betterSide(landmarks, def.left, def.right);
+      // While armed the measured side is fixed. Alternating lunges swap which
+      // leg is clearer every rep, and measuring a different leg mid-rep makes
+      // the angle jump by tens of degrees — which reads as a phantom rep or
+      // swallows a real one.
+      const clearest = betterSide(landmarks, def.left, def.right);
+      let side = clearest;
+
+      if (armed && trackedSide) {
+        const held = { indices: trackedSide, confidence: confidenceOf(landmarks, trackedSide) };
+        const other = trackedSide === def.left ? def.right : def.left;
+
+        if (held.confidence >= def.minConfidence) {
+          sideUnclearFrames = 0;
+          side = held;
+
+          // Alternating work — lunges, single-leg anything — moves the other
+          // limb on the next rep. The lock is only given up when the tracked
+          // side is sitting still at the top AND the other side is clearly
+          // mid-movement, so a swap can never happen part-way through a rep
+          // the tracked side is actually doing.
+          if (phase === 'top') {
+            const heldAngle = def.measure(landmarks, trackedSide);
+            // "At the top or straighter" — a limb held out straighter than
+            // the anchored top is still not moving, and measuring distance
+            // rather than direction called that mid-rep.
+            const stillAtTop = inverted
+              ? heldAngle <= downThreshold + 10
+              : heldAngle >= topThreshold - 10;
+            const otherConfidence = confidenceOf(landmarks, other);
+
+            if (stillAtTop && otherConfidence >= def.minConfidence) {
+              const otherAngle = def.measure(landmarks, other);
+              if (travelFrom(otherAngle) >= fullTravel * 0.5) {
+                trackedSide = other;
+                side = { indices: other, confidence: otherConfidence };
+                window.length = 0;
+                heldFrames = 0;
+                // The new side is already on its way down, so this rep is
+                // timed from when it left the top rather than from now.
+                cycleStartedAt = now - def.minRepMs;
+                topSince = now - MIN_TOP_MS;
+              }
+            }
+          }
+        } else if (++sideUnclearFrames < SIDE_SWAP_FRAMES) {
+          side = held;
+        } else {
+          // Genuinely cannot see that side any more: move, and start the
+          // current rep's timing from here rather than carrying it over.
+          trackedSide = clearest.indices;
+          sideUnclearFrames = 0;
+          side = clearest;
+          window.length = 0;
+          cycleStartedAt = now;
+          topSince = now;
+          phase = 'top';
+          heldFrames = 0;
+        }
+      }
 
       // Presence measured against what THIS exercise needs.
       const bodyConfidence = confidenceOf(landmarks, def.presence);
@@ -593,12 +722,20 @@ export function createRepEngine(exercise: PoseExerciseId, target = 0) {
       const raw = def.measure(landmarks, side.indices);
       window.push(raw);
       if (window.length > 3) window.shift();
-      const angle = window.reduce((a, b) => a + b, 0) / window.length;
+
+      // Median rather than mean: a single frame where a joint is mistracked
+      // can be 40° out, and an average carries a third of that error into the
+      // decision, which is enough to flip a phase. The median throws the
+      // spike away entirely.
+      const angle =
+        window.length >= 3
+          ? [...window].sort((a, b) => a - b)[Math.floor(window.length / 2)]
+          : window.reduce((a, b) => a + b, 0) / window.length;
 
       // For an inverted exercise the "down" position is the straight one, so
       // the comparisons flip rather than duplicating the state machine.
-      const atBottom = inverted ? angle >= def.upAngle : angle <= def.downAngle;
-      const atTop = inverted ? angle <= def.downAngle : angle >= def.upAngle;
+      const atBottom = inverted ? angle >= topThreshold : angle <= downThreshold;
+      const atTop = inverted ? angle <= downThreshold : angle >= topThreshold;
 
       // Posture coaching is computed from the same trusted frame, and is
       // deliberately null whenever the landmarks it needs are unclear.
@@ -614,9 +751,24 @@ export function createRepEngine(exercise: PoseExerciseId, target = 0) {
       if (!armed) {
         const inPosition = def.ready ? def.ready(landmarks) : true;
 
+        // The straightest position seen while getting ready, which is what
+        // the thresholds are anchored to once the hold completes.
+        observedTop = inverted
+          ? Math.min(observedTop, angle)
+          : Math.max(observedTop, angle);
+
+        // Close enough to their own top to be the start of a rep, even if it
+        // is a few degrees short of the nominal one.
+        const nearOwnTop = inverted
+          ? angle <= observedTop + TOP_SLACK
+          : angle >= observedTop - TOP_SLACK;
+        const plausibleTop = inverted
+          ? observedTop <= def.downAngle + TOP_TOLERANCE
+          : observedTop >= def.upAngle - TOP_TOLERANCE;
+
         // A null posture reading means the landmarks were unclear. Unknown is
         // not the same as ready, so the counter stays disarmed.
-        if (inPosition !== true || !atTop) {
+        if (inPosition !== true || !(atTop || (nearOwnTop && plausibleTop))) {
           holdingSince = 0;
           return idle({
             confidence: side.confidence,
@@ -642,7 +794,11 @@ export function createRepEngine(exercise: PoseExerciseId, target = 0) {
         }
 
         // Armed. The user is in position and has been still, so the next
-        // descent is a genuine first repetition.
+        // descent is a genuine first repetition. The thresholds are anchored
+        // to the top they actually held, with the same travel required.
+        anchorTo(observedTop);
+        trackedSide = side.indices;
+        sideUnclearFrames = 0;
         armed = true;
         phase = 'top';
         heldFrames = 0;

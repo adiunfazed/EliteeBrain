@@ -335,5 +335,110 @@ console.log('\n--- squats arm from standing, not from walking past ---');
   check('walking into frame counts nothing', engine.value, 0);
 }
 
+
+console.log('\n--- a body the camera reads a few degrees short still counts ---');
+
+{
+  // Someone whose knees never read straighter than 150 (a low phone, a
+  // rotated hip, or simply no full extension). The old fixed top of 160
+  // meant they could never arm and never got a single rep.
+  const shortRange = simulate(5, { top: 150, bottom: 88 });
+  check('their reps are counted', shortRange.count, 5);
+
+  // But the range of motion required does not shrink with them: the bottom
+  // moves by the same amount as the top, so a shallow rep is still shallow.
+  const shortAndShallow = simulate(5, { top: 150, bottom: 125 });
+  check('a shallow rep is still refused', shortAndShallow.count, 0);
+  check(
+    'and they are told it was shallow',
+    shortAndShallow.events.every((e) => e.startsWith('rejected')),
+    true
+  );
+}
+
+check(
+  'a top far below anything anatomical never arms',
+  simulate(4, { top: 128, bottom: 95 }).count,
+  0
+);
+
+console.log('\n--- one mistracked frame is not a rep ---');
+
+{
+  const engine = createRepEngine('squats', 0);
+  let now = 0;
+  const feed = (angle: number) => {
+    const r = engine.push(squatFrame(angle), now);
+    now += 33;
+    return r;
+  };
+
+  for (let i = 0; i < 45; i++) feed(170);
+
+  // A single frame where the knee is mistracked to the floor, then straight
+  // back. The median window throws it away; a mean would carry a third of it.
+  feed(60);
+  for (let i = 0; i < 20; i++) feed(170);
+  check('a one-frame glitch counts nothing', engine.value, 0);
+
+  // Two glitched frames in a row are still not a rep, because a rep needs a
+  // pause at the bottom and a plausible duration.
+  feed(60);
+  feed(60);
+  for (let i = 0; i < 20; i++) feed(170);
+  check('nor do two', engine.value, 0);
+}
+
+console.log('\n--- alternating lunges keep counting ---');
+
+{
+  // The clearer leg swaps every rep, which is what alternating lunges do to
+  // a camera. The tracked side is locked while armed, so the measured angle
+  // does not jump between legs mid-rep.
+  const lungeFrame = (front: number, back: number, leftIsFront: boolean) => {
+    const lm = blank();
+    const legs = [
+      [LM.leftHip, LM.leftKnee, LM.leftAnkle, leftIsFront ? front : back, leftIsFront ? 0.1 : -0.1],
+      [LM.rightHip, LM.rightKnee, LM.rightAnkle, leftIsFront ? back : front, leftIsFront ? -0.1 : 0.1],
+    ] as const;
+
+    for (const [hipI, kneeI, ankleI, knee, dx] of legs) {
+      const rad = (knee * Math.PI) / 180;
+      const kx = 0.5 + dx;
+      const ky = 0.6;
+      // The front leg is clearly visible, the back one less so — which is
+      // exactly what makes the side swap between reps.
+      const vis = knee === front ? 0.95 : 0.6;
+      put(lm, kneeI, kx, ky, vis);
+      put(lm, hipI, kx, ky - 0.2, vis);
+      put(lm, ankleI, kx + 0.2 * Math.sin(rad), ky - 0.2 * Math.cos(rad), vis);
+    }
+
+    put(lm, LM.leftShoulder, 0.5, 0.15);
+    put(lm, LM.rightShoulder, 0.5, 0.15);
+    return lm;
+  };
+
+  const engine = createRepEngine('lunges', 0);
+  let now = 0;
+  const feed = (front: number, back: number, leftFront: boolean) => {
+    engine.push(lungeFrame(front, back, leftFront), now);
+    now += 33;
+  };
+
+  // Stand still to arm, feet together.
+  for (let i = 0; i < 50; i++) feed(172, 172, true);
+
+  for (let rep = 0; rep < 4; rep++) {
+    const leftFront = rep % 2 === 0;
+    for (let i = 0; i < 12; i++) feed(172 - (72 * i) / 12, 172, leftFront);
+    for (let i = 0; i < 10; i++) feed(100, 172, leftFront);
+    for (let i = 0; i < 12; i++) feed(100 + (72 * i) / 12, 172, leftFront);
+    for (let i = 0; i < 6; i++) feed(172, 172, leftFront);
+  }
+
+  check('every alternating rep is counted', engine.value, 4);
+}
+
 console.log(`\n${failures === 0 ? 'All checks passed.' : `${failures} check(s) failed.`}`);
 process.exit(failures === 0 ? 0 : 1);
