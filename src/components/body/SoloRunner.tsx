@@ -18,6 +18,8 @@ interface Props {
   onComplete: (results: SetResult[]) => void;
   /** Fires the moment a set ends, so a record can be shown in real time. */
   onSetComplete?: (result: SetResult) => void;
+  /** Hands the parent a way to end this exercise exactly as the X does. */
+  registerLeave?: (leave: (() => void) | null) => void;
 }
 
 /** The movements the rep engine can actually judge. */
@@ -50,6 +52,7 @@ export const SoloRunner: React.FC<Props> = ({
   onClose,
   onComplete,
   onSetComplete,
+  registerLeave,
 }) => {
   const isHold = item.metric === 'hold';
 
@@ -197,6 +200,14 @@ export const SoloRunner: React.FC<Props> = ({
       }));
 
   const finish = () => (loggedCount > 0 ? onComplete(results()) : onClose());
+
+  const leaveRef = useRef(finish);
+  leaveRef.current = finish;
+
+  useEffect(() => {
+    registerLeave?.(() => leaveRef.current());
+    return () => registerLeave?.(null);
+  }, [registerLeave]);
   const unitFor = (n: number) => (isHold ? 's' : n === 1 ? 'rep' : 'reps');
 
   /* ---------------- camera mode ---------------- */

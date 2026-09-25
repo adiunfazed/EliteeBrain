@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X } from 'lucide-react';
+import { useBackGuard } from '../lib/backStack';
 
 interface Props {
   open: boolean;
@@ -21,6 +22,9 @@ interface Props {
  * rising from the button that summoned it reads as connected to it.
  */
 export const ComposerSheet: React.FC<Props> = ({ open, title, onClose, children }) => {
+  // Back closes the sheet rather than leaving the app.
+  useBackGuard(open, onClose);
+
   const panelRef = useRef<HTMLDivElement>(null);
 
   // Escape closes, and focus moves into the sheet so typing starts immediately.

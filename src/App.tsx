@@ -36,6 +36,7 @@ import { resolveEntitlement, startTrialFields } from './lib/entitlement';
 import { goalById } from './lib/goals';
 import { ScrollProgress } from './components/ScrollProgress';
 import { XpProvider } from './components/XpToast';
+import { installBackHandler, useBackGuard } from './lib/backStack';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { UpdateBanner } from './components/UpdateBanner';
 import { DeleteAccountModal } from './components/DeleteAccountModal';
@@ -130,6 +131,26 @@ export default function App() {
 
   // Active Execution States
   const [activeModuleId, setActiveModuleId] = useState<ModuleId | null>(null);
+
+  /**
+   * The hardware back button, layer by layer.
+   *
+   * Each of these closes on back instead of the press falling through to the
+   * browser and taking the whole app with it. First run is deliberately not
+   * in the list: there is nothing behind it to go back to.
+   */
+  useBackGuard(isAuthModalOpen, () => setIsAuthModalOpen(false));
+  useBackGuard(isSignOutModalOpen, () => setIsSignOutModalOpen(false));
+  useBackGuard(isDeleteAccountOpen, () => setIsDeleteAccountOpen(false));
+  useBackGuard(isProModalOpen, () => setIsProModalOpen(false));
+  useBackGuard(isNotifOpen, () => setIsNotifOpen(false));
+  useBackGuard(isAdminPortalOpen, () => setIsAdminPortalOpen(false));
+  useBackGuard(isSettingsOpen, () => setIsSettingsOpen(false));
+  useBackGuard(isBadgesGalleryOpen, () => setIsBadgesGalleryOpen(false));
+  useBackGuard(isAICoachOpen, () => setIsAICoachOpen(false));
+  useBackGuard(isOnboardingOpen, () => setIsOnboardingOpen(false));
+  useBackGuard(showTemplates, () => setShowTemplates(false));
+  useBackGuard(!!activeModuleId, () => setActiveModuleId(null));
   const [lastResult, setLastResult] = useState<SessionResult | null>(null);
 
   // Apply Theme & Colorblind Classes to root <html>

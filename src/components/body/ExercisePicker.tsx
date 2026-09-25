@@ -10,6 +10,7 @@ import {
   customExerciseId,
   presetExercises,
 } from '../../lib/workoutTemplates';
+import { useBackGuard } from '../../lib/backStack';
 import { soundFx } from '../../utils/audio';
 
 interface Props {
@@ -53,6 +54,9 @@ export const ExercisePicker: React.FC<Props> = ({
   const lastTap = useRef<{ id: string; at: number }>({ id: '', at: 0 });
 
   const typed = cleanName(query);
+
+  // Back closes the sheet, not the screen behind it.
+  useBackGuard(open, onClose);
 
   const [section, setSection] = useState<'all' | MuscleGroup>('all');
 

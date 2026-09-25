@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile, ModuleId, Task } from '../types';
+import { installBackHandler, useBackGuard } from '../lib/backStack';
 import { MODULE_METADATA } from '../utils/storage';
 import { ModuleRoster } from './ModuleRoster';
 import { ModuleCard } from './ModuleCard';
@@ -139,6 +140,69 @@ export const Dashboard: React.FC<Props> = ({
   const [tasksDone, setTasksDone] = useState(0);
   const [tasksTarget, setTasksTarget] = useState(0);
   const [focusToday, setFocusToday] = useState({ sessions: 0, seconds: 0 });
+
+  /* ---------------- the hardware back button ---------------- */
+
+  /** Overlays close on back rather than the press leaving the app. */
+  useBackGuard(showLeaderboard, () => setShowLeaderboard(false));
+  useBackGuard(showShare, () => setShowShare(false));
+  useBackGuard(!!coachTool, () => setCoachTool(null));
+
+  /**
+   * Where back goes when nothing is open: the section visited before this
+   * one, then Home, and only then out of the app.
+   *
+   * The trail is built by watching the section change rather than by routing
+   * every navigation through one function — there are a dozen places that
+   * switch section, and one of them forgetting to record the move is exactly
+   * how a back button starts behaving unpredictably.
+   */
+  const sectionTrail = useRef<DashboardSection[]>([]);
+  const lastSection = useRef(activeSection);
+  const wentBack = useRef(false);
+  const [exitHint, setExitHint] = useState(false);
+  const exitArmedAt = useRef(0);
+
+  useEffect(() => {
+    if (lastSection.current === activeSection) return;
+
+    if (wentBack.current) wentBack.current = false;
+    else sectionTrail.current = [...sectionTrail.current, lastSection.current].slice(-12);
+
+    lastSection.current = activeSection;
+  }, [activeSection]);
+
+  const handleRootBack = useCallback((): boolean => {
+    const previous = sectionTrail.current.pop();
+    if (previous !== undefined) {
+      wentBack.current = true;
+      setActiveSection(previous);
+      window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+      return true;
+    }
+
+    if (activeSection !== 'engine') {
+      wentBack.current = true;
+      setActiveSection('engine');
+      return true;
+    }
+
+    // On Home with nothing to go back to. One press warns, a second within
+    // two seconds leaves — so the app is never closed by a stray tap, and
+    // never traps someone who does want out.
+    const now = Date.now();
+    if (now - exitArmedAt.current < 2000) return false;
+
+    exitArmedAt.current = now;
+    setExitHint(true);
+    window.setTimeout(() => setExitHint(false), 2000);
+    return true;
+  }, [activeSection]);
+
+  const rootBackRef = useRef(handleRootBack);
+  rootBackRef.current = handleRootBack;
+
+  useEffect(() => installBackHandler(() => rootBackRef.current()), []);
 
   // Life Momentum reads across every system, so the raw collections are
   // subscribed once here and passed down rather than re-fetched per component.
@@ -1206,6 +1270,13 @@ export const Dashboard: React.FC<Props> = ({
         onAction={handleEliAction}
         onAsk={() => setActiveSection('coach')}
       />
+
+      {/* Said once, above the nav bar, when back has nowhere left to go. */}
+      {exitHint && (
+        <div className="exit-hint" role="status">
+          Press back again to close EliteLife
+        </div>
+      )}
 
       {/* PERSISTENT BOTTOM NAVIGATION BAR (Fixed at bottom of screen, sleek & compact) */}
       <div className="fixed bottom-0 inset-x-0 z-40 bg-[var(--surface)]/95 backdrop-blur-2xl px-1.5 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] overflow-visible"

@@ -12,6 +12,7 @@ import {
   suppressSuggestion,
 } from '../../lib/eli';
 import { soundFx } from '../../utils/audio';
+import { useBackGuard } from '../../lib/backStack';
 
 interface Props {
   /** The signed-in account, or null. Scopes suppression per account. */
@@ -58,6 +59,8 @@ export const EliCoach: React.FC<Props> = ({
   ready = true,
 }) => {
   const [open, setOpen] = useState(false);
+  // Back closes the panel rather than leaving the app.
+  useBackGuard(open, () => setOpen(false));
   /** The small note shown instead of the panel when there is nothing to say. */
   const [emptyNote, setEmptyNote] = useState(false);
   /**

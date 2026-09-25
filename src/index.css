@@ -4712,3 +4712,32 @@ html:not(.dark) .panel-tick-mark[data-state='done'] {
 .eb-done { color: var(--done); }
 .eb-warn { color: var(--warn); }
 .eb-danger { color: var(--danger); }
+
+
+/* The one-press warning before the back button leaves the app. */
+.exit-hint {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(76px + env(safe-area-inset-bottom));
+  z-index: 60;
+  padding: 9px 16px;
+  border-radius: 999px;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--rule-strong);
+  box-shadow: 0 8px 26px -14px rgba(0, 0, 0, 0.7);
+  animation: eb-fade-in 160ms ease-out;
+}
+
+@keyframes eb-fade-in {
+  from { opacity: 0; transform: translate(-50%, 6px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .exit-hint { animation: none; }
+}

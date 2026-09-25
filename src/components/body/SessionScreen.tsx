@@ -27,6 +27,13 @@ interface Props {
   onFinish: (results: SetResult[][]) => void;
   /** Nothing was done at all — nothing to file. */
   onAbort: () => void;
+  /**
+   * Hands the parent a way to end this session exactly as the X does.
+   *
+   * The set log lives in here, so only this component knows whether there is
+   * anything worth saving. The hardware back button needs the same answer.
+   */
+  registerLeave?: (leave: (() => void) | null) => void;
 }
 
 /**
@@ -52,6 +59,7 @@ export const SessionScreen: React.FC<Props> = ({
   onSetComplete,
   onFinish,
   onAbort,
+  registerLeave,
 }) => {
   /** One set of rows per exercise, keyed by its position in the workout. */
   const [rows, setRows] = useState<LoggedSet[][]>(() =>
@@ -234,6 +242,14 @@ export const SessionScreen: React.FC<Props> = ({
   }, [rows]);
 
   const anyWork = totals.done > 0;
+
+  const leaveRef = useRef(() => {});
+  leaveRef.current = () => (anyWork ? onFinish(results()) : onAbort());
+
+  useEffect(() => {
+    registerLeave?.(() => leaveRef.current());
+    return () => registerLeave?.(null);
+  }, [registerLeave]);
 
   const hasRecord = (exerciseId: string) => {
     const view = records[exerciseId];

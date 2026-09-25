@@ -21,6 +21,7 @@ import { formatDuration } from '../lib/focus';
 import { CATEGORY_META } from '../lib/taskEngine';
 import { newTaskId } from '../lib/tasks';
 import { soundFx } from '../utils/audio';
+import { useBackGuard } from '../lib/backStack';
 
 interface Props {
   task: Task | null;
@@ -56,6 +57,9 @@ export const TaskDetailSheet: React.FC<Props> = ({
   onStartFocus,
   onEdit,
 }) => {
+  // Back closes the sheet rather than leaving the app.
+  useBackGuard(!!task, onClose);
+
   const [subtaskDraft, setSubtaskDraft] = useState('');
   const [notes, setNotes] = useState('');
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Dumbbell, Flame, History, Trophy, Zap } from 'lucide-react';
 import { ExerciseLibrary } from './ExerciseLibrary';
 import { SessionScreen, SetResult } from './SessionScreen';
@@ -48,6 +48,7 @@ import {
   saveRecord,
 } from '../../lib/trainingStore';
 import { todayISO } from '../../lib/tasks';
+import { useBackGuard } from '../../lib/backStack';
 import { soundFx } from '../../utils/audio';
 import { useXp } from '../XpToast';
 import { resolveEntitlement } from '../../lib/entitlement';
@@ -141,6 +142,30 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId, profile, onUpgrad
   }, [alarms]);
 
   const today = todayISO();
+
+  /**
+   * Back closes whatever is open here before it reaches the section nav.
+   *
+   * A session in progress is handed back rather than thrown away, exactly as
+   * the X does — the same rule everywhere: work already logged is kept.
+   */
+  useBackGuard(view === 'builder', () => {
+    setEditingTemplate(null);
+    setView('home');
+  });
+  useBackGuard(view === 'wake', () => setView('home'));
+  useBackGuard(view === 'config', () => {
+    setSelected(null);
+    setView('home');
+  });
+  useBackGuard(view === 'summary', () => {
+    setSummary(null);
+    setSelected(null);
+    setView('home');
+  });
+  useBackGuard(view === 'running' || view === 'solo', () => {
+    if (run) handleAbortOrSave();
+  });
 
   /**
    * The one answer to "what is my best?".
@@ -293,6 +318,22 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId, profile, onUpgrad
   const handleAbort = () => {
     setRun(null);
     setView('home');
+  };
+
+  /**
+   * Leaving a session from the back button.
+   *
+   * The runner owns the set log, so the parent cannot see what has been
+   * ticked — it asks the runner to end itself through the same callback the
+   * X uses, which keeps everything already logged.
+   */
+  const leaveSession = useRef<(() => void) | null>(null);
+  const registerLeave = useCallback((leave: (() => void) | null) => {
+    leaveSession.current = leave;
+  }, []);
+  const handleAbortOrSave = () => {
+    if (leaveSession.current) leaveSession.current();
+    else handleAbort();
   };
 
   const finishSession = async (state: Run, done: SetResult[][]) => {
@@ -663,6 +704,7 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId, profile, onUpgrad
           onSetComplete={handleSetComplete}
           onFinish={handleFinish}
           onAbort={handleAbort}
+          registerLeave={registerLeave}
         />
       )}
 
@@ -674,6 +716,7 @@ export const BodyTrainingSection: React.FC<Props> = ({ userId, profile, onUpgrad
           onSetComplete={(result) => handleSetComplete(run.items[0], result)}
           onComplete={(done) => handleFinish([done])}
           onClose={handleAbort}
+          registerLeave={registerLeave}
         />
       )}
 
