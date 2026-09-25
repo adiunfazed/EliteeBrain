@@ -408,7 +408,7 @@ console.log('\n--- the gym catalogue ---');
 
 {
   const catalogue = catalogueExercises();
-  ok('there are plenty to pick from', catalogue.length >= 40);
+  ok('there are plenty to pick from', catalogue.length >= 80);
   ok('every one has a name', catalogue.every((e) => e.name.trim().length > 0));
   ok('every one is a custom exercise, id and all', catalogue.every((e) => isCustomExercise(e.id)));
   ok('none of them claims the camera can count it', catalogue.every((e) => !e.tracked));
@@ -419,6 +419,26 @@ console.log('\n--- the gym catalogue ---');
 
   const ids = catalogue.map((e) => e.id);
   check('no two entries share an id', new Set(ids).size, ids.length);
+
+  ok('every one is filed under a body part', catalogue.every((e) => !!e.group));
+  ok('and says what it works', catalogue.every((e) => (e.targets || '').length >= 3));
+
+  const chest = catalogue.filter((e) => e.group === 'Chest').map((e) => e.name);
+  ok('the chest section holds the presses', chest.includes('Bench press'));
+  ok('and the flies', chest.includes('Dumbbell fly'));
+  ok(
+    'curls are filed under biceps, not arms-in-general',
+    catalogue.filter((e) => e.group === 'Biceps').every((e) => /curl/i.test(e.name))
+  );
+  ok(
+    'pulldowns and pull-ups are under lats',
+    catalogue.filter((e) => e.group === 'Lats').length >= 5
+  );
+  check(
+    'a squat is a leg exercise and says which muscles',
+    catalogue.find((e) => e.name === 'Back squat')?.targets,
+    'Quads · Glutes · Core'
+  );
 
   const bench = catalogue.find((e) => e.name === 'Bench press')!;
   check(

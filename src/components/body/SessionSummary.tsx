@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'motion/react';
 import { Check, Trophy, Zap } from 'lucide-react';
 import { TemplateItem } from '../../lib/workoutTemplates';
 
@@ -40,21 +39,11 @@ export const SessionSummary: React.FC<Props> = ({ title, lines, xp, prXp, onDone
   const records = lines.filter((l) => l.record).length;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.22 }}
-      className="space-y-4"
-    >
+    <div className="space-y-4">
       <div className="text-center pt-2">
-        <motion.span
-          initial={{ scale: 0.7, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: 'spring', stiffness: 340, damping: 20 }}
-          className="done-mark mx-auto"
-        >
+        <span className="done-mark mx-auto">
           <Check className="w-8 h-8 shrink-0" />
-        </motion.span>
+        </span>
 
         <h2 className="t-title mt-3">{title} complete</h2>
         <p className="t-sub mt-1">
@@ -132,6 +121,6 @@ export const SessionSummary: React.FC<Props> = ({ title, lines, xp, prXp, onDone
       <button onClick={onDone} className="btn-lg w-full">
         Done
       </button>
-    </motion.div>
+    </div>
   );
 };

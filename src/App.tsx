@@ -17,7 +17,6 @@ import { SignOutConfirmModal } from './components/SignOutConfirmModal';
 import { AICoachModal } from './components/AICoachModal';
 import { ProSubscriptionModal } from './components/ProSubscriptionModal';
 import { AdminPortalModal } from './components/AdminPortalModal';
-import { MethodsModal } from './components/MethodsModal';
 import { SplashScreen } from './components/SplashScreen';
 import { AchievementUnlockedModal } from './components/AchievementUnlockedModal';
 import { AchievementsGalleryModal } from './components/AchievementsGalleryModal';
@@ -125,7 +124,6 @@ export default function App() {
     setShowFirstRun(true);
   }, [currentUser]);
   const [isAdminPortalOpen, setIsAdminPortalOpen] = useState(false);
-  const [isMethodsOpen, setIsMethodsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isBadgesGalleryOpen, setIsBadgesGalleryOpen] = useState(false);
   const [unlockedAchievementIds, setUnlockedAchievementIds] = useState<string[]>([]);
@@ -517,13 +515,10 @@ export default function App() {
         onOpenAICoach={() => setIsAICoachOpen(true)}
         onOpenProModal={() => setIsProModalOpen(true)}
         onOpenAdminPortal={() => setIsAdminPortalOpen(true)}
-        onOpenMethodsModal={() => setIsMethodsOpen(true)}
         onOpenNotifications={() => setIsNotifOpen(true)}
         onOpenBadgesGallery={() => setIsBadgesGalleryOpen(true)}
         isDarkMode={isDarkMode}
         onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
-        isColorblind={isColorblind}
-        onToggleColorblind={() => setIsColorblind(!isColorblind)}
         onProfileUpdate={updateAndSyncProfile}
       />
 
@@ -684,7 +679,6 @@ export default function App() {
       )}
 
       {/* Scientific Methodology Modal */}
-      <MethodsModal isOpen={isMethodsOpen} onClose={() => setIsMethodsOpen(false)} />
 
       {/* Mandatory / Interactive Full-Screen Sign-In Gate */}
       {authResolved && ((!currentUser && !isGuestMode) || isAuthModalOpen) && (
@@ -737,6 +731,8 @@ export default function App() {
       {showFirstRun && currentUser && (
         <WelcomeScreen
           suggested={profile.displayName || currentUser.displayName || undefined}
+          dark={isDarkMode}
+          onTheme={setIsDarkMode}
           onDone={(name) => {
             const updated = { ...profile, displayName: name };
             setProfile(updated);

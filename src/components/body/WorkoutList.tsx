@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'motion/react';
 import { Pencil, Play, Plus, Repeat } from 'lucide-react';
 import { WorkoutTemplate, summariseTemplate } from '../../lib/workoutTemplates';
 import { soundFx } from '../../utils/audio';
@@ -52,7 +51,7 @@ export const WorkoutList: React.FC<Props> = ({ templates, onStart, onEdit, onCre
 
   return (
     <div className="space-y-2">
-      {templates.map((template, index) => {
+      {templates.map((template) => {
         const summary = summariseTemplate(template.items);
         // The exercises, not the arithmetic: "Bench press · Overhead press"
         // is how anyone recognises which workout this is. The numbers live
@@ -64,13 +63,7 @@ export const WorkoutList: React.FC<Props> = ({ templates, onStart, onEdit, onCre
         const used = lastUsedLabel(template.lastUsedAt);
 
         return (
-          <motion.div
-            key={template.id}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2, delay: Math.min(index * 0.03, 0.15) }}
-            className="wk-card"
-          >
+          <div key={template.id} className="wk-card">
             <div className="min-w-0 flex-1">
               <p className="text-[15.5px] font-bold leading-snug truncate">{template.name}</p>
               <p className="t-meta mt-1 truncate">
@@ -118,7 +111,7 @@ export const WorkoutList: React.FC<Props> = ({ templates, onStart, onEdit, onCre
                 Start
               </button>
             </div>
-          </motion.div>
+          </div>
         );
       })}
 

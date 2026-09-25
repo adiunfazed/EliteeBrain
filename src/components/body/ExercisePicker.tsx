@@ -1,22 +1,21 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Check, Plus, Search, Timer, Trophy, X } from 'lucide-react';
+import { Check, Plus, Search, Timer, X } from 'lucide-react';
 import {
   KnownExercise,
+  MUSCLE_GROUPS,
+  MuscleGroup,
   catalogueExercises,
   cleanName,
   customExerciseId,
   presetExercises,
 } from '../../lib/workoutTemplates';
-import { RecordViews, recordLabel } from '../../lib/personalRecords';
 import { soundFx } from '../../utils/audio';
 
 interface Props {
   open: boolean;
   /** Custom exercises this account has used before. */
   known: KnownExercise[];
-  /** Both bests per exercise, so a familiar lift shows its number. */
-  records?: RecordViews;
   /** How many of each exercise the workout already holds. */
   counts?: Record<string, number>;
   onPick: (exercise: KnownExercise) => void;
@@ -41,7 +40,6 @@ interface Props {
 export const ExercisePicker: React.FC<Props> = ({
   open,
   known,
-  records = {},
   counts = {},
   onPick,
   onClose,
@@ -56,32 +54,62 @@ export const ExercisePicker: React.FC<Props> = ({
 
   const typed = cleanName(query);
 
-  const groups = useMemo(() => {
-    const q = typed.toLowerCase();
-    const match = (list: KnownExercise[]) =>
-      q ? list.filter((e) => e.name.toLowerCase().includes(q)) : list;
+  const [section, setSection] = useState<'all' | MuscleGroup>('all');
 
-    // Anything already in a workout of the user's own comes first: it is the
-    // likeliest pick, and it carries their personal best.
-    const mine = match(known);
-    const mineIds = new Set(mine.map((e) => e.id));
-    const catalogue = match(catalogueExercises()).filter((e) => !mineIds.has(e.id));
-    const basics = match(presetExercises()).filter((e) => !mineIds.has(e.id));
+  /** Everything this account can add, in one list, deduplicated by id. */
+  const everything = useMemo(() => {
+    const catalogue = [...catalogueExercises(), ...presetExercises()];
+    // An exercise the user has already used is the same exercise as the one
+    // in the catalogue — same id, same name — so it inherits the body part
+    // rather than falling out of every section but "All".
+    const knownBy = new Map(catalogue.map((e) => [e.id, e]));
 
+    const out: KnownExercise[] = [];
+    const seen = new Set<string>();
+
+    for (const exercise of [...known, ...catalogue]) {
+      if (seen.has(exercise.id)) continue;
+      seen.add(exercise.id);
+      const reference = knownBy.get(exercise.id);
+      out.push({
+        ...exercise,
+        group: exercise.group || reference?.group,
+        targets: exercise.targets || reference?.targets,
+      });
+    }
+
+    return out;
+  }, [known]);
+
+  /** Only the sections that actually hold something. */
+  const sections = useMemo(() => {
+    const present = new Set(everything.map((e) => e.group).filter(Boolean));
     return [
-      { label: 'Your exercises', rows: mine },
-      { label: 'Common lifts', rows: catalogue },
-      { label: 'Bodyweight', rows: basics },
-    ].filter((group) => group.rows.length > 0);
-  }, [known, typed]);
+      { key: 'all' as const, label: 'All' },
+      ...MUSCLE_GROUPS.filter((g) => present.has(g)).map((g) => ({ key: g, label: g })),
+    ];
+  }, [everything, known]);
 
-  const total = groups.reduce((n, g) => n + g.rows.length, 0);
+  const rows = useMemo(() => {
+    const q = typed.toLowerCase();
+    const mine = new Set(known.map((e) => e.id));
+
+    return everything
+      .filter((e) => (section === 'all' ? true : e.group === section))
+      .filter((e) => (q ? e.name.toLowerCase().includes(q) : true))
+      // Inside a section, the account's own exercises come first: they are
+      // the likeliest pick. Everything else keeps the catalogue's order,
+      // which is grouped by movement rather than alphabet.
+      .sort((a, b) => Number(mine.has(b.id)) - Number(mine.has(a.id)));
+  }, [everything, known, section, typed]);
+
+  const total = rows.length;
 
   // Only offered when it is genuinely new — otherwise the list already has
   // it, and creating it again would produce the same id and do nothing.
   const canCreate =
     typed.length > 0 &&
-    !groups.some((g) => g.rows.some((e) => e.name.toLowerCase() === typed.toLowerCase()));
+    !everything.some((e) => e.name.toLowerCase() === typed.toLowerCase());
 
   const pick = (exercise: KnownExercise) => {
     const now = Date.now();
@@ -164,6 +192,23 @@ export const ExercisePicker: React.FC<Props> = ({
                   </button>
                 )}
               </div>
+
+              {/* Body parts as a scrolling row of sections. A dropdown would
+                  hide them behind a tap; on a phone this is one swipe. */}
+              <div className="pick-tabs" role="tablist" aria-label="Body part">
+                {sections.map((tab) => (
+                  <button
+                    key={tab.key}
+                    role="tab"
+                    aria-selected={section === tab.key}
+                    onClick={() => setSection(tab.key)}
+                    className="pick-tab"
+                    data-active={section === tab.key ? 'true' : 'false'}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="sheet-scroll">
@@ -218,70 +263,54 @@ export const ExercisePicker: React.FC<Props> = ({
                 <p className="t-sub py-4 text-center">Type a name to add your own exercise.</p>
               )}
 
-              {groups.map((group) => (
-                <div key={group.label} className="pick-group-block">
-                  <p className="pick-group">{group.label}</p>
+              {rows.map((exercise) => {
+                const inWorkout = counts[exercise.id] || 0;
+                const added = (justAdded[exercise.id] || 0) > 0;
 
-                  {group.rows.map((exercise) => {
-                    // The workout's own count is the truth — it already
-                    // includes anything added from this sheet. Adding the
-                    // local tally on top counted every new row twice.
-                    const inWorkout = counts[exercise.id] || 0;
-                    const added = (justAdded[exercise.id] || 0) > 0;
-                    const best = recordLabel(records[exercise.id], exercise.metric);
-
-                    return (
-                      <button
-                        key={exercise.id}
-                        onClick={() => pick(exercise)}
-                        className="pick-row"
-                        data-added={added ? 'true' : 'false'}
-                      >
-                        <span className="min-w-0 flex-1 text-left">
-                          <span className="block text-[15px] font-semibold truncate">
-                            {exercise.name}
+                return (
+                  <button
+                    key={exercise.id}
+                    onClick={() => pick(exercise)}
+                    className="pick-row"
+                    data-added={added ? 'true' : 'false'}
+                  >
+                    <span className="min-w-0 flex-1 text-left">
+                      <span className="block text-[15px] font-semibold truncate">
+                        {exercise.name}
+                      </span>
+                      {/* What it works, rather than what you once lifted on
+                          it: this list is for choosing an exercise, and a
+                          personal best is a reason to look somewhere else. */}
+                      <span className="t-meta mt-0.5 flex items-center gap-2 flex-wrap">
+                        {exercise.targets && <span>{exercise.targets}</span>}
+                        {exercise.metric === 'hold' && (
+                          <span className="inline-flex items-center gap-1">
+                            <Timer className="w-3 h-3 shrink-0" />
+                            timed
                           </span>
-                          <span className="t-meta mt-0.5 flex items-center gap-2.5 flex-wrap">
-                            {exercise.metric === 'hold' && (
-                              <span className="inline-flex items-center gap-1">
-                                <Timer className="w-3 h-3 shrink-0" />
-                                timed
-                              </span>
-                            )}
-                            {best && (
-                              <span className="inline-flex items-center gap-1 eb-warn">
-                                <Trophy className="w-3 h-3 shrink-0" />
-                                {best}
-                              </span>
-                            )}
-                            {inWorkout > 0 && (
-                              <span style={{ color: 'var(--done)' }}>
-                                {inWorkout} in this workout
-                              </span>
-                            )}
-                          </span>
-                        </span>
+                        )}
+                        {inWorkout > 0 && (
+                          <span style={{ color: 'var(--done)' }}>{inWorkout} added</span>
+                        )}
+                      </span>
+                    </span>
 
-                        {/* A full pill rather than a bare icon: this is the
-                            thing being tapped, so it has to look like it. */}
-                        <span className="pick-add" data-added={added ? 'true' : 'false'}>
-                          {added ? (
-                            <>
-                              <Check className="w-3.5 h-3.5 shrink-0 stroke-[3]" />
-                              Added
-                            </>
-                          ) : (
-                            <>
-                              <Plus className="w-3.5 h-3.5 shrink-0" />
-                              Add
-                            </>
-                          )}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              ))}
+                    <span className="pick-add" data-added={added ? 'true' : 'false'}>
+                      {added ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 shrink-0 stroke-[3]" />
+                          Added
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="w-3.5 h-3.5 shrink-0" />
+                          Add
+                        </>
+                      )}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
 
             <button onClick={onClose} className="btn-lg w-full mt-3">

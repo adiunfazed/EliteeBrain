@@ -21,13 +21,10 @@ interface Props {
   onOpenAICoach: () => void;
   onOpenProModal: () => void;
   onOpenAdminPortal: () => void;
-  onOpenMethodsModal: () => void;
   onOpenNotifications?: () => void;
   onOpenBadgesGallery?: () => void;
   isDarkMode: boolean;
   onToggleDarkMode: () => void;
-  isColorblind: boolean;
-  onToggleColorblind: () => void;
   onProfileUpdate?: (p: UserProfile) => void;
 }
 
@@ -41,13 +38,10 @@ export const Header: React.FC<Props> = ({
   onOpenAICoach,
   onOpenProModal,
   onOpenAdminPortal,
-  onOpenMethodsModal,
   onOpenNotifications,
   onOpenBadgesGallery,
   isDarkMode,
   onToggleDarkMode,
-  isColorblind,
-  onToggleColorblind,
   onProfileUpdate,
 }) => {
   const ent = resolveEntitlement(profile);
@@ -132,19 +126,6 @@ export const Header: React.FC<Props> = ({
 
         {/* DESKTOP ACTIONS BAR (Visible on md and above) */}
         <div className="hidden md:flex items-center gap-2.5">
-          {/* Science Methods Button */}
-          <button
-            onClick={() => {
-              soundFx.playClick();
-              onOpenMethodsModal();
-            }}
-            title="Scientific Methodology Citations"
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--surface-sunk)] hover:bg-[#212631] border border-[var(--rule)] text-[var(--ink-muted)] hover:text-[var(--ink)] text-xs font-mono rounded-xl transition-all cursor-pointer active:scale-95"
-          >
-            <HelpCircle className="w-3.5 h-3.5 shrink-0 text-[#7E63DC]" />
-            <span>Science Methods</span>
-          </button>
-
           {/* Badges & Rewards Button */}
           {onOpenBadgesGallery && (
             <motion.button
@@ -167,22 +148,6 @@ export const Header: React.FC<Props> = ({
 
           <div className="h-4 w-[1px] bg-[var(--rule)] mx-1" />
 
-          {/* Colorblind Toggle */}
-          <button
-            onClick={() => {
-              soundFx.playClick();
-              onToggleColorblind();
-            }}
-            title={isColorblind ? 'Disable Colorblind Palette' : 'Enable Colorblind Palette'}
-            className={`p-2 border rounded-xl transition-all cursor-pointer active:scale-95 ${
-              isColorblind
-                ? 'bg-[var(--signal)] text-white border-[var(--signal)] shadow-sm'
-                : 'bg-[var(--surface-sunk)] hover:bg-[#212631] border-[var(--rule)] text-[var(--ink-muted)]'
-            }`}
-          >
-            <Eye className="w-4 h-4 shrink-0" />
-          </button>
-
           {/* Theme Toggle */}
           <button
             onClick={() => {
@@ -192,7 +157,11 @@ export const Header: React.FC<Props> = ({
             title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             className="p-2 bg-[var(--surface-sunk)] hover:bg-[#212631] border border-[var(--rule)] text-[var(--ink)] rounded-xl transition-all cursor-pointer active:scale-95"
           >
-            {isDarkMode ? <Sun className="w-4 h-4 shrink-0 eb-warn" /> : <Moon className="w-4 h-4 shrink-0 text-slate-300" />}
+            {isDarkMode ? (
+              <Sun className="w-4 h-4 shrink-0 eb-warn" />
+            ) : (
+              <Moon className="w-4 h-4 shrink-0" style={{ color: 'var(--signal-ink)' }} />
+            )}
           </button>
 
           {/* Theme toggle. Desktop only — the mobile row is tight and the
@@ -403,20 +372,10 @@ export const Header: React.FC<Props> = ({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {/* Science Methods */}
-              <button
-                onClick={() => {
-                  soundFx.playClick();
-                  onOpenMethodsModal();
-                  setIsMobileMenuOpen(false);
-                }}
-                className="flex items-center justify-center gap-2 px-3 py-2 bg-[var(--surface-sunk)] border border-[var(--rule)] text-[var(--ink)] text-xs font-mono rounded-xl active:bg-[#212631]"
-              >
-                <HelpCircle className="w-4 h-4 shrink-0 text-[#7E63DC]" />
-                <span>Methods</span>
-              </button>
-
+            {/* Two columns, three rows at most: the menu is a handful of
+                switches, and a four-across grid of tiny tiles made each one
+                harder to hit than it needed to be. */}
+            <div className="grid grid-cols-2 gap-2">
               {/* Notifications */}
               <button
                 onClick={() => {
@@ -424,7 +383,7 @@ export const Header: React.FC<Props> = ({
                   onOpenNotifications?.();
                   setIsMobileMenuOpen(false);
                 }}
-                className="flex items-center justify-center gap-2 px-3 py-2 bg-[var(--surface-sunk)] border border-[var(--rule)] text-[var(--ink)] text-xs font-mono rounded-xl active:bg-[#212631]"
+                className="menu-tile"
               >
                 <Bell className="w-4 h-4 shrink-0 text-[var(--signal-ink)]" />
                 <span>Alerts</span>
@@ -436,7 +395,7 @@ export const Header: React.FC<Props> = ({
                   soundFx.playClick();
                   onToggleSound();
                 }}
-                className="flex items-center justify-center gap-2 px-3 py-2 bg-[var(--surface-sunk)] border border-[var(--rule)] text-[var(--ink)] text-xs font-mono rounded-xl active:bg-[#212631]"
+                className="menu-tile"
               >
                 {profile.soundEnabled ? (
                   <>
@@ -451,13 +410,14 @@ export const Header: React.FC<Props> = ({
                 )}
               </button>
 
-              {/* Theme Mode */}
+              {/* Theme Mode. Takes the full width when it is the last tile,
+                  so the grid never ends on a lone half-width button. */}
               <button
                 onClick={() => {
                   soundFx.playClick();
                   onToggleDarkMode();
                 }}
-                className="flex items-center justify-center gap-2 px-3 py-2 bg-[var(--surface-sunk)] border border-[var(--rule)] text-[var(--ink)] text-xs font-mono rounded-xl active:bg-[#212631]"
+                className={`menu-tile ${isAdmin ? '' : 'col-span-2'}`}
               >
                 {isDarkMode ? (
                   <>
@@ -472,22 +432,6 @@ export const Header: React.FC<Props> = ({
                 )}
               </button>
 
-              {/* Colorblind Palette */}
-              <button
-                onClick={() => {
-                  soundFx.playClick();
-                  onToggleColorblind();
-                }}
-                className={`flex items-center justify-center gap-2 px-3 py-2 border text-xs font-mono rounded-xl ${
-                  isColorblind
-                    ? 'bg-[var(--signal)] text-white border-[var(--signal)]'
-                    : 'bg-[var(--surface-sunk)] border-[var(--rule)] text-[var(--ink)]'
-                }`}
-              >
-                <Eye className="w-4 h-4 shrink-0" />
-                <span>Colorblind</span>
-              </button>
-
               {/* Admin Portal (Only visible to admin unfazed.adibiz@gmail.com) */}
               {isAdmin && (
                 <button
@@ -496,7 +440,7 @@ export const Header: React.FC<Props> = ({
                     onOpenAdminPortal();
                     setIsMobileMenuOpen(false);
                   }}
-                  className="flex items-center justify-center gap-2 px-3 py-2 border text-xs font-mono rounded-xl font-bold transition-all cursor-pointer active:scale-95 bg-rose-600/20 eb-danger border-rose-500/50 hover:bg-rose-600/30"
+                  className="menu-tile menu-tile-danger"
                 >
                   <Shield className="w-4 h-4 shrink-0 eb-danger" />
                   <span>Admin Portal</span>
@@ -504,12 +448,12 @@ export const Header: React.FC<Props> = ({
               )}
             </div>
 
-            {/* Account & Display Name Section (below Dark Theme & Colorblind) */}
+            {/* Account and display name */}
             <div className="mt-3 pt-3 border-t border-[var(--rule)]/60 space-y-2.5">
               {/* Account Display Name Card */}
               <div className="bg-[var(--surface-sunk)] border border-[var(--rule)] p-2.5 rounded-xl space-y-2">
                 <div className="flex items-center justify-between text-xs text-[var(--ink-muted)]">
-                  <span className="flex items-center gap-1.5 font-bold text-slate-200">
+                  <span className="flex items-center gap-1.5 font-bold text-[var(--ink)]">
                     <UserIcon className="w-3.5 h-3.5 shrink-0 text-[#7E63DC]" />
                     <span>User Profile Name</span>
                   </span>
@@ -527,7 +471,7 @@ export const Header: React.FC<Props> = ({
                         soundFx.playClick();
                         setIsEditingName(!isEditingName);
                       }}
-                      className="px-2 py-0.5 rounded-lg bg-[var(--rule)]/60 hover:bg-[var(--rule)] text-slate-200 t-meta cursor-pointer transition-all flex items-center gap-1"
+                      className="menu-edit"
                     >
                       <Edit2 className="w-3.5 h-3.5 shrink-0 text-[var(--signal-ink)]" />
                       <span>{isEditingName ? 'Cancel' : 'Edit Name'}</span>
@@ -543,18 +487,18 @@ export const Header: React.FC<Props> = ({
                       onChange={(e) => setNameInput(e.target.value)}
                       placeholder="Enter display name..."
                       maxLength={30}
-                      className="flex-1 min-w-0 bg-[var(--ground)] border border-[var(--rule)] rounded-xl px-3 py-1.5 text-xs font-mono text-slate-100 focus:outline-none focus:border-[var(--signal)]"
+                      className="menu-input"
                     />
                     <button
                       type="submit"
                       disabled={isSavingName || !nameInput.trim()}
-                      className="px-3 py-1.5 bg-[var(--signal)] hover:bg-[#4B5BE0] text-white font-mono text-xs font-bold rounded-xl cursor-pointer transition-all disabled:opacity-50 shrink-0 flex items-center gap-1"
+                      className="menu-save"
                     >
                       {isSavingName ? 'Saving...' : 'Save'}
                     </button>
                   </form>
                 ) : (
-                  <p className="text-xs font-mono text-slate-200 font-bold pl-1 truncate">
+                  <p className="text-[13px] text-[var(--ink)] font-bold pl-1 truncate">
                     {profile.displayName || currentUser?.displayName || currentUser?.email?.split('@')[0] || 'there'}
                   </p>
                 )}

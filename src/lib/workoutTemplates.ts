@@ -386,6 +386,34 @@ export function itemLine(item: TemplateItem): string {
 /* Exercises the user has invented                                     */
 /* ------------------------------------------------------------------ */
 
+/** The sections the exercise list is divided into. */
+export type MuscleGroup =
+  | 'Chest'
+  | 'Back'
+  | 'Lats'
+  | 'Shoulders'
+  | 'Biceps'
+  | 'Triceps'
+  | 'Legs'
+  | 'Glutes'
+  | 'Core'
+  | 'Cardio'
+  | 'Full body';
+
+export const MUSCLE_GROUPS: MuscleGroup[] = [
+  'Chest',
+  'Back',
+  'Lats',
+  'Shoulders',
+  'Biceps',
+  'Triceps',
+  'Legs',
+  'Glutes',
+  'Core',
+  'Cardio',
+  'Full body',
+];
+
 export interface KnownExercise {
   id: string;
   name: string;
@@ -396,6 +424,10 @@ export interface KnownExercise {
   restSeconds: number;
   /** The camera can only judge the movements the rep engine knows. */
   tracked: boolean;
+  /** Which section it belongs to. */
+  group?: MuscleGroup;
+  /** What it actually works, in the order it works them. */
+  targets?: string;
 }
 
 const TRACKED = new Set(['pushups', 'squats', 'lunges', 'glute-bridge', 'calf-raises']);
@@ -412,62 +444,125 @@ const TRACKED = new Set(['pushups', 'squats', 'lunges', 'glute-bridge', 'calf-ra
  * Deliberately not exhaustive. It covers what most people actually put in a
  * session; anything missing is one typed name away.
  */
-const CATALOGUE: { name: string; metric?: ExerciseMetric; rest?: number }[] = [
-  // Chest
-  { name: 'Bench press', rest: 120 },
-  { name: 'Incline bench press', rest: 120 },
-  { name: 'Dumbbell press', rest: 90 },
-  { name: 'Dumbbell fly', rest: 60 },
-  { name: 'Cable crossover', rest: 60 },
-  { name: 'Chest dip', rest: 90 },
-  // Back
-  { name: 'Deadlift', rest: 180 },
-  { name: 'Barbell row', rest: 120 },
-  { name: 'Dumbbell row', rest: 90 },
-  { name: 'Lat pulldown', rest: 90 },
-  { name: 'Seated cable row', rest: 90 },
-  { name: 'Pull-up', rest: 120 },
-  { name: 'Chin-up', rest: 120 },
-  { name: 'Face pull', rest: 60 },
-  { name: 'Shrug', rest: 60 },
-  // Legs
-  { name: 'Back squat', rest: 180 },
-  { name: 'Front squat', rest: 150 },
-  { name: 'Romanian deadlift', rest: 120 },
-  { name: 'Leg press', rest: 120 },
-  { name: 'Leg extension', rest: 60 },
-  { name: 'Leg curl', rest: 60 },
-  { name: 'Hip thrust', rest: 90 },
-  { name: 'Bulgarian split squat', rest: 90 },
-  { name: 'Standing calf raise', rest: 45 },
-  // Shoulders and arms
-  { name: 'Overhead press', rest: 120 },
-  { name: 'Arnold press', rest: 90 },
-  { name: 'Lateral raise', rest: 45 },
-  { name: 'Rear delt fly', rest: 45 },
-  { name: 'Barbell curl', rest: 60 },
-  { name: 'Dumbbell curl', rest: 60 },
-  { name: 'Hammer curl', rest: 60 },
-  { name: 'Preacher curl', rest: 60 },
-  { name: 'Triceps pushdown', rest: 60 },
-  { name: 'Skull crusher', rest: 60 },
-  { name: 'Close-grip bench press', rest: 90 },
-  { name: 'Triceps dip', rest: 90 },
-  // Core and carries
-  { name: 'Hanging leg raise', rest: 60 },
-  { name: 'Cable crunch', rest: 45 },
-  { name: 'Russian twist', rest: 45 },
-  { name: 'Ab wheel rollout', rest: 60 },
-  { name: 'Side plank', metric: 'hold', rest: 45 },
-  { name: 'Farmer carry', metric: 'hold', rest: 90 },
-  { name: 'Dead hang', metric: 'hold', rest: 60 },
-  // Conditioning
-  { name: 'Burpee', rest: 60 },
-  { name: 'Mountain climber', rest: 45 },
-  { name: 'Jump rope', metric: 'hold', rest: 60 },
-  { name: 'Kettlebell swing', rest: 60 },
-  { name: 'Box jump', rest: 90 },
-  { name: 'Battle ropes', metric: 'hold', rest: 60 },
+interface CatalogueEntry {
+  name: string;
+  group: MuscleGroup;
+  /** Primary mover first, then what else does real work. */
+  targets: string;
+  metric?: ExerciseMetric;
+  rest?: number;
+}
+
+const CATALOGUE: CatalogueEntry[] = [
+  /* ---- Chest ---- */
+  { name: 'Bench press', group: 'Chest', targets: 'Chest · Triceps · Front delts', rest: 120 },
+  { name: 'Incline bench press', group: 'Chest', targets: 'Upper chest · Front delts', rest: 120 },
+  { name: 'Decline bench press', group: 'Chest', targets: 'Lower chest · Triceps', rest: 120 },
+  { name: 'Dumbbell bench press', group: 'Chest', targets: 'Chest · Triceps', rest: 90 },
+  { name: 'Incline dumbbell press', group: 'Chest', targets: 'Upper chest · Front delts', rest: 90 },
+  { name: 'Dumbbell fly', group: 'Chest', targets: 'Chest', rest: 60 },
+  { name: 'Cable crossover', group: 'Chest', targets: 'Chest', rest: 60 },
+  { name: 'Pec deck', group: 'Chest', targets: 'Chest', rest: 60 },
+  { name: 'Chest dip', group: 'Chest', targets: 'Lower chest · Triceps', rest: 90 },
+  { name: 'Machine chest press', group: 'Chest', targets: 'Chest · Triceps', rest: 90 },
+
+  /* ---- Back ---- */
+  { name: 'Deadlift', group: 'Back', targets: 'Whole posterior chain · Grip', rest: 180 },
+  { name: 'Barbell row', group: 'Back', targets: 'Mid back · Lats · Biceps', rest: 120 },
+  { name: 'Pendlay row', group: 'Back', targets: 'Mid back · Lats', rest: 120 },
+  { name: 'Dumbbell row', group: 'Back', targets: 'Lats · Mid back', rest: 90 },
+  { name: 'Seated cable row', group: 'Back', targets: 'Mid back · Lats · Biceps', rest: 90 },
+  { name: 'Chest-supported row', group: 'Back', targets: 'Mid back · Rear delts', rest: 90 },
+  { name: 'T-bar row', group: 'Back', targets: 'Mid back · Lats', rest: 120 },
+  { name: 'Face pull', group: 'Back', targets: 'Rear delts · Upper back', rest: 60 },
+  { name: 'Shrug', group: 'Back', targets: 'Traps', rest: 60 },
+  { name: 'Back extension', group: 'Back', targets: 'Lower back · Glutes · Hamstrings', rest: 60 },
+  { name: 'Rack pull', group: 'Back', targets: 'Upper back · Glutes · Grip', rest: 150 },
+
+  /* ---- Lats ---- */
+  { name: 'Pull-up', group: 'Lats', targets: 'Lats · Biceps · Upper back', rest: 120 },
+  { name: 'Chin-up', group: 'Lats', targets: 'Lats · Biceps', rest: 120 },
+  { name: 'Lat pulldown', group: 'Lats', targets: 'Lats · Biceps', rest: 90 },
+  { name: 'Close-grip pulldown', group: 'Lats', targets: 'Lats · Biceps', rest: 90 },
+  { name: 'Straight-arm pulldown', group: 'Lats', targets: 'Lats', rest: 60 },
+  { name: 'Cable pullover', group: 'Lats', targets: 'Lats · Chest', rest: 60 },
+
+  /* ---- Shoulders ---- */
+  { name: 'Overhead press', group: 'Shoulders', targets: 'Front delts · Triceps · Upper chest', rest: 120 },
+  { name: 'Seated dumbbell press', group: 'Shoulders', targets: 'Front and side delts · Triceps', rest: 90 },
+  { name: 'Arnold press', group: 'Shoulders', targets: 'Front and side delts', rest: 90 },
+  { name: 'Lateral raise', group: 'Shoulders', targets: 'Side delts', rest: 45 },
+  { name: 'Cable lateral raise', group: 'Shoulders', targets: 'Side delts', rest: 45 },
+  { name: 'Rear delt fly', group: 'Shoulders', targets: 'Rear delts · Upper back', rest: 45 },
+  { name: 'Front raise', group: 'Shoulders', targets: 'Front delts', rest: 45 },
+  { name: 'Upright row', group: 'Shoulders', targets: 'Side delts · Traps', rest: 60 },
+
+  /* ---- Biceps ---- */
+  { name: 'Barbell curl', group: 'Biceps', targets: 'Biceps', rest: 60 },
+  { name: 'Dumbbell curl', group: 'Biceps', targets: 'Biceps', rest: 60 },
+  { name: 'Hammer curl', group: 'Biceps', targets: 'Biceps · Brachialis · Forearms', rest: 60 },
+  { name: 'Preacher curl', group: 'Biceps', targets: 'Biceps', rest: 60 },
+  { name: 'Incline dumbbell curl', group: 'Biceps', targets: 'Biceps (long head)', rest: 60 },
+  { name: 'Cable curl', group: 'Biceps', targets: 'Biceps', rest: 60 },
+  { name: 'Concentration curl', group: 'Biceps', targets: 'Biceps', rest: 45 },
+
+  /* ---- Triceps ---- */
+  { name: 'Triceps pushdown', group: 'Triceps', targets: 'Triceps', rest: 60 },
+  { name: 'Rope pushdown', group: 'Triceps', targets: 'Triceps (lateral head)', rest: 60 },
+  { name: 'Skull crusher', group: 'Triceps', targets: 'Triceps (long head)', rest: 60 },
+  { name: 'Overhead triceps extension', group: 'Triceps', targets: 'Triceps (long head)', rest: 60 },
+  { name: 'Close-grip bench press', group: 'Triceps', targets: 'Triceps · Chest', rest: 90 },
+  { name: 'Triceps dip', group: 'Triceps', targets: 'Triceps · Lower chest', rest: 90 },
+  { name: 'Triceps kickback', group: 'Triceps', targets: 'Triceps', rest: 45 },
+
+  /* ---- Legs ---- */
+  { name: 'Back squat', group: 'Legs', targets: 'Quads · Glutes · Core', rest: 180 },
+  { name: 'Front squat', group: 'Legs', targets: 'Quads · Core', rest: 150 },
+  { name: 'Leg press', group: 'Legs', targets: 'Quads · Glutes', rest: 120 },
+  { name: 'Romanian deadlift', group: 'Legs', targets: 'Hamstrings · Glutes', rest: 120 },
+  { name: 'Leg extension', group: 'Legs', targets: 'Quads', rest: 60 },
+  { name: 'Leg curl', group: 'Legs', targets: 'Hamstrings', rest: 60 },
+  { name: 'Bulgarian split squat', group: 'Legs', targets: 'Quads · Glutes', rest: 90 },
+  { name: 'Walking lunge', group: 'Legs', targets: 'Quads · Glutes', rest: 90 },
+  { name: 'Goblet squat', group: 'Legs', targets: 'Quads · Glutes · Core', rest: 90 },
+  { name: 'Standing calf raise', group: 'Legs', targets: 'Calves', rest: 45 },
+  { name: 'Seated calf raise', group: 'Legs', targets: 'Calves (soleus)', rest: 45 },
+
+  /* ---- Glutes ---- */
+  { name: 'Hip thrust', group: 'Glutes', targets: 'Glutes · Hamstrings', rest: 90 },
+  { name: 'Glute bridge (weighted)', group: 'Glutes', targets: 'Glutes', rest: 60 },
+  { name: 'Cable kickback', group: 'Glutes', targets: 'Glutes', rest: 45 },
+  { name: 'Hip abduction', group: 'Glutes', targets: 'Glute medius', rest: 45 },
+  { name: 'Step-up', group: 'Glutes', targets: 'Glutes · Quads', rest: 60 },
+
+  /* ---- Core ---- */
+  { name: 'Hanging leg raise', group: 'Core', targets: 'Lower abs · Hip flexors', rest: 60 },
+  { name: 'Cable crunch', group: 'Core', targets: 'Abs', rest: 45 },
+  { name: 'Russian twist', group: 'Core', targets: 'Obliques · Abs', rest: 45 },
+  { name: 'Ab wheel rollout', group: 'Core', targets: 'Abs · Lower back', rest: 60 },
+  { name: 'Sit-up', group: 'Core', targets: 'Abs · Hip flexors', rest: 45 },
+  { name: 'Bicycle crunch', group: 'Core', targets: 'Abs · Obliques', rest: 45 },
+  { name: 'Side plank', group: 'Core', targets: 'Obliques · Core', metric: 'hold', rest: 45 },
+  { name: 'Dead bug', group: 'Core', targets: 'Deep core', rest: 45 },
+
+  /* ---- Cardio and conditioning ---- */
+  { name: 'Burpee', group: 'Cardio', targets: 'Full body · Conditioning', rest: 60 },
+  { name: 'Mountain climber', group: 'Cardio', targets: 'Core · Shoulders · Conditioning', rest: 45 },
+  { name: 'Jump rope', group: 'Cardio', targets: 'Calves · Conditioning', metric: 'hold', rest: 60 },
+  { name: 'Rowing machine', group: 'Cardio', targets: 'Back · Legs · Conditioning', metric: 'hold', rest: 90 },
+  { name: 'Treadmill run', group: 'Cardio', targets: 'Legs · Conditioning', metric: 'hold', rest: 120 },
+  { name: 'Cycling', group: 'Cardio', targets: 'Quads · Conditioning', metric: 'hold', rest: 90 },
+  { name: 'Box jump', group: 'Cardio', targets: 'Quads · Glutes · Power', rest: 90 },
+  { name: 'Battle ropes', group: 'Cardio', targets: 'Shoulders · Conditioning', metric: 'hold', rest: 60 },
+
+  /* ---- Full body ---- */
+  { name: 'Kettlebell swing', group: 'Full body', targets: 'Glutes · Hamstrings · Core', rest: 60 },
+  { name: 'Clean and press', group: 'Full body', targets: 'Full body · Shoulders', rest: 150 },
+  { name: 'Power clean', group: 'Full body', targets: 'Full body · Power', rest: 150 },
+  { name: 'Thruster', group: 'Full body', targets: 'Quads · Shoulders · Conditioning', rest: 120 },
+  { name: 'Farmer carry', group: 'Full body', targets: 'Grip · Traps · Core', metric: 'hold', rest: 90 },
+  { name: 'Dead hang', group: 'Full body', targets: 'Grip · Lats · Shoulders', metric: 'hold', rest: 60 },
+  { name: 'Sled push', group: 'Full body', targets: 'Legs · Conditioning', metric: 'hold', rest: 120 },
 ];
 
 /**
@@ -484,8 +579,20 @@ export function catalogueExercises(): KnownExercise[] {
     custom: true,
     restSeconds: row.rest ?? 60,
     tracked: false,
+    group: row.group,
+    targets: row.targets,
   }));
 }
+
+/** What each built-in bodyweight exercise works, and where it is filed. */
+const PRESET_MUSCLES: Record<string, { group: MuscleGroup; targets: string }> = {
+  pushups: { group: 'Chest', targets: 'Chest · Triceps · Core' },
+  squats: { group: 'Legs', targets: 'Quads · Glutes' },
+  lunges: { group: 'Legs', targets: 'Quads · Glutes · Balance' },
+  plank: { group: 'Core', targets: 'Abs · Deep core' },
+  'glute-bridge': { group: 'Glutes', targets: 'Glutes · Hamstrings' },
+  'calf-raises': { group: 'Legs', targets: 'Calves' },
+};
 
 export function presetExercises(): KnownExercise[] {
   return EXERCISES.map((e) => ({
@@ -496,6 +603,8 @@ export function presetExercises(): KnownExercise[] {
     cue: e.cue,
     restSeconds: e.restSeconds,
     tracked: TRACKED.has(e.id),
+    group: PRESET_MUSCLES[e.id]?.group,
+    targets: PRESET_MUSCLES[e.id]?.targets,
   }));
 }
 

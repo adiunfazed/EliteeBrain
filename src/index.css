@@ -24,19 +24,21 @@
 }
 
 :root {
-  --ground: #F4F6F8;
+  --ground: #F2F5F9;
   --surface: #FFFFFF;
-  --surface-sunk: #EBEFF5;
-  --ink: #0E1116;
-  --ink-muted: #647085;
+  --surface-sunk: #E9EEF5;
+  --ink: #0B0E13;
+  /* Darker than it was: on white, mid-grey secondary text washed out
+     completely in daylight, which is where a light theme gets used. */
+  --ink-muted: #4C586B;
   /* Dimmer than muted — used for hints and secondary labels. */
-  --ink-dim: #7A8698;
-  --rule: #D1D8E2;
+  --ink-dim: #64718A;
+  --rule: #C9D2DF;
   /* A stronger rule for hover and emphasis. */
-  --rule-strong: #B8C2D0;
+  --rule-strong: #A9B5C6;
 
-  --signal: #7A63E0;
-  --signal-ink: #5A45BC;
+  --signal: #6A52D6;
+  --signal-ink: #4B37A8;
 
   --dom-memory: #E11D48;
   --dom-focus: #7E63DC;
@@ -700,6 +702,18 @@
    ================================================================== */
 
 :root {
+  /* The light theme's own status colours. The dark theme's amber and teal
+     are tuned for a near-black page; on white they are close to invisible,
+     so each one is taken down to a shade that actually reads. */
+  --done: #0B8F7D;
+  --done-dim: rgba(11, 143, 125, 0.12);
+  --warn: #A25B06;
+  --warn-dim: rgba(162, 91, 6, 0.12);
+  --danger: #C23A28;
+  --danger-dim: rgba(194, 58, 40, 0.12);
+}
+
+.dark {
   --done: #00C2A8;
   --done-dim: rgba(0, 194, 168, 0.14);
   --warn: #FFB020;
@@ -3966,3 +3980,735 @@ button > span,
   .rest-panel { gap: 11px; padding: 12px; }
   .pick-add { min-width: 70px; padding: 0 10px; }
 }
+
+
+/* ==================================================================
+   Quick start: two modes, kept apart
+
+   By hand is the set list, sized for one exercise on a phone. With the
+   camera there is nothing to press at all — a preview and one enormous
+   number, because the phone is on the floor and so are the hands.
+   ================================================================== */
+
+.cam-open {
+  width: 100%;
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border-radius: 14px;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--signal-ink);
+  background: color-mix(in oklab, var(--signal) 17%, transparent);
+  border: 1px solid color-mix(in oklab, var(--signal) 45%, var(--rule));
+  transition: transform 130ms ease, background-color 150ms ease;
+}
+
+.cam-open:active {
+  transform: scale(0.985);
+  background: color-mix(in oklab, var(--signal) 26%, transparent);
+}
+
+.cam-count {
+  margin-top: 14px;
+  text-align: center;
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: 104px;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--ink);
+}
+
+.cam-count[data-full='true'] { color: var(--done); }
+
+/* The larger set list, used when one exercise has the whole screen. */
+.log[data-size='lg'] .log-row,
+.log[data-size='lg'] .log-head {
+  grid-template-columns: 44px 1fr 1fr 60px;
+  gap: 10px;
+}
+
+.log[data-size='lg'][data-weight='false'] .log-row,
+.log[data-size='lg'][data-weight='false'] .log-head {
+  grid-template-columns: 52px 1fr 68px;
+}
+
+.log[data-weight='false'] .log-row,
+.log[data-weight='false'] .log-head {
+  grid-template-columns: 34px 1fr 46px;
+}
+
+.log[data-size='lg'] .log-row { padding: 8px 10px; border-radius: 14px; }
+.log[data-size='lg'] .log-cell { height: 52px; border-radius: 12px; }
+.log[data-size='lg'] .log-input { font-size: 20px; }
+.log[data-size='lg'] .log-index { height: 44px; font-size: 15px; }
+.log[data-size='lg'] .log-check,
+.log[data-size='lg'] .log-timer { width: 48px; height: 48px; border-radius: 13px; }
+.log[data-size='lg'] .log-add { padding: 10px 14px; font-size: 13.5px; }
+
+/* --- the picker's body-part sections --- */
+
+.pick-tabs {
+  display: flex;
+  gap: 7px;
+  margin-top: 10px;
+  padding-bottom: 2px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.pick-tabs::-webkit-scrollbar { display: none; }
+
+.pick-tab {
+  flex: none;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+  color: var(--ink-dim);
+  background: var(--surface-sunk);
+  border: 1px solid var(--rule);
+  transition: color 140ms ease, background-color 140ms ease, border-color 140ms ease;
+}
+
+.pick-tab[data-active='true'] {
+  color: var(--signal-ink);
+  background: color-mix(in oklab, var(--signal) 18%, transparent);
+  border-color: color-mix(in oklab, var(--signal) 50%, var(--rule));
+}
+
+@media (max-width: 380px) {
+  .cam-count { font-size: 88px; }
+}
+
+
+/* ==================================================================
+   Light theme corrections
+
+   Parts of the app were written when there was only a dark theme, and
+   they hardcode near-black panels and white text. On white those panels
+   are black rectangles with invisible labels. Rather than rewrite every
+   screen at once, this layer repaints those hardcoded colours to the
+   theme's own tokens whenever the light theme is on.
+
+   Everything here is scoped to `html:not(.dark)`, so the dark theme is
+   byte-for-byte unchanged.
+   ================================================================== */
+
+/* A background that was hardcoded dark becomes a surface. The bracket
+   selectors match Tailwind's arbitrary values as they appear in the DOM
+   (`bg-[#111827]`), which is how these colours were written. */
+html:not(.dark) [class*="bg-[#0"],
+html:not(.dark) [class*="bg-[#1"],
+html:not(.dark) [class*="bg-[#2"],
+html:not(.dark) [class*="bg-slate-7"],
+html:not(.dark) [class*="bg-slate-8"],
+html:not(.dark) [class*="bg-slate-9"],
+html:not(.dark) [class*="bg-gray-7"],
+html:not(.dark) [class*="bg-gray-8"],
+html:not(.dark) [class*="bg-gray-9"],
+html:not(.dark) [class*="bg-zinc-8"],
+html:not(.dark) [class*="bg-zinc-9"],
+html:not(.dark) [class*="bg-neutral-8"],
+html:not(.dark) [class*="bg-neutral-9"],
+html:not(.dark) .bg-black {
+  background-color: var(--surface-sunk);
+  border-color: var(--rule);
+}
+
+/* A border that was hardcoded dark becomes a rule. */
+html:not(.dark) [class*="border-[#1"],
+html:not(.dark) [class*="border-[#2"],
+html:not(.dark) [class*="border-[#3"],
+html:not(.dark) [class*="border-slate-7"],
+html:not(.dark) [class*="border-slate-8"],
+html:not(.dark) [class*="border-gray-7"],
+html:not(.dark) [class*="border-gray-8"] {
+  border-color: var(--rule);
+}
+
+/*
+   Text that was written for a dark background becomes ink — but only
+   where the element is not itself a coloured control, and not inside
+   one. White on a purple button is correct and stays.
+ */
+html:not(.dark)
+  :is(
+    .text-white,
+    [class*="text-white/"],
+    [class*="text-slate-1"],
+    [class*="text-slate-2"],
+    [class*="text-slate-3"],
+    [class*="text-slate-4"],
+    [class*="text-gray-1"],
+    [class*="text-gray-2"],
+    [class*="text-gray-3"],
+    [class*="text-[#A0AEC0]"],
+    [class*="text-[#CBD5E0]"],
+    [class*="text-[#E2E8F0]"]
+  ):not(
+    [class*="bg-rose"],
+    [class*="bg-red"],
+    [class*="bg-emerald"],
+    [class*="bg-green"],
+    [class*="bg-blue"],
+    [class*="bg-indigo"],
+    [class*="bg-violet"],
+    [class*="bg-purple"],
+    [class*="bg-fuchsia"],
+    [class*="bg-pink"],
+    [class*="bg-amber"],
+    [class*="bg-orange"],
+    [class*="bg-yellow"],
+    [class*="bg-teal"],
+    [class*="bg-cyan"],
+    [class*="bg-sky"],
+    [class*="bg-gradient"],
+    [class*="--signal"]
+  ):not(
+    :is(
+      [class*="bg-rose"],
+      [class*="bg-red"],
+      [class*="bg-emerald"],
+      [class*="bg-green"],
+      [class*="bg-blue"],
+      [class*="bg-indigo"],
+      [class*="bg-violet"],
+      [class*="bg-purple"],
+      [class*="bg-fuchsia"],
+      [class*="bg-pink"],
+      [class*="bg-amber"],
+      [class*="bg-orange"],
+      [class*="bg-yellow"],
+      [class*="bg-teal"],
+      [class*="bg-cyan"],
+      [class*="bg-sky"],
+      [class*="bg-gradient"],
+      [class*="--signal"],
+      .btn-lg,
+      .wk-start,
+      .eb-btn-primary,
+      .eb-tile-violet,
+      .eb-tile-coral,
+      .eb-tile-teal,
+      .eb-tile-amber,
+      .eb-tile-slate,
+      .pr-badge
+    )
+      *
+  ) {
+  color: var(--ink);
+}
+
+/* The quieter greys keep their hierarchy rather than all going to ink. */
+html:not(.dark) [class*="text-slate-4"],
+html:not(.dark) [class*="text-slate-5"],
+html:not(.dark) [class*="text-gray-4"],
+html:not(.dark) [class*="text-gray-5"],
+html:not(.dark) [class*="text-white/6"],
+html:not(.dark) [class*="text-white/5"] {
+  color: var(--ink-muted);
+}
+
+/*
+   Weight and hierarchy, in both themes.
+
+   Controls carry a heavier weight than body text so a button reads as a
+   button at a glance, and the heading styles are pinned to ink so a
+   screen that set its own colour cannot quietly wash one out.
+ */
+.btn-lg,
+.btn-quiet,
+.btn-text,
+.chip,
+.wk-start,
+.pick-add,
+.pick-tab,
+.rest-preset,
+.rest-skip,
+.add-row,
+.log-add,
+.menu-tile,
+.segmented > button {
+  font-weight: 700;
+}
+
+/*
+   Only weight here, deliberately.
+
+   These classes already set their own colour further up, and several
+   screens pair them with a colour utility — `t-meta eb-warn` on the Pro
+   pill, for one. Re-declaring colour this late in the file would win
+   that pairing and quietly grey out every such label.
+ */
+.t-section,
+.panel-title {
+  font-weight: 800;
+}
+
+/* Quiet buttons need a visible edge on white, where a hairline
+   disappears. */
+html:not(.dark) .btn-quiet,
+html:not(.dark) .icon-btn,
+html:not(.dark) .step-btn {
+  border-color: var(--rule-strong);
+  color: var(--ink);
+}
+
+/* The primary button keeps white text, and gets a slightly deeper fill
+   so white stays legible on it. */
+html:not(.dark) .btn-lg,
+html:not(.dark) .eb-btn-primary {
+  background: linear-gradient(160deg, #7561DF, #5B45C8);
+  color: #fff;
+}
+
+html:not(.dark) .wk-start {
+  color: #fff;
+  background: linear-gradient(180deg, #7561DF, #5B45C8);
+  border-color: #5B45C8;
+}
+
+/* Cards and panels need a touch more separation from a white page than
+   a hairline gives. */
+html:not(.dark) .panel-sm,
+html:not(.dark) .eb-card,
+html:not(.dark) .wk-card,
+html:not(.dark) .run-card,
+html:not(.dark) .build-block,
+html:not(.dark) .stat-strip,
+html:not(.dark) .sheet {
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.04);
+}
+
+/* Inputs: a white field on a white card is invisible without an edge. */
+html:not(.dark) .field-wrap,
+html:not(.dark) .log-cell,
+html:not(.dark) .step-field,
+html:not(.dark) .step-value {
+  background: var(--surface);
+  border-color: var(--rule-strong);
+}
+
+html:not(.dark) input,
+html:not(.dark) textarea {
+  color: var(--ink);
+}
+
+html:not(.dark) input::placeholder,
+html:not(.dark) textarea::placeholder {
+  color: var(--ink-dim);
+}
+
+/* The done tick is teal on both themes; on white it needs dark glyphs. */
+html:not(.dark) .log-check[data-done='true'],
+html:not(.dark) .panel-tick-mark[data-state='done'] {
+  color: #04221D;
+}
+
+
+/* ==================================================================
+   First run: the theme choice
+
+   Two cards, each drawn in the theme it offers, so the choice is made by
+   looking rather than by reading two words. Tapping one applies it
+   immediately — the screen behind the cards becomes the real preview.
+   ================================================================== */
+
+.theme-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.theme-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 18px;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  transition: border-color 160ms ease, transform 140ms ease, box-shadow 160ms ease;
+}
+
+.theme-card:active { transform: scale(0.985); }
+
+.theme-card[data-active='true'] {
+  border-color: var(--signal);
+  box-shadow: 0 0 0 1px var(--signal) inset, 0 10px 30px -18px var(--signal);
+}
+
+.theme-card-foot {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 2px 2px;
+}
+
+.theme-card-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.theme-radio {
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: transparent;
+  border: 2px solid var(--rule-strong);
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.theme-radio[data-active='true'] {
+  background: var(--signal);
+  border-color: var(--signal);
+}
+
+/* The miniature. Same tokens as the app, a tenth of the size. */
+.theme-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  height: 116px;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid;
+  overflow: hidden;
+}
+
+.theme-preview-bar {
+  height: 6px;
+  width: 62%;
+  border-radius: 999px;
+}
+
+.theme-preview-bar.short { width: 40%; height: 5px; }
+
+.theme-preview-card {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 4px;
+  padding: 8px;
+  border-radius: 9px;
+  border: 1px solid;
+}
+
+.theme-preview-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 5px;
+  flex: none;
+}
+
+.theme-preview-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.theme-preview-lines > span {
+  height: 4px;
+  border-radius: 999px;
+}
+
+.theme-preview-lines > span:first-child { width: 80%; }
+.theme-preview-lines > span:last-child { width: 55%; }
+
+.theme-preview-pill {
+  margin-top: auto;
+  height: 16px;
+  border-radius: 8px;
+}
+
+/* ------------------------------------------------------------------
+   The quick menu behind the header's slider button
+   ------------------------------------------------------------------ */
+
+.menu-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 0 12px;
+  border-radius: 14px;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--surface-sunk);
+  border: 1px solid var(--rule);
+  transition: border-color 150ms ease, transform 130ms ease;
+}
+
+.menu-tile:active {
+  transform: scale(0.98);
+  border-color: var(--rule-strong);
+}
+
+.menu-tile-danger {
+  color: var(--danger);
+  border-color: color-mix(in oklab, var(--danger) 40%, var(--rule));
+  background: color-mix(in oklab, var(--danger) 12%, transparent);
+}
+
+.menu-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: 9px;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--rule);
+}
+
+.menu-input {
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 11px;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--rule-strong);
+  outline: none;
+}
+
+.menu-input:focus { border-color: var(--signal); }
+
+.menu-save {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 11px;
+  flex: none;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 13px;
+  color: #fff;
+  background: var(--signal);
+  border: 1px solid var(--signal);
+}
+
+.menu-save:disabled { opacity: 0.45; }
+
+
+/* ==================================================================
+   Dark theme corrections
+
+   The same job the light layer does, for the other side. Several older
+   screens hardcode their own blue-grey panels — #181E2A, #1A202C,
+   #2D3748, slate-800 — from before there was a palette. They are not
+   broken on black the way they were on white, but they are a different
+   dark from the rest of the app: bluer, flatter, and bordered in a grey
+   the theme never uses. Repainting them to the same tokens is what made
+   the light theme read as one system, so it is done here too.
+
+   Scoped to `.dark`, so the light theme is untouched.
+   ================================================================== */
+
+.dark [class*="bg-[#0"],
+.dark [class*="bg-[#1"],
+.dark [class*="bg-[#2"],
+.dark [class*="bg-slate-7"],
+.dark [class*="bg-slate-8"],
+.dark [class*="bg-slate-9"],
+.dark [class*="bg-gray-7"],
+.dark [class*="bg-gray-8"],
+.dark [class*="bg-gray-9"],
+.dark [class*="bg-zinc-8"],
+.dark [class*="bg-zinc-9"],
+.dark [class*="bg-neutral-8"],
+.dark [class*="bg-neutral-9"] {
+  background-color: var(--surface-sunk);
+  border-color: var(--rule);
+}
+
+/* Borders drawn in a grey the palette does not contain. */
+.dark [class*="border-[#1"],
+.dark [class*="border-[#2"],
+.dark [class*="border-[#3"],
+.dark [class*="border-[#4"],
+.dark [class*="border-slate-6"],
+.dark [class*="border-slate-7"],
+.dark [class*="border-slate-8"],
+.dark [class*="border-gray-6"],
+.dark [class*="border-gray-7"],
+.dark [class*="border-gray-8"] {
+  border-color: var(--rule);
+}
+
+/*
+   Text. Pure white is a shade the theme does not use — its ink is
+   #F5F4F8, which is what stops a dark screen looking like a lightbox —
+   and the assorted slate greys each pick their own idea of secondary.
+   Both are pulled back onto the two the theme actually has.
+
+   Coloured controls keep their own white, here as in light.
+ */
+.dark
+  :is(
+    .text-white,
+    [class*="text-slate-1"],
+    [class*="text-slate-2"],
+    [class*="text-[#E2E8F0]"],
+    [class*="text-[#EDF2F7]"]
+  ):not(
+    [class*="bg-rose"],
+    [class*="bg-red"],
+    [class*="bg-emerald"],
+    [class*="bg-green"],
+    [class*="bg-blue"],
+    [class*="bg-indigo"],
+    [class*="bg-violet"],
+    [class*="bg-purple"],
+    [class*="bg-fuchsia"],
+    [class*="bg-pink"],
+    [class*="bg-amber"],
+    [class*="bg-orange"],
+    [class*="bg-yellow"],
+    [class*="bg-teal"],
+    [class*="bg-cyan"],
+    [class*="bg-sky"],
+    [class*="bg-gradient"],
+    [class*="--signal"]
+  ):not(
+    :is(
+      [class*="bg-rose"],
+      [class*="bg-red"],
+      [class*="bg-emerald"],
+      [class*="bg-green"],
+      [class*="bg-blue"],
+      [class*="bg-indigo"],
+      [class*="bg-violet"],
+      [class*="bg-purple"],
+      [class*="bg-fuchsia"],
+      [class*="bg-pink"],
+      [class*="bg-amber"],
+      [class*="bg-orange"],
+      [class*="bg-yellow"],
+      [class*="bg-teal"],
+      [class*="bg-cyan"],
+      [class*="bg-sky"],
+      [class*="bg-gradient"],
+      [class*="--signal"],
+      .btn-lg,
+      .wk-start,
+      .eb-btn-primary,
+      .eb-tile-violet,
+      .eb-tile-coral,
+      .eb-tile-teal,
+      .eb-tile-amber,
+      .eb-tile-slate,
+      .pr-badge
+    )
+      *
+  ) {
+  color: var(--ink);
+}
+
+/* One secondary grey, not five. */
+.dark [class*="text-slate-3"],
+.dark [class*="text-slate-4"],
+.dark [class*="text-slate-5"],
+.dark [class*="text-gray-3"],
+.dark [class*="text-gray-4"],
+.dark [class*="text-gray-5"],
+.dark [class*="text-[#A0AEC0]"],
+.dark [class*="text-[#CBD5E0]"],
+.dark [class*="text-[#718096]"] {
+  color: var(--ink-muted);
+}
+
+/*
+   Separation. A shadow does nothing on a near-black page, so a card is
+   lifted the way it is lifted in print: a one-pixel highlight along the
+   top edge, and a shadow soft enough to darken the ground under it
+   rather than draw a box.
+ */
+.dark .panel-sm,
+.dark .eb-card,
+.dark .wk-card,
+.dark .run-card,
+.dark .build-block,
+.dark .stat-strip,
+.dark .sheet,
+.dark .menu-tile {
+  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.035) inset, 0 2px 10px -6px rgba(0, 0, 0, 0.7);
+}
+
+/* Fields need an edge on dark too, or they vanish into the card. */
+.dark .field-wrap,
+.dark .log-cell,
+.dark .step-field,
+.dark .step-value,
+.dark .menu-input {
+  border-color: var(--rule-strong);
+}
+
+.dark input,
+.dark textarea {
+  color: var(--ink);
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: var(--ink-dim);
+}
+
+/* Quiet controls: the same visible edge the light theme gives them. */
+.dark .btn-quiet,
+.dark .icon-btn,
+.dark .step-btn {
+  border-color: var(--rule-strong);
+}
+
+
+/* ------------------------------------------------------------------
+   Status colour, last word
+
+   `.eb-warn` and friends are declared beside the tokens near the top of
+   this file, while the typography classes come hundreds of lines later
+   — so a pill written `class="t-meta eb-warn"` lost its amber to the
+   grey of `t-meta` purely by source order. The Pro pill on the header
+   has been reading as disabled text because of it.
+
+   Re-stating them here, after the typography, makes the pairing work
+   the way every screen already assumes it does.
+   ------------------------------------------------------------------ */
+
+.eb-done { color: var(--done); }
+.eb-warn { color: var(--warn); }
+.eb-danger { color: var(--danger); }

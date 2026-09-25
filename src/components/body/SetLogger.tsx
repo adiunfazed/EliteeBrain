@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 import { Check, Pause, Play, Plus, Trophy, X } from 'lucide-react';
 import { RestRing } from './RestRing';
 import { soundFx } from '../../utils/audio';
@@ -37,6 +36,15 @@ interface Props {
   rest?: { afterIndex: number; left: number; total: number } | null;
   /** Whether the hold timer is running, for a timed exercise. */
   timerRunning?: boolean;
+  /**
+   * Whether the weight column is shown.
+   *
+   * Off for bodyweight work started from Quick start, where a kilogram
+   * column would be a cell to skip past on every single row.
+   */
+  showWeight?: boolean;
+  /** 'lg' gives taller rows and bigger numbers, for a one-exercise screen. */
+  size?: 'md' | 'lg';
   onChange: (index: number, patch: Partial<LoggedSet>) => void;
   onToggleDone?: (index: number) => void;
   onToggleTimer?: (index: number) => void;
@@ -155,33 +163,27 @@ export const SetLogger: React.FC<Props> = ({
   onRemove,
   onSkipRest,
   onSetRest,
+  showWeight = true,
+  size = 'md',
   max = 12,
 }) => {
   const isHold = metric === 'hold';
 
   return (
-    <div className="log">
+    <div className="log" data-size={size} data-weight={showWeight ? 'true' : 'false'}>
       <div className="log-head">
         <span>Set</span>
-        <span>Weight</span>
+        {showWeight && <span>Weight</span>}
         <span>{isHold ? 'Secs' : 'Reps'}</span>
         <span className="sr-only">Done</span>
       </div>
 
-      <AnimatePresence initial={false}>
-        {rows.map((row, index) => {
+      {rows.map((row, index) => {
           const active = mode === 'log' && index === activeIndex && !row.done;
           const isPr = !!prRows[index] && !row.done;
 
           return (
-            <motion.div
-              key={index}
-              layout
-              initial={{ opacity: 0, y: -4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.16 }}
-            >
+            <div key={index}>
               <div
                 className="log-row"
                 data-done={row.done ? 'true' : 'false'}
@@ -192,14 +194,16 @@ export const SetLogger: React.FC<Props> = ({
                   {isPr && <Trophy className="w-3 h-3 shrink-0 log-pr" />}
                 </span>
 
-                <Cell
-                  value={row.weight}
-                  suffix="kg"
-                  decimals
-                  label={`Set ${index + 1} weight in kilograms`}
-                  disabled={row.done}
-                  onCommit={(weight) => onChange(index, { weight })}
-                />
+                {showWeight && (
+                  <Cell
+                    value={row.weight}
+                    suffix="kg"
+                    decimals
+                    label={`Set ${index + 1} weight in kilograms`}
+                    disabled={row.done}
+                    onCommit={(weight) => onChange(index, { weight })}
+                  />
+                )}
 
                 <Cell
                   value={row.reps}
@@ -270,12 +274,7 @@ export const SetLogger: React.FC<Props> = ({
                   taking over the screen — the next set's numbers stay visible
                   and editable while it runs. */}
               {rest && rest.afterIndex === index && rest.left > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="rest-panel"
-                >
+                <div className="rest-panel">
                   <div className="rest-panel-ring">
                     <RestRing left={rest.left} total={rest.total} size={92} />
                     <span className="eb-label mt-1.5">Rest</span>
@@ -306,12 +305,11 @@ export const SetLogger: React.FC<Props> = ({
                       Skip rest
                     </button>
                   </div>
-                </motion.div>
+                </div>
               )}
-            </motion.div>
+            </div>
           );
         })}
-      </AnimatePresence>
 
       {onAdd && rows.length < max && (
         <button onClick={onAdd} className="log-add">

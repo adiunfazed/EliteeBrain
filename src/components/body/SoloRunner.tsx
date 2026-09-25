@@ -1,19 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import {
-  Activity,
-  Check,
-  Minus,
-  Pause,
-  Play,
-  Plus,
-  Trophy,
-  X,
-} from 'lucide-react';
+import { Activity, Camera, Check, Timer, Trophy, X } from 'lucide-react';
 import { PoseExerciseId, RepEvent } from '../../lib/pose/repEngine';
 import { TemplateItem } from '../../lib/workoutTemplates';
 import { CameraView } from './CameraView';
 import { RestRing } from './RestRing';
+import { LoggedSet, SetLogger } from './SetLogger';
 import { SetResult } from './SessionScreen';
 import { soundFx } from '../../utils/audio';
 
@@ -29,8 +20,6 @@ interface Props {
   onSetComplete?: (result: SetResult) => void;
 }
 
-type Phase = 'working' | 'resting' | 'done';
-
 /** The movements the rep engine can actually judge. */
 const TRACKED = new Set<PoseExerciseId>([
   'pushups',
@@ -41,17 +30,19 @@ const TRACKED = new Set<PoseExerciseId>([
 ]);
 
 /**
- * One exercise, counted.
+ * One exercise from Quick start.
  *
- * Deliberately not the set-log table: a bodyweight set from Quick start is
- * counted live — by the camera where it can see the movement, by the big
- * button where it cannot — so the screen is one number, one button and a
- * rest timer. There is no weight column, because there is no weight, and no
- * grid of cells to fill in while doing push-ups.
+ * Two modes, kept completely apart because they are two different ways of
+ * training and mixing them made both worse:
  *
- * The set table belongs to custom workouts, where the numbers are decided in
- * advance and typed in as they happen. These are two genuinely different jobs
- * and one screen cannot do both without being worse at each.
+ *   By hand — the set list, with a row per set and a tick. Bigger rows than
+ *   the workout builder's, and no weight column, because this is bodyweight
+ *   work and a kilogram cell on every row is just something to skip past.
+ *
+ *   With the camera — no list, no buttons, nothing to press. The preview and
+ *   one enormous number, because the phone is on the floor three feet away
+ *   and the only question is how many. The set logs itself at the target and
+ *   the rest timer takes over.
  */
 export const SoloRunner: React.FC<Props> = ({
   item,
@@ -61,9 +52,6 @@ export const SoloRunner: React.FC<Props> = ({
   onSetComplete,
 }) => {
   const isHold = item.metric === 'hold';
-  const sets = item.plan.length;
-  const target = item.plan[0]?.reps || item.target;
-  const restSeconds = item.restSeconds;
 
   const poseId = useMemo(
     () =>
@@ -73,173 +61,307 @@ export const SoloRunner: React.FC<Props> = ({
     [item.exerciseId]
   );
 
-  const [phase, setPhase] = useState<Phase>('working');
-  const [setIndex, setSetIndex] = useState(0);
-  const [results, setResults] = useState<SetResult[]>([]);
-  const [value, setValue] = useState(0);
-  const [restLeft, setRestLeft] = useState(0);
-  const [restTotal, setRestTotal] = useState(restSeconds);
-  const [manual, setManual] = useState(false);
-  const [paused, setPaused] = useState(false);
-  /** The last verdict from the camera, shown as a small live status. */
+  const [rows, setRows] = useState<LoggedSet[]>(() =>
+    item.plan.map((set) => ({ weight: 0, reps: isHold ? 0 : set.reps, done: false }))
+  );
+  const [cameraMode, setCameraMode] = useState(false);
+  const [rest, setRest] = useState<{ afterIndex: number; left: number; total: number } | null>(
+    null
+  );
+  const [timerRunning, setTimerRunning] = useState(false);
   const [feedback, setFeedback] = useState<RepEvent | null>(null);
-  /** Bumps the counter once per accepted rep. */
-  const [bump, setBump] = useState(0);
+  /** Live reps from the camera for the set in progress. */
+  const [cameraReps, setCameraReps] = useState(0);
 
-  /** Reps counted by the camera, so manual taps can be added on top. */
-  const cameraBase = useRef(0);
-  const manualExtra = useRef(0);
-  /**
-   * Guards the automatic finish.
-   *
-   * Reaching the target fires from a render, and without this a second frame
-   * arriving before the state settles would complete the same set twice.
-   */
-  const finishing = useRef(false);
-  const finishTimer = useRef<number | null>(null);
+  const planned = useRef(item.plan.map((s) => s.reps));
   const verdictTimer = useRef<number | null>(null);
+  const finishTimer = useRef<number | null>(null);
+  /** Stops a camera set being logged twice as frames keep arriving. */
+  const logging = useRef(false);
 
-  const useCamera = !!poseId && !isHold && !manual;
-
-  /** Never above the target, never below zero. */
-  const clamp = (n: number) => Math.max(0, Math.min(target, n));
-
-  /** A hold counts seconds, and can be paused mid-hold. */
-  useEffect(() => {
-    if (phase !== 'working' || !isHold || paused) return;
-    const id = window.setInterval(() => setValue((v) => Math.min(target, v + 1)), 1000);
-    return () => window.clearInterval(id);
-  }, [phase, isHold, target, paused]);
-
-  /**
-   * The target is the finish line, for reps and holds alike.
-   *
-   * One place decides it, so the camera, the manual button and the hold timer
-   * cannot disagree about when a set is over.
-   */
-  useEffect(() => {
-    if (phase !== 'working' || value < target || finishing.current) return;
-
-    finishing.current = true;
-    soundFx.playSuccess();
-
-    // A short beat so the finished number is actually seen at 30/30 before
-    // the screen moves on. Deliberately NOT cleared by this effect's
-    // cleanup: a re-render while the count sits at the target would cancel
-    // the pending timer and the guard above would refuse to schedule
-    // another, leaving the set stuck. It is cleared on unmount instead.
-    finishTimer.current = window.setTimeout(() => completeSet(target), 850);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value, target, phase]);
+  const activeIndex = rows.findIndex((r) => !r.done);
+  const done = activeIndex < 0;
+  const goal = planned.current[activeIndex] ?? item.target;
+  const loggedCount = rows.filter((r) => r.done).length;
 
   useEffect(
     () => () => {
-      if (finishTimer.current) window.clearTimeout(finishTimer.current);
       if (verdictTimer.current) window.clearTimeout(verdictTimer.current);
+      if (finishTimer.current) window.clearTimeout(finishTimer.current);
     },
     []
   );
 
-  /** Rest countdown. */
+  /** Rest counts down, in both modes. */
   useEffect(() => {
-    if (phase !== 'resting') return;
+    if (!rest) return;
     const id = window.setInterval(() => {
-      setRestLeft((s) => {
-        if (s <= 1) {
+      setRest((current) => {
+        if (!current) return null;
+        if (current.left <= 1) {
           soundFx.playClick();
-          setPhase('working');
-          return 0;
+          return null;
         }
-        return s - 1;
+        return { ...current, left: current.left - 1 };
       });
     }, 1000);
     return () => window.clearInterval(id);
-  }, [phase]);
+  }, [rest]);
 
-  const completeSet = (achieved: number) => {
-    const result: SetResult = { value: achieved, target, weight: 0 };
-    const next = [...results, result];
+  /** A hold counts seconds into its own row. */
+  useEffect(() => {
+    if (!timerRunning || activeIndex < 0) return;
+    const id = window.setInterval(() => {
+      setRows((current) =>
+        current.map((row, i) => (i === activeIndex ? { ...row, reps: row.reps + 1 } : row))
+      );
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [timerRunning, activeIndex]);
 
-    setResults(next);
-    setValue(0);
-    setFeedback(null);
-    setPaused(false);
-    cameraBase.current = 0;
-    manualExtra.current = 0;
-    finishing.current = false;
-    finishTimer.current = null;
-
-    // Reported immediately, so a personal record is celebrated as it happens
-    // rather than after the whole exercise is finished.
-    onSetComplete?.(result);
-
-    if (next.length >= sets) {
-      setPhase('done');
-      return;
-    }
-
-    setSetIndex((i) => i + 1);
-    setRestTotal(restSeconds || 60);
-    setRestLeft(restSeconds);
-    setPhase(restSeconds > 0 ? 'resting' : 'working');
+  const patchRow = (index: number, patch: Partial<LoggedSet>) => {
+    setRows((current) => current.map((row, i) => (i === index ? { ...row, ...patch } : row)));
   };
 
   /**
-   * Bank a set that fell short of its target.
+   * Log one set.
    *
-   * Failing a set is part of training — eight of a planned ten is real work
-   * and the honest number to record. It is never counted as completing the
-   * set: only sets that met their target count toward XP.
+   * The number recorded is whatever the row holds — the plan if it was hit,
+   * the real figure if the set fell short or went over. The plan is an
+   * intention; only the log gets to claim what happened.
    */
-  const bankShortSet = () => {
-    if (value <= 0) return;
-    soundFx.playClick();
-    completeSet(value);
+  const logSet = (index: number, value?: number) => {
+    const row = rows[index];
+    const reps = value ?? row?.reps ?? 0;
+    if (!row || row.done || reps <= 0) return;
+
+    const next = rows.map((r, i) => (i === index ? { ...r, reps, done: true } : r));
+    setRows(next);
+    setTimerRunning(false);
+    setCameraReps(0);
+    setFeedback(null);
+    soundFx.playSuccess();
+
+    onSetComplete?.({ value: reps, target: planned.current[index] ?? reps, weight: 0 });
+
+    const more = next.some((r) => !r.done);
+    if (more && item.restSeconds > 0) {
+      setRest({ afterIndex: index, left: item.restSeconds, total: item.restSeconds });
+    } else {
+      setRest(null);
+    }
   };
 
-  const targetReached = value >= target;
-  const progress = Math.min(1, value / Math.max(1, target));
-  const sessionProgress = Math.min(1, (results.length + progress) / Math.max(1, sets));
-  const onPrPace = best > 0 && value > best;
+  /** A hold that reaches its planned seconds logs itself. */
+  useEffect(() => {
+    if (!isHold || !timerRunning || activeIndex < 0) return;
+    if (goal > 0 && (rows[activeIndex]?.reps || 0) >= goal) {
+      setTimerRunning(false);
+      logSet(activeIndex);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows, timerRunning, activeIndex, isHold]);
+
+  /**
+   * The camera reached the target.
+   *
+   * Logged after a short beat so the finished number is actually seen at
+   * 25/25 before the screen becomes a rest timer.
+   */
+  useEffect(() => {
+    if (!cameraMode || activeIndex < 0 || logging.current) return;
+    if (goal <= 0 || cameraReps < goal) return;
+
+    logging.current = true;
+    finishTimer.current = window.setTimeout(() => {
+      logging.current = false;
+      logSet(activeIndex, goal);
+    }, 800);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cameraReps, goal, cameraMode, activeIndex]);
+
+  const addSet = () => {
+    const last = rows[rows.length - 1];
+    planned.current = [...planned.current, last?.reps || goal];
+    setRows((current) => [...current, { weight: 0, reps: last?.reps || goal, done: false }]);
+  };
+
+  const results = (): SetResult[] =>
+    rows
+      .map((row, index) => ({ row, index }))
+      .filter(({ row }) => row.done && row.reps > 0)
+      .map(({ row, index }) => ({
+        value: row.reps,
+        target: planned.current[index] ?? row.reps,
+        weight: 0,
+      }));
+
+  const finish = () => (loggedCount > 0 ? onComplete(results()) : onClose());
   const unitFor = (n: number) => (isHold ? 's' : n === 1 ? 'rep' : 'reps');
+
+  /* ---------------- camera mode ---------------- */
+
+  if (cameraMode && poseId && !isHold) {
+    const resting = !!rest;
+
+    return (
+      <div className="fixed inset-0 z-[95] bg-[var(--ground)] flex flex-col">
+        <div className="run-top">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                soundFx.playClick();
+                setCameraMode(false);
+              }}
+              aria-label="Turn the camera off"
+              className="icon-btn shrink-0"
+            >
+              <X className="w-4 h-4 shrink-0" />
+            </button>
+
+            <div className="min-w-0 flex-1">
+              <p className="t-section truncate">{item.name}</p>
+              <p className="t-meta mt-0.5 tabular-nums">
+                Set {Math.min(loggedCount + 1, rows.length)} of {rows.length} · target {goal}
+              </p>
+            </div>
+
+            {loggedCount > 0 && (
+              <button onClick={finish} className="wk-start shrink-0">
+                Finish
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4">
+          <div className="max-w-md mx-auto">
+            {/* Nothing to press. The camera counts, the number grows, the set
+                ends itself — the phone is on the floor and the user's hands
+                are on the floor with it. */}
+            {!done && !resting && (
+              <>
+                <CameraView
+                  exercise={poseId}
+                  target={goal}
+                  active
+                  resetKey={activeIndex}
+                  onRep={(count) => setCameraReps(count)}
+                  onFeedback={(event) => {
+                    setFeedback(event);
+                    if (verdictTimer.current) window.clearTimeout(verdictTimer.current);
+                    verdictTimer.current = window.setTimeout(() => setFeedback(null), 2000);
+                  }}
+                  onManualMode={() => setCameraMode(false)}
+                />
+
+                <p className="cam-count tabular-nums" data-full={cameraReps >= goal}>
+                  {cameraReps}
+                </p>
+                <p className="t-meta text-center">of {goal} {unitFor(goal)}</p>
+
+                {feedback && (
+                  <div
+                    key={`${feedback.kind}-${feedback.count}-${feedback.reason ?? ''}`}
+                    className="rep-verdict"
+                    data-tone={feedback.kind === 'rep' ? 'good' : 'bad'}
+                  >
+                    {feedback.kind === 'rep' ? (
+                      <Check className="w-4 h-4 shrink-0" />
+                    ) : (
+                      <Activity className="w-4 h-4 shrink-0" />
+                    )}
+                    {feedback.kind === 'rep'
+                      ? 'Good rep'
+                      : feedback.reason || 'That one did not count'}
+                  </div>
+                )}
+              </>
+            )}
+
+            {resting && (
+              <div className="text-center pt-6">
+                <div className="flex justify-center">
+                  <RestRing left={rest!.left} total={rest!.total} size={168} />
+                </div>
+                <p className="t-sub mt-4">
+                  Rest · set {loggedCount + 1} of {rows.length} next
+                </p>
+
+                <div className="rest-presets mt-6">
+                  {[60, 90, 120].map((seconds) => (
+                    <button
+                      key={seconds}
+                      onClick={() => {
+                        soundFx.playClick();
+                        setRest({ ...rest!, left: seconds, total: seconds });
+                      }}
+                      data-active={rest!.total === seconds ? 'true' : 'false'}
+                      className="rest-preset"
+                    >
+                      {seconds}s
+                    </button>
+                  ))}
+                </div>
+
+                <button onClick={() => setRest(null)} className="btn-lg w-full mt-3">
+                  Start set {loggedCount + 1}
+                </button>
+              </div>
+            )}
+
+            {done && (
+              <div className="text-center pt-10">
+                <span className="done-mark mx-auto">
+                  <Check className="w-8 h-8 shrink-0" />
+                </span>
+                <p className="t-title mt-4">{item.name} done</p>
+                <p className="t-sub mt-2">
+                  {loggedCount} {loggedCount === 1 ? 'set' : 'sets'} ·{' '}
+                  {rows.reduce((n, r) => n + (r.done ? r.reps : 0), 0)} reps total
+                </p>
+                <button onClick={finish} className="btn-lg w-full mt-8">
+                  Finish
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ---------------- by hand ---------------- */
 
   return (
     <div className="fixed inset-0 z-[95] bg-[var(--ground)] flex flex-col">
       <div className="run-top">
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => {
-              // Sets already finished are real work and are kept, or a record
-              // set in set one would be celebrated and then vanish.
-              if (results.length > 0) onComplete(results);
-              else onClose();
-            }}
-            aria-label="Stop workout"
-            className="icon-btn shrink-0"
-          >
+          <button onClick={finish} aria-label="Stop workout" className="icon-btn shrink-0">
             <X className="w-4 h-4 shrink-0" />
           </button>
 
           <div className="min-w-0 flex-1">
             <p className="t-section truncate">{item.name}</p>
-            {best > 0 && (
-              <p className="t-meta mt-0.5 flex items-center gap-1 eb-warn">
-                <Trophy className="w-3 h-3 shrink-0" />
-                Best {best} {unitFor(best)}
-              </p>
-            )}
+            <p className="t-meta mt-0.5 flex items-center gap-2 flex-wrap dot-meta">
+              <span className="tabular-nums">
+                {loggedCount}/{rows.length} sets
+              </span>
+              {best > 0 && (
+                <span className="inline-flex items-center gap-1 eb-warn">
+                  <Trophy className="w-3 h-3 shrink-0" />
+                  {best} {unitFor(best)}
+                </span>
+              )}
+            </p>
           </div>
-
-          <span className="t-meta shrink-0 tabular-nums">
-            Set {Math.min(setIndex + 1, sets)} / {sets}
-          </span>
         </div>
 
         <div className="run-bar">
           <div
             className="run-bar-fill"
             style={{
-              width: `${sessionProgress * 100}%`,
+              width: `${(loggedCount / Math.max(1, rows.length)) * 100}%`,
               background: 'color-mix(in oklab, var(--signal) 70%, var(--ink))',
             }}
           />
@@ -247,219 +369,68 @@ export const SoloRunner: React.FC<Props> = ({
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">
-        {/* The camera stays mounted between sets. Unmounting dropped the
-            stream and the model, so every set after the first asked for the
-            camera again and reloaded several megabytes of pose model. */}
-        {useCamera && phase !== 'done' && (
-          <div
-            className="max-w-md mx-auto"
-            style={{ display: phase === 'working' ? 'block' : 'none' }}
-          >
-            <CameraView
-              exercise={poseId as PoseExerciseId}
-              target={target}
-              active={phase === 'working'}
-              resetKey={results.length}
-              onRep={(count) => {
-                cameraBase.current = count;
-                setValue(clamp(count + manualExtra.current));
-                setBump((n) => n + 1);
+        <div className="max-w-md mx-auto space-y-4">
+          {/* The camera is the first thing on the screen, as it was, and it
+              takes over completely when chosen. */}
+          {poseId && !isHold && (
+            <button
+              onClick={() => {
+                soundFx.playClick();
+                setCameraMode(true);
               }}
-              onFeedback={(event) => {
-                setFeedback(event);
-                if (verdictTimer.current) window.clearTimeout(verdictTimer.current);
-                verdictTimer.current = window.setTimeout(() => setFeedback(null), 2200);
-              }}
-              onManualMode={() => setManual(true)}
-            />
-          </div>
-        )}
-
-        {phase === 'working' && (
-          <div className={`max-w-md mx-auto ${useCamera ? '' : 'run-stage'}`}>
-            {/* The live verdict, repeated below the frame so it is readable
-                without watching the preview. Only ever real engine output,
-                and it clears itself rather than sitting there stale. */}
-            {useCamera && feedback && (
-              <div
-                key={`${feedback.kind}-${feedback.count}-${feedback.reason ?? ''}`}
-                className="rep-verdict"
-                data-tone={feedback.kind === 'rep' ? 'good' : 'bad'}
-              >
-                {feedback.kind === 'rep' ? (
-                  <Check className="w-4 h-4 shrink-0" />
-                ) : (
-                  <Activity className="w-4 h-4 shrink-0" />
-                )}
-                {feedback.kind === 'rep' ? 'Good rep' : feedback.reason || 'That one did not count'}
-              </div>
-            )}
-
-            <div className="text-center mt-5">
-              <p
-                key={bump}
-                className={`t-figure ${bump > 0 ? 'rep-bump' : ''}`}
-                style={{
-                  fontSize: 76,
-                  lineHeight: 1,
-                  color: targetReached ? 'var(--done)' : undefined,
-                }}
-              >
-                {isHold ? Math.max(0, target - value) : value}
-              </p>
-              <p className="t-meta mt-2">{isHold ? 'seconds left' : `of ${target} reps`}</p>
-
-              <AnimatePresence>
-                {onPrPace && !isHold && (
-                  <motion.span
-                    initial={{ opacity: 0, y: 4, scale: 0.96 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="pr-pace"
-                  >
-                    <Trophy className="w-3.5 h-3.5 shrink-0" />
-                    Personal record pace
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </div>
-
-            <div className="run-progress">
-              <div
-                className="run-progress-fill"
-                style={{
-                  width: `${progress * 100}%`,
-                  background: targetReached ? 'var(--done)' : 'var(--signal)',
-                }}
-              />
-            </div>
-
-            {!useCamera && <div className="run-fill" />}
-
-            {!isHold && (
-              <div className="flex items-center gap-3 mt-6">
-                <button
-                  onClick={() => {
-                    soundFx.playClick();
-                    manualExtra.current = Math.max(-cameraBase.current, manualExtra.current - 1);
-                    setValue(clamp(cameraBase.current + manualExtra.current));
-                  }}
-                  disabled={value <= 0}
-                  aria-label="One fewer"
-                  className="count-minus"
-                >
-                  <Minus className="w-5 h-5 shrink-0" />
-                </button>
-
-                <button
-                  onClick={() => {
-                    soundFx.playClick();
-                    manualExtra.current += 1;
-                    setValue(clamp(cameraBase.current + manualExtra.current));
-                    setBump((n) => n + 1);
-                  }}
-                  disabled={targetReached}
-                  className="count-plus"
-                >
-                  <Plus className="w-5 h-5 shrink-0" />
-                  Count one
-                </button>
-              </div>
-            )}
-
-            {isHold && (
-              <button
-                onClick={() => {
-                  soundFx.playClick();
-                  setPaused((p) => !p);
-                }}
-                className="btn-quiet w-full mt-6"
-              >
-                {paused ? (
-                  <>
-                    <Play className="w-4 h-4 shrink-0" />
-                    Resume hold
-                  </>
-                ) : (
-                  <>
-                    <Pause className="w-4 h-4 shrink-0" />
-                    Pause
-                  </>
-                )}
-              </button>
-            )}
-
-            <p className="t-meta text-center mt-4">
-              {targetReached
-                ? 'Set complete'
-                : `${Math.max(0, target - value)} ${unitFor(Math.max(0, target - value))} to go`}
-            </p>
-
-            {/* An honest way out of a set that is not going to happen. Only
-                offered once something has actually been done. */}
-            {value > 0 && !targetReached && (
-              <button onClick={bankShortSet} className="btn-text mx-auto mt-2">
-                Stop set at {value} {unitFor(value)}
-              </button>
-            )}
-          </div>
-        )}
-
-        {phase === 'resting' && (
-          <div className="max-w-md mx-auto text-center pt-8">
-            <div className="flex justify-center">
-              <RestRing left={restLeft} total={restTotal} size={168} />
-            </div>
-
-            <p className="t-sub mt-4">
-              Rest · set {setIndex + 1} of {sets} next
-            </p>
-
-            <div className="rest-presets mt-6">
-              {[60, 90, 120].map((seconds) => (
-                <button
-                  key={seconds}
-                  onClick={() => {
-                    soundFx.playClick();
-                    setRestTotal(seconds);
-                    setRestLeft(seconds);
-                  }}
-                  data-active={restTotal === seconds ? 'true' : 'false'}
-                  className="rest-preset"
-                >
-                  {seconds}s
-                </button>
-              ))}
-            </div>
-
-            <button onClick={() => setPhase('working')} className="btn-lg w-full mt-3">
-              Start set {setIndex + 1}
-            </button>
-          </div>
-        )}
-
-        {phase === 'done' && (
-          <div className="max-w-md mx-auto text-center pt-10">
-            <motion.span
-              initial={{ scale: 0.7, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: 'spring', stiffness: 340, damping: 20 }}
-              className="done-mark mx-auto"
+              className="cam-open"
             >
-              <Check className="w-8 h-8 shrink-0" />
-            </motion.span>
+              <Camera className="w-4 h-4 shrink-0" />
+              Count reps with camera
+            </button>
+          )}
 
-            <p className="t-title mt-4">{item.name} done</p>
-            <p className="t-sub mt-2">
-              {results.length} {results.length === 1 ? 'set' : 'sets'} ·{' '}
-              {results.reduce((n, r) => n + r.value, 0)} {isHold ? 'seconds' : 'reps'} total
+          {isHold && (
+            <p className="t-meta text-center flex items-center justify-center gap-1.5">
+              <Timer className="w-3.5 h-3.5 shrink-0" />
+              Start the timer on the set you are holding.
             </p>
+          )}
 
-            <button onClick={() => onComplete(results)} className="btn-lg w-full mt-8">
+          <SetLogger
+            metric={item.metric}
+            rows={rows}
+            mode="log"
+            size="lg"
+            showWeight={false}
+            activeIndex={activeIndex}
+            goals={planned.current}
+            rest={rest}
+            timerRunning={timerRunning}
+            onChange={patchRow}
+            onToggleDone={(index) =>
+              rows[index].done
+                ? patchRow(index, { done: false })
+                : logSet(index)
+            }
+            onToggleTimer={() => setTimerRunning((t) => !t)}
+            onAdd={addSet}
+            onSkipRest={() => setRest(null)}
+            onSetRest={(seconds) =>
+              setRest((current) => (current ? { ...current, left: seconds, total: seconds } : current))
+            }
+          />
+
+          {done && (
+            <div className="text-center pt-2">
+              <span className="done-mark mx-auto">
+                <Check className="w-8 h-8 shrink-0" />
+              </span>
+              <p className="t-title mt-3">{item.name} done</p>
+            </div>
+          )}
+
+          {loggedCount > 0 && (
+            <button onClick={finish} className="btn-lg w-full">
               Finish
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

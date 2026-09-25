@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { motion } from 'motion/react';
 import { Check, Trophy, X } from 'lucide-react';
 import { TemplateItem } from '../../lib/workoutTemplates';
 import { RecordViews, recordLabel } from '../../lib/personalRecords';
@@ -363,8 +362,7 @@ export const SessionScreen: React.FC<Props> = ({
             );
           })}
 
-          <motion.button
-            layout
+          <button
             onClick={() => {
               soundFx.playClick();
               anyWork ? onFinish(results()) : onAbort();
@@ -372,7 +370,7 @@ export const SessionScreen: React.FC<Props> = ({
             className="btn-lg w-full"
           >
             {anyWork ? 'Finish workout' : 'Close without logging'}
-          </motion.button>
+          </button>
         </div>
       </div>
     </div>

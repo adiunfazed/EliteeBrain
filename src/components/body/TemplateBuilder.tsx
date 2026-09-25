@@ -1,5 +1,4 @@
 import React, { useMemo, useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 import {
   ArrowDown,
   ArrowUp,
@@ -191,20 +190,14 @@ export const TemplateBuilder: React.FC<Props> = ({
       </div>
 
       <div className="space-y-3">
-        <AnimatePresence initial={false}>
-          {items.map((item, index) => {
+        {/* No layout animation here. Moving an exercise with the arrows is an
+            instant, deliberate swap, and animating two cards past each other
+            made it look like something had gone wrong. */}
+        {items.map((item, index) => {
             const best = recordLabel(records[item.exerciseId], item.metric);
 
             return (
-              <motion.div
-                key={`${item.exerciseId}:${index}`}
-                layout
-                initial={{ opacity: 0, y: -6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                transition={{ duration: 0.18 }}
-                className="build-block"
-              >
+              <div key={`${item.exerciseId}:${index}`} className="build-block">
                 <div className="build-block-head">
                   <span className="build-index">{index + 1}</span>
 
@@ -277,10 +270,9 @@ export const TemplateBuilder: React.FC<Props> = ({
                     onChange={(v) => patch(index, { restSeconds: v })}
                   />
                 </div>
-              </motion.div>
+              </div>
             );
-          })}
-        </AnimatePresence>
+        })}
 
         <button
           onClick={() => {
@@ -403,7 +395,6 @@ export const TemplateBuilder: React.FC<Props> = ({
       <ExercisePicker
         open={picking}
         known={known}
-        records={records}
         counts={items.reduce<Record<string, number>>((map, i) => {
           map[i.exerciseId] = (map[i.exerciseId] || 0) + 1;
           return map;
